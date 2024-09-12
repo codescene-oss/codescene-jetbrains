@@ -9,10 +9,15 @@
     <resource-bundle>messages.MyBundle</resource-bundle>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.codescene.jetbrains.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
+        <toolWindow id="CodeScene"
+                    icon="/toolWindow/logo-40x40.png"
+                    factoryClass="com.codescene.jetbrains.toolWindow.MyToolWindowFactory"
+        />
     </extensions>
 
     <applicationListeners>
-        <listener class="com.codescene.jetbrains.listeners.MyApplicationActivationListener" topic="com.intellij.openapi.application.ApplicationActivationListener"/>
+        <listener topic="com.intellij.openapi.application.ApplicationActivationListener"
+                  class="com.codescene.jetbrains.listeners.MyApplicationActivationListener"
+        />
     </applicationListeners>
 </idea-plugin>
