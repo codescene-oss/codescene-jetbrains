@@ -139,7 +139,7 @@ jobs:
 
       # Free GitHub Actions Environment Disk Space
       - name: Maximize Build Space
-        uses: jlumbroso/free-disk-space@master
+        uses: jlumbroso/free-disk-space@main
         with:
           tool-cache: false
           large-packages: false
