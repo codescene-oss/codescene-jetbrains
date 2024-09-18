@@ -12,6 +12,7 @@ members, ensuring transparency and consistency throughout the project lifecycle.
 1. [DEC-2024-09-12-001: Choose Kotlin for Plugin Development](#dec-2024-09-12-001-choose-kotlin-for-plugin-development)
 2. [DEC-2024-09-12-002: Determine Supported Product Versions for the Plugin](#dec-2024-09-12-002-determine-supported-product-versions-for-the-plugin)
 3. [DEC-2024-09-12-003: Choose JDK 17 for Plugin Development](#dec-2024-09-12-003-choose-jdk-17-for-plugin-development)
+4. [DEC-2024-09-18-001: Update Supported Product Versions for the Plugin](#dec-2024-09-18-001-update-supported-product-versions-for-the-plugin)
 
 ---
 
@@ -56,6 +57,8 @@ None
 
 [Back to Top](#table-of-contents)
 
+>**_NOTE:_**  Decision overruled by: [DEC-2024-09-18-001: Update Supported Product Versions for the Plugin](#dec-2024-09-18-001-update-supported-product-versions-for-the-plugin).
+
 **Date**: 2024-09-12
 
 **Decision Maker(s)**: Dzenan Granulo, Selma Copra
@@ -84,9 +87,8 @@ The plugin needs to be tested and maintained for compatibility with IntelliJ IDE
 None
 
 **Additional Resources**:
-- [JetBrains Product Versions in Use Statistics](https://plugins.jetbrains.com/docs/marketplace/product-versions-in-use-statistics.html) [as of September 2024]
+- [JetBrains Product Versions in Use Statistics](https://plugins.jetbrains.com/docs/marketplace/product-versions-in-use-statistics.html) [date of access: September 2024]
 
----
 
 ## DEC-2024-09-12-003: Choose JDK 17 for Plugin Development
 
@@ -125,5 +127,35 @@ None
 - [DEC-2024-09-12-002: Determine Supported Product Versions for the Plugin](#dec-2024-09-12-002-determine-supported-product-versions-for-the-plugin)
 
 **Additional Resources**:
-- [Supported Java versions and features](https://www.jetbrains.com/help/idea/supported-java-versions.html) [as of September 2024]
+- [Supported Java versions and features](https://www.jetbrains.com/help/idea/supported-java-versions.html) [date of access: September 2024]
+
+
+## DEC-2024-09-18-001: Update Supported Product Versions for the Plugin
+
+[Back to Top](#table-of-contents)
+
+**Date**: 2024-09-18
+
+**Decision Maker(s)**: Dzenan Granulo, Selma Copra
+
+**Status**: Pending
+
+**Decision**:
+The plugin will support IntelliJ IDEA versions from the last three major releases: 2024.X, 2023.X, 2022.3 and 2022.2.
+
+**Context**:
+Refer to Context of [DEC-2024-09-12-002: Determine Supported Product Versions for the Plugin](#dec-2024-09-12-002-determine-supported-product-versions-for-the-plugin).
+Additionally, the goal is to support the latest IntelliJ Platform SDK functionality, which was not possible with version 2022.1, 2021.3 and 2021.2.
+
+**Rationale**:
+Refer to Rationale of [DEC-2024-09-12-002: Determine Supported Product Versions for the Plugin](#dec-2024-09-12-002-determine-supported-product-versions-for-the-plugin).
+
+**Consequences**:
+The plugin needs to be tested and maintained for compatibility with IntelliJ IDEA 2022.2, 2022.3, 2023.X, and 2024.X.
+
+**Alternatives Considered**:
+None
+
+**Related Decisions**:
+- [DEC-2024-09-12-002: Determine Supported Product Versions for the Plugin](#dec-2024-09-12-002-determine-supported-product-versions-for-the-plugin)
   
