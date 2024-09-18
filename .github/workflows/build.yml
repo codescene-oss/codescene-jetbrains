@@ -28,7 +28,7 @@ jobs:
   # Prepare environment and build the plugin
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04-8core
     outputs:
       version: ${{ steps.properties.outputs.version }}
       changelog: ${{ steps.properties.outputs.changelog }}
@@ -98,7 +98,7 @@ jobs:
   test:
     name: Test
     needs: [ build ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04-8core
     steps:
 
       # Check out the current repository
@@ -134,7 +134,7 @@ jobs:
   verify:
     name: Verify plugin
     needs: [ build ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04-8core
     steps:
 
       # Free GitHub Actions Environment Disk Space
@@ -186,7 +186,7 @@ jobs:
     name: Release draft
     if: github.event_name != 'pull_request'
     needs: [ build, test, verify ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04-8core
     permissions:
       contents: write
     steps:
