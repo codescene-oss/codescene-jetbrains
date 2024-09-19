@@ -1,79 +1,80 @@
 package com.codescene.jetbrains.components.settings.tab
 
+import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.dsl.builder.*
 
 @Suppress("DialogTitleCapitalization")
-class SettingsTab : BoundConfigurable("Settings") {
+class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
     private val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
     override fun createPanel(): DialogPanel = panel {
         row {
-            checkBox("Enable Code Lenses").bindSelected(settings::enableCodeLenses)
-                .comment("Enable CodeScene Code Lenses")
+            checkBox(UiLabelsBundle.message("enableCodeLenses"))
+                .bindSelected(settings::enableCodeLenses)
+                .comment(UiLabelsBundle.message("enableCodeLensesComment"))
         }
 
         row {
-            checkBox("Enable Auto Refactor")
+            checkBox(UiLabelsBundle.message("enableAutoRefactor"))
                 .bindSelected(settings::enableAutoRefactor)
-                .comment("Enable CodeScene ACE. This is currently only available for customers part of the ACE beta program.")
+                .comment(UiLabelsBundle.message("enableAutoRefactorComment"))
         }
 
         row {
-            checkBox("Preview Code Health Gate")
+            checkBox(UiLabelsBundle.message("previewCodeHealthGate"))
                 .bindSelected(settings::previewCodeHealthGate)
-                .comment("Preview the experimental Code Health Gate (beta)")
+                .comment(UiLabelsBundle.message("previewCodeHealthGateComment"))
         }
 
         row {
-            checkBox("Gitignore")
+            checkBox(UiLabelsBundle.message("gitignore"))
                 .bindSelected(settings::excludeGitignoreFiles)
-                .comment("Exclude files in .gitignore from analysis")
+                .comment(UiLabelsBundle.message("gitignoreComment"))
         }
 
         panel {
-            groupRowsRange("Server") {
-                row("Server URL") {
+            groupRowsRange(UiLabelsBundle.message("server")) {
+                row(UiLabelsBundle.message("serverUrl")) {
                     textField()
                         .align(Align.FILL)
                         .resizableColumn()
-                        .comment("https://domain.com")
+                        .comment(UiLabelsBundle.message("serverUrlComment"))
                         .bindText(settings::serverUrl)
                 }
             }
 
-            //TODO: Make the combo boxes selectable when value type is determined
-            groupRowsRange("Editor") {
-                row("Folding Range Provider") {
+            groupRowsRange(UiLabelsBundle.message("editor")) {
+                row(UiLabelsBundle.message("foldingRangeProvider")) {
                     comboBox(listOf("All", "TODO"))
                         .align(Align.FILL)
                         .resizableColumn()
                         .comment(
-                            "Defines a default folding range provider which takes precedence over all other folding range providers. Must be the identifier of an extension contributing a folding range provider.",
+                            UiLabelsBundle.message("foldingRangeProviderComment"),
                             maxLineLength = MAX_LINE_LENGTH_WORD_WRAP
                         )
                 }
 
-                row("Default Formatter") {
+                row(UiLabelsBundle.message("defaultFormatter")) {
                     comboBox(listOf("None", "TODO"))
                         .align(Align.FILL)
                         .resizableColumn()
                         .comment(
-                            "Defines a default formatter which takes precedence over all other formatter settings. Must be the identifier of an extension contributing a formatter.",
+                            UiLabelsBundle.message("defaultFormatterComment"),
                             maxLineLength = MAX_LINE_LENGTH_WORD_WRAP
                         )
                 }
             }
 
-            groupRowsRange("Notebook") {
-                row("Default Formatter") {
+            groupRowsRange(UiLabelsBundle.message("notebook")) {
+                row(UiLabelsBundle.message("notebookFormatter")) {
                     comboBox(listOf("None", "TODO"))
                         .align(Align.FILL)
                         .resizableColumn()
                         .comment(
-                            "Defines a default notebook formatter which takes precedence over all other formatter settings. Must be the identifier of an extension contributing a formatter.",
+                            UiLabelsBundle.message("notebookFormatterComment"),
                             maxLineLength = MAX_LINE_LENGTH_WORD_WRAP
                         )
                 }
