@@ -138,7 +138,7 @@ None
 
 **Decision Maker(s)**: Dzenan Granulo, Selma Copra
 
-**Status**: Pending
+**Status**: Accepted
 
 **Decision**:
 The plugin will support IntelliJ IDEA versions from the last three major releases: 2024.X, 2023.X, 2022.3 and 2022.2.
