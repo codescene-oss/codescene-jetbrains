@@ -37,7 +37,7 @@ class SettingsTab : BoundConfigurable("Settings") {
             groupRowsRange("Server") {
                 row("Server URL") {
                     textField()
-                        .align(AlignX.FILL)
+                        .align(Align.FILL)
                         .resizableColumn()
                         .comment("https://domain.com")
                         .bindText(settings::serverUrl)
@@ -48,7 +48,7 @@ class SettingsTab : BoundConfigurable("Settings") {
             groupRowsRange("Editor") {
                 row("Folding Range Provider") {
                     comboBox(listOf("All", "TODO"))
-                        .align(AlignX.FILL)
+                        .align(Align.FILL)
                         .resizableColumn()
                         .comment(
                             "Defines a default folding range provider which takes precedence over all other folding range providers. Must be the identifier of an extension contributing a folding range provider.",
@@ -58,7 +58,7 @@ class SettingsTab : BoundConfigurable("Settings") {
 
                 row("Default Formatter") {
                     comboBox(listOf("None", "TODO"))
-                        .align(AlignX.FILL)
+                        .align(Align.FILL)
                         .resizableColumn()
                         .comment(
                             "Defines a default formatter which takes precedence over all other formatter settings. Must be the identifier of an extension contributing a formatter.",
@@ -70,7 +70,7 @@ class SettingsTab : BoundConfigurable("Settings") {
             groupRowsRange("Notebook") {
                 row("Default Formatter") {
                     comboBox(listOf("None", "TODO"))
-                        .align(AlignX.FILL)
+                        .align(Align.FILL)
                         .resizableColumn()
                         .comment(
                             "Defines a default notebook formatter which takes precedence over all other formatter settings. Must be the identifier of an extension contributing a formatter.",
