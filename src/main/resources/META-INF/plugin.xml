@@ -8,6 +8,8 @@
 
     <resource-bundle>messages.MyBundle</resource-bundle>
 
+    <idea-version since-build="222"/>
+
     <actions>
         <action
                 text="Settings"
@@ -27,15 +29,17 @@
                 instance="com.codescene.jetbrains.components.settings.CodeSceneSettings"
         />
 
-        <toolWindow id="CodeScene"
-                    icon="/toolWindow/logo-40x40.png"
-                    factoryClass="com.codescene.jetbrains.components.toolWindow.CodeSceneToolWindowFactory"
+        <toolWindow
+                id="CodeScene"
+                icon="/toolWindow/logo-40x40.png"
+                factoryClass="com.codescene.jetbrains.components.toolWindow.CodeSceneToolWindowFactory"
         />
     </extensions>
 
     <applicationListeners>
-        <listener topic="com.intellij.openapi.application.ApplicationActivationListener"
-                  class="com.codescene.jetbrains.listeners.MyApplicationActivationListener"
+        <listener
+                topic="com.intellij.openapi.application.ApplicationActivationListener"
+                class="com.codescene.jetbrains.listeners.MyApplicationActivationListener"
         />
     </applicationListeners>
 </idea-plugin>

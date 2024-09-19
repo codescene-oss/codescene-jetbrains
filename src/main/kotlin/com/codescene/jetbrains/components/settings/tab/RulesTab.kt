@@ -7,11 +7,9 @@ import javax.swing.JComponent
 class RulesTab : Configurable {
     override fun getDisplayName(): String = "Rules"
 
-    override fun createComponent(): JComponent {
-        return panel {
-            row("Rules") {
-                label("This is the Rules section placeholder.")
-            }
+    override fun createComponent(): JComponent = panel {
+        row("Rules") {
+            label("This is the Rules section placeholder.")
         }
     }
 

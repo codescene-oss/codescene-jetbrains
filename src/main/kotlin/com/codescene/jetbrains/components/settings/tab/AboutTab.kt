@@ -7,11 +7,9 @@ import javax.swing.JComponent
 class AboutTab : Configurable {
     override fun getDisplayName(): String = "About"
 
-    override fun createComponent(): JComponent {
-        return panel {
-            row("About CodeScene") {
-                label("This is the About section placeholder.")
-            }
+    override fun createComponent(): JComponent = panel {
+        row("About CodeScene") {
+            label("This is the About section placeholder.")
         }
     }
 

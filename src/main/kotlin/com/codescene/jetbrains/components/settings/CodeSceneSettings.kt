@@ -22,9 +22,7 @@ class CodeSceneSettings : Composite, Configurable {
         rulesTab
     )
 
-    override fun getConfigurables(): Array<Configurable> {
-        return childConfigurables
-    }
+    override fun getConfigurables(): Array<Configurable> = childConfigurables
 
     override fun createComponent(): JComponent = JBTabbedPane().apply {
         childConfigurables
@@ -35,9 +33,7 @@ class CodeSceneSettings : Composite, Configurable {
             }
     }
 
-    override fun isModified(): Boolean {
-        return settingsTab.isModified
-    }
+    override fun isModified(): Boolean = settingsTab.isModified
 
     override fun apply() {
         if (settingsTab.isModified) {
@@ -45,15 +41,9 @@ class CodeSceneSettings : Composite, Configurable {
         }
     }
 
-    override fun reset() {
-        settingsTab.reset()
-    }
+    override fun reset() = settingsTab.reset()
 
-    override fun disposeUIResources() {
-        childConfigurables.forEach { it.disposeUIResources() }
-    }
+    override fun disposeUIResources() = childConfigurables.forEach { it.disposeUIResources() }
 
-    override fun getDisplayName(): String {
-        return "CodeScene"
-    }
+    override fun getDisplayName(): String = "CodeScene"
 }

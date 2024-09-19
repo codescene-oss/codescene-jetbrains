@@ -7,11 +7,9 @@ import javax.swing.JComponent
 class GeneralTab : Configurable {
     override fun getDisplayName(): String = "General"
 
-    override fun createComponent(): JComponent {
-        return panel {
-            row("General") {
-                label("This is the General section placeholder.")
-            }
+    override fun createComponent(): JComponent = panel {
+        row("General") {
+            label("This is the General section placeholder.")
         }
     }
 
