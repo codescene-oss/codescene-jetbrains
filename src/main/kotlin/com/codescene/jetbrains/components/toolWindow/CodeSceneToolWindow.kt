@@ -5,6 +5,6 @@ import com.intellij.ui.components.JBPanel
 
 class CodeSceneToolWindow(private val project: Project) {
     fun getContent() = JBPanel<JBPanel<*>>().apply {
-        //TODO
+        //TODO: Add tool window contents
     }
 }

@@ -8,10 +8,28 @@
 
     <resource-bundle>messages.MyBundle</resource-bundle>
 
+    <actions>
+        <action
+                text="Settings"
+                id="ShowSettingsAction"
+                icon="AllIcons.General.Gear"
+                description="Open the settings dialog"
+                class="com.codescene.jetbrains.actions.ShowSettingsAction"
+        />
+    </actions>
+
     <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceImplementation="com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore"/>
+
+        <applicationConfigurable
+                parentId="tools"
+                displayName="CodeScene"
+                instance="com.codescene.jetbrains.components.settings.CodeSceneSettings"
+        />
+
         <toolWindow id="CodeScene"
                     icon="/toolWindow/logo-40x40.png"
-                    factoryClass="com.codescene.jetbrains.toolWindow.MyToolWindowFactory"
+                    factoryClass="com.codescene.jetbrains.components.toolWindow.CodeSceneToolWindowFactory"
         />
     </extensions>
 
