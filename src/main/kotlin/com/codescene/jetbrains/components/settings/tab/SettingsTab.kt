@@ -6,9 +6,13 @@ import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.dsl.builder.*
 
-@Suppress("DialogTitleCapitalization")
+@Suppress("DialogTitleCapitalization", "UnstableApiUsage")
 class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
     private val settings = CodeSceneGlobalSettingsStore.getInstance().state
+    private val urlPattern = "^(?:(?:https?|ftp)://)?(?:www\\.)?[a-z0-9-]+(?:\\.[a-z0-9-]+)+\\S*$"
+    private val urlRegex = Regex(urlPattern)
+
+    private fun isValidUrl(url: String?): Boolean = (url ?: "").matches(urlRegex)
 
     override fun createPanel(): DialogPanel = panel {
         row {
@@ -43,6 +47,11 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                         .resizableColumn()
                         .comment(UiLabelsBundle.message("serverUrlComment"))
                         .bindText(settings::serverUrl)
+                        .cellValidation {
+                            addInputRule(UiLabelsBundle.message("serverUrlValidationError")) {
+                                !isValidUrl(it.text)
+                            }
+                        }
                 }
             }
 
