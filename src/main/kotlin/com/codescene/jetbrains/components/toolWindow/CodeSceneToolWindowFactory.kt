@@ -8,7 +8,7 @@ import com.intellij.ui.content.ContentFactory
 
 class CodeSceneToolWindowFactory : ToolWindowFactory {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val contentPanel = CodeSceneToolWindow(project).getContent()
+        val contentPanel = CodeSceneToolWindow().getContent()
         val content = ContentFactory.getInstance().createContent(contentPanel, null, false)
 
         val showSettingsAction = ActionManager.getInstance().getAction("ShowSettingsAction")

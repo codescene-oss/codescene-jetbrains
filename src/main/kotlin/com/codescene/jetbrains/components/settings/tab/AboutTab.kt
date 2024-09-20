@@ -1,11 +1,12 @@
 package com.codescene.jetbrains.components.settings.tab
 
+import com.codescene.jetbrains.UiLabelsBundle
 import com.intellij.openapi.options.Configurable
 import com.intellij.ui.dsl.builder.panel
 import javax.swing.JComponent
 
 class AboutTab : Configurable {
-    override fun getDisplayName(): String = "About"
+    override fun getDisplayName(): String = UiLabelsBundle.message("aboutTitle")
 
     override fun createComponent(): JComponent = panel {
         row("About CodeScene") {

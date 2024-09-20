@@ -3,6 +3,7 @@ package com.codescene.jetbrains.components.settings
 import com.codescene.jetbrains.components.settings.tab.AboutTab
 import com.codescene.jetbrains.components.settings.tab.GeneralTab
 import com.codescene.jetbrains.components.settings.tab.SettingsTab
+import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.Configurable.Composite
 import com.intellij.ui.components.JBTabbedPane
@@ -42,5 +43,5 @@ class CodeSceneSettings : Composite, Configurable {
 
     override fun disposeUIResources() = childConfigurables.forEach { it.disposeUIResources() }
 
-    override fun getDisplayName(): String = "CodeScene"
+    override fun getDisplayName(): String = CODESCENE
 }
