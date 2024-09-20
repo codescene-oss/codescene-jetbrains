@@ -2,7 +2,6 @@ package com.codescene.jetbrains.components.settings
 
 import com.codescene.jetbrains.components.settings.tab.AboutTab
 import com.codescene.jetbrains.components.settings.tab.GeneralTab
-import com.codescene.jetbrains.components.settings.tab.RulesTab
 import com.codescene.jetbrains.components.settings.tab.SettingsTab
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.Configurable.Composite
@@ -13,13 +12,11 @@ class CodeSceneSettings : Composite, Configurable {
     private val settingsTab = SettingsTab()
     private val aboutTab = AboutTab()
     private val generalTab = GeneralTab()
-    private val rulesTab = RulesTab()
 
     private val childConfigurables: Array<Configurable> = arrayOf(
         generalTab,
         settingsTab,
         aboutTab,
-        rulesTab
     )
 
     override fun getConfigurables(): Array<Configurable> = childConfigurables
