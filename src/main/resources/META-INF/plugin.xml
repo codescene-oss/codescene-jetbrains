@@ -8,7 +8,7 @@
 
     <resource-bundle>messages.UiLabelsBundle</resource-bundle>
 
-    <idea-version since-build="222" until-build="242.*"/>
+    <idea-version since-build="223" until-build="242.*"/>
 
     <actions>
         <action
