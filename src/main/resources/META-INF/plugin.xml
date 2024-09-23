@@ -1,8 +1,8 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <id>com.codescene</id>
+    <id>com.codescene.vanilla</id>
     <name>CodeScene</name>
-    <vendor>JetBrains</vendor>
+    <vendor>CodeScene</vendor>
 
     <depends>com.intellij.modules.platform</depends>
 
