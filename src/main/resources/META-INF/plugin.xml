@@ -6,18 +6,40 @@
 
     <depends>com.intellij.modules.platform</depends>
 
-    <resource-bundle>messages.MyBundle</resource-bundle>
+    <resource-bundle>messages.UiLabelsBundle</resource-bundle>
+
+    <idea-version since-build="223" until-build="242.*"/>
+
+    <actions>
+        <action
+                text="Settings"
+                id="ShowSettingsAction"
+                icon="AllIcons.General.Gear"
+                description="Open the settings dialog"
+                class="com.codescene.jetbrains.actions.ShowSettingsAction"
+        />
+    </actions>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="CodeScene"
-                    icon="/toolWindow/logo-40x40.png"
-                    factoryClass="com.codescene.jetbrains.toolWindow.MyToolWindowFactory"
+        <applicationService serviceImplementation="com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore"/>
+
+        <applicationConfigurable
+                parentId="tools"
+                displayName="CodeScene"
+                instance="com.codescene.jetbrains.components.settings.CodeSceneSettings"
+        />
+
+        <toolWindow
+                id="CodeScene"
+                icon="/toolWindow/logo-40x40.png"
+                factoryClass="com.codescene.jetbrains.components.toolWindow.CodeSceneToolWindowFactory"
         />
     </extensions>
 
     <applicationListeners>
-        <listener topic="com.intellij.openapi.application.ApplicationActivationListener"
-                  class="com.codescene.jetbrains.listeners.MyApplicationActivationListener"
+        <listener
+                topic="com.intellij.openapi.application.ApplicationActivationListener"
+                class="com.codescene.jetbrains.listeners.MyApplicationActivationListener"
         />
     </applicationListeners>
 </idea-plugin>
