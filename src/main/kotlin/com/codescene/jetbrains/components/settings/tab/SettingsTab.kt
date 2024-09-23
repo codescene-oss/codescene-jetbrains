@@ -2,6 +2,7 @@ package com.codescene.jetbrains.components.settings.tab
 
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.util.Constants.EXAMPLE_SERVER_URL
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.dsl.builder.*
@@ -41,7 +42,7 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                     textField()
                         .align(Align.FILL)
                         .resizableColumn()
-                        .comment(UiLabelsBundle.message("serverUrlComment"))
+                        .comment(EXAMPLE_SERVER_URL)
                         .bindText(settings::serverUrl)
                 }
             }
