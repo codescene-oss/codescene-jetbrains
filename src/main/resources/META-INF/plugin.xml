@@ -38,8 +38,16 @@
 
     <applicationListeners>
         <listener
-                topic="com.intellij.openapi.application.ApplicationActivationListener"
-                class="com.codescene.jetbrains.listeners.MyApplicationActivationListener"
+                topic="com.intellij.ide.AppLifecycleListener"
+                class="com.github.ericdallo.clj4intellij.listener.ClojureClassLoaderListener"
         />
     </applicationListeners>
+
+    <projectListeners>
+        <listener
+                activeInTestMode="false"
+                class="com.codescene.jetbrains.listeners.MyFileOpenListener"
+                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"
+        />
+    </projectListeners>
 </idea-plugin>

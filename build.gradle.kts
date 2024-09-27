@@ -3,7 +3,7 @@ import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
-    id("java") // Java support
+    id("dev.clojurephant.clojure") version "0.8.0-beta.7"
     alias(libs.plugins.kotlin) // Kotlin support
     alias(libs.plugins.intelliJPlatform) // IntelliJ Platform Gradle Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
@@ -23,6 +23,7 @@ kotlin {
 
 // Configure project's dependencies
 repositories {
+    mavenLocal()
     mavenCentral()
 
     maven {
@@ -33,6 +34,11 @@ repositories {
         }
     }
 
+    maven {
+        name = "Clojars"
+        url = uri("https://repo.clojars.org")
+    }
+
     // IntelliJ Platform Gradle Plugin Repositories Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-repositories-extension.html
     intellijPlatform {
         defaultRepositories()
@@ -41,10 +47,11 @@ repositories {
 
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
-    testImplementation(libs.junit)
-
-    implementation("org.clojure:clojure:$clojureVersion")
+    implementation("org.clojure:clojure:1.13.0-master-SNAPSHOT")
+    implementation ("com.github.ericdallo:clj4intellij:0.5.2")
     implementation("codescene.devtools.ide:api:$codeSceneDevToolsVersion")
+
+    testImplementation(libs.junit)
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
@@ -160,6 +167,18 @@ intellijPlatformTesting {
 
 tasks {
     runIde {
-        classpath += sourceSets.main.get().runtimeClasspath
+        classpath += sourceSets["main"].runtimeClasspath
     }
+
+    register<JavaExec>("run") {
+        mainClass.set("com.codescene.Main")
+        classpath += sourceSets["main"].runtimeClasspath
+    }
+}
+
+clojure.builds.named("main") {
+    classpath.from(sourceSets.main.get().runtimeClasspath.asPath)
+    checkAll()
+    aotAll()
+    reflection.set("fail")
 }
