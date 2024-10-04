@@ -181,7 +181,7 @@ jobs:
           path: ${{ github.workspace }}/build/reports/pluginVerifier
 
   # Check dependencies for vulnerabilities
-  dependencyCheck:
+  dependency-check:
     name: Dependency check
     needs: [ build ]
     runs-on: ubuntu-20.04-8core
@@ -239,7 +239,7 @@ jobs:
   releaseDraft:
     name: Release draft
     if: github.event_name != 'pull_request'
-    needs: [ build, test, verify, dependencyCheck ]
+    needs: [ build, test, verify, dependency-check, delta-analysis ]
     runs-on: ubuntu-20.04-8core
     permissions:
       contents: write
