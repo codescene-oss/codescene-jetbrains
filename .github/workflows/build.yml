@@ -184,7 +184,7 @@ jobs:
   dependencyCheck:
     name: Dependency check
     needs: [ build ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04-8core
     steps:
 
       # Check out the current repository
@@ -210,7 +210,9 @@ jobs:
           path: ${{github.workspace}}/reports/dependency-check-report.html
 
   delta-analysis:
-    runs-on: ubuntu-latest
+    name: CodeScene delta analysis
+    needs: [ build ]
+    runs-on: ubuntu-20.04-8core
     steps:
       - name: Fetch Sources
         uses: actions/checkout@v4
