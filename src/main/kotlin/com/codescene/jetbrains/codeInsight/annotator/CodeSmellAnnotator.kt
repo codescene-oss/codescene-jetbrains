@@ -84,17 +84,12 @@ class CodeSmellAnnotator : ExternalAnnotator<
         }
     }
 
-    override fun collectInformation(@NotNull file: PsiFile): AnnotationContext {
-        return AnnotationContext()
-    }
+    override fun collectInformation(@NotNull file: PsiFile): AnnotationContext = AnnotationContext()
 
-    override fun doAnnotate(collectedInfo: AnnotationContext): AnnotationContext {
-        return collectedInfo
-    }
+    override fun doAnnotate(collectedInfo: AnnotationContext): AnnotationContext = collectedInfo
 
-    private fun formatCategoryDetails(category: String, details: String): String {
-        return if (details.isNotEmpty()) "$category ($details)" else category
-    }
+    private fun formatCodeSmellMessage(category: String, details: String): String =
+        if (details.isNotEmpty()) "$category ($details)" else category
 
     private fun annotateCodeSmells(
         codeSmells: List<CodeSmell>,
@@ -120,7 +115,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
         validTextRange: TextRange,
         annotationHolder: AnnotationHolder
     ) {
-        val message = formatCategoryDetails(codeSmell.category, codeSmell.details)
+        val message = formatCodeSmellMessage(codeSmell.category, codeSmell.details)
 
         return annotationHolder
             .newAnnotation(HighlightSeverity.WARNING, message)

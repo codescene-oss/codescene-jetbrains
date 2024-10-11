@@ -8,9 +8,11 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 
 class ShowProblemIntentionAction(private val codeSmell: String) : IntentionAction, PriorityAction {
-    override fun getText(): String = "CodeScene: $codeSmell"
+    private val name = "$CODESCENE: $codeSmell"
 
-    override fun getFamilyName(): String = "$CODESCENE: $codeSmell"
+    override fun getText(): String = name
+
+    override fun getFamilyName(): String = name
 
     override fun isAvailable(project: Project, editor: Editor?, file: PsiFile): Boolean = true
 

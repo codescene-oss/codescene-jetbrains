@@ -30,8 +30,27 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
     override fun computeCodeVision(editor: Editor, uiData: Unit): CodeVisionState {
         val project = editor.project ?: return CodeVisionState.READY_EMPTY
+        val settings = CodeSceneGlobalSettingsStore.getInstance().state
+
+        if (!settings.enableCodeLenses || DumbService.isDumb(project)) {
+            return CodeVisionState.READY_EMPTY
+        }
 
         return recomputeLenses(editor, project)
+    }
+
+    open fun handleCodeSmells(editor: Editor): ArrayList<Pair<TextRange, CodeVisionEntry>> {
+        val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
+
+        getCodeSmellsByCategory().forEach { smell ->
+            val range = getTextRange(smell, editor)
+
+            val entry = getCodeVisionEntry(smell)
+
+            lenses.add(range to entry)
+        }
+
+        return lenses
     }
 
     private fun getTextRange(codeSmell: CodeSmell, editor: Editor): TextRange {
@@ -65,30 +84,8 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
             AllIcons.General.InspectionsWarningEmpty
         )
 
-    open fun handleCodeSmells(editor: Editor): ArrayList<Pair<TextRange, CodeVisionEntry>> {
-        val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
-
-        getCodeSmellsByCategory().forEach { smell ->
-            val range = getTextRange(smell, editor)
-
-            val entry = getCodeVisionEntry(smell)
-
-            lenses.add(range to entry)
-        }
-
-        return lenses
-    }
-
-    private fun recomputeLenses(editor: Editor, project: Project): CodeVisionState {
-        val settings = CodeSceneGlobalSettingsStore.getInstance().state
-
-        if (!settings.enableCodeLenses) {
-            return CodeVisionState.READY_EMPTY
-        }
-
-        if (DumbService.isDumb(project)) return CodeVisionState.READY_EMPTY
-
-        return ReadAction.compute<CodeVisionState, RuntimeException> {
+    private fun recomputeLenses(editor: Editor, project: Project): CodeVisionState =
+        ReadAction.compute<CodeVisionState, RuntimeException> {
             val file = FileDocumentManager.getInstance().getFile(editor.document)?.findPsiFile(project)
                 ?: return@compute CodeVisionState.READY_EMPTY
 
@@ -98,5 +95,4 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
             CodeVisionState.Ready(lenses)
         }
-    }
 }
