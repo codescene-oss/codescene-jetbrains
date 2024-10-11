@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.codeInsight
 
+import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.intellij.codeInsight.codeVision.*
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.icons.AllIcons
@@ -10,8 +11,6 @@ import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.findPsiFile
-import com.intellij.psi.PsiElement
-import org.jetbrains.annotations.Nls
 import java.awt.event.MouseEvent
 
 //TODO: refactor
@@ -21,7 +20,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
     abstract override val id: String
 
-    abstract fun handleClick(editor: Editor, element: CodeSmell, event: MouseEvent?)
+    abstract fun handleClick(editor: Editor, category: String, event: MouseEvent?)
 
     override val defaultAnchor = CodeVisionAnchorKind.Top
 
@@ -34,8 +33,6 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
         return recomputeLenses(editor, project)
     }
-
-    open fun logClickToFUS(element: PsiElement, hint: @Nls String) {}
 
     private fun getTextRange(codeSmell: CodeSmell, editor: Editor): TextRange {
         val start = editor.document.getLineStartOffset(codeSmell.range.startLine) - 1
@@ -60,24 +57,20 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         return fileLevelSmells + functionLevelSmells + expressionLevelSmells
     }
 
-
-    private fun getCodeVisionEntry(codeSmell: CodeSmell): ClickableTextCodeVisionEntry {
-        val message = codeSmell.details.takeIf { it.isNotEmpty() }
-            ?.let { "${codeSmell.category} ($it)" } ?: codeSmell.category
-
-        return ClickableTextCodeVisionEntry(
-            message,
+    private fun getCodeVisionEntry(codeSmell: CodeSmell): ClickableTextCodeVisionEntry =
+        ClickableTextCodeVisionEntry(
+            codeSmell.category,
             id,
-            { event, sourceEditor -> handleClick(sourceEditor, codeSmell, event) },
+            { event, sourceEditor -> handleClick(sourceEditor, codeSmell.category, event) },
             AllIcons.General.InspectionsWarningEmpty
         )
-    }
 
-    private fun handleCodeSmells(editor: Editor): ArrayList<Pair<TextRange, CodeVisionEntry>> {
+    open fun handleCodeSmells(editor: Editor): ArrayList<Pair<TextRange, CodeVisionEntry>> {
         val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
 
         getCodeSmellsByCategory().forEach { smell ->
             val range = getTextRange(smell, editor)
+
             val entry = getCodeVisionEntry(smell)
 
             lenses.add(range to entry)
@@ -87,6 +80,12 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
     }
 
     private fun recomputeLenses(editor: Editor, project: Project): CodeVisionState {
+        val settings = CodeSceneGlobalSettingsStore.getInstance().state
+
+        if (!settings.enableCodeLenses) {
+            return CodeVisionState.READY_EMPTY
+        }
+
         if (DumbService.isDumb(project)) return CodeVisionState.READY_EMPTY
 
         return ReadAction.compute<CodeVisionState, RuntimeException> {
@@ -96,6 +95,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
             if (file.project.isDefault) return@compute CodeVisionState.READY_EMPTY
 
             val lenses = handleCodeSmells(editor)
+
             CodeVisionState.Ready(lenses)
         }
     }
