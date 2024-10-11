@@ -34,6 +34,11 @@
                 icon="/toolWindow/logo-40x40.png"
                 factoryClass="com.codescene.jetbrains.components.toolWindow.CodeSceneToolWindowFactory"/>
 
+        <!-- An empty language attribute applies to all languages -->
+        <externalAnnotator
+                language=""
+                implementationClass="com.codescene.jetbrains.codeInsight.annotator.CodeSmellAnnotator"/>
+
         <!-- The order of code vision providers' declarations determines their display sequence in the IDE.
              Providers listed first appear last. Adjust this order to control the hierarchy of code smell warnings shown.
         -->
