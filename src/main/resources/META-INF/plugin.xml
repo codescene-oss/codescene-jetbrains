@@ -100,11 +100,11 @@
                 implementation="com.codescene.jetbrains.codeInsight.codeVision.CodeHealthCodeVisionProvider"/>
     </extensions>
 
-    <applicationListeners>
-        <listener
-                topic="com.intellij.ide.AppLifecycleListener"
-                class="com.github.ericdallo.clj4intellij.listener.ClojureClassLoaderListener"/>
-    </applicationListeners>
+<!--    <applicationListeners>-->
+<!--        <listener-->
+<!--                topic="com.intellij.ide.AppLifecycleListener"-->
+<!--                class="com.github.ericdallo.clj4intellij.listener.ClojureClassLoaderListener"/>-->
+<!--    </applicationListeners>-->
 
     <projectListeners>
         <listener

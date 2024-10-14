@@ -2,53 +2,6 @@ package com.codescene.jetbrains.codeInsight
 
 //TODO: remove after API integration - just for dev purposes
 
-val codeAnalysisResult1 = CodeAnalysisResult(
-    score = 8.89,
-    fileLevelCodeSmells = listOf(
-        CodeSmell(
-            category = "Bumpy Road Ahead",
-            range = CodeSmellRange(startLine = 1, startColumn = 1, endLine = 1, endColumn = 1),
-            details = "LoC = 94 lines"
-        ),
-        CodeSmell(
-            category = "Large Method",
-            range = CodeSmellRange(startLine = 1, startColumn = 1, endLine = 1, endColumn = 1),
-            details = "LoC = 95 lines"
-        )
-    ),
-    functionLevelCodeSmells = listOf(
-        FunctionCodeSmell(
-            function = "computeTangents",
-            range = CodeSmellRange(startLine = 55, startColumn = 2, endLine = 212, endColumn = 17),
-            codeSmells = listOf(
-                CodeSmell(
-                    category = "Bumpy Road Ahead",
-                    range = CodeSmellRange(startLine = 55, startColumn = 2, endLine = 55, endColumn = 17),
-                    details = "bumps = 2"
-                ),
-                CodeSmell(
-                    category = "Complex Method",
-                    range = CodeSmellRange(startLine = 55, startColumn = 2, endLine = 55, endColumn = 17),
-                    details = "cc = 14"
-                ),
-                CodeSmell(
-                    category = "Large Method",
-                    range = CodeSmellRange(startLine = 55, startColumn = 2, endLine = 55, endColumn = 17),
-                    details = "LoC = 95 lines"
-                )
-            )
-        )
-    ),
-    expressionLevelCodeSmells = listOf(
-        CodeSmell(
-            category = "Bumpy Road Ahead",
-            range = CodeSmellRange(startLine = 63, startColumn = 3, endLine = 65, endColumn = 39),
-            details = "3 complex conditional expressions"
-        )
-    ),
-    rawScore = "..."
-)
-
 val codeAnalysisResult = CodeAnalysisResult(
     score = 8.89,
     fileLevelCodeSmells = listOf(
