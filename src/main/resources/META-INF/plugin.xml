@@ -42,4 +42,10 @@
                 class="com.codescene.jetbrains.listeners.MyApplicationActivationListener"
         />
     </applicationListeners>
+
+    <applicationListeners>
+        <listener
+                topic="com.intellij.ide.AppLifecycleListener"
+                class="com.github.ericdallo.clj4intellij.listener.ClojureClassLoaderListener"/>
+    </applicationListeners>
 </idea-plugin>

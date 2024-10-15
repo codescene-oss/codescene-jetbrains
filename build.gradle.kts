@@ -3,7 +3,7 @@ import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
-    id("java") // Java support
+    id("dev.clojurephant.clojure") version "0.8.0-beta.7"
     alias(libs.plugins.kotlin) // Kotlin support
     alias(libs.plugins.intelliJPlatform) // IntelliJ Platform Gradle Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
@@ -15,6 +15,7 @@ version = providers.gradleProperty("pluginVersion").get()
 val codeSceneDevToolsVersion = providers.gradleProperty("codeSceneDevToolsVersion").get()
 val clojureVersion = providers.gradleProperty("clojureVersion").get()
 val codeSceneRepository = providers.gradleProperty("codeSceneRepository").get()
+val clj4IntelliJVersion = providers.gradleProperty("clj4IntelliJVersion").get()
 
 // Set the JVM language level used to build the project.
 kotlin {
@@ -33,6 +34,11 @@ repositories {
         }
     }
 
+    maven {
+        name = "Clojars"
+        url = uri("https://repo.clojars.org")
+    }
+
     // IntelliJ Platform Gradle Plugin Repositories Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-repositories-extension.html
     intellijPlatform {
         defaultRepositories()
@@ -43,7 +49,8 @@ repositories {
 dependencies {
     testImplementation(libs.junit)
 
-    implementation("org.clojure:clojure:$clojureVersion")
+    implementation(files("libs/clojure-1.13.0-master-SNAPSHOT.jar"))
+    implementation("com.github.ericdallo:clj4intellij:$clj4IntelliJVersion")
     implementation("codescene.devtools.ide:api:$codeSceneDevToolsVersion")
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
@@ -135,6 +142,15 @@ tasks {
     publishPlugin {
         dependsOn(patchChangelog)
     }
+
+    runIde {
+        classpath += sourceSets["main"].runtimeClasspath
+    }
+
+    register<JavaExec>("run") {
+        mainClass.set("com.codescene.Main")
+        classpath += sourceSets["main"].runtimeClasspath
+    }
 }
 
 intellijPlatformTesting {
@@ -158,8 +174,9 @@ intellijPlatformTesting {
     }
 }
 
-tasks {
-    runIde {
-        classpath += sourceSets.main.get().runtimeClasspath
-    }
+clojure.builds.named("main") {
+    classpath.from(sourceSets.main.get().runtimeClasspath.asPath)
+    checkAll()
+    aotAll()
+    reflection.set("fail")
 }
