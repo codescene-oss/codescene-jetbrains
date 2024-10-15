@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.codeInsight
 
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.util.getTextRange
 import com.intellij.codeInsight.codeVision.*
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.icons.AllIcons
@@ -51,13 +52,6 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         }
 
         return lenses
-    }
-
-    private fun getTextRange(codeSmell: CodeSmell, editor: Editor): TextRange {
-        val start = editor.document.getLineStartOffset(codeSmell.range.startLine) - 1
-        val end = editor.document.getLineStartOffset(codeSmell.range.endLine) - 1
-
-        return TextRange(start, end)
     }
 
     private fun List<CodeSmell>.filterByCategory(): List<CodeSmell> {

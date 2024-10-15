@@ -3,6 +3,7 @@ package com.codescene.jetbrains.codeInsight.annotator
 import com.codescene.jetbrains.codeInsight.CodeSmell
 import com.codescene.jetbrains.codeInsight.codeAnalysisResult
 import com.codescene.jetbrains.codeInsight.intentions.ShowProblemIntentionAction
+import com.codescene.jetbrains.util.getTextRange
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.ExternalAnnotator
@@ -13,6 +14,7 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
 import org.jetbrains.annotations.NotNull
 
+//TODO: move somewhere else
 val extToLanguageId = mapOf(
     "js" to "javascript",
     "mjs" to "javascript",
@@ -101,13 +103,6 @@ class CodeSmellAnnotator : ExternalAnnotator<
 
             addAnnotation(codeSmell, validTextRange, holder)
         }
-    }
-
-    private fun getTextRange(codeSmell: CodeSmell, editor: Editor): TextRange {
-        val start = editor.document.getLineStartOffset(codeSmell.range.startLine - 1)
-        val end = editor.document.getLineEndOffset(codeSmell.range.endLine - 1)
-
-        return TextRange(start, end)
     }
 
     private fun addAnnotation(
