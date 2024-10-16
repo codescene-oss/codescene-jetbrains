@@ -29,8 +29,8 @@ repositories {
     maven {
         url = uri(codeSceneRepository)
         credentials {
-            username = providers.environmentVariable("GH_USERNAME").getOrElse("")
-            password = providers.environmentVariable("GH_PACKAGE_TOKEN").getOrElse("")
+            username = providers.environmentVariable("GH_USERNAME").orNull
+            password = providers.environmentVariable("GH_PACKAGE_TOKEN").orNull
         }
     }
 
