@@ -104,6 +104,9 @@ jobs:
   # Run tests and upload a code coverage report
   test:
     name: Test
+    env:
+      GH_USERNAME: ${{ secrets.GH_USERNAME }}
+      GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
     needs: [ build ]
     runs-on: ubuntu-20.04-8core
     steps:
@@ -140,6 +143,9 @@ jobs:
   # Run plugin structure verification along with IntelliJ Plugin Verifier
   verify:
     name: Verify plugin
+    env:
+      GH_USERNAME: ${{ secrets.GH_USERNAME }}
+      GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
     needs: [ build ]
     runs-on: ubuntu-20.04-8core
     steps:
