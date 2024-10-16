@@ -2,7 +2,7 @@ package com.codescene.jetbrains.listeners
 
 import clojure.java.api.Clojure
 import clojure.lang.IFn
-import codescene.devtools.ide.api
+import codescene.devtools.ide.DevToolsAPI
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
@@ -46,7 +46,7 @@ class MyFileOpenListener : FileEditorManagerListener {
                 val relativePath = VfsUtil.getRelativePath(file, project.baseDir)
                 println("Callind CodeScene API from classloader: $classLoader")
                 try {
-                    val data = api.review(relativePath, code)
+                    val data = DevToolsAPI.review(relativePath, code)
                     println("Got response from CodeScene API: $data")
                 } catch (e: Exception) {
                     println(e.message)
