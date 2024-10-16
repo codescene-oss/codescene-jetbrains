@@ -207,7 +207,8 @@ jobs:
             --failOnCVSS 5
 
       # Upload dependency check report
-      - name: Upload Test results
+      - name: Upload dependency check results
+        if: ${{ always() }}
         uses: actions/upload-artifact@master
         with:
           name: Dependency check report
