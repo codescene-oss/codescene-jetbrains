@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.listeners
 
-import codescene.devtools.ide.api
+import codescene.devtools.ide.DevToolsAPI
 import com.intellij.openapi.application.ApplicationActivationListener
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.wm.IdeFrame
@@ -24,7 +24,7 @@ class MyApplicationActivationListener : ApplicationActivationListener {
                 val content = String(inputStream.readAllBytes(), StandardCharsets.UTF_8)
                 thisLogger().warn("content")
 
-                val data = api.review(path, content)
+                val data = DevToolsAPI.review(path, content)
 
                 println("Data: $data")
             }

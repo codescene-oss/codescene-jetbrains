@@ -49,9 +49,9 @@ repositories {
 dependencies {
     testImplementation(libs.junit)
 
-    implementation(files("libs/clojure-1.13.0-master-SNAPSHOT.jar"))
+//    implementation(files("libs/clojure-1.13.0-master-SNAPSHOT.jar"))
     implementation("com.github.ericdallo:clj4intellij:$clj4IntelliJVersion")
-    implementation(files("libs/api-1.0.47580.jar"))
+    implementation(files("libs/api-obf.jar"))
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
