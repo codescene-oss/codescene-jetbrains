@@ -48,7 +48,7 @@ repositories {
 
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
-    implementation("org.clojure:clojure:$clojureVersion")
+//    implementation("org.clojure:clojure:$clojureVersion")
     implementation("com.github.ericdallo:clj4intellij:$clj4IntelliJVersion")
     implementation("codescene.devtools.ide:api:$codeSceneDevToolsVersion")
 
