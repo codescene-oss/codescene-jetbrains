@@ -51,7 +51,7 @@ dependencies {
 
     implementation(files("libs/clojure-1.13.0-master-SNAPSHOT.jar"))
     implementation("com.github.ericdallo:clj4intellij:$clj4IntelliJVersion")
-    implementation("codescene.devtools.ide:api:$codeSceneDevToolsVersion")
+    implementation(files("libs/codescene_old.jar"))
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
