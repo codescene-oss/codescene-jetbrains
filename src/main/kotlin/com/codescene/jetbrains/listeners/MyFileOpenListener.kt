@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.listeners
 
-import codescene.devtools.ide.api
+import codescene.devtools.ide.DevToolsAPI
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
@@ -25,7 +25,7 @@ class MyFileOpenListener : FileEditorManagerListener {
 
             println("Calling CodeScene API...")
             try {
-                val data = api.review(relativePath, code)
+                val data = DevToolsAPI.review(relativePath, code)
 
                 thisLogger().info("Received response from CS API: \n $data")
             } catch (e: Exception) {
