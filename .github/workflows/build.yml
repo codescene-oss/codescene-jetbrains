@@ -28,6 +28,9 @@ jobs:
   # Prepare environment and build the plugin
   build:
     name: Build
+    env:
+      GH_USERNAME: ${{ secrets.GH-USERNAME }}
+      GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
     runs-on: ubuntu-20.04-8core
     outputs:
       version: ${{ steps.properties.outputs.version }}
@@ -72,11 +75,12 @@ jobs:
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
+      - name: Debug Environment Variables
+        run: |
+          echo "GH_USERNAME: $GH_USERNAME"
+
       # Build plugin
       - name: Build plugin
-        env:
-          GH_USERNAME: ${{ secrets.GH-USERNAME }}
-          GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
         run: ./gradlew buildPlugin
 
       # Prepare plugin archive content for creating artifact
