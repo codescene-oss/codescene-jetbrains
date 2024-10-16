@@ -29,6 +29,9 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-20.04-8core
+    env:
+      GH_USERNAME: ${{ secrets.GH_USERNAME }}
+      GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
     outputs:
       version: ${{ steps.properties.outputs.version }}
       changelog: ${{ steps.properties.outputs.changelog }}
