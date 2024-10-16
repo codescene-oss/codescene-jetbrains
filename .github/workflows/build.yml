@@ -74,6 +74,9 @@ jobs:
 
       # Build plugin
       - name: Build plugin
+        env:
+          GH-USERNAME: ${{ secrets.GH-USERNAME }}
+          GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
         run: ./gradlew buildPlugin
 
       # Prepare plugin archive content for creating artifact
