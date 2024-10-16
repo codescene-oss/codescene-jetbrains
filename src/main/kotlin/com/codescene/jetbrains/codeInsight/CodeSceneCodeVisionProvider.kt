@@ -8,7 +8,6 @@ import com.intellij.icons.AllIcons
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.findPsiFile
@@ -33,7 +32,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         val project = editor.project ?: return CodeVisionState.READY_EMPTY
         val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
-        if (!settings.enableCodeLenses || DumbService.isDumb(project)) {
+        if (!settings.enableCodeLenses) {
             return CodeVisionState.READY_EMPTY
         }
 
