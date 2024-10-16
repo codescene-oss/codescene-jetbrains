@@ -200,7 +200,7 @@ jobs:
         uses: dependency-check/Dependency-Check_Action@main
         id: Depcheck
         with:
-          project: 'test_from_template'
+          project: 'codescene-jetbrains'
           path: '.'
           format: 'HTML'
           args: >
