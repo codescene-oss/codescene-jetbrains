@@ -76,10 +76,6 @@ jobs:
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Debug Environment Variables
-        run: |
-          echo "GH_USERNAME: $GH_USERNAME"
-
       # Build plugin
       - name: Build plugin
         run: ./gradlew buildPlugin
