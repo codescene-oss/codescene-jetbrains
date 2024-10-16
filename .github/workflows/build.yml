@@ -102,6 +102,9 @@ jobs:
     name: Test
     needs: [ build ]
     runs-on: ubuntu-20.04-8core
+    env:
+      GH_USERNAME: ${{ secrets.GH_USERNAME }}
+      GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
     steps:
 
       # Check out the current repository
