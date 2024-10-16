@@ -30,7 +30,7 @@ jobs:
     name: Build
     env:
       GH_USERNAME: ${{ secrets.GH_USERNAME }}
-      GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}x
+      GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
     runs-on: ubuntu-20.04-8core
     outputs:
       version: ${{ steps.properties.outputs.version }}
