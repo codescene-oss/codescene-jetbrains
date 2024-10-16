@@ -12,6 +12,11 @@ plugins {
 group = providers.gradleProperty("pluginGroup").get()
 version = providers.gradleProperty("pluginVersion").get()
 
+val codeSceneDevToolsVersion = providers.gradleProperty("codeSceneDevToolsVersion").get()
+val clojureVersion = providers.gradleProperty("clojureVersion").get()
+val clj4IntelliJVersion = providers.gradleProperty("clj4IntelliJVersion").get()
+val codeSceneRepository = providers.gradleProperty("codeSceneRepository").get()
+
 // Set the JVM language level used to build the project.
 kotlin {
     jvmToolchain(17)
@@ -21,6 +26,14 @@ kotlin {
 repositories {
     mavenCentral()
 
+    maven {
+        url = uri(codeSceneRepository)
+        credentials {
+            username = System.getenv("GH_USERNAME")
+            password = System.getenv("GH_PACKAGE_TOKEN")
+        }
+    }
+
     // IntelliJ Platform Gradle Plugin Repositories Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-repositories-extension.html
     intellijPlatform {
         defaultRepositories()
@@ -29,6 +42,7 @@ repositories {
 
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
+    implementation("codescene.devtools.ide:api:$codeSceneDevToolsVersion")
     testImplementation(libs.junit)
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
@@ -119,6 +133,15 @@ tasks {
 
     publishPlugin {
         dependsOn(patchChangelog)
+    }
+
+    runIde {
+        classpath += sourceSets["main"].runtimeClasspath
+    }
+
+    register<JavaExec>("run") {
+        mainClass.set("com.codescene.Main")
+        classpath += sourceSets["main"].runtimeClasspath
     }
 }
 

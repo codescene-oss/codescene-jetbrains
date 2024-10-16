@@ -36,10 +36,16 @@
         />
     </extensions>
 
-    <applicationListeners>
+<!--    <applicationListeners>-->
+<!--        <listener-->
+<!--                topic="com.intellij.openapi.application.ApplicationActivationListener"-->
+<!--                class="com.codescene.jetbrains.listeners.MyApplicationActivationListener"-->
+<!--        />-->
+<!--    </applicationListeners>-->
+    <projectListeners>
         <listener
-                topic="com.intellij.openapi.application.ApplicationActivationListener"
-                class="com.codescene.jetbrains.listeners.MyApplicationActivationListener"
-        />
-    </applicationListeners>
+                activeInTestMode="false"
+                class="com.codescene.jetbrains.listeners.MyFileOpenListener"
+                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+    </projectListeners>
 </idea-plugin>
