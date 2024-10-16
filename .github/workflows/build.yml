@@ -22,15 +22,16 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-  
+
+env:
+  GH_USERNAME: ${{ secrets.GH_USERNAME }}
+  GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
+
 jobs:
 
   # Prepare environment and build the plugin
   build:
     name: Build
-    env:
-      GH_USERNAME: ${{ secrets.GH_USERNAME }}
-      GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
     runs-on: ubuntu-20.04-8core
     outputs:
       version: ${{ steps.properties.outputs.version }}
@@ -104,9 +105,6 @@ jobs:
   # Run tests and upload a code coverage report
   test:
     name: Test
-    env:
-      GH_USERNAME: ${{ secrets.GH_USERNAME }}
-      GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
     needs: [ build ]
     runs-on: ubuntu-20.04-8core
     steps:
@@ -143,9 +141,6 @@ jobs:
   # Run plugin structure verification along with IntelliJ Plugin Verifier
   verify:
     name: Verify plugin
-    env:
-      GH_USERNAME: ${{ secrets.GH_USERNAME }}
-      GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
     needs: [ build ]
     runs-on: ubuntu-20.04-8core
     steps:
