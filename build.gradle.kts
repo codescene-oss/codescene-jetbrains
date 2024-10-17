@@ -3,19 +3,18 @@ import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
-    id("dev.clojurephant.clojure") version "0.8.0-beta.7"
     alias(libs.plugins.kotlin) // Kotlin support
     alias(libs.plugins.intelliJPlatform) // IntelliJ Platform Gradle Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
+    kotlin("plugin.serialization") version "2.0.21"
 }
 
 group = providers.gradleProperty("pluginGroup").get()
 version = providers.gradleProperty("pluginVersion").get()
 
 val codeSceneDevToolsVersion = providers.gradleProperty("codeSceneDevToolsVersion").get()
-val clojureVersion = providers.gradleProperty("clojureVersion").get()
-val clj4IntelliJVersion = providers.gradleProperty("clj4IntelliJVersion").get()
 val codeSceneRepository = providers.gradleProperty("codeSceneRepository").get()
+val kotlinxSerializationVersion = providers.gradleProperty("kotlinxSerializationVersion").get()
 
 // Set the JVM language level used to build the project.
 kotlin {
@@ -30,14 +29,9 @@ repositories {
     maven {
         url = uri(codeSceneRepository)
         credentials {
-            username = System.getenv("GITHUB_USERNAME")
-            password = System.getenv("GITHUB_TOKEN")
+            username = System.getenv("GH_USERNAME")
+            password = System.getenv("GH_PACKAGE_TOKEN")
         }
-    }
-
-    maven {
-        name = "Clojars"
-        url = uri("https://repo.clojars.org")
     }
 
     // IntelliJ Platform Gradle Plugin Repositories Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-repositories-extension.html
@@ -48,8 +42,7 @@ repositories {
 
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
-    implementation("org.clojure:clojure:$clojureVersion")
-    implementation("com.github.ericdallo:clj4intellij:$clj4IntelliJVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
     implementation("codescene.devtools.ide:api:$codeSceneDevToolsVersion")
 
     testImplementation(libs.junit)
@@ -174,11 +167,4 @@ intellijPlatformTesting {
             }
         }
     }
-}
-
-clojure.builds.named("main") {
-    classpath.from(sourceSets.main.get().runtimeClasspath.asPath)
-    checkAll()
-    aotAll()
-    reflection.set("fail")
 }

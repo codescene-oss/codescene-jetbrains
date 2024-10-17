@@ -8,6 +8,7 @@ import com.intellij.icons.AllIcons
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
@@ -32,6 +33,9 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
     override fun computeCodeVision(editor: Editor, uiData: Unit): CodeVisionState {
         val project = editor.project ?: return CodeVisionState.READY_EMPTY
         val settings = CodeSceneGlobalSettingsStore.getInstance().state
+
+        //TODO: Remove
+        if (FileEditorManager.getInstance(project).selectedTextEditor?.virtualFile?.name != "example.js") return CodeVisionState.READY_EMPTY
 
         if (!settings.enableCodeLenses || DumbService.isDumb(project)) {
             return CodeVisionState.READY_EMPTY
