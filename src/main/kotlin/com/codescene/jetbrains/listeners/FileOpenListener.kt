@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 class FileOpenListener : FileEditorManagerListener {
     override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
         if (file.isValid) {
-            CoroutineScope(Dispatchers.Default).launch {
+            CoroutineScope(Dispatchers.IO).launch {
                 CodeSceneService.getInstance(source.project).reviewCode(file)
             }
         }

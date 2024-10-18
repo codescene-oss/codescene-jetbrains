@@ -1,5 +1,7 @@
-package com.codescene.jetbrains.codeInsight
+package com.codescene.jetbrains.codeInsight.codeVision
 
+import com.codescene.jetbrains.codeInsight.CodeSmell
+import com.codescene.jetbrains.codeInsight.codeAnalysisResult
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.util.getTextRange
 import com.intellij.codeInsight.codeVision.*

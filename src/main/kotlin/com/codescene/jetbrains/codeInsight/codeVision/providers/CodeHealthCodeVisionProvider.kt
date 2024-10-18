@@ -1,7 +1,7 @@
-package com.codescene.jetbrains.codeInsight.codeVision
+package com.codescene.jetbrains.codeInsight.codeVision.providers
 
-import com.codescene.jetbrains.codeInsight.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.codeInsight.codeAnalysisResult
+import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.icons.AllIcons
