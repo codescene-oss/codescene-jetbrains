@@ -103,7 +103,7 @@
     <projectListeners>
         <listener
                 activeInTestMode="false"
-                class="com.codescene.jetbrains.listeners.MyFileOpenListener"
+                class="com.codescene.jetbrains.listeners.FileOpenListener"
                 topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
     </projectListeners>
 </idea-plugin>
