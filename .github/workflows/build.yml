@@ -22,6 +22,10 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+
+env:
+  GH_USERNAME: ${{ secrets.GH_USERNAME }}
+  GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
   
 jobs:
 
@@ -196,7 +200,7 @@ jobs:
         uses: dependency-check/Dependency-Check_Action@main
         id: Depcheck
         with:
-          project: 'test_from_template'
+          project: 'codescene-jetbrains'
           path: '.'
           format: 'HTML'
           args: >
@@ -204,6 +208,7 @@ jobs:
 
       # Upload dependency check report
       - name: Upload Test results
+        if: ${{ always() }}
         uses: actions/upload-artifact@master
         with:
           name: Dependency check report
