@@ -22,8 +22,6 @@
     </actions>
 
     <extensions defaultExtensionNs="com.intellij">
-        <postStartupActivity implementation="com.codescene.jetbrains.listeners.DocumentChangeListenerStartupActivity"/>
-
         <applicationService serviceImplementation="com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore"/>
 
         <applicationConfigurable
@@ -37,9 +35,9 @@
                 factoryClass="com.codescene.jetbrains.components.toolWindow.CodeSceneToolWindowFactory"/>
 
         <!-- An empty language attribute applies to all languages -->
-<!--        <externalAnnotator-->
-<!--                language=""-->
-<!--                implementationClass="com.codescene.jetbrains.codeInsight.annotator.CodeSmellAnnotator"/>-->
+        <externalAnnotator
+                language=""
+                implementationClass="com.codescene.jetbrains.codeInsight.annotator.CodeSmellAnnotator"/>
 
         <!-- The order of code vision providers' declarations determines their display sequence in the IDE.
              Providers listed first appear last. Adjust this order to control the hierarchy of code smell warnings shown.
@@ -101,11 +99,4 @@
         <codeInsight.codeVisionProvider
                 implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.CodeHealthCodeVisionProvider"/>
     </extensions>
-
-    <projectListeners>
-        <listener
-                activeInTestMode="false"
-                class="com.codescene.jetbrains.listeners.FileOpenListener"
-                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
-    </projectListeners>
 </idea-plugin>

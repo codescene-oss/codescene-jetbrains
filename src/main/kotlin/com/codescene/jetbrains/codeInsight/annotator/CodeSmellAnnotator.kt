@@ -1,8 +1,8 @@
 package com.codescene.jetbrains.codeInsight.annotator
 
-import com.codescene.jetbrains.codeInsight.CodeSmell
-import com.codescene.jetbrains.codeInsight.codeAnalysisResult
 import com.codescene.jetbrains.codeInsight.intentions.ShowProblemIntentionAction
+import com.codescene.jetbrains.data.CodeSmell
+import com.codescene.jetbrains.services.CodeSceneService
 import com.codescene.jetbrains.util.getTextRange
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.lang.annotation.AnnotationHolder
@@ -12,6 +12,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.annotations.NotNull
 
 //TODO: move somewhere else
@@ -76,13 +77,19 @@ class CodeSmellAnnotator : ExternalAnnotator<
         if (extToLanguageId.containsKey(fileExtension)) {
             val editor = FileEditorManager.getInstance(psiFile.project).selectedTextEditor ?: return
 
-            annotateCodeSmells(codeAnalysisResult.fileLevelCodeSmells, editor, holder)
-
-            codeAnalysisResult.functionLevelCodeSmells.forEach { functionSmell ->
-                annotateCodeSmells(functionSmell.codeSmells, editor, holder)
+            val result = runBlocking { //TODO: Explore non-blocking options
+                CodeSceneService.getInstance(psiFile.project).reviewCode(editor)
             }
 
-            annotateCodeSmells(codeAnalysisResult.expressionLevelCodeSmells, editor, holder)
+            if (result != null) {
+                annotateCodeSmells(result.fileLevelCodeSmells, editor, holder)
+
+                result.functionLevelCodeSmells.forEach { functionSmell ->
+                    annotateCodeSmells(functionSmell.codeSmells, editor, holder)
+                }
+
+                annotateCodeSmells(result.expressionLevelCodeSmells, editor, holder)
+            }
         }
     }
 

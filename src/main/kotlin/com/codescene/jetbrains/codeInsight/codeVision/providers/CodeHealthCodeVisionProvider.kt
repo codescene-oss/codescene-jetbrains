@@ -1,7 +1,7 @@
 package com.codescene.jetbrains.codeInsight.codeVision.providers
 
-import com.codescene.jetbrains.codeInsight.codeAnalysisResult
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
+import com.codescene.jetbrains.data.ApiResponse
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.icons.AllIcons
@@ -14,8 +14,8 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override val id = "codeVision.codescene.codeHealth"
     override val name = "com.codescene.codeVision.codeHealth"
 
-    private fun getCodeVisionEntry(): ClickableTextCodeVisionEntry {
-        val text = "Code health score: ${codeAnalysisResult.score}/10"
+    private fun getCodeVisionEntry(result: ApiResponse?): ClickableTextCodeVisionEntry {
+        val text = "Code health score: ${result?.score}/10"
 
         return ClickableTextCodeVisionEntry(
             text,
@@ -25,11 +25,11 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
         )
     }
 
-    override fun handleCodeSmells(editor: Editor): ArrayList<Pair<TextRange, CodeVisionEntry>> {
+    override fun getLenses(editor: Editor, result: ApiResponse?): ArrayList<Pair<TextRange, CodeVisionEntry>> {
         val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
 
         val range = TextRange(0, 0)
-        val entry = getCodeVisionEntry()
+        val entry = getCodeVisionEntry(result)
 
         lenses.add(range to entry)
 
