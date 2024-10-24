@@ -21,7 +21,10 @@ class ReviewCacheService {
         val hash = DigestUtils.sha256Hex(content)
         val path = editor.virtualFile.path
 
-        return if (cache.containsKey(path) && cache[path]?.first == hash) cache[path]?.second else null
+        val apiResponse = cache[path]?.second
+        val cacheHit = cache.containsKey(path) && cache[path]?.first == hash
+
+        return if (cacheHit) apiResponse else null
     }
 
     fun cacheResponse(filePath: String, code: String, response: ApiResponse) {
