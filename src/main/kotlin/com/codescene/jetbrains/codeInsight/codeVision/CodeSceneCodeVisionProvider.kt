@@ -10,15 +10,43 @@ import com.intellij.codeInsight.codeVision.*
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import org.reflections.Reflections
 import java.awt.event.MouseEvent
 
 @Suppress("UnstableApiUsage")
 abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
+    companion object {
+        val apiCallMutex = Mutex()
+        var isApiCallInProgress: Boolean = false
+        private var providers: List<String> = emptyList()
+
+        fun getProviders(): List<String> {
+            if (providers.isEmpty()) {
+                val reflections = Reflections("${this::class.java.packageName}.providers")
+                val providerClasses = reflections.getSubTypesOf(CodeSceneCodeVisionProvider::class.java)
+
+                providers = providerClasses.map { it.simpleName }
+            }
+
+            return providers
+        }
+    }
+
+    private val settings = CodeSceneGlobalSettingsStore.getInstance().state
+
     abstract val categoryToFilter: String
 
-    abstract override val id: String
+    override val id: String = this::class.simpleName!!
+
+    override val name:String = "${this::class.java.packageName}.providers.${this::class.simpleName}"
+
     abstract fun handleClick(editor: Editor, category: String, event: MouseEvent?)
 
     override val defaultAnchor = CodeVisionAnchorKind.Top
@@ -36,22 +64,30 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
             return CodeVisionState.READY_EMPTY
         }
 
-        return recomputeLenses(editor)
+        return recomputeCodeVision(editor)
     }
 
-    private fun recomputeLenses(editor: Editor): CodeVisionState {
-        val cacheService = ReviewCacheService.getInstance(editor.project!!)
+    override fun isAvailableFor(project: Project): Boolean = settings.enableCodeLenses
+
+    private fun triggerCodeReview(editor: Editor, project: Project) = CoroutineScope(Dispatchers.IO).launch {
+        apiCallMutex.withLock {
+            if (!isApiCallInProgress) {
+                isApiCallInProgress = true
+
+                CodeSceneService.getInstance(project).reviewCode(editor)
+            }
+        }
+    }
+
+    private fun recomputeCodeVision(editor: Editor): CodeVisionState {
+        val project = editor.project!!
+        val cacheService = ReviewCacheService.getInstance(project)
         val cachedResponse = cacheService.getCachedResponse(editor)
 
         if (cachedResponse == null) {
-            //TODO: Explore non-blocking options
-            val review = runBlocking {
-                CodeSceneService.getInstance(editor.project!!).reviewCode(editor)
-            }
+            triggerCodeReview(editor, project)
 
-            val lenses = getLenses(editor, review)
-
-            return CodeVisionState.Ready(lenses)
+            return CodeVisionState.READY_EMPTY
         }
 
         val lenses = getLenses(editor, cachedResponse)

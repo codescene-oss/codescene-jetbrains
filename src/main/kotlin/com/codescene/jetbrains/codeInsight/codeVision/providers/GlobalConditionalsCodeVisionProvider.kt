@@ -6,8 +6,6 @@ import java.awt.event.MouseEvent
 
 class GlobalConditionalsCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override val categoryToFilter = "Global Conditionals"
-    override val id = "codeVision.codescene.globalConditionals"
-    override val name = "com.codescene.codeVision.globalConditionals"
 
     override fun handleClick(editor: Editor, category: String, event: MouseEvent?) {
         //TODO

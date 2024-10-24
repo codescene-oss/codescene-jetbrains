@@ -6,8 +6,6 @@ import java.awt.event.MouseEvent
 
 class LowCohesionCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override val categoryToFilter = "Low Cohesion"
-    override val id = "codeVision.codescene.lowCohesion"
-    override val name = "com.codescene.codeVision.lowCohesion"
 
     override fun handleClick(editor: Editor, category: String, event: MouseEvent?) {
         //TODO

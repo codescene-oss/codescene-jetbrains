@@ -6,8 +6,6 @@ import java.awt.event.MouseEvent
 
 class ConstructorOverInjectionCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override val categoryToFilter = "Constructor Over Injection"
-    override val id = "codeVision.codescene.constructorOverInjection"
-    override val name = "com.codescene.codeVision.constructorOverInjection"
 
     override fun handleClick(editor: Editor, category: String, event: MouseEvent?) {
         //TODO

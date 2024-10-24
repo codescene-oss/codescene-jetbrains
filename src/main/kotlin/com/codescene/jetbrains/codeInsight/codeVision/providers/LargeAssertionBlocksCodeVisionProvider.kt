@@ -6,8 +6,6 @@ import java.awt.event.MouseEvent
 
 class LargeAssertionBlocksCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override val categoryToFilter = "Large Assertion Blocks"
-    override val id = "codeVision.codescene.largeAssertionBlocks"
-    override val name = "com.codescene.codeVision.largeAssertionBlocks"
 
     override fun handleClick(editor: Editor, category: String, event: MouseEvent?) {
         //TODO

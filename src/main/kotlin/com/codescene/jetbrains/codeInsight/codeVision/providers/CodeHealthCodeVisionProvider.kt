@@ -11,8 +11,6 @@ import java.awt.event.MouseEvent
 
 class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override val categoryToFilter = ""
-    override val id = "codeVision.codescene.codeHealth"
-    override val name = "com.codescene.codeVision.codeHealth"
 
     private fun getCodeVisionEntry(result: ApiResponse?): ClickableTextCodeVisionEntry {
         val text = "Code health score: ${result?.score}/10"
@@ -28,10 +26,12 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override fun getLenses(editor: Editor, result: ApiResponse?): ArrayList<Pair<TextRange, CodeVisionEntry>> {
         val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
 
-        val range = TextRange(0, 0)
-        val entry = getCodeVisionEntry(result)
+        if (result != null) {
+            val range = TextRange(0, 0)
+            val entry = getCodeVisionEntry(result)
 
-        lenses.add(range to entry)
+            lenses.add(range to entry)
+        }
 
         return lenses
     }

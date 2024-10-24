@@ -2,7 +2,7 @@ package com.codescene.jetbrains.codeInsight.annotator
 
 import com.codescene.jetbrains.codeInsight.intentions.ShowProblemIntentionAction
 import com.codescene.jetbrains.data.CodeSmell
-import com.codescene.jetbrains.services.CodeSceneService
+import com.codescene.jetbrains.services.ReviewCacheService
 import com.codescene.jetbrains.util.getTextRange
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.lang.annotation.AnnotationHolder
@@ -12,7 +12,6 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.annotations.NotNull
 
 //TODO: move somewhere else
@@ -72,23 +71,23 @@ class CodeSmellAnnotator : ExternalAnnotator<
         annotationResult: AnnotationContext,
         @NotNull holder: AnnotationHolder
     ) {
+        println("apply!")
+
         val fileExtension = psiFile.virtualFile.extension ?: return
 
         if (extToLanguageId.containsKey(fileExtension)) {
             val editor = FileEditorManager.getInstance(psiFile.project).selectedTextEditor ?: return
 
-            val result = runBlocking { //TODO: Explore non-blocking options
-                CodeSceneService.getInstance(psiFile.project).reviewCode(editor)
-            }
+            val cache = ReviewCacheService.getInstance(editor.project!!).getCachedResponse(editor)
 
-            if (result != null) {
-                annotateCodeSmells(result.fileLevelCodeSmells, editor, holder)
+            if (cache != null) {
+                annotateCodeSmells(cache.fileLevelCodeSmells, editor, holder)
 
-                result.functionLevelCodeSmells.forEach { functionSmell ->
+                cache.functionLevelCodeSmells.forEach { functionSmell ->
                     annotateCodeSmells(functionSmell.codeSmells, editor, holder)
                 }
 
-                annotateCodeSmells(result.expressionLevelCodeSmells, editor, holder)
+                annotateCodeSmells(cache.expressionLevelCodeSmells, editor, holder)
             }
         }
     }

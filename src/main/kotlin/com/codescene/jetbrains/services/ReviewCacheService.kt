@@ -21,8 +21,6 @@ class ReviewCacheService {
         val hash = DigestUtils.sha256Hex(content)
         val path = editor.virtualFile.path
 
-        println("Getting cache")
-
         return if (cache.containsKey(path) && cache[path]?.first == hash) cache[path]?.second else null
     }
 
@@ -30,8 +28,5 @@ class ReviewCacheService {
         val contentHash = DigestUtils.sha256Hex(code)
 
         cache[filePath] = Pair(contentHash, response)
-
-        println("Updating cache")
-
     }
 }

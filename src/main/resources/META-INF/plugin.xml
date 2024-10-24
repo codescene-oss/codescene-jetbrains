@@ -63,7 +63,7 @@
         <codeInsight.codeVisionProvider
                 implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.GlobalNestedComplexityCodeVisionProvider"/>
         <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.DuplicatedAssertionBlocks"/>
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.DuplicatedAssertionBlocksCodeVisionProvider"/>
         <codeInsight.codeVisionProvider
                 implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.FileSizeIssueCodeVisionProvider"/>
         <codeInsight.codeVisionProvider

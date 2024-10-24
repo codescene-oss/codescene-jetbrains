@@ -15,6 +15,7 @@ version = providers.gradleProperty("pluginVersion").get()
 val codeSceneDevToolsVersion = providers.gradleProperty("codeSceneDevToolsVersion").get()
 val codeSceneRepository = providers.gradleProperty("codeSceneRepository").get()
 val kotlinxSerializationVersion = providers.gradleProperty("kotlinxSerializationVersion").get()
+val reflectionsVersion = providers.gradleProperty("reflectionsVersion").get()
 
 // Set the JVM language level used to build the project.
 kotlin {
@@ -42,6 +43,7 @@ repositories {
 
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
+    implementation("org.reflections:reflections:$reflectionsVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
     implementation("codescene.devtools.ide:api:$codeSceneDevToolsVersion")
 
