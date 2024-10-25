@@ -9,6 +9,7 @@ import com.codescene.jetbrains.util.getTextRange
 import com.intellij.codeInsight.codeVision.*
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
@@ -74,6 +75,8 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
     private fun recomputeCodeVision(editor: Editor): CodeVisionState {
         val project = editor.project!!
+        val document = editor.document
+
         val cacheService = ReviewCacheService.getInstance(project)
         val cachedResponse = cacheService.getCachedResponse(editor)
 
@@ -83,19 +86,19 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
             return CodeVisionState.READY_EMPTY
         }
 
-        val lenses = getLenses(editor, cachedResponse)
+        val lenses = getLenses(document, cachedResponse)
 
         return CodeVisionState.Ready(lenses)
     }
 
     open fun getLenses(
-        editor: Editor,
+        document: Document,
         result: ApiResponse?
     ): ArrayList<Pair<TextRange, CodeVisionEntry>> {
         val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
 
         getCodeSmellsByCategory(result).forEach { smell ->
-            val range = getTextRange(smell, editor)
+            val range = getTextRange(smell, document)
 
             val entry = getCodeVisionEntry(smell)
 

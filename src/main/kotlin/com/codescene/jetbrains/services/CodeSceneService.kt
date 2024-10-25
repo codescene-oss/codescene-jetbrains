@@ -5,11 +5,14 @@ import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvide
 import com.codescene.jetbrains.data.ApiResponse
 import com.intellij.codeInsight.codeVision.CodeVisionHost
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.psi.PsiFile
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
 import java.util.concurrent.TimeUnit
@@ -54,11 +57,14 @@ class CodeSceneService(project: Project) {
 
             val parsedData = Json.decodeFromString<ApiResponse>(result)
 
-            cacheService.cacheResponse(path, code, parsedData)
+            val entry = CacheEntry(fileContents = code, filePath = path, response = parsedData)
+            cacheService.cacheResponse(entry)
         }
     }
 
     private suspend fun refreshUI(editor: Editor, project: Project) = withContext(Dispatchers.Main) {
+        val psiFile = ReadAction.compute<PsiFile, RuntimeException> { editor.virtualFile.findPsiFile(project) }
+
         val host = project.service<CodeVisionHost>()
         val invalidateSignal = CodeVisionHost.LensInvalidateSignal(
             editor,
@@ -68,9 +74,10 @@ class CodeSceneService(project: Project) {
         println("Refreshing code lens...")
 
         host.invalidateProvider(invalidateSignal)
-        DaemonCodeAnalyzer.getInstance(project).restart()
 
-        println("Refreshing external annotations...")
+        DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
+
+        println("Refreshing external annotations for ${psiFile.name}...")
 
         CodeSceneCodeVisionProvider.isApiCallInProgress = false
     }

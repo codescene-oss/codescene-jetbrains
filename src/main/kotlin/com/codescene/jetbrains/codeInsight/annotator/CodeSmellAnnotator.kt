@@ -2,91 +2,57 @@ package com.codescene.jetbrains.codeInsight.annotator
 
 import com.codescene.jetbrains.codeInsight.intentions.ShowProblemIntentionAction
 import com.codescene.jetbrains.data.CodeSmell
+import com.codescene.jetbrains.services.CacheQuery
 import com.codescene.jetbrains.services.ReviewCacheService
 import com.codescene.jetbrains.util.formatCodeSmellMessage
 import com.codescene.jetbrains.util.getTextRange
+import com.codescene.jetbrains.util.isFileSupported
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.ExternalAnnotator
 import com.intellij.lang.annotation.HighlightSeverity
-import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.editor.Document
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
 import org.jetbrains.annotations.NotNull
 
-//TODO: move somewhere else
-val extToLanguageId = mapOf(
-    "js" to "javascript",
-    "mjs" to "javascript",
-    "sj" to "javascript",
-    "jsx" to "javascriptreact",
-    "ts" to "typescript",
-    "tsx" to "typescriptreact",
-    "brs" to "brightscript",
-    "bs" to "brighterscript",
-    "cls" to "apex",
-    "tgr" to "apex",
-    "trigger" to "apex",
-    "c" to "c",
-    "clj" to "clojure",
-    "cljc" to "clojure",
-    "cljs" to "clojure",
-    "cc" to "cpp",
-    "cpp" to "cpp",
-    "cxx" to "cpp",
-    "h" to "cpp",
-    "hh" to "cpp",
-    "hpp" to "cpp",
-    "hxx" to "cpp",
-    "ipp" to "cpp",
-    "m" to "objective-c",
-    "mm" to listOf("objective-c", "objective-cpp"),
-    "cs" to "csharp",
-    "erl" to "erlang",
-    "go" to "go",
-    "groovy" to "groovy",
-    "java" to "java",
-    "kt" to "kotlin",
-    "php" to "php",
-    "pm" to listOf("perl", "perl6"),
-    "pl" to listOf("perl", "perl6"),
-    "ps1" to "powershell",
-    "psd1" to "powershell",
-    "psm1" to "powershell",
-    "py" to "python",
-    "rb" to "ruby",
-    "rs" to "rust",
-    "swift" to "swift",
-    "vb" to "vb",
-    "vue" to "vue",
-    "dart" to "dart",
-    "scala" to "scala"
-)
-
 class CodeSmellAnnotator : ExternalAnnotator<
         CodeSmellAnnotator.AnnotationContext, CodeSmellAnnotator.AnnotationContext
         >() {
+    //TODO: refactor
     override fun apply(
         @NotNull psiFile: PsiFile,
         annotationResult: AnnotationContext,
         @NotNull holder: AnnotationHolder
     ) {
-        val fileExtension = psiFile.virtualFile.extension ?: return
+        val project = psiFile.project
+        val fileName = psiFile.name
+        val extension = psiFile.virtualFile.extension ?: return
 
-        if (extToLanguageId.containsKey(fileExtension)) {
-            val editor = FileEditorManager.getInstance(psiFile.project).selectedTextEditor ?: return
+        println("Triggering apply for $fileName")
 
-            val cache = ReviewCacheService.getInstance(editor.project!!).getCachedResponse(editor)
+        if (isFileSupported(extension)) {
+            val document = FileDocumentManager.getInstance().getDocument(psiFile.virtualFile)
 
-            if (cache != null) {
-                annotateCodeSmells(cache.fileLevelCodeSmells, editor, holder)
+            if (document != null) {
+                println("Found document for $fileName")
 
-                cache.functionLevelCodeSmells.forEach { functionSmell ->
-                    annotateCodeSmells(functionSmell.codeSmells, editor, holder)
+                val query = CacheQuery(document.text, psiFile.virtualFile.path)
+                val cache =
+                    ReviewCacheService.getInstance(project).getCachedResponse(query)
+
+                if (cache != null) {
+                    annotateCodeSmells(cache.fileLevelCodeSmells, document, holder)
+
+                    cache.functionLevelCodeSmells.forEach { functionSmell ->
+                        annotateCodeSmells(functionSmell.codeSmells, document, holder)
+                    }
+
+                    annotateCodeSmells(cache.expressionLevelCodeSmells, document, holder)
+
+                    println("Annotated file $fileName successfully")
                 }
-
-                annotateCodeSmells(cache.expressionLevelCodeSmells, editor, holder)
             }
         }
     }
@@ -97,17 +63,17 @@ class CodeSmellAnnotator : ExternalAnnotator<
 
     private fun annotateCodeSmells(
         codeSmells: List<CodeSmell>,
-        editor: Editor,
+        document: Document,
         holder: AnnotationHolder
     ) {
         codeSmells.forEach { codeSmell ->
-            val validTextRange = getTextRange(codeSmell, editor)
+            val validTextRange = getTextRange(codeSmell, document)
 
-            addAnnotation(codeSmell, validTextRange, holder)
+            getAnnotation(codeSmell, validTextRange, holder)
         }
     }
 
-    private fun addAnnotation(
+    private fun getAnnotation(
         codeSmell: CodeSmell,
         validTextRange: TextRange,
         annotationHolder: AnnotationHolder
