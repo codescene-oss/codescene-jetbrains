@@ -10,3 +10,6 @@ fun getTextRange(codeSmell: CodeSmell, editor: Editor): TextRange {
 
     return TextRange(start, end)
 }
+
+fun formatCodeSmellMessage(category: String, details: String): String =
+    if (details.isNotEmpty()) "$category ($details)" else category

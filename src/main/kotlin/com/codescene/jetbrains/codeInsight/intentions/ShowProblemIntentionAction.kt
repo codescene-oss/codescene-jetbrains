@@ -17,7 +17,7 @@ class ShowProblemIntentionAction(private val codeSmell: String) : IntentionActio
     override fun isAvailable(project: Project, editor: Editor?, file: PsiFile): Boolean = true
 
     override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {
-        println("Showing problem details: $codeSmell")
+        //TODO: Open code smell details tab
     }
 
     override fun startInWriteAction(): Boolean = false

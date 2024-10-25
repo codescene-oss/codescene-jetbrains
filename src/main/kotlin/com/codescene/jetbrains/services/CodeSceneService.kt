@@ -11,7 +11,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.*
-import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
 import java.util.concurrent.TimeUnit
 
@@ -73,9 +72,7 @@ class CodeSceneService(project: Project) {
 
         println("Refreshing external annotations...")
 
-        CodeSceneCodeVisionProvider.apiCallMutex.withLock {
-            CodeSceneCodeVisionProvider.isApiCallInProgress = false
-        }
+        CodeSceneCodeVisionProvider.isApiCallInProgress = false
     }
 
     private fun <T> runWithClassLoaderChange(action: () -> T) {

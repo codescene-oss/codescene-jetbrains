@@ -12,18 +12,13 @@ import com.intellij.icons.AllIcons
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import org.reflections.Reflections
 import java.awt.event.MouseEvent
 
 @Suppress("UnstableApiUsage")
 abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
     companion object {
-        val apiCallMutex = Mutex()
+        @Volatile
         var isApiCallInProgress: Boolean = false
         private var providers: List<String> = emptyList()
 
@@ -45,7 +40,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
     override val id: String = this::class.simpleName!!
 
-    override val name:String = "${this::class.java.packageName}.providers.${this::class.simpleName}"
+    override val name: String = "${this::class.java.packageName}.providers.${this::class.simpleName}"
 
     abstract fun handleClick(editor: Editor, category: String, event: MouseEvent?)
 
@@ -69,13 +64,11 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
     override fun isAvailableFor(project: Project): Boolean = settings.enableCodeLenses
 
-    private fun triggerCodeReview(editor: Editor, project: Project) = CoroutineScope(Dispatchers.IO).launch {
-        apiCallMutex.withLock {
-            if (!isApiCallInProgress) {
-                isApiCallInProgress = true
+    private fun triggerCodeReview(editor: Editor, project: Project) {
+        if (!isApiCallInProgress) {
+            isApiCallInProgress = true
 
-                CodeSceneService.getInstance(project).reviewCode(editor)
-            }
+            CodeSceneService.getInstance(project).reviewCode(editor)
         }
     }
 

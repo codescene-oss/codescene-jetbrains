@@ -3,6 +3,7 @@ package com.codescene.jetbrains.codeInsight.annotator
 import com.codescene.jetbrains.codeInsight.intentions.ShowProblemIntentionAction
 import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.services.ReviewCacheService
+import com.codescene.jetbrains.util.formatCodeSmellMessage
 import com.codescene.jetbrains.util.getTextRange
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.lang.annotation.AnnotationHolder
@@ -71,8 +72,6 @@ class CodeSmellAnnotator : ExternalAnnotator<
         annotationResult: AnnotationContext,
         @NotNull holder: AnnotationHolder
     ) {
-        println("apply!")
-
         val fileExtension = psiFile.virtualFile.extension ?: return
 
         if (extToLanguageId.containsKey(fileExtension)) {
@@ -95,9 +94,6 @@ class CodeSmellAnnotator : ExternalAnnotator<
     override fun collectInformation(@NotNull file: PsiFile): AnnotationContext = AnnotationContext()
 
     override fun doAnnotate(collectedInfo: AnnotationContext): AnnotationContext = collectedInfo
-
-    private fun formatCodeSmellMessage(category: String, details: String): String =
-        if (details.isNotEmpty()) "$category ($details)" else category
 
     private fun annotateCodeSmells(
         codeSmells: List<CodeSmell>,
