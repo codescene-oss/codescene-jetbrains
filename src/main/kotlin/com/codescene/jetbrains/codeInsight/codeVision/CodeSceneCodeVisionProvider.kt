@@ -1,9 +1,9 @@
 package com.codescene.jetbrains.codeInsight.codeVision
 
-import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.data.CodeSmell
+import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.services.api.CodeDeltaService
 import com.codescene.jetbrains.services.api.CodeReviewService
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
@@ -13,10 +13,10 @@ import com.codescene.jetbrains.util.getTextRange
 import com.codescene.jetbrains.util.isFileSupported
 import com.intellij.codeInsight.codeVision.*
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
 import org.reflections.Reflections
-import java.awt.event.MouseEvent
 import java.util.concurrent.ConcurrentHashMap
 
 @Suppress("UnstableApiUsage")
@@ -49,8 +49,6 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
     override val id: String = this::class.simpleName!!
 
     override val name: String = "${this::class.java.packageName}.providers.${this::class.simpleName}"
-
-    abstract fun handleClick(editor: Editor, category: String, event: MouseEvent?)
 
     override val defaultAnchor = CodeVisionAnchorKind.Top
 
@@ -154,9 +152,16 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         ClickableTextCodeVisionEntry(
             codeSmell.category,
             id,
-            { event, sourceEditor -> handleClick(sourceEditor, codeSmell.category, event) },
-            CODE_SMELL
+            { _, sourceEditor -> handleClick(sourceEditor, codeSmell) },
+            AllIcons.General.InspectionsWarningEmpty
         )
+
+    fun handleClick(editor: Editor, category: CodeSmell) {
+        val project = editor.project ?: return
+        val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
+
+        codeSceneDocumentationService.openDocumentationPanel(editor, category)
+    }
 
     private fun markApiCallInProgress(filePath: String, apiCalls: MutableSet<String>) {
         apiCalls.add(filePath)

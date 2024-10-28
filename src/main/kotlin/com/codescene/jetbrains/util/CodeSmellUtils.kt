@@ -9,6 +9,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
+import io.ktor.util.*
+import java.awt.Color
 import java.io.File
 
 private val supportedLanguages = mapOf(
@@ -101,3 +103,42 @@ fun getTextRange(
 
 fun formatCodeSmellMessage(category: String, details: String): String =
     if (details.isNotEmpty()) "$category ($details)" else category
+
+fun categoryToFileName(category: String): String {
+    return category.replace(" ", "-").replace(",", "").toLowerCasePreservingASCIIRules()
+}
+
+// this list needs to match documentation files for code smells (docs/codeSmells)
+val codeSmellNames = listOf(
+    Constants.BRAIN_CLASS,
+    Constants.BRAIN_METHOD,
+    Constants.BUMPY_ROAD_AHEAD,
+    Constants.COMPLEX_CONDITIONAL ,
+    Constants.COMPLEX_METHOD ,
+    Constants.CONSTRUCTOR_OVER_INJECTION,
+    Constants.DUPLICATED_ASSERTION_BLOCKS,
+    Constants.CODE_DUPLICATION,
+    Constants.FILE_SIZE_ISSUE,
+    Constants.EXCESS_NUMBER_OF_FUNCTION_ARGUMENTS,
+    Constants.NUMBER_OF_FUNCTIONS_IN_A_SINGLE_MODULE,
+    Constants.GLOBAL_CONDITIONALS,
+    Constants.DEEP_GLOBAL_NESTED_COMPLEXITY,
+    Constants.HIGH_DEGREE_OF_CODE_DUPLICATION,
+    Constants.LARGE_ASSERTION_BLOCKS,
+    Constants.LARGE_EMBEDDED_CODE_BLOCK,
+    Constants.LARGE_METHOD,
+    Constants.LINES_OF_CODE_IN_A_SINGLE_FILE,
+    Constants.LINES_OF_DECLARATION_IN_A_SINGLE_FILE,
+    Constants.LOW_COHESION,
+    Constants.MISSING_ARGUMENTS_ABSTRACTIONS,
+    Constants.MODULARITY_ISSUE,
+    Constants.DEEP_NESTED_COMPLEXITY,
+    Constants.OVERALL_CODE_COMPLEXITY,
+    Constants.POTENTIALLY_LOW_COHESION,
+    Constants.PRIMITIVE_OBSESSION,
+    Constants.STRING_HEAVY_FUNCTION_ARGUMENTS,
+)
+
+fun Color.webRgba(alpha: Double = this.alpha.toDouble()): String {
+    return "rgba($red, $green, $blue, $alpha)"
+}

@@ -5,6 +5,7 @@
     <vendor>CodeScene</vendor>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>org.intellij.plugins.markdown</depends>
 
     <!--  TODO: Add plugin icon  -->
 
@@ -104,6 +105,8 @@
                 implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.BrainClassCodeVisionProvider"/>
         <codeInsight.codeVisionProvider
                 implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.CodeHealthCodeVisionProvider"/>
+
+        <fileEditorProvider implementation="com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewerProvider" />
     </extensions>
 
     <projectListeners>

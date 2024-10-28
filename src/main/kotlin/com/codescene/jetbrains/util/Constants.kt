@@ -4,6 +4,8 @@ object Constants {
     const val CODESCENE = "CodeScene"
     const val CODESCENE_SERVER_URL = "https://codescene.io"
     const val EXAMPLE_SERVER_URL = "https://domain.com"
+    const val DOCUMENTATION_BASE_PATH = "docs/codeSmells/"
+    const val STYLE_BASE_PATH = "docs/styles/"
 
     const val BRAIN_CLASS = "Brain Class"
     const val BRAIN_METHOD = "Brain Method"
