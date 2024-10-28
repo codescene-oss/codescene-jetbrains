@@ -3,7 +3,6 @@ package com.codescene.jetbrains.services
 import com.codescene.jetbrains.data.ApiResponse
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
-import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import org.apache.commons.codec.digest.DigestUtils
 import java.util.concurrent.ConcurrentHashMap
@@ -34,18 +33,6 @@ class ReviewCacheService {
 
         val apiResponse = cache[filePath]?.second
         val cacheHit = cache.containsKey(filePath) && cache[filePath]?.first == hash
-
-        return if (cacheHit) apiResponse else null
-    }
-
-    fun getCachedResponse(editor: Editor): ApiResponse? {
-        val content = editor.document.text
-
-        val hash = DigestUtils.sha256Hex(content)
-        val path = editor.virtualFile.path
-
-        val apiResponse = cache[path]?.second
-        val cacheHit = cache.containsKey(path) && cache[path]?.first == hash
 
         return if (cacheHit) apiResponse else null
     }

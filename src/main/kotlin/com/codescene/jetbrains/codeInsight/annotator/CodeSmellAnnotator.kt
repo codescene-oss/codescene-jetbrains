@@ -4,6 +4,7 @@ import com.codescene.jetbrains.codeInsight.intentions.ShowProblemIntentionAction
 import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.services.CacheQuery
 import com.codescene.jetbrains.services.ReviewCacheService
+import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.formatCodeSmellMessage
 import com.codescene.jetbrains.util.getTextRange
 import com.codescene.jetbrains.util.isFileSupported
@@ -30,19 +31,21 @@ class CodeSmellAnnotator : ExternalAnnotator<
         val fileName = psiFile.name
         val extension = psiFile.virtualFile.extension ?: return
 
-        println("Triggering apply for $fileName")
+        Log.info("Applying code smell annotations for file: $fileName")
 
         if (isFileSupported(extension)) {
             val document = FileDocumentManager.getInstance().getDocument(psiFile.virtualFile)
 
             if (document != null) {
-                println("Found document for $fileName")
+                Log.debug("Document found for file: $fileName with extension: $extension")
 
                 val query = CacheQuery(document.text, psiFile.virtualFile.path)
                 val cache =
                     ReviewCacheService.getInstance(project).getCachedResponse(query)
 
                 if (cache != null) {
+                    Log.info("Cache found for file: $fileName. Annotating code smells.")
+
                     annotateCodeSmells(cache.fileLevelCodeSmells, document, holder)
 
                     cache.functionLevelCodeSmells.forEach { functionSmell ->
@@ -51,7 +54,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
 
                     annotateCodeSmells(cache.expressionLevelCodeSmells, document, holder)
 
-                    println("Annotated file $fileName successfully")
+                    Log.info("Successfully annotated code smells for file: $fileName")
                 }
             }
         }
@@ -69,6 +72,8 @@ class CodeSmellAnnotator : ExternalAnnotator<
         codeSmells.forEach { codeSmell ->
             val validTextRange = getTextRange(codeSmell, document)
 
+            Log.debug("Annotating code smell: ${codeSmell.category} at text range: $validTextRange")
+
             getAnnotation(codeSmell, validTextRange, holder)
         }
     }
@@ -79,6 +84,8 @@ class CodeSmellAnnotator : ExternalAnnotator<
         annotationHolder: AnnotationHolder
     ) {
         val message = formatCodeSmellMessage(codeSmell.category, codeSmell.details)
+
+        Log.debug("Creating annotation for code smell: ${codeSmell.category} with message: $message")
 
         return annotationHolder
             .newAnnotation(HighlightSeverity.WARNING, message)

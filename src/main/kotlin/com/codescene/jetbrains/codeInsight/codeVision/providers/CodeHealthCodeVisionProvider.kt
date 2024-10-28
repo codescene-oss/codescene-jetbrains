@@ -5,6 +5,7 @@ import com.codescene.jetbrains.data.ApiResponse
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
 import java.awt.event.MouseEvent
@@ -23,7 +24,7 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
         )
     }
 
-    override fun getLenses(editor: Editor, result: ApiResponse?): ArrayList<Pair<TextRange, CodeVisionEntry>> {
+    override fun getLenses(document: Document, result: ApiResponse?): ArrayList<Pair<TextRange, CodeVisionEntry>> {
         val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
 
         if (result != null) {
