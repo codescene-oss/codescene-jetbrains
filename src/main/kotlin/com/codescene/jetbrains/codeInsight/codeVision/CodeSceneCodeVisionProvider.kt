@@ -6,7 +6,10 @@ import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.services.CacheQuery
 import com.codescene.jetbrains.services.CodeSceneService
 import com.codescene.jetbrains.services.ReviewCacheService
+import com.codescene.jetbrains.util.Constants.CODESCENE
+import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.getTextRange
+import com.codescene.jetbrains.util.isFileSupported
 import com.intellij.codeInsight.codeVision.*
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.icons.AllIcons
@@ -58,8 +61,12 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
         if (!settings.enableCodeLenses) {
+            Log.info("Code vision disabled in $CODESCENE settings. Skipping computation...")
+
             return CodeVisionState.READY_EMPTY
         }
+
+        if (!isFileSupported(editor.project!!, editor.virtualFile, settings.excludeGitignoreFiles)) return CodeVisionState.READY_EMPTY
 
         return recomputeCodeVision(editor)
     }

@@ -1,8 +1,12 @@
 package com.codescene.jetbrains.util
 
 import com.codescene.jetbrains.data.CodeSmell
+import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.intellij.openapi.editor.Document
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.vfs.VirtualFile
+import java.io.File
 
 private val supportedLanguages = mapOf(
     "js" to "javascript",
@@ -52,7 +56,36 @@ private val supportedLanguages = mapOf(
     "scala" to "scala"
 )
 
-fun isFileSupported(extension: String) = supportedLanguages.containsKey(extension)
+private fun readGitignore(project: Project): List<String> {
+    val gitignoreFile = File(project.basePath, ".gitignore")
+
+    return if (gitignoreFile.exists())
+        gitignoreFile.readLines().map { it.trim() }.filter { it.isNotEmpty() }
+    else
+        emptyList()
+
+}
+
+private fun isExcludedByGitignore(file: VirtualFile, gitignorePatterns: List<String>): Boolean =
+    gitignorePatterns.any { pattern -> file.extension!! == pattern }
+
+private fun inSupportedLanguages(extension: String) = supportedLanguages.containsKey(extension)
+
+fun isFileSupported(project: Project, virtualFile: VirtualFile, excludeGitignoreFiles: Boolean): Boolean {
+    val gitignorePatterns = if (excludeGitignoreFiles) readGitignore(project) else emptyList()
+
+    val isExcludedByGitignore = isExcludedByGitignore(virtualFile, gitignorePatterns).also {
+        if (it)
+            Log.debug("File ${virtualFile.name} is excluded from analysis due to $CODESCENE gitignore settings.")
+    }
+    val supportedExtension = virtualFile.extension?.let(::inSupportedLanguages) == true
+
+    val isSupported = (supportedExtension && !isExcludedByGitignore).also {
+        if (!it) Log.warn("File type not supported: ${virtualFile.name}. Skipping operation.")
+    }
+
+    return isSupported
+}
 
 fun getTextRange(
     codeSmell: CodeSmell, document: Document,
