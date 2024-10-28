@@ -63,7 +63,6 @@ private fun readGitignore(project: Project): List<String> {
         gitignoreFile.readLines().map { it.trim() }.filter { it.isNotEmpty() }
     else
         emptyList()
-
 }
 
 private fun isExcludedByGitignore(file: VirtualFile, gitignorePatterns: List<String>): Boolean =

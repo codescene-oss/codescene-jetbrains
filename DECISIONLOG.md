@@ -59,8 +59,7 @@ None
 [Back to Top](#table-of-contents)
 
 > **_NOTE:_**  Decision overruled
->
-by: [DEC-2024-09-18-001: Update Supported Product Versions for the Plugin](#dec-2024-09-18-001-update-supported-product-versions-for-the-plugin).
+> by: [DEC-2024-09-18-001: Update Supported Product Versions for the Plugin](#dec-2024-09-18-001-update-supported-product-versions-for-the-plugin).
 
 **Date**: 2024-09-12
 
@@ -160,20 +159,20 @@ None
 **Status**: Accepted
 
 **Decision**:
-The plugin will support IntelliJ IDEA versions from the last three major releases: 2024.X, 2023.X, and 2022.3.
+The plugin will support IntelliJ IDEA versions from the last two major releases: 2024.X and 2023.X.
 
 **Context**:
 Refer to Context
 of [DEC-2024-09-12-002: Determine Supported Product Versions for the Plugin](#dec-2024-09-12-002-determine-supported-product-versions-for-the-plugin).
-Additionally, the goal is to support the latest IntelliJ Platform SDK functionality, which was not possible with
-versions 2022.2, 2022.1, 2021.3 and 2021.2.
+The goal is to support the latest IntelliJ Platform SDK functionality, with respect to CodeScene's plugin functionality
+requirements, which is not available in versions earlier than 2023.X, including 2022.2, 2022.1, 2021.3, and 2021.2.
 
 **Rationale**:
 Refer to Rationale
 of [DEC-2024-09-12-002: Determine Supported Product Versions for the Plugin](#dec-2024-09-12-002-determine-supported-product-versions-for-the-plugin).
 
 **Consequences**:
-The plugin needs to be tested and maintained for compatibility with IntelliJ IDEA 2022.3, 2023.X, and 2024.X.
+The plugin needs to be tested and maintained for compatibility with IntelliJ IDEA 2023.X, and 2024.X.
 
 **Alternatives Considered**:
 None
