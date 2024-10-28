@@ -54,9 +54,12 @@ class CodeSceneService(project: Project) {
         val code = editor.document.text
 
         runWithClassLoaderChange {
+            val startTime = System.currentTimeMillis()
+
             val result = DevToolsAPI.review(file.path, code)
 
-            Log.info("Received response from CodeScene API for file: $fileName")
+            val elapsedTime = System.currentTimeMillis() - startTime
+            Log.info("Received response from CodeScene API for file: $fileName in ${elapsedTime}ms")
 
             val parsedData = Json.decodeFromString<ApiResponse>(result)
 

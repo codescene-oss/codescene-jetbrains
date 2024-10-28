@@ -37,7 +37,7 @@ class UIRefreshService(private val project: Project) {
             providerIds = CodeSceneCodeVisionProvider.getProviders()
         )
 
-        Log.info("Refreshing code lens display for file: ${editor.virtualFile.name} with provider IDs: ${invalidateSignal.providerIds}")
+        Log.info("Refreshing code lens display for file ${editor.virtualFile.name} with provider IDs: ${invalidateSignal.providerIds}")
 
         codeVisionHost.invalidateProvider(invalidateSignal)
     }
