@@ -22,10 +22,17 @@ import java.awt.event.MouseEvent
 
 @Suppress("UnstableApiUsage")
 abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
+    private val settings = CodeSceneGlobalSettingsStore.getInstance().state
+
     companion object {
         @Volatile
-        var isApiCallInProgress: Boolean = false
+        var activeApiCalls = mutableSetOf<String>()
+
         private var providers: List<String> = emptyList()
+
+        fun markApiCallComplete(filePath: String) {
+            activeApiCalls.remove(filePath)
+        }
 
         fun getProviders(): List<String> {
             if (providers.isEmpty()) {
@@ -38,8 +45,6 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
             return providers
         }
     }
-
-    private val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
     abstract val categoryToFilter: String
 
@@ -74,8 +79,10 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
     override fun isAvailableFor(project: Project): Boolean = settings.enableCodeLenses
 
     private fun triggerCodeReview(editor: Editor, project: Project) {
-        if (!isApiCallInProgress) {
-            isApiCallInProgress = true
+        val filePath = editor.virtualFile.path
+
+        if (!isApiCallInProgressForFile(filePath)) {
+            markApiCallInProgress(filePath)
 
             CodeSceneService.getInstance(project).reviewCode(editor)
         }
@@ -142,4 +149,9 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
             AllIcons.General.InspectionsWarningEmpty
         )
 
+    private fun markApiCallInProgress(filePath: String) {
+        activeApiCalls.add(filePath)
+    }
+
+    private fun isApiCallInProgressForFile(filePath: String): Boolean = activeApiCalls.contains(filePath)
 }

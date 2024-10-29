@@ -79,11 +79,7 @@ fun isFileSupported(project: Project, virtualFile: VirtualFile, excludeGitignore
     }
     val supportedExtension = virtualFile.extension?.let(::inSupportedLanguages) == true
 
-    val isSupported = (supportedExtension && !isExcludedByGitignore).also {
-        if (!it) Log.warn("File type not supported: ${virtualFile.name}. Skipping operation.")
-    }
-
-    return isSupported
+    return supportedExtension && !isExcludedByGitignore
 }
 
 fun getTextRange(

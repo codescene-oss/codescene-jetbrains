@@ -29,7 +29,11 @@ class CodeSmellAnnotator : ExternalAnnotator<
     ) {
         val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
-        if (!isFileSupported(psiFile.project, psiFile.virtualFile, settings.excludeGitignoreFiles)) return
+        if (!isFileSupported(psiFile.project, psiFile.virtualFile, settings.excludeGitignoreFiles)) {
+            Log.warn("File type not supported: ${psiFile.virtualFile.name}. Skipping code smell annotation.")
+
+            return
+        }
 
         annotateFile(psiFile, holder)
     }

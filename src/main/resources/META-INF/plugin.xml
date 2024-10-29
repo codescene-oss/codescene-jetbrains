@@ -99,4 +99,8 @@
         <codeInsight.codeVisionProvider
                 implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.CodeHealthCodeVisionProvider"/>
     </extensions>
+
+    <projectListeners>
+        <listener class="com.codescene.jetbrains.listeners.FileLifecycleListener" topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+    </projectListeners>
 </idea-plugin>
