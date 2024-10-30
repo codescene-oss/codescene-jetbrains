@@ -7,7 +7,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 
-class ShowProblemIntentionAction(private val codeSmell: String) : IntentionAction, PriorityAction {
+class ShowProblemIntentionAction(codeSmell: String) : IntentionAction, PriorityAction {
     private val name = "$CODESCENE: $codeSmell"
 
     override fun getText(): String = name

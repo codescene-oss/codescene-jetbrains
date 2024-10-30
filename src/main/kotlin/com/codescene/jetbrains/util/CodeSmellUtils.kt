@@ -65,18 +65,16 @@ private fun readGitignore(project: Project): List<String> {
         emptyList()
 }
 
-private fun isExcludedByGitignore(file: VirtualFile, gitignorePatterns: List<String>): Boolean =
-    gitignorePatterns.any { pattern -> file.extension!! == pattern }
+private fun isExcludedByGitignore(file: VirtualFile, ignoredFiles: List<String>): Boolean =
+    ignoredFiles.any { ignoredFile -> ignoredFile.removePrefix(".") == file.extension }
+        .also { isExcluded -> if (isExcluded) Log.debug("File ${file.name} is excluded from analysis due to $CODESCENE gitignore settings.") }
 
 private fun inSupportedLanguages(extension: String) = supportedLanguages.containsKey(extension)
 
 fun isFileSupported(project: Project, virtualFile: VirtualFile, excludeGitignoreFiles: Boolean): Boolean {
-    val gitignorePatterns = if (excludeGitignoreFiles) readGitignore(project) else emptyList()
+    val ignoredFiles = if (excludeGitignoreFiles) readGitignore(project) else emptyList()
 
-    val isExcludedByGitignore = isExcludedByGitignore(virtualFile, gitignorePatterns).also {
-        if (it)
-            Log.debug("File ${virtualFile.name} is excluded from analysis due to $CODESCENE gitignore settings.")
-    }
+    val isExcludedByGitignore = isExcludedByGitignore(virtualFile, ignoredFiles)
     val supportedExtension = virtualFile.extension?.let(::inSupportedLanguages) == true
 
     return supportedExtension && !isExcludedByGitignore
