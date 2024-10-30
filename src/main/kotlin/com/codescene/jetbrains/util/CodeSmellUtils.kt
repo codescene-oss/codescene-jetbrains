@@ -56,7 +56,7 @@ private val supportedLanguages = mapOf(
     "scala" to "scala"
 )
 
-private fun readGitignore(project: Project): List<String> {
+fun readGitignore(project: Project): List<String> {
     val gitignoreFile = File(project.basePath, ".gitignore")
 
     return if (gitignoreFile.exists())

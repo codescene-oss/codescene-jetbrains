@@ -16,6 +16,7 @@ val codeSceneDevToolsVersion = providers.gradleProperty("codeSceneDevToolsVersio
 val codeSceneRepository = providers.gradleProperty("codeSceneRepository").get()
 val kotlinxSerializationVersion = providers.gradleProperty("kotlinxSerializationVersion").get()
 val reflectionsVersion = providers.gradleProperty("reflectionsVersion").get()
+val mockkVersion = providers.gradleProperty("mockkVersion").get()
 
 // Set the JVM language level used to build the project.
 kotlin {
@@ -48,7 +49,9 @@ dependencies {
     implementation("codescene.devtools.ide:api:$codeSceneDevToolsVersion")
 
     testImplementation(libs.junit)
-
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
+    testImplementation("io.mockk:mockk:${mockkVersion}")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
         create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"))

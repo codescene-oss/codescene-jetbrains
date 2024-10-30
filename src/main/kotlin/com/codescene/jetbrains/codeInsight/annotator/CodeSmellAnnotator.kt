@@ -24,38 +24,31 @@ class CodeSmellAnnotator : ExternalAnnotator<
         >() {
     override fun apply(
         @NotNull psiFile: PsiFile,
-        annotationResult: AnnotationContext,
+        annotationContext: AnnotationContext,
         @NotNull holder: AnnotationHolder
     ) {
         val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
         if (!isFileSupported(psiFile.project, psiFile.virtualFile, settings.excludeGitignoreFiles)) {
             Log.warn("File type not supported: ${psiFile.virtualFile.name}. Skipping code smell annotation.")
-
             return
         }
 
-        annotateFile(psiFile, holder)
+        annotateFile(psiFile, holder, annotationContext.cache)
     }
 
-    private fun annotateFile(psiFile: PsiFile, holder: AnnotationHolder) {
-        val fileName = psiFile.name
+    private fun annotateFile(psiFile: PsiFile, holder: AnnotationHolder, reviewCache: ApiResponse?) {
+        val document = FileDocumentManager.getInstance().getDocument(psiFile.virtualFile) ?: return
 
-        val document = FileDocumentManager.getInstance().getDocument(psiFile.virtualFile) ?: run {
-            Log.warn("No document found for file: $fileName. Skipping annotation.")
-            return
-        }
+        if (reviewCache != null) {
+            Log.info("Annotating code smells for file: ${psiFile.name}")
 
-        Log.debug("Document found for file: $fileName")
+            reviewCache.fileLevelCodeSmells.forEach { annotateCodeSmell(it, document, holder) }
+            reviewCache.functionLevelCodeSmells.flatMap { it.codeSmells }
+                .forEach { annotateCodeSmell(it, document, holder) }
+            reviewCache.expressionLevelCodeSmells.forEach { annotateCodeSmell(it, document, holder) }
 
-        fetchCache(psiFile, document.text)?.let { cache ->
-            Log.info("Annotating code smells for file: ${fileName}")
-
-            cache.fileLevelCodeSmells.forEach { annotateCodeSmell(it, document, holder) }
-            cache.functionLevelCodeSmells.flatMap { it.codeSmells }.forEach { annotateCodeSmell(it, document, holder) }
-            cache.expressionLevelCodeSmells.forEach { annotateCodeSmell(it, document, holder) }
-
-            Log.info("Successfully annotated code smells for file: $fileName")
+            Log.info("Successfully annotated code smells for file: ${psiFile.name}")
         }
     }
 
@@ -82,9 +75,22 @@ class CodeSmellAnnotator : ExternalAnnotator<
         }
     }
 
-    override fun collectInformation(@NotNull file: PsiFile): AnnotationContext = AnnotationContext()
+    override fun collectInformation(@NotNull file: PsiFile): AnnotationContext? {
+        val document = FileDocumentManager.getInstance().getDocument(file.virtualFile)
 
-    override fun doAnnotate(collectedInfo: AnnotationContext): AnnotationContext = collectedInfo
+        val content = document?.text ?: run {
+            Log.warn("No document found for file: ${file.name}. Skipping annotation.")
 
-    class AnnotationContext
+            return null
+        }
+
+        val cache = fetchCache(file, content)
+
+        return AnnotationContext(cache)
+    }
+
+    override fun doAnnotate(collectedInfo: AnnotationContext): AnnotationContext? =
+        collectedInfo.takeIf { it.cache != null }
+
+    class AnnotationContext(val cache: ApiResponse?)
 }
