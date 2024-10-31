@@ -20,7 +20,7 @@ import com.intellij.openapi.diagnostic.Logger
 
 object Log {
     private val logger: Logger by lazy { Logger.getInstance(Log::class.java) }
-    private const val PREFIX = "$CODESCENE - "
+    private const val PREFIX = "$CODESCENE -"
 
     fun info(message: String) = logger.info("$PREFIX $message")
 

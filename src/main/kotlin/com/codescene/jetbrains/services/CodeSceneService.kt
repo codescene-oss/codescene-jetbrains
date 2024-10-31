@@ -44,6 +44,9 @@ class CodeSceneService(project: Project) : Disposable {
                 uiRefreshService.refreshUI(editor)
 
                 CodeSceneCodeVisionProvider.markApiCallComplete(filePath)
+
+            } catch (e: CancellationException) {
+                Log.info("Code review canceled for file $fileName.")
             } catch (e: Exception) {
                 Log.error("Error during code review for file $fileName - ${e.message}")
             } finally {
@@ -56,7 +59,7 @@ class CodeSceneService(project: Project) : Disposable {
         activeFileReviews[filePath]?.let { job ->
             job.cancel()
 
-            Log.info("Cancelled active $CODESCENE review for file '$filePath' because it was closed.")
+            Log.info("Cancelling active $CODESCENE review for file '$filePath' because it was closed.")
 
             activeFileReviews.remove(filePath)
             CodeSceneCodeVisionProvider.markApiCallComplete(filePath)
@@ -108,6 +111,7 @@ class CodeSceneService(project: Project) : Disposable {
 
     override fun dispose() {
         activeFileReviews.values.forEach { it.cancel() }
+        activeFileReviews.clear()
 
         scope.cancel()
     }
