@@ -58,7 +58,9 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
     override val relativeOrderings: List<CodeVisionRelativeOrdering> = emptyList()
 
-    override fun precomputeOnUiThread(editor: Editor) {}
+    override fun precomputeOnUiThread(editor: Editor) {
+        // Precomputations on the UI thread are unnecessary in this context, so this is left intentionally empty.
+    }
 
     override fun computeCodeVision(editor: Editor, uiData: Unit): CodeVisionState {
         editor.project ?: return CodeVisionState.READY_EMPTY

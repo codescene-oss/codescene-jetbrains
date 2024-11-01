@@ -44,7 +44,6 @@ class CodeSceneService(project: Project) : Disposable {
                 uiRefreshService.refreshUI(editor)
 
                 CodeSceneCodeVisionProvider.markApiCallComplete(filePath)
-
             } catch (e: CancellationException) {
                 Log.info("Code review canceled for file $fileName.")
             } catch (e: Exception) {

@@ -4,11 +4,11 @@ import com.codescene.jetbrains.data.ApiResponse
 import com.codescene.jetbrains.services.CacheEntry
 import com.codescene.jetbrains.services.CacheQuery
 import com.codescene.jetbrains.services.ReviewCacheService
+import io.mockk.mockk
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.mock
 
 const val filePath = "/path/to/file.txt"
 const val fileContents = "code"
@@ -21,7 +21,7 @@ class ReviewCacheServiceTest {
     @Before
     fun setUp() {
         reviewCacheService = ReviewCacheService()
-        response = mock()
+        response = mockk()
     }
 
     @Test
