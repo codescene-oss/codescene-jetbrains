@@ -71,29 +71,31 @@ class CodeSceneService(project: Project) : Disposable {
         val fileName = file.name
         val code = editor.document.text
 
-        runWithClassLoaderChange {
+        val result = runWithClassLoaderChange {
             val startTime = System.currentTimeMillis()
 
-            val result = DevToolsAPI.review(path, code)
+            val response = DevToolsAPI.review(path, code)
 
             val elapsedTime = System.currentTimeMillis() - startTime
             Log.info("Received response from CodeScene API for file $fileName in ${elapsedTime}ms")
 
-            val parsedData = Json.decodeFromString<ApiResponse>(result)
-
-            val entry = CacheEntry(fileContents = code, filePath = path, response = parsedData)
-            cacheService.cacheResponse(entry)
-
-            Log.debug("Review response cached for file $fileName with path $path")
+            response
         }
+
+        val parsedData = Json.decodeFromString<ApiResponse>(result)
+
+        val entry = CacheEntry(fileContents = code, filePath = path, response = parsedData)
+        cacheService.cacheResponse(entry)
+
+        Log.debug("Review response cached for file $fileName with path $path")
     }
 
-    private fun <T> runWithClassLoaderChange(action: () -> T) {
+    private fun <T> runWithClassLoaderChange(action: () -> T): T {
         val originalClassLoader = Thread.currentThread().contextClassLoader
         val classLoader = this@CodeSceneService.javaClass.classLoader
         Thread.currentThread().contextClassLoader = classLoader
 
-        try {
+        return try {
             Log.debug("Switching to plugin's ClassLoader: ${classLoader.javaClass.name}")
 
             action()
