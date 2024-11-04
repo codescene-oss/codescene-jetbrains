@@ -11,6 +11,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiFile
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.annotations.NotNull
@@ -23,13 +24,14 @@ class UIRefreshService(private val project: Project) {
         fun getInstance(project: Project): UIRefreshService = project.service<UIRefreshService>()
     }
 
-    suspend fun refreshUI(@NotNull editor: Editor) = withContext(Dispatchers.Main) {
-        refreshCodeVision(editor)
+    suspend fun refreshUI(@NotNull editor: Editor, dispatcher: CoroutineDispatcher = Dispatchers.Main) =
+        withContext(dispatcher) {
+            refreshCodeVision(editor)
 
-        refreshAnnotations(editor)
+            refreshAnnotations(editor)
 
-        Log.debug("UI refresh complete for file: ${editor.virtualFile.name}")
-    }
+            Log.debug("UI refresh complete for file: ${editor.virtualFile.name}")
+        }
 
     private fun refreshCodeVision(editor: Editor) {
         val invalidateSignal = CodeVisionHost.LensInvalidateSignal(
