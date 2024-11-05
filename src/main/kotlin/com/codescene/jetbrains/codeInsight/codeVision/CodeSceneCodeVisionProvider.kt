@@ -6,8 +6,6 @@ import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.services.CacheQuery
 import com.codescene.jetbrains.services.CodeSceneService
 import com.codescene.jetbrains.services.ReviewCacheService
-import com.codescene.jetbrains.util.Constants.CODESCENE
-import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.getTextRange
 import com.codescene.jetbrains.util.isFileSupported
 import com.intellij.codeInsight.codeVision.*
@@ -22,8 +20,6 @@ import java.awt.event.MouseEvent
 
 @Suppress("UnstableApiUsage")
 abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
-    private val settings = CodeSceneGlobalSettingsStore.getInstance().state
-
     companion object {
         @Volatile
         var activeApiCalls = mutableSetOf<String>()
@@ -65,20 +61,13 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
     override fun computeCodeVision(editor: Editor, uiData: Unit): CodeVisionState {
         editor.project ?: return CodeVisionState.READY_EMPTY
 
-        val settings = CodeSceneGlobalSettingsStore.getInstance().state
+        val excludeGitignoreFiles = CodeSceneGlobalSettingsStore.getInstance().state.excludeGitignoreFiles
+        val fileSupported = isFileSupported(editor.project!!, editor.virtualFile, excludeGitignoreFiles)
 
-        if (!settings.enableCodeLenses) {
-            Log.info("Code vision disabled in $CODESCENE settings. Skipping computation...")
-
-            return CodeVisionState.READY_EMPTY
-        }
-
-        if (!isFileSupported(editor.project!!, editor.virtualFile, settings.excludeGitignoreFiles)) return CodeVisionState.READY_EMPTY
+        if (!fileSupported) return CodeVisionState.READY_EMPTY
 
         return recomputeCodeVision(editor)
     }
-
-    override fun isAvailableFor(project: Project): Boolean = settings.enableCodeLenses
 
     private fun triggerCodeReview(editor: Editor, project: Project) {
         val filePath = editor.virtualFile.path
@@ -91,6 +80,8 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
     }
 
     private fun recomputeCodeVision(editor: Editor): CodeVisionState {
+        val codeVisionEnabled = CodeSceneGlobalSettingsStore.getInstance().state.enableCodeLenses
+
         val project = editor.project!!
         val document = editor.document
         val query = CacheQuery(document.text, editor.virtualFile.path)
@@ -101,8 +92,10 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         if (cachedResponse == null) {
             triggerCodeReview(editor, project)
 
-            return CodeVisionState.READY_EMPTY
+            return CodeVisionState.NotReady
         }
+
+        if (!codeVisionEnabled) return CodeVisionState.READY_EMPTY
 
         val lenses = getLenses(document, cachedResponse)
 

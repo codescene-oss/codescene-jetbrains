@@ -1,6 +1,8 @@
 package com.codescene.jetbrains.services
 
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
+import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
 import com.intellij.codeInsight.codeVision.CodeVisionHost
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
@@ -34,6 +36,14 @@ class UIRefreshService(private val project: Project) {
         }
 
     private fun refreshCodeVision(editor: Editor) {
+        val settings = CodeSceneGlobalSettingsStore.getInstance().state
+
+        if (!settings.enableCodeLenses) {
+            Log.info("Code vision disabled in $CODESCENE settings. Skipping refresh...")
+
+            return
+        }
+
         val invalidateSignal = CodeVisionHost.LensInvalidateSignal(
             editor,
             providerIds = CodeSceneCodeVisionProvider.getProviders()
