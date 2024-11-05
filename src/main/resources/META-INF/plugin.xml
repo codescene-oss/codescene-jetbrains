@@ -43,64 +43,65 @@
              Providers listed first appear last. Adjust this order to control the hierarchy of code smell warnings shown.
         -->
         <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.BumpyRoadCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.ComplexConditionalCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.BrainMethodCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.FunctionArgumentsCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.LargeMethodCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.ComplexMethodCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.NestedComplexityCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.DuplicationCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.ConstructorOverInjectionCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.GlobalNestedComplexityCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.DuplicatedAssertionBlocksCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.FileSizeIssueCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.GlobalConditionalsCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.BrainClassCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.HighDegreeDuplicationCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.LargeAssertionBlocksCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.LargeEmbeddedCodeBlockCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.LinesOfCodeInSingleFileCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.LinesOfDeclarationInSingleFileCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.LowCohesionCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.MissingAbstractionsCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.ModularityIssueCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.FunctionsInSingleModuleCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.OverallCodeComplexityCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.PotentiallyLowCohesionCodeVisionProvider"/>
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.StringHeavyArgumentsCodeVisionProvider"/>
         <codeInsight.codeVisionProvider
                 implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.PrimitiveObsessionCodeVisionProvider"/>
         <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.StringHeavyArgumentsCodeVisionProvider"/>
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.PotentiallyLowCohesionCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.OverallCodeComplexityCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.FunctionsInSingleModuleCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.ModularityIssueCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.MissingAbstractionsCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.LowCohesionCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.LinesOfDeclarationInSingleFileCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.LinesOfCodeInSingleFileCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.LargeMethodCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.LargeEmbeddedCodeBlockCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.LargeAssertionBlocksCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.HighDegreeDuplicationCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.GlobalConditionalsCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.FileSizeIssueCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.FunctionArgumentsCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.DuplicatedAssertionBlocksCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.NestedComplexityCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.GlobalNestedComplexityCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.ConstructorOverInjectionCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.ComplexMethodCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.ComplexConditionalCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.DuplicationCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.BumpyRoadCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.BrainMethodCodeVisionProvider"/>
+        <codeInsight.codeVisionProvider
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.BrainClassCodeVisionProvider"/>
         <codeInsight.codeVisionProvider
                 implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.CodeHealthCodeVisionProvider"/>
     </extensions>
 
     <projectListeners>
-        <listener class="com.codescene.jetbrains.listeners.FileLifecycleListener" topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+        <listener class="com.codescene.jetbrains.listeners.FileLifecycleListener"
+                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
     </projectListeners>
 </idea-plugin>
