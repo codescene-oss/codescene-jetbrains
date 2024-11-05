@@ -3,14 +3,20 @@ import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
-    id("java") // Java support
     alias(libs.plugins.kotlin) // Kotlin support
     alias(libs.plugins.intelliJPlatform) // IntelliJ Platform Gradle Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
+    kotlin("plugin.serialization") version "2.0.21"
 }
 
 group = providers.gradleProperty("pluginGroup").get()
 version = providers.gradleProperty("pluginVersion").get()
+
+val codeSceneDevToolsVersion = providers.gradleProperty("codeSceneDevToolsVersion").get()
+val codeSceneRepository = providers.gradleProperty("codeSceneRepository").get()
+val kotlinxSerializationVersion = providers.gradleProperty("kotlinxSerializationVersion").get()
+val reflectionsVersion = providers.gradleProperty("reflectionsVersion").get()
+val mockkVersion = providers.gradleProperty("mockkVersion").get()
 
 // Set the JVM language level used to build the project.
 kotlin {
@@ -19,7 +25,16 @@ kotlin {
 
 // Configure project's dependencies
 repositories {
+    mavenLocal()
     mavenCentral()
+
+    maven {
+        url = uri(codeSceneRepository)
+        credentials {
+            username = System.getenv("GH_USERNAME")
+            password = System.getenv("GH_PACKAGE_TOKEN")
+        }
+    }
 
     // IntelliJ Platform Gradle Plugin Repositories Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-repositories-extension.html
     intellijPlatform {
@@ -29,7 +44,12 @@ repositories {
 
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
+    implementation("org.reflections:reflections:$reflectionsVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+    implementation("codescene.devtools.ide:api:$codeSceneDevToolsVersion")
+
     testImplementation(libs.junit)
+    testImplementation("io.mockk:mockk:${mockkVersion}")
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
@@ -96,7 +116,8 @@ intellijPlatform {
         // The pluginVersion is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
-        channels = providers.gradleProperty("pluginVersion").map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
+        channels = providers.gradleProperty("pluginVersion")
+            .map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
     }
 
     pluginVerification {
@@ -119,6 +140,15 @@ tasks {
 
     publishPlugin {
         dependsOn(patchChangelog)
+    }
+
+    runIde {
+        classpath += sourceSets["main"].runtimeClasspath
+    }
+
+    register<JavaExec>("run") {
+        mainClass.set("com.codescene.Main")
+        classpath += sourceSets["main"].runtimeClasspath
     }
 }
 
