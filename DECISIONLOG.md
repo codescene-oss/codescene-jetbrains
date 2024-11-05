@@ -189,7 +189,7 @@ None
 
 **Decision Maker(s)**: Selma Copra
 
-**Status**: Draft
+**Status**: Accepted
 
 **Decision**:
 To display multiple distinct code vision elements above problematic methods, a separate code vision provider was created
