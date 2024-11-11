@@ -2,7 +2,8 @@ package com.codescene.jetbrains.services
 
 import codescene.devtools.ide.DevToolsAPI
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
-import com.codescene.jetbrains.data.ApiResponse
+import com.codescene.jetbrains.data.CodeDelta
+import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
 import com.intellij.openapi.Disposable
@@ -20,6 +21,7 @@ class CodeSceneService(project: Project) : Disposable {
     private val uiRefreshService: UIRefreshService = UIRefreshService.getInstance(project)
 
     private val scope = CoroutineScope(Dispatchers.IO)
+    private val deltaScope = CoroutineScope(Dispatchers.IO)
     private val debounceDelay: Long = TimeUnit.SECONDS.toMillis(3)
     private val activeFileReviews = mutableMapOf<String, Job>()
 
@@ -54,6 +56,45 @@ class CodeSceneService(project: Project) : Disposable {
         }
     }
 
+    fun performDeltaAnalysis() {
+        try {
+            val codeWithoutCodeSmell = """
+                function foo() {
+                    return 'bar';
+                }
+                
+                function bar() {
+                  return 'bar';
+                }
+                """.trimIndent()
+            val codeWithCodeSmell = """
+                function foo(a, b, c, d, e, f) {
+                    return "bar"
+                }
+                
+                function bar(a, b, c, d, e, f) {
+                   return 'bar';
+                }
+                """.trimIndent()
+            val path = "src/main/resources/example2.js"
+
+            runWithClassLoaderChange {
+                val reviewNoCodeSmells =
+                    Json.decodeFromString<CodeReview>(DevToolsAPI.review(path, codeWithoutCodeSmell))
+                val reviewWithCodeSmells =
+                    Json.decodeFromString<CodeReview>(DevToolsAPI.review(path, codeWithCodeSmell))
+
+                val delta = DevToolsAPI.delta(reviewNoCodeSmells.rawScore, reviewWithCodeSmells.rawScore);
+                val parsedDelta = Json.decodeFromString<CodeDelta>(delta)
+
+                println("delta: $delta, parsedDelta:$parsedDelta")
+
+            }
+        } catch (e: Exception) {
+            Log.error("Error during delta analysis for file - ${e.message}")
+        }
+    }
+
     fun cancelFileReview(filePath: String) {
         activeFileReviews[filePath]?.let { job ->
             job.cancel()
@@ -82,7 +123,7 @@ class CodeSceneService(project: Project) : Disposable {
             response
         }
 
-        val parsedData = Json.decodeFromString<ApiResponse>(result)
+        val parsedData = Json.decodeFromString<CodeReview>(result)
 
         val entry = CacheEntry(fileContents = code, filePath = path, response = parsedData)
         cacheService.cacheResponse(entry)

@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.service
 
-import com.codescene.jetbrains.data.ApiResponse
+import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.services.CacheEntry
 import com.codescene.jetbrains.services.CacheQuery
 import com.codescene.jetbrains.services.ReviewCacheService
@@ -16,7 +16,7 @@ const val newFileContents = "code changed"
 
 class ReviewCacheServiceTest {
     private lateinit var reviewCacheService: ReviewCacheService
-    private lateinit var response: ApiResponse
+    private lateinit var response: CodeReview
 
     @Before
     fun setUp() {

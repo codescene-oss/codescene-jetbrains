@@ -1,7 +1,7 @@
 package com.codescene.jetbrains.codeInsight.codeVision.providers
 
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
-import com.codescene.jetbrains.data.ApiResponse
+import com.codescene.jetbrains.data.CodeReview
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.icons.AllIcons
@@ -13,7 +13,7 @@ import java.awt.event.MouseEvent
 class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override val categoryToFilter = ""
 
-    private fun getCodeVisionEntry(result: ApiResponse?): ClickableTextCodeVisionEntry {
+    private fun getCodeVisionEntry(result: CodeReview?): ClickableTextCodeVisionEntry {
         val text = "Code health score: ${result?.score}/10"
 
         return ClickableTextCodeVisionEntry(
@@ -24,7 +24,7 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
         )
     }
 
-    override fun getLenses(document: Document, result: ApiResponse?): ArrayList<Pair<TextRange, CodeVisionEntry>> {
+    override fun getLenses(document: Document, result: CodeReview?): ArrayList<Pair<TextRange, CodeVisionEntry>> {
         val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
 
         if (result != null) {
