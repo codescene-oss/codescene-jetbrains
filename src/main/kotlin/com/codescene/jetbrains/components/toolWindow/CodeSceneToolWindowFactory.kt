@@ -11,7 +11,7 @@ import com.intellij.ui.content.ContentFactory
 
 class CodeSceneToolWindowFactory : ToolWindowFactory {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val content = getContent()
+        val content = getContent(project)
         val actions = getTitleActions()
 
         toolWindow.setTitleActions(actions)
@@ -20,8 +20,8 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
 
     override fun shouldBeAvailable(project: Project) = true
 
-    private fun getContent(): Content {
-        val contentPanel = CodeSceneToolWindow().getContent()
+    private fun getContent(project: Project): Content {
+        val contentPanel = CodeSceneToolWindow().getContent(project)
         val content = ContentFactory.getInstance()
 
         return content.createContent(contentPanel, null, false)

@@ -1,99 +1,172 @@
 package com.codescene.jetbrains.components.toolWindow
 
-import com.intellij.icons.AllIcons
-import com.intellij.openapi.fileTypes.FileTypeManager
+import com.codescene.jetbrains.components.tree.CustomTreeCellRenderer
+import com.codescene.jetbrains.data.*
+import com.codescene.jetbrains.data.Function
+import com.codescene.jetbrains.util.getCodeHealth
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.editor.CaretModel
+import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.LogicalPosition
+import com.intellij.openapi.editor.ScrollType
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.OpenFileDescriptor
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.search.FilenameIndex
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.treeStructure.Tree
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
+import java.io.File
 import javax.swing.BoxLayout
-import javax.swing.JComponent
 import javax.swing.JTree
+import javax.swing.event.TreeSelectionEvent
 import javax.swing.tree.DefaultMutableTreeNode
-import javax.swing.tree.DefaultTreeCellRenderer
 import javax.swing.tree.DefaultTreeModel
 
-data class FileInfo(
-    val functions: List<String>,
-    val codeHealth: String
+//TODO: remove
+val parsedTreeComponents = CodeDelta(
+    fileLevelFindings = emptyList(),
+    functionLevelFindings = listOf(
+        FunctionFinding(
+            function = Function(
+                name = "foo",
+                range = HighlightRange(startLine = 1, startColumn = 1, endLine = 3, endColumn = 2)
+            ),
+            changeDetails = listOf(
+                ChangeDetails(
+                    category = "Excess Number of Function Arguments",
+                    description = "foo has 6 arguments, threshold = 4",
+                    changeType = ChangeType.INTRODUCED,
+                    position = Position(line = 1, column = 1)
+                )
+            )
+        ),
+        FunctionFinding(
+            function = Function(
+                name = "bar",
+                range = HighlightRange(startLine = 5, startColumn = 1, endLine = 7, endColumn = 2)
+            ),
+            changeDetails = listOf(
+                ChangeDetails(
+                    category = "Excess Number of Function Arguments",
+                    description = "bar has 6 arguments, threshold = 4",
+                    changeType = ChangeType.INTRODUCED,
+                    position = Position(line = 5, column = 1)
+                )
+            )
+        )
+    ),
+    oldScore = 10.0,
+    newScore = 9.6882083290695
 )
 
-val treeComponents: Array<Pair<String, FileInfo>> = arrayOf(
-    "CodeSceneToolWindow.kt" to FileInfo(
-        functions = listOf("buildResponse"),
-        codeHealth = "Good"
-    ),
-    "startupScript.js" to FileInfo(
-        functions = listOf("computeAverage", "getIcon", "updateUi"),
-        codeHealth = "Needs Improvement"
-    ),
-    "ApplicationStarter.java" to FileInfo(
-        functions = listOf("listAvailableEntries", "getNode"),
-        codeHealth = "Critical"
-    )
+data class HealthDetails(
+    val oldScore: Double,
+    val newScore: Double,
 )
 
+val deltaAnalyses: List<Pair<String, CodeDelta>> = listOf(("src/main/kotlin/Test.js" to parsedTreeComponents))
+
+data class CodeHealthFinding(
+    val displayName: String,
+    val filePath: String,
+    val additionalInfo: String
+)
+
+//TODO: Refactor
 class CodeSceneToolWindow {
-    fun getContent() = JBPanel<JBPanel<*>>(BorderLayout()).apply {
-        layout = BoxLayout(this, BoxLayout.Y_AXIS)
+    private lateinit var project: Project
 
-        treeComponents.forEach { (fileName, fileInfo) ->
-            val fileTreePanel = createFileTree(fileName, fileInfo)
+    fun getContent(project: Project): JBPanel<JBPanel<*>> {
+        this.project = project
 
-            fileTreePanel.alignmentX = Component.LEFT_ALIGNMENT
+        return JBPanel<JBPanel<*>>(BorderLayout()).apply {
+            layout = BoxLayout(this, BoxLayout.Y_AXIS)
 
-            add(fileTreePanel)
+            deltaAnalyses.forEach { (name, delta) ->
+                val fileTreePanel = createFileTree(name, delta)
+
+                fileTreePanel.alignmentX = Component.LEFT_ALIGNMENT
+
+                add(fileTreePanel)
+            }
         }
     }
 
-    private fun createFileTree(fileName: String, fileInfo: FileInfo): Tree {
-        val root = DefaultMutableTreeNode(fileName).apply {
-            add(DefaultMutableTreeNode(fileInfo.codeHealth))
 
-            fileInfo.functions.forEach { add(DefaultMutableTreeNode(it)) }
+    private fun createFileTree(
+        filePath: String,
+        delta: CodeDelta
+    ): Tree {
+        val healthDetails = HealthDetails(delta.oldScore, delta.newScore)
+        val healthInformation = getCodeHealth(healthDetails)
+
+        val root = DefaultMutableTreeNode(filePath).apply {
+            add(DefaultMutableTreeNode(healthInformation))
+
+            delta.functionLevelFindings.forEach { (function) ->
+                val finding = CodeHealthFinding(
+                    displayName = function.name,
+                    filePath,
+                    additionalInfo = "bar has 6 arguments, threshold = 4" //TODO: change
+                )
+
+                add(DefaultMutableTreeNode(finding))
+            }
         }
 
-        return Tree(DefaultTreeModel(root)).apply {
+        val tree = Tree(DefaultTreeModel(root)).apply {
             cellRenderer = CustomTreeCellRenderer()
-
-            addTreeSelectionListener { event ->
-                val selectedNode = event?.path?.lastPathComponent as? DefaultMutableTreeNode
-
-                if (selectedNode != null && selectedNode.isLeaf) {
-                    println("Leaf clicked: ${selectedNode.userObject}")
-                }
-            }
-
-            selectionModel.addTreeSelectionListener { clearSelection() }
             isFocusable = false
             minimumSize = Dimension(200, 80)
+
+            addTreeSelectionListener(::handleTreeSelectionEvent)
+        }
+
+        return tree
+    }
+
+    private fun handleTreeSelectionEvent(event: TreeSelectionEvent) {
+        (event.source as? JTree)?.clearSelection()
+
+        val selectedNode = event.path.lastPathComponent as? DefaultMutableTreeNode
+
+        (selectedNode?.takeIf { it.isLeaf }?.userObject as? CodeHealthFinding)?.also { finding ->
+            focusOnLine(project, finding.filePath, 5)
         }
     }
 
-    private class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
-        override fun getTreeCellRendererComponent(
-            tree: JTree,
-            value: Any?,
-            sel: Boolean,
-            expanded: Boolean,
-            leaf: Boolean,
-            row: Int,
-            hasFocus: Boolean
-        ): JComponent {
-            super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus)
+    private fun focusOnLine(project: Project, filePath: String, line: Int) {
+        val fileName = File(filePath).name
 
-            val node = value as? DefaultMutableTreeNode
-            node?.let {
-                icon = if (it.isLeaf) AllIcons.Nodes.Method else {
-                    val fileType = FileTypeManager.getInstance().getFileTypeByFileName(it.userObject.toString())
+        val file = ApplicationManager.getApplication().runReadAction<VirtualFile?> {
+            FilenameIndex.getVirtualFilesByName(fileName, GlobalSearchScope.projectScope(project))
+                .firstOrNull { it.path.endsWith(filePath) }
+        }
 
-                    fileType.icon ?: AllIcons.Nodes.Class
+        if (file == null) return
+
+        ApplicationManager.getApplication().invokeLater {
+            val editor: Editor? =
+                FileEditorManager.getInstance(project)
+                    .openTextEditor(OpenFileDescriptor(project, file, line - 1, 0), true)
+
+            if (editor != null) {
+                val caretModel: CaretModel = editor.caretModel
+
+                WriteCommandAction.runWriteCommandAction(project) {
+                    val position = LogicalPosition(line - 1, 0)
+
+                    caretModel.moveToLogicalPosition(position)
+                    editor.scrollingModel.scrollToCaret(ScrollType.CENTER)
                 }
 
-                backgroundNonSelectionColor = null
             }
-            return this
         }
     }
 }
