@@ -75,8 +75,6 @@ data class CodeHealthFinding(
 //TODO: Refactor, make disposable?
 class CodeSceneToolWindow {
     private lateinit var project: Project
-    private val navigationService = CodeNavigationService.getInstance(project)
-
     private val scope = CoroutineScope(Dispatchers.IO)
 
     fun getContent(project: Project): JBPanel<JBPanel<*>> {
@@ -141,6 +139,8 @@ class CodeSceneToolWindow {
     }
 
     private fun handleTreeSelectionEvent(event: TreeSelectionEvent) {
+        val navigationService = CodeNavigationService.getInstance(project)
+
         (event.source as? JTree)?.clearSelection()
 
         val selectedNode = event.path.lastPathComponent as? DefaultMutableTreeNode
