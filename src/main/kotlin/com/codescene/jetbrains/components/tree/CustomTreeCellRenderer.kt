@@ -26,7 +26,7 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
         node?.userObject?.let { userObject ->
             if (userObject is CodeHealthFinding) {
                 backgroundNonSelectionColor = null
-                toolTipText = userObject.additionalInfo
+                toolTipText = userObject.tooltip
                 text = File(userObject.displayName).name
 
                 icon = when {

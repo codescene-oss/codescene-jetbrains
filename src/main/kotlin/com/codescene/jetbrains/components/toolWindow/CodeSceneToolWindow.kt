@@ -4,9 +4,9 @@ import com.codescene.jetbrains.components.tree.CustomTreeCellRenderer
 import com.codescene.jetbrains.data.*
 import com.codescene.jetbrains.data.Function
 import com.codescene.jetbrains.util.getCodeHealth
-import com.intellij.openapi.application.ApplicationManager
+import com.codescene.jetbrains.util.getFunctionDeltaTooltip
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.command.WriteCommandAction
-import com.intellij.openapi.editor.CaretModel
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.ScrollType
@@ -18,6 +18,10 @@ import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.treeStructure.Tree
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
@@ -75,12 +79,13 @@ val deltaAnalyses: List<Pair<String, CodeDelta>> = listOf(("src/main/kotlin/Test
 data class CodeHealthFinding(
     val displayName: String,
     val filePath: String,
-    val additionalInfo: String
+    val tooltip: String
 )
 
-//TODO: Refactor
+//TODO: Refactor, make disposable?
 class CodeSceneToolWindow {
     private lateinit var project: Project
+    private val scope = CoroutineScope(Dispatchers.IO)
 
     fun getContent(project: Project): JBPanel<JBPanel<*>> {
         this.project = project
@@ -98,22 +103,26 @@ class CodeSceneToolWindow {
         }
     }
 
-
     private fun createFileTree(
         filePath: String,
         delta: CodeDelta
     ): Tree {
         val healthDetails = HealthDetails(delta.oldScore, delta.newScore)
         val healthInformation = getCodeHealth(healthDetails)
+        val health = CodeHealthFinding(
+            displayName = healthInformation,
+            filePath,
+            tooltip = "The Code health for this file is declining. Explore the functions below for more details."
+        )
 
         val root = DefaultMutableTreeNode(filePath).apply {
-            add(DefaultMutableTreeNode(healthInformation))
+            add(DefaultMutableTreeNode(health))
 
-            delta.functionLevelFindings.forEach { (function) ->
+            delta.functionLevelFindings.forEach { (function, details) ->
                 val finding = CodeHealthFinding(
                     displayName = function.name,
                     filePath,
-                    additionalInfo = "bar has 6 arguments, threshold = 4" //TODO: change
+                    tooltip = getFunctionDeltaTooltip(function, details)
                 )
 
                 add(DefaultMutableTreeNode(finding))
@@ -137,36 +146,47 @@ class CodeSceneToolWindow {
         val selectedNode = event.path.lastPathComponent as? DefaultMutableTreeNode
 
         (selectedNode?.takeIf { it.isLeaf }?.userObject as? CodeHealthFinding)?.also { finding ->
-            focusOnLine(project, finding.filePath, 5)
+            scope.launch {
+                focusOnLine(finding.filePath, 5)
+            }
         }
     }
 
-    private fun focusOnLine(project: Project, filePath: String, line: Int) {
+    private suspend fun openEditorAndMoveCaret(file: VirtualFile, line: Int) = withContext(Dispatchers.Main) {
+        val openFileDescriptor = OpenFileDescriptor(project, file, line - 1, 0)
+        val editor = FileEditorManager.getInstance(project)
+            .openTextEditor(openFileDescriptor, true)
+
+        if (editor != null) {
+            moveCaret(editor, line)
+        }
+    }
+
+    private fun moveCaret(editor: Editor, line: Int) {
+        val caretModel = editor.caretModel
+
+        WriteCommandAction.runWriteCommandAction(project) {
+            val position = LogicalPosition(line - 1, 0)
+
+            caretModel.moveToLogicalPosition(position)
+            editor.scrollingModel.scrollToCaret(ScrollType.CENTER)
+        }
+    }
+
+    private fun getFileByName(filePath: String): VirtualFile {
         val fileName = File(filePath).name
 
-        val file = ApplicationManager.getApplication().runReadAction<VirtualFile?> {
+        val file = ReadAction.compute<VirtualFile?, Throwable> {
             FilenameIndex.getVirtualFilesByName(fileName, GlobalSearchScope.projectScope(project))
-                .firstOrNull { it.path.endsWith(filePath) }
+                .firstOrNull { it.path.endsWith(filePath) } //TODO: check if I need this
         }
 
-        if (file == null) return
+        return file
+    }
 
-        ApplicationManager.getApplication().invokeLater {
-            val editor: Editor? =
-                FileEditorManager.getInstance(project)
-                    .openTextEditor(OpenFileDescriptor(project, file, line - 1, 0), true)
+    private suspend fun focusOnLine(filePath: String, line: Int) {
+        val file = getFileByName(filePath)
 
-            if (editor != null) {
-                val caretModel: CaretModel = editor.caretModel
-
-                WriteCommandAction.runWriteCommandAction(project) {
-                    val position = LogicalPosition(line - 1, 0)
-
-                    caretModel.moveToLogicalPosition(position)
-                    editor.scrollingModel.scrollToCaret(ScrollType.CENTER)
-                }
-
-            }
-        }
+        openEditorAndMoveCaret(file, line)
     }
 }
