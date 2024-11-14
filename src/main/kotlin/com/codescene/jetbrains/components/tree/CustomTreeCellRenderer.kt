@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.components.tree
 
 import com.codescene.jetbrains.components.toolWindow.CodeHealthFinding
+import com.codescene.jetbrains.components.toolWindow.NodeType
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.fileTypes.FileTypeManager
 import java.io.File
@@ -29,14 +30,18 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
                 toolTipText = userObject.tooltip
                 text = File(userObject.displayName).name
 
-                icon = when {
-                    userObject.displayName.contains("%") -> AllIcons.General.Error
-                    leaf -> AllIcons.Nodes.Method
-                    else -> FileTypeManager.getInstance().getFileTypeByFileName(userObject.displayName).icon
+                icon = when (userObject.nodeType) {
+                    NodeType.CODE_HEALTH -> AllIcons.General.Error
+                    NodeType.FILE_FINDING -> AllIcons.General.Warning
+                    NodeType.FUNCTION_FINDING -> AllIcons.Nodes.Method
+                    NodeType.ROOT -> FileTypeManager.getInstance()
+                        .getFileTypeByFileName(text).icon
                 }
             }
         }
 
         return this
     }
+
+
 }

@@ -20,10 +20,31 @@ import javax.swing.JTree
 import javax.swing.event.TreeSelectionEvent
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
+import javax.swing.tree.TreeNode
+
+enum class NodeType {
+    ROOT,
+    CODE_HEALTH,
+    FILE_FINDING,
+    FUNCTION_FINDING
+}
 
 //TODO: remove
 val parsedTreeComponents = CodeDelta(
-    fileLevelFindings = emptyList(),
+    fileLevelFindings = listOf(
+        ChangeDetails(
+            category = "Lines of Code in a Single File",
+            description = "This module has 2942 lines of code, improve code health by reducing it to 1000",
+            changeType = ChangeType.INTRODUCED,
+            position = Position(line = 1, column = 1)
+        ),
+        ChangeDetails(
+            category = "Overall Code Complexity",
+            description = "This module has a mean cyclomatic complexity of 8.56 across 64 functions. The mean complexity threshold is 4",
+            changeType = ChangeType.INTRODUCED,
+            position = Position(line = 1, column = 1)
+        )
+    ),
     functionLevelFindings = listOf(
         FunctionFinding(
             function = Function(
@@ -68,8 +89,9 @@ val deltaAnalyses: List<Pair<String, CodeDelta>> = listOf(("src/main/kotlin/Test
 data class CodeHealthFinding(
     val tooltip: String,
     val filePath: String,
-    val focusLine: Int = 1,
-    val displayName: String
+    val focusLine: Int? = 1,
+    val displayName: String,
+    val nodeType: NodeType
 )
 
 //TODO: Refactor, make disposable?
@@ -113,13 +135,26 @@ class CodeSceneToolWindow {
         val healthInformation = getCodeHealth(healthDetails)
 
         val health = CodeHealthFinding(
-            tooltip = "The Code health for this file is declining. Explore the functions below for more details.",
+            tooltip = "The Code health for this file is declining. Explore the functions below for more details.", //TODO: localize
             filePath,
-            displayName = healthInformation
+            displayName = healthInformation,
+            nodeType = NodeType.CODE_HEALTH
         )
 
         add(DefaultMutableTreeNode(health))
     }
+
+    private fun DefaultMutableTreeNode.addFileLeaf(filePath: String, delta: CodeDelta) =
+        delta.fileLevelFindings.forEach {
+            val finding = CodeHealthFinding(
+                tooltip = it.description,
+                filePath,
+                displayName = it.category,
+                nodeType = NodeType.FILE_FINDING
+            )
+
+            add(DefaultMutableTreeNode(finding))
+        }
 
     private fun DefaultMutableTreeNode.addFunctionLeaf(filePath: String, delta: CodeDelta) =
         delta.functionLevelFindings.forEach { (function, details) ->
@@ -127,15 +162,21 @@ class CodeSceneToolWindow {
                 tooltip = getFunctionDeltaTooltip(function, details),
                 filePath,
                 focusLine = details[0].position.line,
-                displayName = function.name
+                displayName = function.name,
+                nodeType = NodeType.FUNCTION_FINDING
             )
 
             add(DefaultMutableTreeNode(finding))
         }
 
-    private fun buildTree(filePath: String, delta: CodeDelta) = DefaultMutableTreeNode(filePath).apply {
-        addCodeHealthLeaf(filePath, delta)
-        addFunctionLeaf(filePath, delta)
+    private fun buildTree(filePath: String, delta: CodeDelta): TreeNode {
+        val root = CodeHealthFinding(tooltip = filePath, filePath, displayName = filePath, nodeType = NodeType.ROOT) //TODO: change tooltip logic
+
+        return DefaultMutableTreeNode(root).apply {
+            addCodeHealthLeaf(filePath, delta)
+            addFileLeaf(filePath, delta)
+            addFunctionLeaf(filePath, delta)
+        }
     }
 
     private fun handleTreeSelectionEvent(event: TreeSelectionEvent) {
@@ -147,7 +188,7 @@ class CodeSceneToolWindow {
 
         (selectedNode?.takeIf { it.isLeaf }?.userObject as? CodeHealthFinding)?.also { finding ->
             scope.launch {
-                navigationService.focusOnLine(finding.filePath, finding.focusLine)
+                navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
             }
         }
     }
