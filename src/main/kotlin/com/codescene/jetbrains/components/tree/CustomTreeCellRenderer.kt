@@ -28,7 +28,8 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
             if (userObject is CodeHealthFinding) {
                 backgroundNonSelectionColor = null
                 toolTipText = userObject.tooltip
-                text = File(userObject.displayName).name
+
+                text = getText(userObject)
 
                 icon = when (userObject.nodeType) {
                     NodeType.CODE_HEALTH -> AllIcons.General.Error
@@ -43,5 +44,14 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
         return this
     }
 
+    private fun getText(node: CodeHealthFinding): String {
+        val displayName = File(node.displayName).name
+        val additionalText = node.additionalText
+
+        return if (additionalText.isEmpty())
+            displayName
+        else
+            "<html>$displayName <span style='color:gray;'>${node.additionalText}</span></html>"
+    }
 
 }

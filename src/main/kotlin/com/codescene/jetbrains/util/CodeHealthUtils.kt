@@ -22,12 +22,14 @@ fun codeImproved(healthDetails: HealthDetails) =
     if (healthDetails.newScore > healthDetails.oldScore) "+"
     else "-"
 
-fun getCodeHealth(healthDetails: HealthDetails): String {
+data class HealthInformation(val change: String, val percentage: String)
+
+fun getCodeHealth(healthDetails: HealthDetails): HealthInformation {
     val newScore = round(healthDetails.newScore)
     val oldScore = round(healthDetails.oldScore)
 
     val changePercentage = getChangePercentage(healthDetails)
     val sign = codeImproved(healthDetails)
 
-    return "$oldScore → $newScore ($sign${changePercentage}%)"
+    return HealthInformation("$oldScore → $newScore", "($sign${changePercentage}%)")
 }

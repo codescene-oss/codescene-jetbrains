@@ -91,7 +91,8 @@ data class CodeHealthFinding(
     val filePath: String,
     val focusLine: Int? = 1,
     val displayName: String,
-    val nodeType: NodeType
+    val nodeType: NodeType,
+    val additionalText: String = ""
 )
 
 //TODO: Refactor, make disposable?
@@ -132,12 +133,13 @@ class CodeSceneToolWindow {
 
     private fun DefaultMutableTreeNode.addCodeHealthLeaf(filePath: String, delta: CodeDelta) {
         val healthDetails = HealthDetails(delta.oldScore, delta.newScore)
-        val healthInformation = getCodeHealth(healthDetails)
+        val (change, percentage) = getCodeHealth(healthDetails)
 
         val health = CodeHealthFinding(
             tooltip = "The Code health for this file is declining. Explore the functions below for more details.", //TODO: localize
             filePath,
-            displayName = healthInformation,
+            displayName = "Code Health: $change",
+            additionalText = percentage,
             nodeType = NodeType.CODE_HEALTH
         )
 
