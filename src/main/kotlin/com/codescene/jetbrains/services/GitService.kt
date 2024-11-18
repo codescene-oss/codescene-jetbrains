@@ -12,12 +12,12 @@ import git4idea.repo.GitRepository
 import git4idea.repo.GitRepositoryManager
 
 @Service(Service.Level.PROJECT)
-class GitService {
+class GitService(val project: Project) {
     companion object {
         fun getInstance(project: Project): GitService = project.service<GitService>()
     }
 
-    fun getHeadCommit(project: Project, file: VirtualFile): String {
+    fun getHeadCommit(file: VirtualFile): String {
         val gitRepository =
             GitRepositoryManager.getInstance(project).getRepositoryForFile(file) ?: return ""
         val handler = createGitShowHandler(project, gitRepository, file)

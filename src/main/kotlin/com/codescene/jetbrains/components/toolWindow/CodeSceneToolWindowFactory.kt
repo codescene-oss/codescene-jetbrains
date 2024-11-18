@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.components.toolWindow
 
 import com.codescene.jetbrains.actions.ShowSettingsAction
+import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.project.Project
@@ -10,24 +11,38 @@ import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
 
 class CodeSceneToolWindowFactory : ToolWindowFactory {
+    private var codeSceneToolWindow: CodeSceneToolWindow? = null
+
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
+        codeSceneToolWindow = CodeSceneToolWindow()
+
         val content = getContent(project)
         val actions = getTitleActions()
 
         toolWindow.setTitleActions(actions)
         toolWindow.contentManager.addContent(content)
+
+        subscribe(project)
+    }
+
+    private fun subscribe(project: Project){
+        project.messageBus.connect().subscribe(ToolWindowRefreshNotifier.TOPIC, object : ToolWindowRefreshNotifier {
+            override fun refresh() {
+                codeSceneToolWindow?.refreshContent(project)
+            }
+        })
     }
 
     override fun shouldBeAvailable(project: Project) = true
 
     private fun getContent(project: Project): Content {
-        val contentPanel = CodeSceneToolWindow().getContent(project)
+        val contentPanel = codeSceneToolWindow!!.getContent(project)
         val content = ContentFactory.getInstance()
 
         return content.createContent(contentPanel, null, false)
     }
 
-    private fun getTitleActions(): List<AnAction>{
+    private fun getTitleActions(): List<AnAction> {
         val action = ShowSettingsAction::class.java.simpleName
         val showSettingsAction = ActionManager.getInstance().getAction(action)
 

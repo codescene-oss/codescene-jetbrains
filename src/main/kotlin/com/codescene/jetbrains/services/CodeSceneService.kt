@@ -4,6 +4,7 @@ import codescene.devtools.ide.DevToolsAPI
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.data.CodeReview
+import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
 import com.intellij.openapi.Disposable
@@ -18,6 +19,7 @@ import java.util.concurrent.TimeUnit
 @Service(Service.Level.PROJECT)
 class CodeSceneService(project: Project) : Disposable {
     private val cacheService: ReviewCacheService = ReviewCacheService.getInstance(project)
+    private val deltaCacheService: DeltaCacheService = DeltaCacheService.getInstance(project)
     private val uiRefreshService: UIRefreshService = UIRefreshService.getInstance(project)
 
     private val scope = CoroutineScope(Dispatchers.IO)
@@ -56,42 +58,48 @@ class CodeSceneService(project: Project) : Disposable {
         }
     }
 
-    fun performDeltaAnalysis() {
+    //TODO: refactor
+    fun codeDelta(editor: Editor) {
+        val project = editor.project!!
+        val path = editor.virtualFile.path
+        val currentCode = editor.document.text
+
+        val oldCode = GitService.getInstance(project).getHeadCommit(editor.virtualFile)
+        val cachedEntry = deltaCacheService.getCachedResponse(DeltaCacheQuery(path, oldCode, currentCode))
+
+        if (oldCode == "" || cachedEntry != null) {
+            println("There is no HEAD commit for this file, or there is cached review for file. Skipping delta...")
+
+            return
+        }
+
         try {
-            val codeWithoutCodeSmell = """
-                function foo() {
-                    return 'bar';
-                }
-                
-                function bar() {
-                  return 'bar';
-                }
-                """.trimIndent()
-            val codeWithCodeSmell = """
-                function foo(a, b, c, d, e, f) {
-                    return "bar"
-                }
-                
-                function bar(a, b, c, d, e, f) {
-                   return 'bar';
-                }
-                """.trimIndent()
-            val path = "src/main/resources/example2.js"
-
-            runWithClassLoaderChange {
-                val reviewNoCodeSmells =
-                    Json.decodeFromString<CodeReview>(DevToolsAPI.review(path, codeWithoutCodeSmell))
-                val reviewWithCodeSmells =
-                    Json.decodeFromString<CodeReview>(DevToolsAPI.review(path, codeWithCodeSmell))
-
-                val delta = DevToolsAPI.delta(reviewNoCodeSmells.rawScore, reviewWithCodeSmells.rawScore);
-                val parsedDelta = Json.decodeFromString<CodeDelta>(delta)
-
-                println("delta: $delta, parsedDelta:$parsedDelta")
-
-            }
+            performDeltaAnalysis(editor, oldCode, currentCode)
         } catch (e: Exception) {
             Log.error("Error during delta analysis for file - ${e.message}")
+        }
+    }
+
+    private fun performDeltaAnalysis(editor: Editor, oldCode: String, currentCode: String) = deltaScope.launch {
+        runWithClassLoaderChange {
+            //TODO: check if this can be done differently
+            val oldCodeReview =
+                Json.decodeFromString<CodeReview>(DevToolsAPI.review(editor.virtualFile.path, oldCode))
+            val newCodeReview =
+                Json.decodeFromString<CodeReview>(DevToolsAPI.review(editor.virtualFile.path, editor.document.text))
+
+            val delta = DevToolsAPI.delta(oldCodeReview.rawScore, newCodeReview.rawScore)
+
+            if (delta != "null") {
+                val parsedDelta = Json.decodeFromString<CodeDelta>(delta)
+
+                deltaCacheService.cacheResponse(
+                    editor.virtualFile.path,
+                    DeltaCacheEntry(oldCode, currentCode, parsedDelta)
+                )
+
+                editor.project!!.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh()
+            }
         }
     }
 

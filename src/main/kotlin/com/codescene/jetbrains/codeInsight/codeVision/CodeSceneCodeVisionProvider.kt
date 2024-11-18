@@ -69,13 +69,16 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         return recomputeCodeVision(editor)
     }
 
-    private fun triggerCodeReview(editor: Editor, project: Project) {
+    private fun triggerCodeAnalysis(editor: Editor, project: Project) {
         val filePath = editor.virtualFile.path
 
         if (!isApiCallInProgressForFile(filePath)) {
             markApiCallInProgress(filePath)
 
-            CodeSceneService.getInstance(project).reviewCode(editor)
+            val codeSceneService = CodeSceneService.getInstance(project)
+
+            codeSceneService.reviewCode(editor)
+            codeSceneService.codeDelta(editor)
         }
     }
 
@@ -90,7 +93,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         val cachedResponse = cacheService.getCachedResponse(query)
 
         if (cachedResponse == null) {
-            triggerCodeReview(editor, project)
+            triggerCodeAnalysis(editor, project)
 
             return CodeVisionState.NotReady
         }

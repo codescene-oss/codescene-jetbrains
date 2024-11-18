@@ -13,20 +13,26 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
 @Service(Service.Level.PROJECT)
 class CodeNavigationService(val project: Project) {
+    private val scope = CoroutineScope(Dispatchers.IO)
+
     companion object {
         fun getInstance(project: Project): CodeNavigationService = project.service<CodeNavigationService>()
     }
 
-    suspend fun focusOnLine(filePath: String, line: Int) {
-        val file = getFileByName(filePath) ?: return
+    fun focusOnLine(filePath: String, line: Int) {
+        scope.launch {
+            val file = getFileByName(filePath) ?: return@launch
 
-        openEditorAndMoveCaret(file, line)
+            openEditorAndMoveCaret(file, line)
+        }
     }
 
     private fun getFileByName(filePath: String): VirtualFile? {
