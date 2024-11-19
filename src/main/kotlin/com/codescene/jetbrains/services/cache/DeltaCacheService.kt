@@ -1,14 +1,20 @@
-package com.codescene.jetbrains.services
+package com.codescene.jetbrains.services.cache
 
 import com.codescene.jetbrains.data.CodeDelta
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.apache.commons.codec.digest.DigestUtils
-import java.util.concurrent.ConcurrentHashMap
+
+data class DeltaCacheItem(
+    val headHash: String,
+    val currentHash: String,
+    val deltaApiResponse: CodeDelta,
+)
 
 data class DeltaCacheEntry(
-    val oldFileContent: String,
+    val filePath: String,
+    val headContent: String,
     val currentFileContent: String,
     val deltaApiResponse: CodeDelta,
 )
@@ -19,16 +25,13 @@ data class DeltaCacheQuery(
     val currentFileContent: String
 )
 
-//TODO: standardize cache
 @Service(Service.Level.PROJECT)
-class DeltaCacheService {
-    private val cache = ConcurrentHashMap<String, DeltaCacheEntry>()
-
+class DeltaCacheService : CacheService<DeltaCacheQuery, DeltaCacheEntry, DeltaCacheItem, CodeDelta>(){
     companion object {
         fun getInstance(project: Project): DeltaCacheService = project.service<DeltaCacheService>()
     }
 
-    fun getCachedResponse(query: DeltaCacheQuery): CodeDelta? {
+    override fun getCachedResponse(query: DeltaCacheQuery): CodeDelta? {
         val (filePath, headCommitContent, currentFileContent) = query
 
         val oldHash = DigestUtils.sha256Hex(headCommitContent)
@@ -37,18 +40,18 @@ class DeltaCacheService {
         val entry = cache[filePath]
         val apiResponse = entry?.deltaApiResponse
 
-        val contentsMatch = entry?.oldFileContent == oldHash && entry?.currentFileContent == newHash
+        val contentsMatch = entry?.headHash == oldHash && entry?.currentHash == newHash
         val cacheHit = cache.containsKey(filePath) && contentsMatch
 
         return if (cacheHit) apiResponse else null
     }
 
-    fun cacheResponse(filePath: String, entry: DeltaCacheEntry) {
-        val (headCommitHash, currentFileContentHash, deltaApiResponse) = entry
+    override fun cacheResponse(entry: DeltaCacheEntry) {
+        val (filePath, headContent, currentFileContent, deltaApiResponse) = entry
 
-        val headContentHash = DigestUtils.sha256Hex(headCommitHash)
-        val currentContentHash = DigestUtils.sha256Hex(currentFileContentHash)
+        val headHash = DigestUtils.sha256Hex(headContent)
+        val currentContentHash = DigestUtils.sha256Hex(currentFileContent)
 
-        cache[filePath] = DeltaCacheEntry(headContentHash, currentContentHash, deltaApiResponse)
+        cache[filePath] = DeltaCacheItem(headHash, currentContentHash, deltaApiResponse)
     }
 }

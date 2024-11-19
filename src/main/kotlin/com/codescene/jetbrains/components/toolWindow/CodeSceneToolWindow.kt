@@ -4,9 +4,9 @@ import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.tree.CustomTreeCellRenderer
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.services.CodeNavigationService
-import com.codescene.jetbrains.services.DeltaCacheQuery
-import com.codescene.jetbrains.services.DeltaCacheService
 import com.codescene.jetbrains.services.GitService
+import com.codescene.jetbrains.services.cache.DeltaCacheQuery
+import com.codescene.jetbrains.services.cache.DeltaCacheService
 import com.codescene.jetbrains.util.getCodeHealth
 import com.codescene.jetbrains.util.getFunctionDeltaTooltip
 import com.intellij.openapi.fileEditor.FileEditorManager

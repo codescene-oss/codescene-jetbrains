@@ -3,9 +3,9 @@ package com.codescene.jetbrains.codeInsight.codeVision
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.data.CodeSmell
-import com.codescene.jetbrains.services.CacheQuery
 import com.codescene.jetbrains.services.CodeSceneService
-import com.codescene.jetbrains.services.ReviewCacheService
+import com.codescene.jetbrains.services.cache.ReviewCacheQuery
+import com.codescene.jetbrains.services.cache.ReviewCacheService
 import com.codescene.jetbrains.util.getTextRange
 import com.codescene.jetbrains.util.isFileSupported
 import com.intellij.codeInsight.codeVision.*
@@ -87,7 +87,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
         val project = editor.project!!
         val document = editor.document
-        val query = CacheQuery(document.text, editor.virtualFile.path)
+        val query = ReviewCacheQuery(document.text, editor.virtualFile.path)
 
         val cacheService = ReviewCacheService.getInstance(project)
         val cachedResponse = cacheService.getCachedResponse(query)

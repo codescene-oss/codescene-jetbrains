@@ -4,8 +4,8 @@ import com.codescene.jetbrains.codeInsight.intentions.ShowProblemIntentionAction
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.data.CodeSmell
-import com.codescene.jetbrains.services.CacheQuery
-import com.codescene.jetbrains.services.ReviewCacheService
+import com.codescene.jetbrains.services.cache.ReviewCacheQuery
+import com.codescene.jetbrains.services.cache.ReviewCacheService
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.formatCodeSmellMessage
 import com.codescene.jetbrains.util.getTextRange
@@ -68,7 +68,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
 
     private fun fetchCache(psiFile: PsiFile, content: String): CodeReview? {
         val path = psiFile.virtualFile.path
-        val query = CacheQuery(content, path)
+        val query = ReviewCacheQuery(content, path)
 
         return ReviewCacheService.getInstance(psiFile.project).getCachedResponse(query).also {
             if (it == null) Log.info("No cache available for ${path}. Skipping annotation.")

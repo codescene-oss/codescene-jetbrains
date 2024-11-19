@@ -1,9 +1,9 @@
 package com.codescene.jetbrains.service
 
 import com.codescene.jetbrains.data.CodeReview
-import com.codescene.jetbrains.services.CacheEntry
-import com.codescene.jetbrains.services.CacheQuery
-import com.codescene.jetbrains.services.ReviewCacheService
+import com.codescene.jetbrains.services.cache.ReviewCacheEntry
+import com.codescene.jetbrains.services.cache.ReviewCacheQuery
+import com.codescene.jetbrains.services.cache.ReviewCacheService
 import io.mockk.mockk
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -26,27 +26,27 @@ class ReviewCacheServiceTest {
 
     @Test
     fun `cacheResponse stores the response in cache`() {
-        val entry = CacheEntry(fileContents, filePath, response)
+        val entry = ReviewCacheEntry(fileContents, filePath, response)
 
         reviewCacheService.cacheResponse(entry)
 
-        val cachedResponse = reviewCacheService.getCachedResponse(CacheQuery(fileContents, filePath))
+        val cachedResponse = reviewCacheService.getCachedResponse(ReviewCacheQuery(fileContents, filePath))
 
         assertEquals(response, cachedResponse)
     }
 
     @Test
     fun `getCachedResponse returns null if no cache entry exists`() {
-        val cachedResponse = reviewCacheService.getCachedResponse(CacheQuery(fileContents, filePath))
+        val cachedResponse = reviewCacheService.getCachedResponse(ReviewCacheQuery(fileContents, filePath))
 
         assertNull(cachedResponse)
     }
 
     @Test
     fun `getCachedResponse returns null if file contents do not match`() {
-        reviewCacheService.cacheResponse(CacheEntry(fileContents, filePath, response))
+        reviewCacheService.cacheResponse(ReviewCacheEntry(fileContents, filePath, response))
 
-        val cachedResponse = reviewCacheService.getCachedResponse(CacheQuery(newFileContents, filePath))
+        val cachedResponse = reviewCacheService.getCachedResponse(ReviewCacheQuery(newFileContents, filePath))
 
         assertNull(cachedResponse)
     }

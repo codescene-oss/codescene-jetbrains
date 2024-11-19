@@ -5,6 +5,7 @@ import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvide
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
+import com.codescene.jetbrains.services.cache.*
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
 import com.intellij.openapi.Disposable
@@ -93,10 +94,8 @@ class CodeSceneService(project: Project) : Disposable {
             if (delta != "null") {
                 val parsedDelta = Json.decodeFromString<CodeDelta>(delta)
 
-                deltaCacheService.cacheResponse(
-                    editor.virtualFile.path,
-                    DeltaCacheEntry(oldCode, currentCode, parsedDelta)
-                )
+                val cacheEntry = DeltaCacheEntry(editor.virtualFile.path, oldCode, currentCode, parsedDelta)
+                deltaCacheService.cacheResponse(cacheEntry)
 
                 editor.project!!.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh()
             }
@@ -133,7 +132,7 @@ class CodeSceneService(project: Project) : Disposable {
 
         val parsedData = Json.decodeFromString<CodeReview>(result)
 
-        val entry = CacheEntry(fileContents = code, filePath = path, response = parsedData)
+        val entry = ReviewCacheEntry(fileContents = code, filePath = path, response = parsedData)
         cacheService.cacheResponse(entry)
 
         Log.debug("Review response cached for file $fileName with path $path")
