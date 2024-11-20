@@ -26,6 +26,7 @@ class CodeSceneService(project: Project) : Disposable {
     private val scope = CoroutineScope(Dispatchers.IO)
     private val deltaScope = CoroutineScope(Dispatchers.IO)
     private val debounceDelay: Long = TimeUnit.SECONDS.toMillis(3)
+
     private val activeFileReviews = mutableMapOf<String, Job>()
     private val activeDeltaReviews = mutableMapOf<String, Job>()
 
@@ -62,59 +63,58 @@ class CodeSceneService(project: Project) : Disposable {
 
     //TODO: refactor
     fun codeDelta(editor: Editor) {
+        val file = editor.virtualFile
         val project = editor.project!!
         val path = editor.virtualFile.path
         val currentCode = editor.document.text
 
-        val oldCode = GitService.getInstance(project).getHeadCommit(editor.virtualFile)
-        val cachedEntry = deltaCacheService.getCachedResponse(DeltaCacheQuery(path, oldCode, currentCode))
+        val oldCode = GitService.getInstance(project).getHeadCommit(file).also { if (it == "") return }
 
-        if (oldCode == "" || cachedEntry != null) {
-            println("There is no HEAD commit for this file, or there is cached review for file. Skipping delta...")
+        deltaCacheService.getCachedResponse(DeltaCacheQuery(path, oldCode, currentCode))
+            .also { if (it != null) return }
 
-            return
-        }
-
-        println("activeDeltaReviews: $activeDeltaReviews")
         activeDeltaReviews[path]?.cancel()
 
         try {
-            println("Performing delta analysis...")
+            activeFileReviews[path] = deltaScope.launch {
+                delay(debounceDelay)
 
-            activeFileReviews[path] = performDeltaAnalysis(editor, oldCode, currentCode)
+                performDeltaAnalysis(editor, oldCode, currentCode)
+
+                editor.project!!.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh()
+                uiRefreshService.refreshCodeVision(editor, listOf("CodeHealthCodeVisionProvider"))
+            }
         } catch (e: Exception) {
             Log.error("Error during delta analysis for file - ${e.message}")
         }
     }
 
-    private fun performDeltaAnalysis(editor: Editor, oldCode: String, currentCode: String) = deltaScope.launch {
-        delay(debounceDelay)
-
-        val cachedReview = cacheService.getCachedResponse(ReviewCacheQuery(currentCode, editor.virtualFile.path))
-        if (cachedReview != null) println("Found cached review for new file")
+    private fun performDeltaAnalysis(editor: Editor, oldCode: String, currentCode: String) {
+        val path = editor.virtualFile.path
+        val newCode = editor.document.text
+        val cachedReview = cacheService.getCachedResponse(ReviewCacheQuery(currentCode, path))
+            .also { if (it != null) println("Found cached review for new file") }
 
         runWithClassLoaderChange {
-            val oldCodeReview =
-                Json.decodeFromString<CodeReview>(DevToolsAPI.review(editor.virtualFile.path, oldCode))
-            val newCodeReview = cachedReview ?: Json.decodeFromString<CodeReview>(
-                DevToolsAPI.review(
-                    editor.virtualFile.path,
-                    editor.document.text
-                )
-            )
-
+            val oldCodeReview = Json.decodeFromString<CodeReview>(DevToolsAPI.review(path, oldCode))
+            val newCodeReview = cachedReview ?: Json.decodeFromString<CodeReview>(DevToolsAPI.review(path, newCode))
 
             val delta = DevToolsAPI.delta(oldCodeReview.rawScore, newCodeReview.rawScore)
 
-            if (delta != "null") {
-                println("Delta calculated. Parsing data and saving in cache...")
+            when (delta) {
+                "null" -> println("Delta is null")
+                else -> {
+                    if (delta != "null") {
+                        println("Delta calculated. Parsing data and saving in cache...")
 
-                val parsedDelta = Json.decodeFromString<CodeDelta>(delta)
+                        val parsedDelta = Json.decodeFromString<CodeDelta>(delta)
 
-                val cacheEntry = DeltaCacheEntry(editor.virtualFile.path, oldCode, currentCode, parsedDelta)
-                deltaCacheService.cacheResponse(cacheEntry)
+                        val cacheEntry = DeltaCacheEntry(editor.virtualFile.path, oldCode, currentCode, parsedDelta)
+                        deltaCacheService.cacheResponse(cacheEntry)
 
-                editor.project!!.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh()
+                        println("Delta analysis done")
+                    }
+                }
             }
         }
     }

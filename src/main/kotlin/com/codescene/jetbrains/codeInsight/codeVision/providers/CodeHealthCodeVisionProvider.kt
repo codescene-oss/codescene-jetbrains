@@ -3,9 +3,10 @@ package com.codescene.jetbrains.codeInsight.codeVision.providers
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.data.CodeReview
+import com.codescene.jetbrains.util.getCachedDelta
+import com.codescene.jetbrains.util.round
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
-import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
 import java.awt.event.MouseEvent
@@ -13,28 +14,25 @@ import java.awt.event.MouseEvent
 class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override val categoryToFilter = ""
 
-    private fun getCodeVisionEntry(result: CodeReview?): ClickableTextCodeVisionEntry {
-        val text = "Code health score: ${result?.score}/10"
+    private fun getCodeVisionEntry(description: String) = ClickableTextCodeVisionEntry(
+        "Code Health: $description",
+        id,
+        { event, sourceEditor -> handleClick(sourceEditor, "Health Score", event) },
+        CODE_HEALTH
+    )
 
-        return ClickableTextCodeVisionEntry(
-            text,
-            id,
-            { event, sourceEditor -> handleClick(sourceEditor, "Health Score", event) },
-            CODE_HEALTH
-        )
-    }
+    override fun getLenses(editor: Editor, result: CodeReview?): ArrayList<Pair<TextRange, CodeVisionEntry>> {
+        val cachedDelta = getCachedDelta(editor)
 
-    override fun getLenses(document: Document, result: CodeReview?): ArrayList<Pair<TextRange, CodeVisionEntry>> {
-        val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
-
-        if (result != null) {
-            val range = TextRange(0, 0)
-            val entry = getCodeVisionEntry(result)
-
-            lenses.add(range to entry)
+        val description = when {
+            cachedDelta != null -> "${round(cachedDelta.oldScore)} → ${round(cachedDelta.newScore)}"
+            result != null -> result.score.toString()
+            else -> return arrayListOf()
         }
 
-        return lenses
+        val entry = getCodeVisionEntry(description)
+
+        return arrayListOf(TextRange(0, 0) to entry)
     }
 
     override fun handleClick(editor: Editor, category: String, event: MouseEvent?) {

@@ -11,7 +11,6 @@ import com.codescene.jetbrains.util.isFileSupported
 import com.intellij.codeInsight.codeVision.*
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.icons.AllIcons
-import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
@@ -100,19 +99,19 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
         if (!codeVisionEnabled) return CodeVisionState.READY_EMPTY
 
-        val lenses = getLenses(document, cachedResponse)
+        val lenses = getLenses(editor, cachedResponse)
 
         return CodeVisionState.Ready(lenses)
     }
 
     open fun getLenses(
-        document: Document,
+        editor: Editor,
         result: CodeReview?
     ): ArrayList<Pair<TextRange, CodeVisionEntry>> {
         val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
 
         getCodeSmellsByCategory(result).forEach { smell ->
-            val range = getTextRange(smell, document)
+            val range = getTextRange(smell, editor.document)
 
             val entry = getCodeVisionEntry(smell)
 

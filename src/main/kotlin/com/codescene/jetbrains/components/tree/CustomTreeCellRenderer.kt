@@ -32,13 +32,7 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
 
                 text = getText(userObject)
 
-                icon = when (userObject.nodeType) {
-                    NodeType.CODE_HEALTH -> CODE_HEALTH_DECREASE
-                    NodeType.FILE_FINDING -> AllIcons.Nodes.WarningIntroduction
-                    NodeType.FUNCTION_FINDING -> AllIcons.Nodes.Method
-                    NodeType.ROOT -> FileTypeManager.getInstance()
-                        .getFileTypeByFileName(text).icon
-                }
+                icon = getIcon(userObject.nodeType)
             }
         }
 
@@ -55,4 +49,11 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
             "<html>$displayName <span style='color:gray;'>${node.additionalText}</span></html>"
     }
 
+    private fun getIcon(type: NodeType) = when (type) {
+        NodeType.CODE_HEALTH -> CODE_HEALTH_DECREASE
+        NodeType.FILE_FINDING -> AllIcons.Nodes.WarningIntroduction
+        NodeType.FUNCTION_FINDING -> AllIcons.Nodes.Method
+        NodeType.ROOT -> FileTypeManager.getInstance()
+            .getFileTypeByFileName(text).icon
+    }
 }

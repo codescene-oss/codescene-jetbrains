@@ -75,7 +75,7 @@ class CodeSceneToolWindow {
         }
     }
 
-    fun getContent(project: Project): JBPanel<JBPanel<*>> {
+    fun getContent(project: Project, delta: CodeDelta? = null): JBPanel<JBPanel<*>> {
         println("getting content for tool window")
 
         this.project = project
@@ -147,8 +147,8 @@ class CodeSceneToolWindow {
         add(DefaultMutableTreeNode(health))
     }
 
-    private fun DefaultMutableTreeNode.addFileLeaf(filePath: String, delta: CodeDelta) =
-        delta.fileLevelFindings?.forEach {
+    private fun DefaultMutableTreeNode.addFileLeaves(filePath: String, delta: CodeDelta) =
+        delta.fileLevelFindings.forEach {
             val finding = CodeHealthFinding(
                 tooltip = it.description,
                 filePath,
@@ -159,8 +159,8 @@ class CodeSceneToolWindow {
             add(DefaultMutableTreeNode(finding))
         }
 
-    private fun DefaultMutableTreeNode.addFunctionLeaf(filePath: String, delta: CodeDelta) =
-        delta.functionLevelFindings?.forEach { (function, details) ->
+    private fun DefaultMutableTreeNode.addFunctionLeaves(filePath: String, delta: CodeDelta) =
+        delta.functionLevelFindings.forEach { (function, details) ->
             val finding = CodeHealthFinding(
                 tooltip = getFunctionDeltaTooltip(function, details),
                 filePath,
@@ -182,8 +182,8 @@ class CodeSceneToolWindow {
 
         return DefaultMutableTreeNode(root).apply {
             addCodeHealthLeaf(filePath, delta)
-            addFileLeaf(filePath, delta)
-            addFunctionLeaf(filePath, delta)
+            addFileLeaves(filePath, delta)
+            addFunctionLeaves(filePath, delta)
         }
     }
 
@@ -196,7 +196,6 @@ class CodeSceneToolWindow {
 
         (selectedNode?.takeIf { it.isLeaf }?.userObject as? CodeHealthFinding)?.also { finding ->
             navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
-
         }
     }
 
