@@ -24,6 +24,8 @@
     </actions>
 
     <extensions defaultExtensionNs="com.intellij">
+        <iconMapper mappingFile="CodeSceneIconMappings.json" />
+
         <applicationService serviceImplementation="com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore"/>
 
         <applicationConfigurable
@@ -33,7 +35,7 @@
 
         <toolWindow
                 id="CodeScene"
-                icon="/toolWindow/logo-40x40.png"
+                icon="com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW"
                 factoryClass="com.codescene.jetbrains.components.toolWindow.CodeSceneToolWindowFactory"/>
 
         <!-- An empty language attribute applies to all languages -->

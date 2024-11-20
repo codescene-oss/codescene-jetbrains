@@ -1,13 +1,9 @@
 package com.codescene.jetbrains.util
 
 import com.codescene.jetbrains.components.toolWindow.HealthDetails
-import java.math.BigDecimal
-import java.math.RoundingMode
 import kotlin.math.abs
 
-fun round(score: Double, decimals: Int = 2) = BigDecimal(score)
-    .setScale(decimals, RoundingMode.HALF_EVEN)
-    .toDouble()
+fun round(score: Double): Double = kotlin.math.floor(score * 100.0) / 100.0
 
 fun getPercentageChange(healthDetails: HealthDetails) =
     round((healthDetails.newScore / healthDetails.oldScore) * 100)

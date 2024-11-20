@@ -27,6 +27,7 @@ class CodeSceneService(project: Project) : Disposable {
     private val deltaScope = CoroutineScope(Dispatchers.IO)
     private val debounceDelay: Long = TimeUnit.SECONDS.toMillis(3)
     private val activeFileReviews = mutableMapOf<String, Job>()
+    private val activeDeltaReviews = mutableMapOf<String, Job>()
 
     companion object {
         fun getInstance(project: Project): CodeSceneService = project.service<CodeSceneService>()
@@ -74,24 +75,40 @@ class CodeSceneService(project: Project) : Disposable {
             return
         }
 
+        println("activeDeltaReviews: $activeDeltaReviews")
+        activeDeltaReviews[path]?.cancel()
+
         try {
-            performDeltaAnalysis(editor, oldCode, currentCode)
+            println("Performing delta analysis...")
+
+            activeFileReviews[path] = performDeltaAnalysis(editor, oldCode, currentCode)
         } catch (e: Exception) {
             Log.error("Error during delta analysis for file - ${e.message}")
         }
     }
 
     private fun performDeltaAnalysis(editor: Editor, oldCode: String, currentCode: String) = deltaScope.launch {
+        delay(debounceDelay)
+
+        val cachedReview = cacheService.getCachedResponse(ReviewCacheQuery(currentCode, editor.virtualFile.path))
+        if (cachedReview != null) println("Found cached review for new file")
+
         runWithClassLoaderChange {
-            //TODO: check if this can be done differently
             val oldCodeReview =
                 Json.decodeFromString<CodeReview>(DevToolsAPI.review(editor.virtualFile.path, oldCode))
-            val newCodeReview =
-                Json.decodeFromString<CodeReview>(DevToolsAPI.review(editor.virtualFile.path, editor.document.text))
+            val newCodeReview = cachedReview ?: Json.decodeFromString<CodeReview>(
+                DevToolsAPI.review(
+                    editor.virtualFile.path,
+                    editor.document.text
+                )
+            )
+
 
             val delta = DevToolsAPI.delta(oldCodeReview.rawScore, newCodeReview.rawScore)
 
             if (delta != "null") {
+                println("Delta calculated. Parsing data and saving in cache...")
+
                 val parsedDelta = Json.decodeFromString<CodeDelta>(delta)
 
                 val cacheEntry = DeltaCacheEntry(editor.virtualFile.path, oldCode, currentCode, parsedDelta)
