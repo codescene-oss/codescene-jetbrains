@@ -11,4 +11,13 @@ object CodeSceneIcons {
 
     @JvmField
     val CODE_HEALTH_DECREASE = getIcon("/images/codeHealthDecrease.svg", javaClass)
+
+    @JvmField
+    val CODE_HEALTH = getIcon("/images/codeHealth.svg", javaClass)
+
+    @JvmField
+    val CODE_HEALTH_HIGH = getIcon("/images/codeHealthHigh.svg", javaClass)
+
+    @JvmField
+    val CODE_HEALTH_LOW = getIcon("/images/codeHealthLow.svg", javaClass)
 }

@@ -1,10 +1,10 @@
 package com.codescene.jetbrains.codeInsight.codeVision.providers
 
+import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.data.CodeReview
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
@@ -20,7 +20,7 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
             text,
             id,
             { event, sourceEditor -> handleClick(sourceEditor, "Health Score", event) },
-            AllIcons.General.Balloon
+            CODE_HEALTH
         )
     }
 
