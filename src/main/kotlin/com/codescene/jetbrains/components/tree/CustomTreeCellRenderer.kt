@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.components.tree
 
+import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_DECREASE
 import com.codescene.jetbrains.components.toolWindow.CodeHealthFinding
 import com.codescene.jetbrains.components.toolWindow.NodeType
 import com.intellij.icons.AllIcons
@@ -32,8 +33,8 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
                 text = getText(userObject)
 
                 icon = when (userObject.nodeType) {
-                    NodeType.CODE_HEALTH -> AllIcons.General.Error
-                    NodeType.FILE_FINDING -> AllIcons.General.Warning
+                    NodeType.CODE_HEALTH -> CODE_HEALTH_DECREASE
+                    NodeType.FILE_FINDING -> AllIcons.Nodes.WarningIntroduction
                     NodeType.FUNCTION_FINDING -> AllIcons.Nodes.Method
                     NodeType.ROOT -> FileTypeManager.getInstance()
                         .getFileTypeByFileName(text).icon

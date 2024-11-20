@@ -7,5 +7,8 @@ object CodeSceneIcons {
     val CODESCENE_TW = getIcon("/images/iconTool.svg", javaClass)
 
     @JvmField
-    val CODESCENE_TW_DARK = getIcon("/images/iconTool_dark.svg", javaClass)
+    val CODE_HEALTH_INCREASE = getIcon("/images/codeHealthIncrease.svg", javaClass)
+
+    @JvmField
+    val CODE_HEALTH_DECREASE = getIcon("/images/codeHealthDecrease.svg", javaClass)
 }
