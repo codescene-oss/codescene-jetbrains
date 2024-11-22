@@ -5,16 +5,14 @@ import kotlin.math.abs
 
 fun round(score: Double): Double = kotlin.math.floor(score * 100.0) / 100.0
 
-fun getPercentageChange(healthDetails: HealthDetails) =
-    round((healthDetails.newScore / healthDetails.oldScore) * 100)
-
 fun getChangePercentage(healthDetails: HealthDetails): Double {
-    val change = 100 - getPercentageChange(healthDetails)
+    val percentage = (healthDetails.newScore / healthDetails.oldScore) * 100
+    val newScore = round(percentage)
 
-    return abs((round(change)))
+    return round(abs(100 - newScore))
 }
 
-fun codeImproved(healthDetails: HealthDetails) =
+private fun codeImproved(healthDetails: HealthDetails) =
     if (healthDetails.newScore > healthDetails.oldScore) "+"
     else "-"
 
@@ -27,5 +25,8 @@ fun getCodeHealth(healthDetails: HealthDetails): HealthInformation {
     val changePercentage = getChangePercentage(healthDetails)
     val sign = codeImproved(healthDetails)
 
-    return HealthInformation("$oldScore → $newScore", "($sign${changePercentage}%)")
+    return if (newScore != oldScore) HealthInformation(
+        "$oldScore → $newScore",
+        "($sign${changePercentage}%)"
+    ) else HealthInformation(newScore.toString(), "")
 }

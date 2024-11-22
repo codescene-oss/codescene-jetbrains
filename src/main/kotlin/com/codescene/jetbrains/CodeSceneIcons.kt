@@ -13,6 +13,9 @@ object CodeSceneIcons {
     val CODE_HEALTH_DECREASE = getIcon("/images/codeHealthDecrease.svg", javaClass)
 
     @JvmField
+    val CODE_HEALTH_NEUTRAL = getIcon("/images/codeHealthNeutral.svg", javaClass)
+
+    @JvmField
     val CODE_HEALTH = getIcon("/images/codeHealth.svg", javaClass)
 
     @JvmField

@@ -1,6 +1,8 @@
 package com.codescene.jetbrains.components.tree
 
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_DECREASE
+import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_INCREASE
+import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_NEUTRAL
 import com.codescene.jetbrains.components.toolWindow.CodeHealthFinding
 import com.codescene.jetbrains.components.toolWindow.NodeType
 import com.intellij.icons.AllIcons
@@ -50,7 +52,9 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
     }
 
     private fun getIcon(type: NodeType) = when (type) {
-        NodeType.CODE_HEALTH -> CODE_HEALTH_DECREASE
+        NodeType.CODE_HEALTH_DECREASE -> CODE_HEALTH_DECREASE
+        NodeType.CODE_HEALTH_INCREASE -> CODE_HEALTH_INCREASE
+        NodeType.CODE_HEALTH_NEUTRAL -> CODE_HEALTH_NEUTRAL
         NodeType.FILE_FINDING -> AllIcons.Nodes.WarningIntroduction
         NodeType.FUNCTION_FINDING -> AllIcons.Nodes.Method
         NodeType.ROOT -> FileTypeManager.getInstance()
