@@ -6,13 +6,13 @@ import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.services.CodeSceneService
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
 import com.codescene.jetbrains.services.cache.ReviewCacheService
+import com.codescene.jetbrains.util.getCachedDelta
 import com.codescene.jetbrains.util.getTextRange
 import com.codescene.jetbrains.util.isFileSupported
 import com.intellij.codeInsight.codeVision.*
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import org.reflections.Reflections
 import java.awt.event.MouseEvent
@@ -21,12 +21,15 @@ import java.awt.event.MouseEvent
 abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
     companion object {
         @Volatile
-        var activeApiCalls = mutableSetOf<String>()
+        var activeReviewApiCalls = mutableSetOf<String>()
+
+        @Volatile
+        var activeDeltaApiCalls = mutableSetOf<String>()
 
         private var providers: List<String> = emptyList()
 
-        fun markApiCallComplete(filePath: String) {
-            activeApiCalls.remove(filePath)
+        fun markApiCallComplete(filePath: String, apiCalls: MutableSet<String>) {
+            apiCalls.remove(filePath)
         }
 
         fun getProviders(): List<String> {
@@ -68,16 +71,19 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         return recomputeCodeVision(editor)
     }
 
-    private fun triggerCodeAnalysis(editor: Editor, project: Project) {
+    private fun triggerApiCall(
+        editor: Editor,
+        apiCalls: MutableSet<String>,
+        apiCallAction: (CodeSceneService) -> Unit
+    ) {
         val filePath = editor.virtualFile.path
 
-        if (!isApiCallInProgressForFile(filePath)) {
-            markApiCallInProgress(filePath)
+        if (!isApiCallInProgressForFile(filePath, apiCalls)) {
+            markApiCallInProgress(filePath, apiCalls)
 
-            val codeSceneService = CodeSceneService.getInstance(project)
+            val codeSceneService = CodeSceneService.getInstance(editor.project!!)
 
-            codeSceneService.reviewCode(editor)
-            codeSceneService.codeDelta(editor)
+            apiCallAction(codeSceneService)
         }
     }
 
@@ -88,18 +94,26 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         val document = editor.document
         val query = ReviewCacheQuery(document.text, editor.virtualFile.path)
 
-        val cacheService = ReviewCacheService.getInstance(project)
-        val cachedResponse = cacheService.getCachedResponse(query)
+        val reviewCache = ReviewCacheService.getInstance(project)
+        val cachedReview = reviewCache.getCachedResponse(query)
 
-        if (cachedResponse == null) {
-            triggerCodeAnalysis(editor, project)
+        val cachedDelta = getCachedDelta(editor)
+
+        if (cachedDelta == null) triggerApiCall(editor, activeDeltaApiCalls) { codeSceneService ->
+            codeSceneService.codeDelta(editor)
+        }
+
+        if (cachedReview == null) {
+            triggerApiCall(editor, activeReviewApiCalls) { codeSceneService ->
+                codeSceneService.reviewCode(editor)
+            }
 
             return CodeVisionState.NotReady
         }
 
         if (!codeVisionEnabled) return CodeVisionState.READY_EMPTY
 
-        val lenses = getLenses(editor, cachedResponse)
+        val lenses = getLenses(editor, cachedReview)
 
         return CodeVisionState.Ready(lenses)
     }
@@ -126,7 +140,8 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
     }
 
     private fun getCodeSmellsByCategory(codeAnalysisResult: CodeReview?): List<CodeSmell> {
-        val fileLevelSmells = codeAnalysisResult?.fileLevelCodeSmells?.filterByCategory(categoryToFilter) ?: emptyList()
+        val fileLevelSmells =
+            codeAnalysisResult?.fileLevelCodeSmells?.filterByCategory(categoryToFilter) ?: emptyList()
 
         val functionLevelSmells = codeAnalysisResult?.functionLevelCodeSmells?.flatMap { functionCodeSmell ->
             functionCodeSmell.codeSmells.filterByCategory(categoryToFilter)
@@ -146,9 +161,10 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
             AllIcons.General.InspectionsWarningEmpty
         )
 
-    private fun markApiCallInProgress(filePath: String) {
-        activeApiCalls.add(filePath)
+    private fun markApiCallInProgress(filePath: String, apiCalls: MutableSet<String>) {
+        apiCalls.add(filePath)
     }
 
-    private fun isApiCallInProgressForFile(filePath: String): Boolean = activeApiCalls.contains(filePath)
+    private fun isApiCallInProgressForFile(filePath: String, apiCalls: MutableSet<String>) = apiCalls.contains(filePath)
+
 }

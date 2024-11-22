@@ -4,6 +4,7 @@ import com.codescene.jetbrains.actions.ShowSettingsAction
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
@@ -18,17 +19,16 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
 
         val content = getContent(project)
         val actions = getTitleActions()
+        subscribeToRefreshEvent(project)
 
         toolWindow.setTitleActions(actions)
         toolWindow.contentManager.addContent(content)
-
-        subscribe(project)
     }
 
-    private fun subscribe(project: Project){
+    private fun subscribeToRefreshEvent(project: Project){
         project.messageBus.connect().subscribe(ToolWindowRefreshNotifier.TOPIC, object : ToolWindowRefreshNotifier {
-            override fun refresh() {
-                codeSceneToolWindow?.refreshContent(project)
+            override fun refresh(editor: Editor) {
+                codeSceneToolWindow?.refreshContent(editor)
             }
         })
     }

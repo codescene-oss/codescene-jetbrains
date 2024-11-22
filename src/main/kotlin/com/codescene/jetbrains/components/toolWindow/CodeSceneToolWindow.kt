@@ -9,13 +9,13 @@ import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
 import com.codescene.jetbrains.util.getCodeHealth
 import com.codescene.jetbrains.util.getFunctionDeltaTooltip
-import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
+import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
@@ -31,7 +31,9 @@ import javax.swing.tree.TreeNode
 
 enum class NodeType {
     ROOT,
-    CODE_HEALTH,
+    CODE_HEALTH_DECREASE,
+    CODE_HEALTH_INCREASE,
+    CODE_HEALTH_NEUTRAL,
     FILE_FINDING,
     FUNCTION_FINDING
 }
@@ -57,8 +59,9 @@ class CodeSceneToolWindow {
 
     private val healthMonitoringResults: MutableMap<String, CodeDelta> = mutableMapOf()
 
-    private fun pullFromCache() {
-        val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return
+    private var refreshJob: Job? = null
+
+    private fun pullFromCache(editor: Editor) {
         val path = editor.virtualFile.path
 
         val headCommit = runBlocking(Dispatchers.IO) {
@@ -68,25 +71,27 @@ class CodeSceneToolWindow {
         val cachedDelta = DeltaCacheService.getInstance(project)
             .getCachedResponse(DeltaCacheQuery(path, headCommit, editor.document.text))
 
-        println("cachedDelta: $cachedDelta")
-
         cachedDelta?.let {
-            healthMonitoringResults[path] = it
+            synchronized(healthMonitoringResults) {
+                healthMonitoringResults[path] = it
+            }
         }
+
+        println("Ch monitoring results contains: ${healthMonitoringResults.size} entries, checked from ${editor.virtualFile.name}")
     }
 
-    fun getContent(project: Project, delta: CodeDelta? = null): JBPanel<JBPanel<*>> {
-        println("getting content for tool window")
-
+    fun getContent(project: Project): JBScrollPane {
         this.project = project
-
-        pullFromCache()
 
         contentPanel = JBPanel<JBPanel<*>>(BorderLayout()).apply {
             renderContent()
         }
 
-        return contentPanel
+        return JBScrollPane(contentPanel).apply {
+            border = null
+            verticalScrollBarPolicy = JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
+            horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
+        }
     }
 
     private fun JBPanel<JBPanel<*>>.renderContent() {
@@ -109,6 +114,8 @@ class CodeSceneToolWindow {
 
     private fun JBPanel<JBPanel<*>>.renderFileTree() {
         healthMonitoringResults.forEach { (name, delta) ->
+            println("Creating file tree for $name")
+
             val fileTreePanel = createFileTree(name, delta)
 
             fileTreePanel.alignmentX = Component.LEFT_ALIGNMENT
@@ -132,6 +139,11 @@ class CodeSceneToolWindow {
         }
     }
 
+    private fun resolveNodeType(oldScore: Double, newScore: Double): NodeType =
+        if (oldScore > newScore) NodeType.CODE_HEALTH_DECREASE
+        else if (oldScore == newScore) NodeType.CODE_HEALTH_NEUTRAL
+        else NodeType.CODE_HEALTH_INCREASE
+
     private fun DefaultMutableTreeNode.addCodeHealthLeaf(filePath: String, delta: CodeDelta) {
         val healthDetails = HealthDetails(delta.oldScore, delta.newScore)
         val (change, percentage) = getCodeHealth(healthDetails)
@@ -141,7 +153,7 @@ class CodeSceneToolWindow {
             filePath,
             displayName = "Code Health: $change",
             additionalText = percentage,
-            nodeType = NodeType.CODE_HEALTH
+            nodeType = resolveNodeType(delta.oldScore, delta.newScore)
         )
 
         add(DefaultMutableTreeNode(health))
@@ -199,12 +211,16 @@ class CodeSceneToolWindow {
         }
     }
 
-    fun refreshContent(project: Project) {
-        contentPanel.removeAll()
+    fun refreshContent(editor: Editor) {
+        refreshJob?.cancel()
 
-        contentPanel.add(getContent(project))
+        refreshJob = CoroutineScope(Dispatchers.Main).launch {
+            pullFromCache(editor)
 
-        contentPanel.revalidate()
-        contentPanel.repaint()
+            contentPanel.removeAll()
+            contentPanel.renderContent()
+            contentPanel.revalidate()
+            contentPanel.repaint()
+        }
     }
 }

@@ -23,7 +23,7 @@ class CodeSceneService(project: Project) : Disposable {
     private val deltaCacheService: DeltaCacheService = DeltaCacheService.getInstance(project)
     private val uiRefreshService: UIRefreshService = UIRefreshService.getInstance(project)
 
-    private val scope = CoroutineScope(Dispatchers.IO)
+    private val reviewScope = CoroutineScope(Dispatchers.IO)
     private val deltaScope = CoroutineScope(Dispatchers.IO)
     private val debounceDelay: Long = TimeUnit.SECONDS.toMillis(3)
 
@@ -40,7 +40,7 @@ class CodeSceneService(project: Project) : Disposable {
 
         activeFileReviews[filePath]?.cancel()
 
-        activeFileReviews[filePath] = scope.launch {
+        activeFileReviews[filePath] = reviewScope.launch {
             delay(debounceDelay)
 
             Log.info("No cached review for file $fileName at path $filePath. Initiating $CODESCENE review.")
@@ -50,7 +50,10 @@ class CodeSceneService(project: Project) : Disposable {
 
                 uiRefreshService.refreshUI(editor)
 
-                CodeSceneCodeVisionProvider.markApiCallComplete(filePath)
+                CodeSceneCodeVisionProvider.markApiCallComplete(
+                    filePath,
+                    CodeSceneCodeVisionProvider.activeReviewApiCalls
+                )
             } catch (e: CancellationException) {
                 Log.info("Code review canceled for file $fileName.")
             } catch (e: Exception) {
@@ -61,60 +64,77 @@ class CodeSceneService(project: Project) : Disposable {
         }
     }
 
-    //TODO: refactor
     fun codeDelta(editor: Editor) {
-        val file = editor.virtualFile
-        val project = editor.project!!
         val path = editor.virtualFile.path
-        val currentCode = editor.document.text
-
-        val oldCode = GitService.getInstance(project).getHeadCommit(file).also { if (it == "") return }
-
-        deltaCacheService.getCachedResponse(DeltaCacheQuery(path, oldCode, currentCode))
-            .also { if (it != null) return }
 
         activeDeltaReviews[path]?.cancel()
 
         try {
-            activeFileReviews[path] = deltaScope.launch {
+            activeDeltaReviews[path] = deltaScope.launch {
                 delay(debounceDelay)
 
-                performDeltaAnalysis(editor, oldCode, currentCode)
+                performDeltaAnalysis(editor)
 
-                editor.project!!.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh()
+                editor.project!!.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(editor)
+
                 uiRefreshService.refreshCodeVision(editor, listOf("CodeHealthCodeVisionProvider"))
+
+                CodeSceneCodeVisionProvider.markApiCallComplete(
+                    path,
+                    CodeSceneCodeVisionProvider.activeDeltaApiCalls
+                )
             }
         } catch (e: Exception) {
             Log.error("Error during delta analysis for file - ${e.message}")
         }
     }
 
-    private fun performDeltaAnalysis(editor: Editor, oldCode: String, currentCode: String) {
-        val path = editor.virtualFile.path
-        val newCode = editor.document.text
-        val cachedReview = cacheService.getCachedResponse(ReviewCacheQuery(currentCode, path))
-            .also { if (it != null) println("Found cached review for new file") }
+    data class DeltaResponse(
+        val delta: String,
+        val oldScore: String,
+        val newScore: String
+    )
 
-        runWithClassLoaderChange {
+    private fun performDeltaAnalysis(editor: Editor) {
+        val project = editor.project!!
+        val path = editor.virtualFile.path
+        val currentCode = editor.document.text
+
+        val oldCode = GitService.getInstance(project).getHeadCommit(editor.virtualFile).also { if (it == "") return }
+        val cachedReview = cacheService.getCachedResponse(ReviewCacheQuery(currentCode, path))
+            .also { if (it != null) Log.debug("Found cached review for new file: ${path}") }
+
+        val result = runWithClassLoaderChange {
             val oldCodeReview = Json.decodeFromString<CodeReview>(DevToolsAPI.review(path, oldCode))
-            val newCodeReview = cachedReview ?: Json.decodeFromString<CodeReview>(DevToolsAPI.review(path, newCode))
+            val newCodeReview = cachedReview ?: Json.decodeFromString<CodeReview>(DevToolsAPI.review(path, currentCode))
 
             val delta = DevToolsAPI.delta(oldCodeReview.rawScore, newCodeReview.rawScore)
 
-            when (delta) {
-                "null" -> println("Delta is null")
-                else -> {
-                    if (delta != "null") {
-                        println("Delta calculated. Parsing data and saving in cache...")
+            DeltaResponse(delta, oldCodeReview.rawScore, newCodeReview.rawScore)
+        }
 
-                        val parsedDelta = Json.decodeFromString<CodeDelta>(delta)
+        val (delta, oldScore, newScore) = result //TODO
 
-                        val cacheEntry = DeltaCacheEntry(editor.virtualFile.path, oldCode, currentCode, parsedDelta)
-                        deltaCacheService.cacheResponse(cacheEntry)
+        //TODO: refactor
+        when (delta) {
+            "null" -> {
+                //Save something in cache not to trigger delta again?
+                val cacheEntry = DeltaCacheEntry(
+                    path,
+                    oldCode,
+                    currentCode,
+                    CodeDelta(fileLevelFindings = emptyList(), functionLevelFindings = emptyList(), 0.0, 0.0)
+                )
 
-                        println("Delta analysis done")
-                    }
-                }
+                deltaCacheService.cacheResponse(cacheEntry)
+            }
+
+            else -> {
+                val parsedDelta = Json.decodeFromString<CodeDelta>(delta)
+
+                val cacheEntry = DeltaCacheEntry(path, oldCode, currentCode, parsedDelta)
+
+                deltaCacheService.cacheResponse(cacheEntry)
             }
         }
     }
@@ -126,7 +146,7 @@ class CodeSceneService(project: Project) : Disposable {
             Log.info("Cancelling active $CODESCENE review for file '$filePath' because it was closed.")
 
             activeFileReviews.remove(filePath)
-            CodeSceneCodeVisionProvider.markApiCallComplete(filePath)
+            CodeSceneCodeVisionProvider.markApiCallComplete(filePath, CodeSceneCodeVisionProvider.activeReviewApiCalls)
         } ?: Log.debug("No active $CODESCENE review found for file: $filePath")
     }
 
@@ -137,14 +157,7 @@ class CodeSceneService(project: Project) : Disposable {
         val code = editor.document.text
 
         val result = runWithClassLoaderChange {
-            val startTime = System.currentTimeMillis()
-
-            val response = DevToolsAPI.review(path, code)
-
-            val elapsedTime = System.currentTimeMillis() - startTime
-            Log.info("Received response from CodeScene API for file $fileName in ${elapsedTime}ms")
-
-            response
+            DevToolsAPI.review(path, code)
         }
 
         val parsedData = Json.decodeFromString<CodeReview>(result)
@@ -163,7 +176,14 @@ class CodeSceneService(project: Project) : Disposable {
         return try {
             Log.debug("Switching to plugin's ClassLoader: ${classLoader.javaClass.name}")
 
-            action()
+            val startTime = System.currentTimeMillis()
+
+            val result = action()
+
+            val elapsedTime = System.currentTimeMillis() - startTime
+            Log.info("Received response from CodeScene API in ${elapsedTime}ms")
+
+            result
         } catch (e: Exception) {
             Log.error("Exception during ClassLoader change operation: ${e.message}")
 
@@ -177,8 +197,12 @@ class CodeSceneService(project: Project) : Disposable {
 
     override fun dispose() {
         activeFileReviews.values.forEach { it.cancel() }
-        activeFileReviews.clear()
+        activeDeltaReviews.values.forEach { it.cancel() }
 
-        scope.cancel()
+        activeFileReviews.clear()
+        activeDeltaReviews.clear()
+
+        reviewScope.cancel()
+        deltaScope.cancel()
     }
 }
