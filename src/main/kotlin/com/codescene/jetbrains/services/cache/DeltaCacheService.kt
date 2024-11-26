@@ -31,7 +31,7 @@ class DeltaCacheService : CacheService<DeltaCacheQuery, DeltaCacheEntry, DeltaCa
         fun getInstance(project: Project): DeltaCacheService = project.service<DeltaCacheService>()
     }
 
-    override fun getCachedResponse(query: DeltaCacheQuery): CodeDelta? {
+    override fun get(query: DeltaCacheQuery): CodeDelta? {
         val (filePath, headCommitContent, currentFileContent) = query
 
         val oldHash = DigestUtils.sha256Hex(headCommitContent)
@@ -46,7 +46,7 @@ class DeltaCacheService : CacheService<DeltaCacheQuery, DeltaCacheEntry, DeltaCa
         return if (cacheHit) apiResponse else null
     }
 
-    override fun cacheResponse(entry: DeltaCacheEntry) {
+    override fun put(entry: DeltaCacheEntry) {
         val (filePath, headContent, currentFileContent, deltaApiResponse) = entry
 
         val headHash = DigestUtils.sha256Hex(headContent)

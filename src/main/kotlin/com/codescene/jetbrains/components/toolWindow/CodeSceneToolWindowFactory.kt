@@ -12,10 +12,10 @@ import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
 
 class CodeSceneToolWindowFactory : ToolWindowFactory {
-    private var codeSceneToolWindow: CodeSceneToolWindow? = null
+    private var codeHealthMonitorToolWindow: CodeHealthMonitorToolWindow? = null
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        codeSceneToolWindow = CodeSceneToolWindow()
+        codeHealthMonitorToolWindow = CodeHealthMonitorToolWindow()
 
         val content = getContent(project)
         val actions = getTitleActions()
@@ -28,7 +28,7 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
     private fun subscribeToRefreshEvent(project: Project){
         project.messageBus.connect().subscribe(ToolWindowRefreshNotifier.TOPIC, object : ToolWindowRefreshNotifier {
             override fun refresh(editor: Editor) {
-                codeSceneToolWindow?.refreshContent(editor)
+                codeHealthMonitorToolWindow?.refreshContent(editor)
             }
         })
     }
@@ -36,7 +36,7 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
     override fun shouldBeAvailable(project: Project) = true
 
     private fun getContent(project: Project): Content {
-        val contentPanel = codeSceneToolWindow!!.getContent(project)
+        val contentPanel = codeHealthMonitorToolWindow!!.getContent(project)
         val content = ContentFactory.getInstance()
 
         return content.createContent(contentPanel, null, false)

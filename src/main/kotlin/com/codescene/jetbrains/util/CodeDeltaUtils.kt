@@ -32,5 +32,5 @@ fun getCachedDelta(editor: Editor): CodeDelta? {
     val cacheQuery = DeltaCacheQuery(editor.virtualFile.path, oldCode, editor.document.text)
 
     return DeltaCacheService.getInstance(project)
-        .getCachedResponse(cacheQuery)
+        .get(cacheQuery)
 }

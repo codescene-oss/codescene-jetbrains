@@ -28,7 +28,7 @@ class ReviewCacheService: CacheService<ReviewCacheQuery, ReviewCacheEntry, Revie
         fun getInstance(project: Project): ReviewCacheService = project.service<ReviewCacheService>()
     }
 
-    override fun getCachedResponse(query: ReviewCacheQuery): CodeReview? {
+    override fun get(query: ReviewCacheQuery): CodeReview? {
         val (fileContents, filePath) = query
 
         val hash = DigestUtils.sha256Hex(fileContents)
@@ -39,7 +39,7 @@ class ReviewCacheService: CacheService<ReviewCacheQuery, ReviewCacheEntry, Revie
         return if (cacheHit) apiResponse else null
     }
 
-    override fun cacheResponse(entry: ReviewCacheEntry) {
+    override fun put(entry: ReviewCacheEntry) {
         val (fileContents, filePath, response) = entry
 
         val contentHash = DigestUtils.sha256Hex(fileContents)

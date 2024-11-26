@@ -24,7 +24,9 @@
     </actions>
 
     <extensions defaultExtensionNs="com.intellij">
-        <iconMapper mappingFile="CodeSceneIconMappings.json" />
+        <iconMapper mappingFile="CodeSceneIconMappings.json"/>
+
+        <postStartupActivity implementation="com.codescene.jetbrains.listeners.ProjectStartupActivity"/>
 
         <applicationService serviceImplementation="com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore"/>
 

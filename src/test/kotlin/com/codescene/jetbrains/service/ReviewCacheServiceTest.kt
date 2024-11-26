@@ -28,25 +28,25 @@ class ReviewCacheServiceTest {
     fun `cacheResponse stores the response in cache`() {
         val entry = ReviewCacheEntry(fileContents, filePath, response)
 
-        reviewCacheService.cacheResponse(entry)
+        reviewCacheService.put(entry)
 
-        val cachedResponse = reviewCacheService.getCachedResponse(ReviewCacheQuery(fileContents, filePath))
+        val cachedResponse = reviewCacheService.get(ReviewCacheQuery(fileContents, filePath))
 
         assertEquals(response, cachedResponse)
     }
 
     @Test
     fun `getCachedResponse returns null if no cache entry exists`() {
-        val cachedResponse = reviewCacheService.getCachedResponse(ReviewCacheQuery(fileContents, filePath))
+        val cachedResponse = reviewCacheService.get(ReviewCacheQuery(fileContents, filePath))
 
         assertNull(cachedResponse)
     }
 
     @Test
     fun `getCachedResponse returns null if file contents do not match`() {
-        reviewCacheService.cacheResponse(ReviewCacheEntry(fileContents, filePath, response))
+        reviewCacheService.put(ReviewCacheEntry(fileContents, filePath, response))
 
-        val cachedResponse = reviewCacheService.getCachedResponse(ReviewCacheQuery(newFileContents, filePath))
+        val cachedResponse = reviewCacheService.get(ReviewCacheQuery(newFileContents, filePath))
 
         assertNull(cachedResponse)
     }

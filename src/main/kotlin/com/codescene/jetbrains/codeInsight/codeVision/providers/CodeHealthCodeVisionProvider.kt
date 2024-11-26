@@ -2,7 +2,7 @@ package com.codescene.jetbrains.codeInsight.codeVision.providers
 
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
-import com.codescene.jetbrains.components.toolWindow.HealthDetails
+import com.codescene.jetbrains.components.tree.HealthDetails
 import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.util.getCachedDelta
 import com.codescene.jetbrains.util.getCodeHealth

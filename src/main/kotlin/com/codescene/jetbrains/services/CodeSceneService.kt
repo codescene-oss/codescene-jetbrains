@@ -8,6 +8,7 @@ import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.codescene.jetbrains.services.cache.*
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.round
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -91,8 +92,8 @@ class CodeSceneService(project: Project) : Disposable {
 
     data class DeltaResponse(
         val delta: String,
-        val oldScore: String,
-        val newScore: String
+        val oldScore: Double,
+        val newScore: Double
     )
 
     private fun performDeltaAnalysis(editor: Editor) {
@@ -101,7 +102,7 @@ class CodeSceneService(project: Project) : Disposable {
         val currentCode = editor.document.text
 
         val oldCode = GitService.getInstance(project).getHeadCommit(editor.virtualFile).also { if (it == "") return }
-        val cachedReview = cacheService.getCachedResponse(ReviewCacheQuery(currentCode, path))
+        val cachedReview = cacheService.get(ReviewCacheQuery(currentCode, path))
             .also { if (it != null) Log.debug("Found cached review for new file: ${path}") }
 
         val result = runWithClassLoaderChange {
@@ -110,7 +111,7 @@ class CodeSceneService(project: Project) : Disposable {
 
             val delta = DevToolsAPI.delta(oldCodeReview.rawScore, newCodeReview.rawScore)
 
-            DeltaResponse(delta, oldCodeReview.rawScore, newCodeReview.rawScore)
+            DeltaResponse(delta, oldCodeReview.score, newCodeReview.score)
         }
 
         val (delta, oldScore, newScore) = result //TODO
@@ -118,15 +119,19 @@ class CodeSceneService(project: Project) : Disposable {
         //TODO: refactor
         when (delta) {
             "null" -> {
-                //Save something in cache not to trigger delta again?
                 val cacheEntry = DeltaCacheEntry(
                     path,
                     oldCode,
                     currentCode,
-                    CodeDelta(fileLevelFindings = emptyList(), functionLevelFindings = emptyList(), 0.0, 0.0)
+                    CodeDelta(
+                        fileLevelFindings = emptyList(),
+                        functionLevelFindings = emptyList(),
+                        round(oldScore),
+                        round(newScore)
+                    )
                 )
 
-                deltaCacheService.cacheResponse(cacheEntry)
+                deltaCacheService.put(cacheEntry)
             }
 
             else -> {
@@ -134,7 +139,7 @@ class CodeSceneService(project: Project) : Disposable {
 
                 val cacheEntry = DeltaCacheEntry(path, oldCode, currentCode, parsedDelta)
 
-                deltaCacheService.cacheResponse(cacheEntry)
+                deltaCacheService.put(cacheEntry)
             }
         }
     }
@@ -163,7 +168,7 @@ class CodeSceneService(project: Project) : Disposable {
         val parsedData = Json.decodeFromString<CodeReview>(result)
 
         val entry = ReviewCacheEntry(fileContents = code, filePath = path, response = parsedData)
-        cacheService.cacheResponse(entry)
+        cacheService.put(entry)
 
         Log.debug("Review response cached for file $fileName with path $path")
     }

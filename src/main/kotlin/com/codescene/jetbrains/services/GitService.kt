@@ -19,20 +19,25 @@ class GitService(val project: Project) {
 
     fun getHeadCommit(file: VirtualFile): String {
         val gitRepository =
-            GitRepositoryManager.getInstance(project).getRepositoryForFile(file) ?: return ""
+            GitRepositoryManager.getInstance(project).getRepositoryForFile(file)
+
+        if (gitRepository == null) {
+            Log.warn("File ${file.path} is not part of a Git repository.")
+
+            return ""
+        }
+
         val handler = createGitShowHandler(project, gitRepository, file)
 
-        return try {
-            Git.getInstance().runCommand(handler).output
+        try {
+            val result = Git.getInstance().runCommand(handler).output
                 .takeIf { it.isNotEmpty() }
                 ?.joinToString("\n")
-                ?: run {
-                    Log.debug("No HEAD commit found for file ${file.path}.")
-                    ""
-                }
+
+            return result ?: ""
         } catch (e: Exception) {
             Log.error("Unable to get HEAD commit for file ${file.path} - ${e.message}")
-            ""
+            return ""
         }
     }
 
@@ -41,7 +46,12 @@ class GitService(val project: Project) {
         gitRepository: GitRepository,
         file: VirtualFile
     ): GitLineHandler {
-        val relativePath = file.path.substringAfter("${gitRepository.root.path}/")
+        val repositoryRoot = gitRepository.root.path
+        val relativePath = file.path.substringAfter("$repositoryRoot/")
+
+        if (!file.path.startsWith(repositoryRoot)) {
+            Log.warn("File ${file.path} is not within the repository root ${repositoryRoot}.")
+        }
 
         return GitLineHandler(project, gitRepository.root, GitCommand.SHOW).apply {
             addParameters("HEAD:$relativePath")

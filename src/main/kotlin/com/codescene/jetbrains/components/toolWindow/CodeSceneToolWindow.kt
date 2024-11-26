@@ -1,89 +1,39 @@
 package com.codescene.jetbrains.components.toolWindow
 
 import com.codescene.jetbrains.UiLabelsBundle
-import com.codescene.jetbrains.components.tree.CustomTreeCellRenderer
+import com.codescene.jetbrains.components.tree.CodeHealthTreeBuilder
 import com.codescene.jetbrains.data.CodeDelta
-import com.codescene.jetbrains.services.CodeNavigationService
 import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
-import com.codescene.jetbrains.util.getCodeHealth
-import com.codescene.jetbrains.util.getFunctionDeltaTooltip
+import com.codescene.jetbrains.util.Log
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
-import com.intellij.ui.treeStructure.Tree
 import kotlinx.coroutines.*
 import java.awt.BorderLayout
 import java.awt.Component
-import java.awt.Dimension
 import java.awt.Font
+import javax.swing.BorderFactory
 import javax.swing.BoxLayout
-import javax.swing.JLabel
-import javax.swing.JTree
-import javax.swing.SwingConstants
-import javax.swing.event.TreeSelectionEvent
-import javax.swing.tree.DefaultMutableTreeNode
-import javax.swing.tree.DefaultTreeModel
-import javax.swing.tree.TreeNode
+import javax.swing.JTextArea
 
-enum class NodeType {
-    ROOT,
-    CODE_HEALTH_DECREASE,
-    CODE_HEALTH_INCREASE,
-    CODE_HEALTH_NEUTRAL,
-    FILE_FINDING,
-    FUNCTION_FINDING
-}
-
-data class HealthDetails(
-    val oldScore: Double,
-    val newScore: Double,
-)
-
-data class CodeHealthFinding(
-    val tooltip: String,
-    val filePath: String,
-    val focusLine: Int? = 1,
-    val displayName: String,
-    val nodeType: NodeType,
-    val additionalText: String = ""
-)
-
-//TODO: Refactor, make disposable?
-class CodeSceneToolWindow {
+class CodeHealthMonitorToolWindow {
     private lateinit var project: Project
     private lateinit var contentPanel: JBPanel<JBPanel<*>>
 
+    private val treeBuilder = CodeHealthTreeBuilder()
     private val healthMonitoringResults: MutableMap<String, CodeDelta> = mutableMapOf()
 
     private var refreshJob: Job? = null
-
-    private fun pullFromCache(editor: Editor) {
-        val path = editor.virtualFile.path
-
-        val headCommit = runBlocking(Dispatchers.IO) {
-            GitService.getInstance(project).getHeadCommit(editor.virtualFile)
-        }
-
-        val cachedDelta = DeltaCacheService.getInstance(project)
-            .getCachedResponse(DeltaCacheQuery(path, headCommit, editor.document.text))
-
-        cachedDelta?.let {
-            synchronized(healthMonitoringResults) {
-                healthMonitoringResults[path] = it
-            }
-        }
-
-        println("Ch monitoring results contains: ${healthMonitoringResults.size} entries, checked from ${editor.virtualFile.name}")
-    }
 
     fun getContent(project: Project): JBScrollPane {
         this.project = project
 
         contentPanel = JBPanel<JBPanel<*>>(BorderLayout()).apply {
+            layout = BoxLayout(this, BoxLayout.Y_AXIS)
             renderContent()
         }
 
@@ -95,28 +45,17 @@ class CodeSceneToolWindow {
     }
 
     private fun JBPanel<JBPanel<*>>.renderContent() {
-        layout = BoxLayout(this, BoxLayout.Y_AXIS)
-
-        if (healthMonitoringResults.isEmpty()) {
-            val message = UiLabelsBundle.message("nothingToShow")
-            val label = JLabel(message).apply {
-                alignmentX = Component.CENTER_ALIGNMENT
-                foreground = JBColor.GRAY
-                horizontalAlignment = SwingConstants.CENTER
-                font = Font("Arial", Font.PLAIN, 14)
-            }
-
-            add(label)
-        } else {
+        if (healthMonitoringResults.isEmpty())
+            addPlaceholderText()
+        else
             renderFileTree()
-        }
     }
 
     private fun JBPanel<JBPanel<*>>.renderFileTree() {
         healthMonitoringResults.forEach { (name, delta) ->
-            println("Creating file tree for $name")
+            Log.debug("Rendering code health information file tree for: $name.")
 
-            val fileTreePanel = createFileTree(name, delta)
+            val fileTreePanel = treeBuilder.createTree(name, delta, project)
 
             fileTreePanel.alignmentX = Component.LEFT_ALIGNMENT
 
@@ -124,90 +63,39 @@ class CodeSceneToolWindow {
         }
     }
 
-    private fun createFileTree(
-        filePath: String,
-        delta: CodeDelta
-    ): Tree {
-        val tree = buildTree(filePath, delta)
+    private fun JBPanel<JBPanel<*>>.addPlaceholderText() {
+        Log.debug("Found no code health information for: $name, rendering placeholder text...")
 
-        return Tree(DefaultTreeModel(tree)).apply {
-            isFocusable = false
-            cellRenderer = CustomTreeCellRenderer()
-            minimumSize = Dimension(200, 80)
+        val message = UiLabelsBundle.message("nothingToShow")
 
-            addTreeSelectionListener(::handleTreeSelectionEvent)
+        val textArea = JTextArea(message).apply {
+            isEditable = false
+            isOpaque = false
+            lineWrap = true
+            wrapStyleWord = true
+            alignmentX = Component.CENTER_ALIGNMENT
+            font = Font("Arial", Font.PLAIN, 14)
+            foreground = JBColor.GRAY
+            border = BorderFactory.createEmptyBorder(0, 20, 0, 20)
         }
+
+        add(textArea)
     }
 
-    private fun resolveNodeType(oldScore: Double, newScore: Double): NodeType =
-        if (oldScore > newScore) NodeType.CODE_HEALTH_DECREASE
-        else if (oldScore == newScore) NodeType.CODE_HEALTH_NEUTRAL
-        else NodeType.CODE_HEALTH_INCREASE
+    private fun pullFromCache(editor: Editor) {
+        val path = editor.virtualFile.path
 
-    private fun DefaultMutableTreeNode.addCodeHealthLeaf(filePath: String, delta: CodeDelta) {
-        val healthDetails = HealthDetails(delta.oldScore, delta.newScore)
-        val (change, percentage) = getCodeHealth(healthDetails)
-
-        val health = CodeHealthFinding(
-            tooltip = UiLabelsBundle.message("decliningFileHealth"),
-            filePath,
-            displayName = "Code Health: $change",
-            additionalText = percentage,
-            nodeType = resolveNodeType(delta.oldScore, delta.newScore)
-        )
-
-        add(DefaultMutableTreeNode(health))
-    }
-
-    private fun DefaultMutableTreeNode.addFileLeaves(filePath: String, delta: CodeDelta) =
-        delta.fileLevelFindings.forEach {
-            val finding = CodeHealthFinding(
-                tooltip = it.description,
-                filePath,
-                displayName = it.category,
-                nodeType = NodeType.FILE_FINDING
-            )
-
-            add(DefaultMutableTreeNode(finding))
+        val headCommit = runBlocking(Dispatchers.IO) {
+            GitService.getInstance(project).getHeadCommit(editor.virtualFile)
         }
 
-    private fun DefaultMutableTreeNode.addFunctionLeaves(filePath: String, delta: CodeDelta) =
-        delta.functionLevelFindings.forEach { (function, details) ->
-            val finding = CodeHealthFinding(
-                tooltip = getFunctionDeltaTooltip(function, details),
-                filePath,
-                focusLine = details[0].position.line,
-                displayName = function.name,
-                nodeType = NodeType.FUNCTION_FINDING
-            )
+        val cachedDelta = DeltaCacheService.getInstance(project)
+            .get(DeltaCacheQuery(path, headCommit, editor.document.text))
 
-            add(DefaultMutableTreeNode(finding))
-        }
-
-    private fun buildTree(filePath: String, delta: CodeDelta): TreeNode {
-        val root = CodeHealthFinding(
-            tooltip = filePath,
-            filePath,
-            displayName = filePath,
-            nodeType = NodeType.ROOT
-        ) //TODO: change tooltip logic
-
-        return DefaultMutableTreeNode(root).apply {
-            addCodeHealthLeaf(filePath, delta)
-            addFileLeaves(filePath, delta)
-            addFunctionLeaves(filePath, delta)
-        }
-    }
-
-    private fun handleTreeSelectionEvent(event: TreeSelectionEvent) {
-        val navigationService = CodeNavigationService.getInstance(project)
-
-        (event.source as? JTree)?.clearSelection()
-
-        val selectedNode = event.path.lastPathComponent as? DefaultMutableTreeNode
-
-        (selectedNode?.takeIf { it.isLeaf }?.userObject as? CodeHealthFinding)?.also { finding ->
-            navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
+        cachedDelta?.let {
+            synchronized(healthMonitoringResults) {
+                healthMonitoringResults[path] = it
+            }
         }
     }
 

@@ -70,7 +70,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
         val path = psiFile.virtualFile.path
         val query = ReviewCacheQuery(content, path)
 
-        return ReviewCacheService.getInstance(psiFile.project).getCachedResponse(query).also {
+        return ReviewCacheService.getInstance(psiFile.project).get(query).also {
             if (it == null) Log.info("No cache available for ${path}. Skipping annotation.")
         }
     }

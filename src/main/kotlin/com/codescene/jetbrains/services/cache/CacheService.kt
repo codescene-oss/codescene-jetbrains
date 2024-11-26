@@ -10,7 +10,25 @@ abstract class CacheService<Q, E, V, R> {
         return DigestUtils.sha256Hex(content)
     }
 
-    abstract fun getCachedResponse(query: Q): R?
+    abstract fun get(query: Q): R?
 
-    abstract fun cacheResponse(entry: E)
+    abstract fun put(entry: E)
+
+    fun invalidate(key: String) {
+        cache.remove(key)
+
+        val cacheName = this::class.java.simpleName
+
+        println("$cacheName: entry for key $key has been invalidated.") //todo: debug log
+    }
+
+    fun updateKey(oldKey: String, newKey: String) {
+        val entry = cache[oldKey]
+
+        if (entry != null) {
+            cache[newKey] = entry
+
+            invalidate(oldKey)
+        }
+    }
 }

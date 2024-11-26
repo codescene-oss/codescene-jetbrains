@@ -95,7 +95,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         val query = ReviewCacheQuery(document.text, editor.virtualFile.path)
 
         val reviewCache = ReviewCacheService.getInstance(project)
-        val cachedReview = reviewCache.getCachedResponse(query)
+        val cachedReview = reviewCache.get(query)
 
         val cachedDelta = getCachedDelta(editor)
 

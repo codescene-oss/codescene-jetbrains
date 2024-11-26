@@ -3,8 +3,6 @@ package com.codescene.jetbrains.components.tree
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_DECREASE
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_INCREASE
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_NEUTRAL
-import com.codescene.jetbrains.components.toolWindow.CodeHealthFinding
-import com.codescene.jetbrains.components.toolWindow.NodeType
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.fileTypes.FileTypeManager
 import java.io.File
