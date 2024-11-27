@@ -56,10 +56,6 @@ class CodeReviewService(project: Project) : CodeSceneService() {
         }
     }
 
-    override fun markApiCallComplete(filePath: String) {
-        CodeSceneCodeVisionProvider.markApiCallComplete(filePath, CodeSceneCodeVisionProvider.activeReviewApiCalls)
-    }
-
     private fun performCodeReview(editor: Editor) {
         val file = editor.virtualFile
         val path = file.path

@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.services.api
 
+import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
 import com.intellij.openapi.Disposable
@@ -16,8 +17,6 @@ abstract class CodeSceneService : Disposable {
     protected val debounceDelay: Long = TimeUnit.SECONDS.toMillis(3)
 
     abstract fun review(editor: Editor)
-
-    protected abstract fun markApiCallComplete(filePath: String)
 
     protected fun <T> runWithClassLoaderChange(action: () -> T): T {
         val originalClassLoader = Thread.currentThread().contextClassLoader
@@ -46,7 +45,7 @@ abstract class CodeSceneService : Disposable {
         }
     }
 
-    fun cancelFileReview(filePath: String) {
+    fun cancelFileReview(filePath: String, calls: MutableSet<String>) {
         val className = this::class.java.simpleName
 
         activeReviewCalls[filePath]?.let { job ->
@@ -56,7 +55,7 @@ abstract class CodeSceneService : Disposable {
 
             activeReviewCalls.remove(filePath)
 
-            markApiCallComplete(filePath)
+            CodeSceneCodeVisionProvider.markApiCallComplete(filePath, calls)
         } ?: Log.debug("$className: No active $CODESCENE review found for file: $filePath")
     }
 

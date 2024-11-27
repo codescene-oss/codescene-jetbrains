@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.listeners
 
+import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.services.api.CodeDeltaService
 import com.codescene.jetbrains.services.api.CodeReviewService
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -11,7 +12,7 @@ class FileLifecycleListener : FileEditorManagerListener {
         val codeDeltaService = CodeDeltaService.getInstance(source.project)
         val codeReviewService = CodeReviewService.getInstance(source.project)
 
-        codeDeltaService.cancelFileReview(file.path)
-        codeReviewService.cancelFileReview(file.path)
+        codeDeltaService.cancelFileReview(file.path, CodeSceneCodeVisionProvider.activeDeltaApiCalls)
+        codeReviewService.cancelFileReview(file.path, CodeSceneCodeVisionProvider.activeReviewApiCalls)
     }
 }

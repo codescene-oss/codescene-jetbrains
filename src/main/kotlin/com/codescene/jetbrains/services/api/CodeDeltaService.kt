@@ -50,10 +50,6 @@ class CodeDeltaService(project: Project) : CodeSceneService() {
         }
     }
 
-    override fun markApiCallComplete(filePath: String) {
-        CodeSceneCodeVisionProvider.markApiCallComplete(filePath, CodeSceneCodeVisionProvider.activeDeltaApiCalls)
-    }
-
     private suspend fun performDeltaAnalysis(editor: Editor) {
         val project = editor.project!!
         val path = editor.virtualFile.path
