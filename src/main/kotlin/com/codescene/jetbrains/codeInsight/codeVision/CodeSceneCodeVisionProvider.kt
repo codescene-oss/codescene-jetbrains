@@ -3,7 +3,8 @@ package com.codescene.jetbrains.codeInsight.codeVision
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.data.CodeSmell
-import com.codescene.jetbrains.services.CodeSceneService
+import com.codescene.jetbrains.services.api.CodeDeltaService
+import com.codescene.jetbrains.services.api.CodeReviewService
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
 import com.codescene.jetbrains.services.cache.ReviewCacheService
 import com.codescene.jetbrains.util.getCachedDelta
@@ -74,16 +75,14 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
     private fun triggerApiCall(
         editor: Editor,
         apiCalls: MutableSet<String>,
-        apiCallAction: (CodeSceneService) -> Unit
+        action: () -> Unit
     ) {
         val filePath = editor.virtualFile.path
 
         if (!isApiCallInProgressForFile(filePath, apiCalls)) {
             markApiCallInProgress(filePath, apiCalls)
 
-            val codeSceneService = CodeSceneService.getInstance(editor.project!!)
-
-            apiCallAction(codeSceneService)
+            action()
         }
     }
 
@@ -99,13 +98,13 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
         val cachedDelta = getCachedDelta(editor)
 
-        if (cachedDelta == null) triggerApiCall(editor, activeDeltaApiCalls) { codeSceneService ->
-            codeSceneService.codeDelta(editor)
+        if (cachedDelta == null) triggerApiCall(editor, activeDeltaApiCalls) {
+            CodeDeltaService.getInstance(project).review(editor)
         }
 
         if (cachedReview == null) {
-            triggerApiCall(editor, activeReviewApiCalls) { codeSceneService ->
-                codeSceneService.reviewCode(editor)
+            triggerApiCall(editor, activeReviewApiCalls) {
+                CodeReviewService.getInstance(project).review(editor)
             }
 
             return CodeVisionState.NotReady
