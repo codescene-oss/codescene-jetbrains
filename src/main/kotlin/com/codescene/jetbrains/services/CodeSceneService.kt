@@ -8,7 +8,6 @@ import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.codescene.jetbrains.services.cache.*
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
-import com.codescene.jetbrains.util.round
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -76,10 +75,6 @@ class CodeSceneService(project: Project) : Disposable {
 
                 performDeltaAnalysis(editor)
 
-                editor.project!!.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(editor)
-
-                uiRefreshService.refreshCodeVision(editor, listOf("CodeHealthCodeVisionProvider"))
-
                 CodeSceneCodeVisionProvider.markApiCallComplete(
                     path,
                     CodeSceneCodeVisionProvider.activeDeltaApiCalls
@@ -96,7 +91,7 @@ class CodeSceneService(project: Project) : Disposable {
         val newScore: Double
     )
 
-    private fun performDeltaAnalysis(editor: Editor) {
+    private suspend fun performDeltaAnalysis(editor: Editor) {
         val project = editor.project!!
         val path = editor.virtualFile.path
         val currentCode = editor.document.text
@@ -119,27 +114,18 @@ class CodeSceneService(project: Project) : Disposable {
         //TODO: refactor
         when (delta) {
             "null" -> {
-                val cacheEntry = DeltaCacheEntry(
-                    path,
-                    oldCode,
-                    currentCode,
-                    CodeDelta(
-                        fileLevelFindings = emptyList(),
-                        functionLevelFindings = emptyList(),
-                        round(oldScore),
-                        round(newScore)
-                    )
-                )
-
-                deltaCacheService.put(cacheEntry)
+                println("Response is null!")
             }
-
             else -> {
                 val parsedDelta = Json.decodeFromString<CodeDelta>(delta)
 
                 val cacheEntry = DeltaCacheEntry(path, oldCode, currentCode, parsedDelta)
 
                 deltaCacheService.put(cacheEntry)
+
+                editor.project!!.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(editor)
+
+                uiRefreshService.refreshCodeVision(editor, listOf("CodeHealthCodeVisionProvider"))
             }
         }
     }
