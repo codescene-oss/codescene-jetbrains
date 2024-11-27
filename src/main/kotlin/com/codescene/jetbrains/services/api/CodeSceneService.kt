@@ -6,14 +6,14 @@ import com.codescene.jetbrains.util.Log
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.editor.Editor
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import java.util.concurrent.TimeUnit
 
 abstract class CodeSceneService : Disposable {
-    protected val scope = CoroutineScope(Dispatchers.IO)
-    protected val activeReviewCalls = mutableMapOf<String, Job>()
+    abstract val scope: CoroutineScope
+    abstract val activeReviewCalls: MutableMap<String, Job>
+
     protected val debounceDelay: Long = TimeUnit.SECONDS.toMillis(3)
 
     abstract fun review(editor: Editor)

@@ -17,8 +17,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
 
 @Service(Service.Level.PROJECT)
@@ -30,6 +29,10 @@ class CodeDeltaService(project: Project) : CodeSceneService() {
     companion object {
         fun getInstance(project: Project): CodeDeltaService = project.service<CodeDeltaService>()
     }
+
+    override val scope = CoroutineScope(Dispatchers.IO)
+
+    override val activeReviewCalls = mutableMapOf<String, Job>()
 
     override fun review(editor: Editor) {
         val path = editor.virtualFile.path

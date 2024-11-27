@@ -12,8 +12,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -25,6 +24,10 @@ class CodeReviewService(project: Project) : CodeSceneService() {
     companion object {
         fun getInstance(project: Project): CodeReviewService = project.service<CodeReviewService>()
     }
+
+    override val scope = CoroutineScope(Dispatchers.IO)
+
+    override val activeReviewCalls = mutableMapOf<String, Job>()
 
     override fun review(editor: Editor) {
         val filePath = editor.virtualFile.path
