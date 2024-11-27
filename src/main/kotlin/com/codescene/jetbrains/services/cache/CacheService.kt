@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.services.cache
 
+import com.codescene.jetbrains.util.Log
 import org.apache.commons.codec.digest.DigestUtils
 import java.util.concurrent.ConcurrentHashMap
 
@@ -15,11 +16,10 @@ abstract class CacheService<Q, E, V, R> {
     abstract fun put(entry: E)
 
     fun invalidate(key: String) {
-        cache.remove(key)
-
-        val cacheName = this::class.java.simpleName
-
-        println("$cacheName: entry for key $key has been invalidated.") //todo: debug log
+        cache[key]?.let {
+            cache.remove(key)
+            Log.debug("${this::class.java.simpleName}: entry for key $key has been invalidated.")
+        }
     }
 
     fun updateKey(oldKey: String, newKey: String) {
@@ -29,6 +29,7 @@ abstract class CacheService<Q, E, V, R> {
             cache[newKey] = entry
 
             invalidate(oldKey)
+            Log.debug("${this::class.java.simpleName}: file was renamed, updated key from $oldKey to $newKey.")
         }
     }
 }

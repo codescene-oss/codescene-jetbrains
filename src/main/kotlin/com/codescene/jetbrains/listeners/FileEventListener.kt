@@ -9,6 +9,9 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.vfs.newvfs.events.VFilePropertyChangeEvent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 //TODO: refactor
 class FileEventListener(private val project: Project) : AsyncFileListener {
@@ -26,30 +29,40 @@ class FileEventListener(private val project: Project) : AsyncFileListener {
             val reviewCache = ReviewCacheService.getInstance(project)
 
             override fun beforeVfsChange() {
-                renameEvents.forEach {
-                    ProgressManager.checkCanceled()
-                    println("Before Rename: ${it.oldValue} -> ${it.newValue}")
+                handleRenameEvents(renameEvents)
+                handleDeleteEvents(deleteEvents)
+            }
 
-                    deltaCache.updateKey(it.oldValue as String, it.newValue as String)
-                    reviewCache.updateKey(it.oldValue as String, it.newValue as String)
-                }
+            private fun handleRenameEvents(
+                renameEvents: List<VFilePropertyChangeEvent>,
+                scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+            ) {
+                scope.launch {
+                    renameEvents.forEach {
+                        ProgressManager.checkCanceled()
+                        println("Before Rename: ${it.oldValue} -> ${it.newValue}.")
 
-                deleteEvents.forEach {
-                    ProgressManager.checkCanceled()
-                    println("Before Delete: ${it.file.path}")
+                        val oldKey = it.file.path
+                        val newKey = "${it.file.parent.path}/${it.newValue}"
 
-                    deltaCache.invalidate(it.file.path)
-                    reviewCache.invalidate(it.file.path)
+                        deltaCache.updateKey(oldKey, newKey)
+                        reviewCache.updateKey(oldKey, newKey)
+                    }
                 }
             }
 
-            override fun afterVfsChange() {
-                renameEvents.forEach {
-                    println("After Rename: ${it.oldValue} -> ${it.newValue}")
-                }
+            private fun handleDeleteEvents(
+                deleteEvents: List<VFileDeleteEvent>,
+                scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+            ) {
+                scope.launch {
+                    deleteEvents.forEach {
+                        ProgressManager.checkCanceled()
+                        println("Before Delete: ${it.file.path} on ${Thread.currentThread().name}")
 
-                deleteEvents.forEach {
-                    println("After Delete: ${it.file.path}")
+                        deltaCache.invalidate(it.file.path)
+                        reviewCache.invalidate(it.file.path)
+                    }
                 }
             }
         }
