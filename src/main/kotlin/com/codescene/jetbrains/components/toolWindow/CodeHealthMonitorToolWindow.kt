@@ -82,7 +82,7 @@ class CodeHealthMonitorToolWindow {
         add(textArea)
     }
 
-    private fun pullFromCache(editor: Editor) {
+    private fun syncCache(editor: Editor) {
         val path = editor.virtualFile.path
 
         val headCommit = runBlocking(Dispatchers.IO) {
@@ -92,10 +92,12 @@ class CodeHealthMonitorToolWindow {
         val cachedDelta = DeltaCacheService.getInstance(project)
             .get(DeltaCacheQuery(path, headCommit, editor.document.text))
 
-        cachedDelta?.let {
+        if (cachedDelta != null) {
             synchronized(healthMonitoringResults) {
-                healthMonitoringResults[path] = it
+                healthMonitoringResults[path] = cachedDelta
             }
+        } else {
+            healthMonitoringResults.remove(path)
         }
     }
 
@@ -103,7 +105,7 @@ class CodeHealthMonitorToolWindow {
         refreshJob?.cancel()
 
         refreshJob = CoroutineScope(Dispatchers.Main).launch {
-            pullFromCache(editor)
+            syncCache(editor)
 
             contentPanel.removeAll()
             contentPanel.renderContent()

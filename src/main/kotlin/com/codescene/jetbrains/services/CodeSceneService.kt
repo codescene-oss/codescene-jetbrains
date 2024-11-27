@@ -75,6 +75,8 @@ class CodeSceneService(project: Project) : Disposable {
 
                 performDeltaAnalysis(editor)
 
+                editor.project!!.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(editor)
+
                 CodeSceneCodeVisionProvider.markApiCallComplete(
                     path,
                     CodeSceneCodeVisionProvider.activeDeltaApiCalls
@@ -85,12 +87,6 @@ class CodeSceneService(project: Project) : Disposable {
         }
     }
 
-    data class DeltaResponse(
-        val delta: String,
-        val oldScore: Double,
-        val newScore: Double
-    )
-
     private suspend fun performDeltaAnalysis(editor: Editor) {
         val project = editor.project!!
         val path = editor.virtualFile.path
@@ -100,33 +96,26 @@ class CodeSceneService(project: Project) : Disposable {
         val cachedReview = cacheService.get(ReviewCacheQuery(currentCode, path))
             .also { if (it != null) Log.debug("Found cached review for new file: ${path}") }
 
-        val result = runWithClassLoaderChange {
+        val delta = runWithClassLoaderChange {
             val oldCodeReview = Json.decodeFromString<CodeReview>(DevToolsAPI.review(path, oldCode))
             val newCodeReview = cachedReview ?: Json.decodeFromString<CodeReview>(DevToolsAPI.review(path, currentCode))
 
             val delta = DevToolsAPI.delta(oldCodeReview.rawScore, newCodeReview.rawScore)
 
-            DeltaResponse(delta, oldCodeReview.score, newCodeReview.score)
+            delta
         }
 
-        val (delta, oldScore, newScore) = result //TODO
+        if (delta == "null") {
+            Log.info("Received no response from $CODESCENE delta API.")
+            deltaCacheService.invalidate(path)
+        } else {
+            val parsedDelta = Json.decodeFromString<CodeDelta>(delta)
 
-        //TODO: refactor
-        when (delta) {
-            "null" -> {
-                println("Response is null!")
-            }
-            else -> {
-                val parsedDelta = Json.decodeFromString<CodeDelta>(delta)
+            val cacheEntry = DeltaCacheEntry(path, oldCode, currentCode, parsedDelta)
 
-                val cacheEntry = DeltaCacheEntry(path, oldCode, currentCode, parsedDelta)
+            deltaCacheService.put(cacheEntry)
 
-                deltaCacheService.put(cacheEntry)
-
-                editor.project!!.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(editor)
-
-                uiRefreshService.refreshCodeVision(editor, listOf("CodeHealthCodeVisionProvider"))
-            }
+            uiRefreshService.refreshCodeVision(editor, listOf("CodeHealthCodeVisionProvider"))
         }
     }
 

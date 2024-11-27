@@ -7,7 +7,10 @@ import com.codescene.jetbrains.util.getCodeHealth
 import com.codescene.jetbrains.util.getFunctionDeltaTooltip
 import com.intellij.openapi.project.Project
 import com.intellij.ui.treeStructure.Tree
+import java.awt.Cursor
 import java.awt.Dimension
+import java.awt.event.MouseEvent
+import java.awt.event.MouseMotionAdapter
 import javax.swing.JTree
 import javax.swing.event.TreeSelectionEvent
 import javax.swing.tree.DefaultMutableTreeNode
@@ -55,6 +58,7 @@ class CodeHealthTreeBuilder {
             minimumSize = Dimension(200, 80)
 
             addTreeSelectionListener(::handleTreeSelectionEvent)
+            addMouseMotionListener(TreeMouseMotionAdapter(this))
         }
     }
 
@@ -130,4 +134,16 @@ class CodeHealthTreeBuilder {
         if (oldScore > newScore) NodeType.CODE_HEALTH_DECREASE
         else if (oldScore == newScore) NodeType.CODE_HEALTH_NEUTRAL
         else NodeType.CODE_HEALTH_INCREASE
+
+    class TreeMouseMotionAdapter(private val tree: Tree) : MouseMotionAdapter() {
+        override fun mouseMoved(e: MouseEvent) {
+            val path = tree.getPathForLocation(e.x, e.y)
+
+            tree.cursor = if (path != null) {
+                Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+            } else {
+                Cursor.getDefaultCursor()
+            }
+        }
+    }
 }
