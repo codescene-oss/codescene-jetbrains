@@ -45,7 +45,7 @@ class CodeDeltaService(project: Project) : CodeSceneService() {
 
                 performDeltaAnalysis(editor)
 
-                editor.project!!.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(editor)
+                editor.project!!.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(editor.virtualFile)
                 CodeSceneCodeVisionProvider.markApiCallComplete(path, CodeSceneCodeVisionProvider.activeDeltaApiCalls)
             }
         } catch (e: Exception) {
@@ -54,28 +54,47 @@ class CodeDeltaService(project: Project) : CodeSceneService() {
     }
 
     private suspend fun performDeltaAnalysis(editor: Editor) {
-        val project = editor.project!!
         val path = editor.virtualFile.path
-        val currentCode = editor.document.text
 
-        val oldCode = GitService.getInstance(project).getHeadCommit(editor.virtualFile).also { if (it == "") return }
-        val cachedReview = reviewCacheService.get(ReviewCacheQuery(currentCode, path))
+        val oldCode = GitService.getInstance(editor.project!!).getHeadCommit(editor.virtualFile)
+
+        val cachedReview = reviewCacheService.get(ReviewCacheQuery(editor.document.text, path))
             .also { if (it != null) Log.debug("Found cached review for new file: ${path}") }
 
-        val delta = runWithClassLoaderChange {
-            val oldCodeReview = Json.decodeFromString<CodeReview>(DevToolsAPI.review(path, oldCode))
-            val newCodeReview = cachedReview ?: Json.decodeFromString<CodeReview>(DevToolsAPI.review(path, currentCode))
+        val delta = getDeltaResponse(editor, oldCode, cachedReview)
 
-            val delta = DevToolsAPI.delta(oldCodeReview.rawScore, newCodeReview.rawScore)
+        handleDeltaResponse(editor, delta, oldCode)
+    }
+
+    private fun getDeltaResponse(editor: Editor, oldCode: String, cachedReview: CodeReview?) =
+        runWithClassLoaderChange {
+            var rawScore: String? = null
+            val path = editor.virtualFile.path
+
+            if (oldCode != "") {
+                Log.debug("Initiating delta review using HEAD commit for $path.")
+
+                val oldCodeReview = Json.decodeFromString<CodeReview>(DevToolsAPI.review(path, oldCode))
+                rawScore = oldCodeReview.rawScore
+            }
+
+            val newCodeReview = cachedReview ?: Json.decodeFromString<CodeReview>(DevToolsAPI.review(path, editor.document.text))
+
+            val delta = DevToolsAPI.delta(rawScore, newCodeReview.rawScore)
 
             delta
         }
 
-        if (delta == "null") {
+    private suspend fun handleDeltaResponse(editor: Editor, deltaJson: String, oldCode: String) {
+        val path = editor.virtualFile.path
+        val currentCode = editor.document.text
+
+        if (deltaJson == "null") {
             Log.info("Received no response from $CODESCENE delta API.")
+
             deltaCacheService.invalidate(path)
         } else {
-            val parsedDelta = Json.decodeFromString<CodeDelta>(delta)
+            val parsedDelta = Json.decodeFromString<CodeDelta>(deltaJson)
 
             val cacheEntry = DeltaCacheEntry(path, oldCode, currentCode, parsedDelta)
 

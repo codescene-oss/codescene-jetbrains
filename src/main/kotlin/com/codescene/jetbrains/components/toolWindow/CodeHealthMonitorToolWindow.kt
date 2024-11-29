@@ -7,8 +7,9 @@ import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
 import com.codescene.jetbrains.util.Log
-import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.findDocument
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
@@ -82,15 +83,16 @@ class CodeHealthMonitorToolWindow {
         add(textArea)
     }
 
-    private fun syncCache(editor: Editor) {
-        val path = editor.virtualFile.path
+    private fun syncCache(file: VirtualFile) {
+        val path = file.path
+        val code = file.findDocument()?.text ?: return
 
         val headCommit = runBlocking(Dispatchers.IO) {
-            GitService.getInstance(project).getHeadCommit(editor.virtualFile)
+            GitService.getInstance(project).getHeadCommit(file)
         }
 
         val cachedDelta = DeltaCacheService.getInstance(project)
-            .get(DeltaCacheQuery(path, headCommit, editor.document.text))
+            .get(DeltaCacheQuery(path, headCommit, code))
 
         if (cachedDelta != null) {
             synchronized(healthMonitoringResults) {
@@ -101,16 +103,22 @@ class CodeHealthMonitorToolWindow {
         }
     }
 
-    fun refreshContent(editor: Editor) {
+    fun refreshContent(file: VirtualFile?) {
         refreshJob?.cancel()
 
         refreshJob = CoroutineScope(Dispatchers.Main).launch {
-            syncCache(editor)
+            if (file != null) syncCache(file)
 
             contentPanel.removeAll()
             contentPanel.renderContent()
             contentPanel.revalidate()
             contentPanel.repaint()
         }
+    }
+
+    fun invalidateAndRefreshContent(fileToInvalidate: String, file: VirtualFile? = null) {
+        healthMonitoringResults.remove(fileToInvalidate)
+
+        refreshContent(file)
     }
 }

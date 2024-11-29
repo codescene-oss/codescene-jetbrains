@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 data class CodeDelta(
     @SerialName("file-level-findings") val fileLevelFindings: List<ChangeDetails>,
     @SerialName("function-level-findings") val functionLevelFindings: List<FunctionFinding>,
-    @SerialName("old-score") val oldScore: Double,
+    @SerialName("old-score") val oldScore: Double = 10.0, // For untracked files, there is no old score, so it defaults to 10.0 (perfect score) for comparison purposes.
     @SerialName("new-score") val newScore: Double
 )
 
@@ -19,11 +19,16 @@ data class Function(
 
 @Serializable
 enum class ChangeType {
-    @SerialName("introduced") INTRODUCED,
-    @SerialName("fixed") FIXED,
-    @SerialName("improved") IMPROVED,
-    @SerialName("degraded") DEGRADED,
-    @SerialName("unchanged") UNCHANGED
+    @SerialName("introduced")
+    INTRODUCED,
+    @SerialName("fixed")
+    FIXED,
+    @SerialName("improved")
+    IMPROVED,
+    @SerialName("degraded")
+    DEGRADED,
+    @SerialName("unchanged")
+    UNCHANGED
 }
 
 @Serializable

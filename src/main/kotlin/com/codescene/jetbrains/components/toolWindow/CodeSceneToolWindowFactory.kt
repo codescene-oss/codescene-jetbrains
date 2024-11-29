@@ -4,8 +4,8 @@ import com.codescene.jetbrains.actions.ShowSettingsAction
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
-import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.content.Content
@@ -27,8 +27,12 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
 
     private fun subscribeToRefreshEvent(project: Project){
         project.messageBus.connect().subscribe(ToolWindowRefreshNotifier.TOPIC, object : ToolWindowRefreshNotifier {
-            override fun refresh(editor: Editor) {
-                codeHealthMonitorToolWindow?.refreshContent(editor)
+            override fun refresh(file: VirtualFile) {
+                codeHealthMonitorToolWindow?.refreshContent(file)
+            }
+
+            override fun invalidateAndRefresh(fileToInvalidate: String, file: VirtualFile?) {
+                codeHealthMonitorToolWindow?.invalidateAndRefreshContent(fileToInvalidate, file)
             }
         })
     }

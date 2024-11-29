@@ -1,13 +1,15 @@
 package com.codescene.jetbrains.notifier
 
 import com.codescene.jetbrains.util.Constants.CODESCENE
-import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.messages.Topic
 
 const val DISPLAY_NAME = "Refresh $CODESCENE Tool Window"
 
 interface ToolWindowRefreshNotifier {
-    fun refresh(editor: Editor)
+    fun refresh(file: VirtualFile)
+
+    fun invalidateAndRefresh(fileToInvalidate: String, file: VirtualFile? = null)
 
     companion object {
         val TOPIC: Topic<ToolWindowRefreshNotifier> =
