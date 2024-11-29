@@ -18,6 +18,13 @@ abstract class CodeSceneService : Disposable {
 
     abstract fun review(editor: Editor)
 
+    /**
+     * Executes the given action using the plugin's ClassLoader to avoid class-loading issues.
+     * This is necessary when calling CodeScene dependencies to resolve conflicts such as:
+     * - ANTLR version mismatches causing ClassCastException (e.g., ANTLRInputStream vs CharStream).
+     * - Clojure dependencies failing due to incompatible URLConnection handling
+     *   (e.g., ZipResourceFile$MyURLConnection vs JarURLConnection).
+     */
     protected fun <T> runWithClassLoaderChange(action: () -> T): T {
         val originalClassLoader = Thread.currentThread().contextClassLoader
         val classLoader = this@CodeSceneService.javaClass.classLoader
