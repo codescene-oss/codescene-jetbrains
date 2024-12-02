@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.components.tree
 
-import com.codescene.jetbrains.UiLabelsBundle
+import com.codescene.jetbrains.data.ChangeType
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.services.CodeNavigationService
 import com.codescene.jetbrains.util.getCodeHealth
@@ -23,6 +23,7 @@ enum class NodeType {
     CODE_HEALTH_INCREASE,
     CODE_HEALTH_NEUTRAL,
     FILE_FINDING,
+    FILE_FINDING_FIXED,
     FUNCTION_FINDING
 }
 
@@ -32,7 +33,7 @@ data class HealthDetails(
 )
 
 data class CodeHealthFinding(
-    val tooltip: String,
+    val tooltip: String = "",
     val filePath: String,
     val focusLine: Int? = 1,
     val displayName: String,
@@ -76,11 +77,11 @@ class CodeHealthTreeBuilder {
 
     private fun buildTree(filePath: String, delta: CodeDelta): TreeNode {
         val root = CodeHealthFinding(
+            filePath = filePath,
             tooltip = filePath,
-            filePath,
             displayName = filePath,
             nodeType = NodeType.ROOT
-        ) //TODO: change tooltip logic
+        )
 
         return DefaultMutableTreeNode(root).apply {
             addCodeHealthLeaf(filePath, delta)
@@ -95,8 +96,7 @@ class CodeHealthTreeBuilder {
 
         //TODO: logic for opening smell documentation tab
         val health = CodeHealthFinding(
-            tooltip = UiLabelsBundle.message("decliningFileHealth"),
-            filePath,
+            filePath = filePath,
             displayName = "Code Health: $change",
             additionalText = percentage,
             nodeType = resolveNodeType(delta.oldScore, delta.newScore)
@@ -107,11 +107,13 @@ class CodeHealthTreeBuilder {
 
     private fun DefaultMutableTreeNode.addFileLeaves(filePath: String, delta: CodeDelta) =
         delta.fileLevelFindings.forEach {
+            val positiveChange = it.changeType == ChangeType.FIXED || it.changeType == ChangeType.IMPROVED
+
             val finding = CodeHealthFinding(
                 tooltip = it.description,
                 filePath,
                 displayName = it.category,
-                nodeType = NodeType.FILE_FINDING
+                nodeType = if (positiveChange) NodeType.FILE_FINDING_FIXED else NodeType.FILE_FINDING
             )
 
             add(DefaultMutableTreeNode(finding))
