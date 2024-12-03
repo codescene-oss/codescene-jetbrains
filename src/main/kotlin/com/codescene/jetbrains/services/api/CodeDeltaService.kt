@@ -17,7 +17,9 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.serialization.json.Json
 
 @Service(Service.Level.PROJECT)
@@ -35,23 +37,15 @@ class CodeDeltaService(project: Project) : CodeSceneService() {
     override val activeReviewCalls = mutableMapOf<String, Job>()
 
     override fun review(editor: Editor) {
-        val path = editor.virtualFile.path
+        reviewFile(editor) {
+            performDeltaAnalysis(editor)
 
-        activeReviewCalls[path]?.cancel()
-
-        try {
-            activeReviewCalls[path] = scope.launch {
-                delay(debounceDelay)
-
-                performDeltaAnalysis(editor)
-
-                editor.project!!.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(editor.virtualFile)
-                CodeSceneCodeVisionProvider.markApiCallComplete(path, CodeSceneCodeVisionProvider.activeDeltaApiCalls)
-            }
-        } catch (e: Exception) {
-            Log.error("Error during delta analysis for file - ${e.message}")
+            editor.project!!.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC)
+                .refresh(editor.virtualFile)
         }
     }
+
+    override fun getActiveApiCalls() = CodeSceneCodeVisionProvider.activeDeltaApiCalls
 
     private suspend fun performDeltaAnalysis(editor: Editor) {
         val path = editor.virtualFile.path
@@ -78,7 +72,8 @@ class CodeDeltaService(project: Project) : CodeSceneService() {
                 rawScore = oldCodeReview.rawScore
             }
 
-            val newCodeReview = cachedReview ?: Json.decodeFromString<CodeReview>(DevToolsAPI.review(path, editor.document.text))
+            val newCodeReview =
+                cachedReview ?: Json.decodeFromString<CodeReview>(DevToolsAPI.review(path, editor.document.text))
 
             val delta = DevToolsAPI.delta(rawScore, newCodeReview.rawScore)
 

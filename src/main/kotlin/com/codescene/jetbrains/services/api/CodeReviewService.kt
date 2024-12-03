@@ -6,15 +6,15 @@ import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.cache.ReviewCacheEntry
 import com.codescene.jetbrains.services.cache.ReviewCacheService
-import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.serialization.json.Json
-import kotlin.coroutines.cancellation.CancellationException
 
 @Service(Service.Level.PROJECT)
 class CodeReviewService(project: Project) : CodeSceneService() {
@@ -30,34 +30,13 @@ class CodeReviewService(project: Project) : CodeSceneService() {
     override val activeReviewCalls = mutableMapOf<String, Job>()
 
     override fun review(editor: Editor) {
-        val filePath = editor.virtualFile.path
-        val fileName = editor.virtualFile.name
-
-        activeReviewCalls[filePath]?.cancel()
-
-        activeReviewCalls[filePath] = scope.launch {
-            delay(debounceDelay)
-
-            Log.info("No cached review for file $fileName at path $filePath. Initiating $CODESCENE review.")
-
-            try {
-                performCodeReview(editor)
-
-                uiRefreshService.refreshUI(editor)
-
-                CodeSceneCodeVisionProvider.markApiCallComplete(
-                    filePath,
-                    CodeSceneCodeVisionProvider.activeReviewApiCalls
-                )
-            } catch (e: CancellationException) {
-                Log.info("Code review canceled for file $fileName.")
-            } catch (e: Exception) {
-                Log.error("Error during code review for file $fileName - ${e.message}")
-            } finally {
-                activeReviewCalls.remove(filePath)
-            }
+        reviewFile(editor) {
+            performCodeReview(editor)
+            uiRefreshService.refreshUI(editor)
         }
     }
+
+    override fun getActiveApiCalls() = CodeSceneCodeVisionProvider.activeReviewApiCalls
 
     private fun performCodeReview(editor: Editor) {
         val file = editor.virtualFile
