@@ -7,6 +7,7 @@ import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
 import com.codescene.jetbrains.util.Log
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
@@ -17,6 +18,7 @@ import kotlinx.coroutines.*
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Font
+import java.util.concurrent.ConcurrentHashMap
 import javax.swing.BorderFactory
 import javax.swing.BoxLayout
 import javax.swing.JTextArea
@@ -26,7 +28,7 @@ class CodeHealthMonitorToolWindow {
     private lateinit var contentPanel: JBPanel<JBPanel<*>>
 
     private val treeBuilder = CodeHealthTreeBuilder()
-    private val healthMonitoringResults: MutableMap<String, CodeDelta> = mutableMapOf()
+    private val healthMonitoringResults: ConcurrentHashMap<String, CodeDelta> = ConcurrentHashMap()
 
     private var refreshJob: Job? = null
 
@@ -85,29 +87,24 @@ class CodeHealthMonitorToolWindow {
 
     private fun syncCache(file: VirtualFile) {
         val path = file.path
-        val code = file.findDocument()?.text ?: return
+        val code = runReadAction { file.findDocument()?.text } ?: return
 
-        val headCommit = runBlocking(Dispatchers.IO) {
-            GitService.getInstance(project).getHeadCommit(file)
-        }
+        val headCommit = GitService.getInstance(project).getHeadCommit(file)
 
         val cachedDelta = DeltaCacheService.getInstance(project)
             .get(DeltaCacheQuery(path, headCommit, code))
 
-        if (cachedDelta != null) {
-            synchronized(healthMonitoringResults) {
-                healthMonitoringResults[path] = cachedDelta
-            }
-        } else {
+        if (cachedDelta != null)
+            healthMonitoringResults[path] = cachedDelta
+        else
             healthMonitoringResults.remove(path)
-        }
     }
 
-    fun refreshContent(file: VirtualFile?) {
+    fun refreshContent(file: VirtualFile?, scope: CoroutineScope = CoroutineScope(Dispatchers.Main)) {
         refreshJob?.cancel()
 
-        refreshJob = CoroutineScope(Dispatchers.Main).launch {
-            if (file != null) syncCache(file)
+        refreshJob = scope.launch {
+            if (file != null) withContext(Dispatchers.IO) { syncCache(file) }
 
             contentPanel.removeAll()
             contentPanel.renderContent()

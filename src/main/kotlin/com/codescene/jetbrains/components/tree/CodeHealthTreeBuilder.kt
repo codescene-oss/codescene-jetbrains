@@ -1,5 +1,7 @@
 package com.codescene.jetbrains.components.tree
 
+import com.codescene.jetbrains.components.tree.listeners.CustomTreeExpansionListener
+import com.codescene.jetbrains.components.tree.listeners.TreeMouseMotionAdapter
 import com.codescene.jetbrains.data.ChangeType
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.services.CodeNavigationService
@@ -7,15 +9,14 @@ import com.codescene.jetbrains.util.getCodeHealth
 import com.codescene.jetbrains.util.getFunctionDeltaTooltip
 import com.intellij.openapi.project.Project
 import com.intellij.ui.treeStructure.Tree
-import java.awt.Cursor
 import java.awt.Dimension
-import java.awt.event.MouseEvent
-import java.awt.event.MouseMotionAdapter
+import java.util.concurrent.ConcurrentHashMap
 import javax.swing.JTree
 import javax.swing.event.TreeSelectionEvent
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
 import javax.swing.tree.TreeNode
+import javax.swing.tree.TreePath
 
 enum class NodeType {
     ROOT,
@@ -43,6 +44,7 @@ data class CodeHealthFinding(
 
 class CodeHealthTreeBuilder {
     private lateinit var project: Project
+    private val collapsedPaths: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
     fun createTree(
         filePath: String,
@@ -51,15 +53,23 @@ class CodeHealthTreeBuilder {
     ): Tree {
         this.project = project
 
-        val tree = buildTree(filePath, delta)
+        val node = buildNode(filePath, delta)
 
-        return Tree(DefaultTreeModel(tree)).apply {
+        return Tree(DefaultTreeModel(node)).apply {
             isFocusable = false
             cellRenderer = CustomTreeCellRenderer()
             minimumSize = Dimension(200, 80)
 
+            // Nodes are rendered expanded by default, so to preserve the collapsed state
+            // between refreshes, we must manually collapse nodes based on the saved state.
+            collapsedPaths.forEach {
+                if (it == filePath)
+                    collapsePath(TreePath(node))
+            }
+
             addTreeSelectionListener(::handleTreeSelectionEvent)
             addMouseMotionListener(TreeMouseMotionAdapter(this))
+            addTreeExpansionListener(CustomTreeExpansionListener(collapsedPaths))
         }
     }
 
@@ -75,7 +85,7 @@ class CodeHealthTreeBuilder {
         }
     }
 
-    private fun buildTree(filePath: String, delta: CodeDelta): TreeNode {
+    private fun buildNode(filePath: String, delta: CodeDelta): TreeNode {
         val root = CodeHealthFinding(
             filePath = filePath,
             tooltip = filePath,
@@ -136,16 +146,4 @@ class CodeHealthTreeBuilder {
         if (oldScore > newScore) NodeType.CODE_HEALTH_DECREASE
         else if (oldScore == newScore) NodeType.CODE_HEALTH_NEUTRAL
         else NodeType.CODE_HEALTH_INCREASE
-
-    class TreeMouseMotionAdapter(private val tree: Tree) : MouseMotionAdapter() {
-        override fun mouseMoved(e: MouseEvent) {
-            val path = tree.getPathForLocation(e.x, e.y)
-
-            tree.cursor = if (path != null) {
-                Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-            } else {
-                Cursor.getDefaultCursor()
-            }
-        }
-    }
 }

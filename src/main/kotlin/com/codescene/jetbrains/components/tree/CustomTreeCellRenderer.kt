@@ -66,7 +66,6 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
         NodeType.FILE_FINDING -> AllIcons.Nodes.WarningIntroduction
         NodeType.FILE_FINDING_FIXED -> CODE_HEALTH_HIGH
         NodeType.FUNCTION_FINDING -> AllIcons.Nodes.Method
-        NodeType.ROOT -> FileTypeManager.getInstance()
-            .getFileTypeByFileName(text).icon
+        NodeType.ROOT -> FileTypeManager.getInstance().getFileTypeByFileName(text).icon
     }
 }
