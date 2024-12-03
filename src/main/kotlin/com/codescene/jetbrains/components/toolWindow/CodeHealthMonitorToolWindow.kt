@@ -1,16 +1,20 @@
 package com.codescene.jetbrains.components.toolWindow
 
+import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.tree.CodeHealthTreeBuilder
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
+import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
+import com.intellij.execution.runners.ExecutionUtil
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
+import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
@@ -110,6 +114,24 @@ class CodeHealthMonitorToolWindow {
             contentPanel.renderContent()
             contentPanel.revalidate()
             contentPanel.repaint()
+
+            updateToolWindowIcon()
+        }
+    }
+
+    private fun updateToolWindowIcon() {
+        val toolWindow = ToolWindowManager.getInstance(project).getToolWindow(CODESCENE)
+
+        if (toolWindow != null) {
+            val originalIcon = CODESCENE_TW
+
+            val notificationIcon = if (healthMonitoringResults.isNotEmpty()) {
+                ExecutionUtil.getLiveIndicator(originalIcon, 0, 13)
+            } else {
+                originalIcon
+            }
+
+            toolWindow.setIcon(notificationIcon)
         }
     }
 
