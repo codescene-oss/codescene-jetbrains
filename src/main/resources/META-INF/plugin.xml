@@ -107,7 +107,7 @@
     </extensions>
 
     <projectListeners>
-        <listener class="com.codescene.jetbrains.listeners.FileLifecycleListener"
+        <listener class="com.codescene.jetbrains.listeners.FileEditorLifecycleListener"
                   topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
     </projectListeners>
 </idea-plugin>

@@ -7,7 +7,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.vfs.VirtualFile
 
-class FileLifecycleListener : FileEditorManagerListener {
+class FileEditorLifecycleListener : FileEditorManagerListener {
     override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
         val codeDeltaService = CodeDeltaService.getInstance(source.project)
         val codeReviewService = CodeReviewService.getInstance(source.project)

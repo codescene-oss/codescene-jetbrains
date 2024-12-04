@@ -91,7 +91,11 @@ class CodeHealthMonitorToolWindow {
 
     private fun syncCache(file: VirtualFile) {
         val path = file.path
-        val code = runReadAction { file.findDocument()?.text } ?: return
+        val code = runReadAction { file.findDocument()?.text }
+            ?: run {
+                Log.warn("Could not find document for file ${file.path}. Skipping code health monitor refresh.")
+                return
+            }
 
         val headCommit = GitService.getInstance(project).getHeadCommit(file)
 

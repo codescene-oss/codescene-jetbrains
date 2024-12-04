@@ -10,7 +10,7 @@ class ProjectStartupActivity : ProjectActivity {
     override suspend fun execute(project: Project) {
         val disposable = project as Disposable
 
-        VirtualFileManager.getInstance().addAsyncFileListener(FileEventListener(project), disposable)
+        VirtualFileManager.getInstance().addAsyncFileListener(FileChangeListener(project), disposable)
 
         Log.debug("FileEventListener registered for project: ${project.name}")
     }
