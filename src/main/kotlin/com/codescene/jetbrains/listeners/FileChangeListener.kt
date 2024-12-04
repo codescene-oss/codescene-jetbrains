@@ -13,12 +13,14 @@ class FileChangeListener(private val project: Project) : AsyncFileListener {
         val renameEvents = events.filterIsInstance<VFilePropertyChangeEvent>()
             .filter { it.propertyName == VirtualFile.PROP_NAME }
         val deleteEvents = events.filterIsInstance<VFileDeleteEvent>()
-        val moveEvent = events.filterIsInstance<VFileMoveEvent>()
+        val moveEvents = events.filterIsInstance<VFileMoveEvent>()
 
-        if (renameEvents.isEmpty() && deleteEvents.isEmpty() && moveEvent.isEmpty()) {
+        val hasRelevantEvents = renameEvents.isNotEmpty() || deleteEvents.isNotEmpty() || moveEvents.isNotEmpty()
+
+        if (!hasRelevantEvents) {
             return null // No relevant events to process
         }
 
-        return FileEventProcessor(project, renameEvents, deleteEvents, moveEvent)
+        return FileEventProcessor(project, renameEvents, deleteEvents, moveEvents)
     }
 }
