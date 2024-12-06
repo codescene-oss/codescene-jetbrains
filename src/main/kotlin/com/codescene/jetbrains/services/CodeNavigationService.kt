@@ -1,7 +1,7 @@
 package com.codescene.jetbrains.services
 
-import com.intellij.openapi.application.ReadAction
-import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
@@ -37,10 +37,11 @@ class CodeNavigationService(val project: Project) {
 
     private fun getFileByName(filePath: String): VirtualFile? {
         val fileName = File(filePath).name
+        val searchScope = GlobalSearchScope.projectScope(project)
 
-        val file = ReadAction.compute<VirtualFile?, Throwable> {
-            FilenameIndex.getVirtualFilesByName(fileName, GlobalSearchScope.projectScope(project))
-                .firstOrNull { it.path.endsWith(filePath) } //TODO: check if I need this
+        val file = runReadAction {
+            FilenameIndex.getVirtualFilesByName(fileName, searchScope)
+                .firstOrNull { it.path.endsWith(filePath) }
         }
 
         return file
@@ -59,7 +60,7 @@ class CodeNavigationService(val project: Project) {
     private fun moveCaret(editor: Editor, line: Int) {
         val caretModel = editor.caretModel
 
-        WriteCommandAction.runWriteCommandAction(project) {
+        runWriteAction {
             val position = LogicalPosition(line - 1, 0)
 
             caretModel.moveToLogicalPosition(position)

@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 abstract class CacheService<Q, E, V, R> {
     protected val cache = ConcurrentHashMap<String, V>()
+    private val cacheImplementation = this::class.java.simpleName
 
     protected fun hash(content: String): String {
         return DigestUtils.sha256Hex(content)
@@ -18,7 +19,7 @@ abstract class CacheService<Q, E, V, R> {
     fun invalidate(key: String) {
         cache[key]?.let {
             cache.remove(key)
-            Log.debug("${this::class.java.simpleName}: entry for key $key has been invalidated.")
+            Log.debug("[$cacheImplementation] entry for key $key has been invalidated.")
         }
     }
 
@@ -29,7 +30,7 @@ abstract class CacheService<Q, E, V, R> {
             cache[newKey] = entry
 
             invalidate(oldKey)
-            Log.debug("${this::class.java.simpleName}: file was renamed, updated key from $oldKey to $newKey.")
+            Log.debug("[$cacheImplementation] $oldKey to $newKey.")
         }
     }
 }

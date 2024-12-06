@@ -17,15 +17,14 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
 import org.reflections.Reflections
 import java.awt.event.MouseEvent
+import java.util.concurrent.ConcurrentHashMap
 
 @Suppress("UnstableApiUsage")
 abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
     companion object {
-        @Volatile
-        var activeReviewApiCalls = mutableSetOf<String>()
+        val activeReviewApiCalls: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
-        @Volatile
-        var activeDeltaApiCalls = mutableSetOf<String>()
+        val activeDeltaApiCalls: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
         private var providers: List<String> = emptyList()
 
@@ -64,8 +63,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
     override fun computeCodeVision(editor: Editor, uiData: Unit): CodeVisionState {
         editor.project ?: return CodeVisionState.READY_EMPTY
 
-        val excludeGitignoreFiles = CodeSceneGlobalSettingsStore.getInstance().state.excludeGitignoreFiles
-        val fileSupported = isFileSupported(editor.project!!, editor.virtualFile, excludeGitignoreFiles)
+        val fileSupported = isFileSupported(editor.project!!, editor.virtualFile)
 
         if (!fileSupported) return CodeVisionState.READY_EMPTY
 

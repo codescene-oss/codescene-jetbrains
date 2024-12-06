@@ -29,6 +29,11 @@ class GitService(val project: Project) {
 
         val handler = createGitShowHandler(project, gitRepository, file)
 
+        if (handler == null) {
+            Log.warn("Unable to retrieve Git handler for file ${file.path}")
+            return ""
+        }
+
         try {
             val result = Git.getInstance().runCommand(handler).output
                 .takeIf { it.isNotEmpty() }
@@ -36,7 +41,7 @@ class GitService(val project: Project) {
 
             return result ?: ""
         } catch (e: Exception) {
-            Log.error("Unable to get HEAD commit for file ${file.path} - ${e.message}")
+            Log.warn("Unable to get HEAD commit for file ${file.path} - ${e.message}")
             return ""
         }
     }
@@ -45,12 +50,13 @@ class GitService(val project: Project) {
         project: Project,
         gitRepository: GitRepository,
         file: VirtualFile
-    ): GitLineHandler {
+    ): GitLineHandler? {
         val repositoryRoot = gitRepository.root.path
         val relativePath = file.path.substringAfter("$repositoryRoot/")
 
         if (!file.path.startsWith(repositoryRoot)) {
             Log.warn("File ${file.path} is not within the repository root ${repositoryRoot}.")
+            return null
         }
 
         return GitLineHandler(project, gitRepository.root, GitCommand.SHOW).apply {

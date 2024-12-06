@@ -1,7 +1,11 @@
 package com.codescene.jetbrains.util
 
-import com.codescene.jetbrains.components.tree.HealthDetails
 import kotlin.math.abs
+
+data class HealthDetails(
+    val oldScore: Double,
+    val newScore: Double,
+)
 
 fun round(score: Double): Double = kotlin.math.floor(score * 100.0) / 100.0
 

@@ -5,10 +5,12 @@ import com.codescene.jetbrains.components.tree.listeners.TreeMouseMotionAdapter
 import com.codescene.jetbrains.data.ChangeType
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.services.CodeNavigationService
+import com.codescene.jetbrains.util.HealthDetails
 import com.codescene.jetbrains.util.getCodeHealth
 import com.codescene.jetbrains.util.getFunctionDeltaTooltip
 import com.intellij.openapi.project.Project
 import com.intellij.ui.treeStructure.Tree
+import java.awt.Component
 import java.awt.Dimension
 import java.util.concurrent.ConcurrentHashMap
 import javax.swing.JTree
@@ -27,11 +29,6 @@ enum class NodeType {
     FILE_FINDING_FIXED,
     FUNCTION_FINDING
 }
-
-data class HealthDetails(
-    val oldScore: Double,
-    val newScore: Double,
-)
 
 data class CodeHealthFinding(
     val tooltip: String = "",
@@ -57,14 +54,14 @@ class CodeHealthTreeBuilder {
 
         return Tree(DefaultTreeModel(node)).apply {
             isFocusable = false
+            alignmentX = Component.LEFT_ALIGNMENT
             cellRenderer = CustomTreeCellRenderer()
             minimumSize = Dimension(200, 80)
 
             // Nodes are rendered expanded by default, so to preserve the collapsed state
             // between refreshes, we must manually collapse nodes based on the saved state.
             collapsedPaths.forEach {
-                if (it == filePath)
-                    collapsePath(TreePath(node))
+                if (it == filePath) collapsePath(TreePath(node))
             }
 
             addTreeSelectionListener(::handleTreeSelectionEvent)
@@ -80,6 +77,7 @@ class CodeHealthTreeBuilder {
 
         val selectedNode = event.path.lastPathComponent as? DefaultMutableTreeNode
 
+        //TODO: logic for opening smell documentation tab
         (selectedNode?.takeIf { it.isLeaf }?.userObject as? CodeHealthFinding)?.also { finding ->
             navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
         }
@@ -104,7 +102,6 @@ class CodeHealthTreeBuilder {
         val healthDetails = HealthDetails(delta.oldScore, delta.newScore)
         val (change, percentage) = getCodeHealth(healthDetails)
 
-        //TODO: logic for opening smell documentation tab
         val health = CodeHealthFinding(
             filePath = filePath,
             displayName = "Code Health: $change",

@@ -23,7 +23,7 @@ data class ReviewCacheEntry(
 )
 
 @Service(Service.Level.PROJECT)
-class ReviewCacheService: CacheService<ReviewCacheQuery, ReviewCacheEntry, ReviewCacheItem, CodeReview>() {
+class ReviewCacheService : CacheService<ReviewCacheQuery, ReviewCacheEntry, ReviewCacheItem, CodeReview>() {
     companion object {
         fun getInstance(project: Project): ReviewCacheService = project.service<ReviewCacheService>()
     }

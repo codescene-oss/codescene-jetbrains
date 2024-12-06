@@ -1,9 +1,12 @@
 package com.codescene.jetbrains.util
 
+import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.util.Constants.CODESCENE
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
 import java.io.File
@@ -71,13 +74,20 @@ private fun isExcludedByGitignore(file: VirtualFile, ignoredFiles: List<String>)
 
 private fun inSupportedLanguages(extension: String) = supportedLanguages.containsKey(extension)
 
-fun isFileSupported(project: Project, virtualFile: VirtualFile, excludeGitignoreFiles: Boolean): Boolean {
-    val ignoredFiles = if (excludeGitignoreFiles) readGitignore(project) else emptyList()
+fun isFileSupported(project: Project, virtualFile: VirtualFile): Boolean {
+    val excludeGitignoreFiles = CodeSceneGlobalSettingsStore.getInstance().state.excludeGitignoreFiles
 
-    val isExcludedByGitignore = isExcludedByGitignore(virtualFile, ignoredFiles)
+    val isInProject = runReadAction {
+        val fileIndex = ProjectFileIndex.getInstance(project)
+        fileIndex.isInContent(virtualFile)
+    }
+
+    val ignoredFiles = readGitignore(project)
+
+    val isExcludedByGitignore = excludeGitignoreFiles && isExcludedByGitignore(virtualFile, ignoredFiles)
     val supportedExtension = virtualFile.extension?.let(::inSupportedLanguages) == true
 
-    return supportedExtension && !isExcludedByGitignore
+    return supportedExtension && !isExcludedByGitignore && isInProject
 }
 
 fun getTextRange(

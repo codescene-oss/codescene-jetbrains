@@ -1,7 +1,6 @@
 package com.codescene.jetbrains.codeInsight.annotator
 
 import com.codescene.jetbrains.codeInsight.intentions.ShowProblemIntentionAction
-import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
@@ -27,9 +26,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
         annotationContext: AnnotationContext,
         @NotNull holder: AnnotationHolder
     ) {
-        val settings = CodeSceneGlobalSettingsStore.getInstance().state
-
-        if (!isFileSupported(psiFile.project, psiFile.virtualFile, settings.excludeGitignoreFiles)) {
+        if (!isFileSupported(psiFile.project, psiFile.virtualFile)) {
             Log.warn("File type not supported: ${psiFile.virtualFile.name}. Skipping code smell annotation.")
             return
         }

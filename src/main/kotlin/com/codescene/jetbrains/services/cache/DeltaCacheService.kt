@@ -26,7 +26,7 @@ data class DeltaCacheQuery(
 )
 
 @Service(Service.Level.PROJECT)
-class DeltaCacheService : CacheService<DeltaCacheQuery, DeltaCacheEntry, DeltaCacheItem, CodeDelta>(){
+class DeltaCacheService : CacheService<DeltaCacheQuery, DeltaCacheEntry, DeltaCacheItem, CodeDelta>() {
     companion object {
         fun getInstance(project: Project): DeltaCacheService = project.service<DeltaCacheService>()
     }

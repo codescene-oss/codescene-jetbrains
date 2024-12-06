@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.util
 
 import com.codescene.jetbrains.data.ChangeDetails
+import com.codescene.jetbrains.data.ChangeType
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.data.Function
 import com.codescene.jetbrains.services.GitService
@@ -11,9 +12,10 @@ import com.intellij.openapi.editor.Editor
 private fun pluralize(word: String, amount: Int) = if (amount > 1) "${word}s" else word
 
 private fun MutableList<String>.addIssueInformation(details: List<ChangeDetails>) {
-    val codeSmells = details.size
+    val codeSmells =
+        details.filter { it.changeType == ChangeType.INTRODUCED || it.changeType == ChangeType.DEGRADED }.size
 
-    this.add("Contains $codeSmells ${pluralize("issue", codeSmells)} degrading code health")
+    if (codeSmells > 0) this.add("Contains $codeSmells ${pluralize("issue", codeSmells)} degrading code health")
 }
 
 fun getFunctionDeltaTooltip(function: Function, details: List<ChangeDetails>): String {

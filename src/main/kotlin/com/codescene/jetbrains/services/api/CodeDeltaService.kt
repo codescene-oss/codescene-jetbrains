@@ -85,7 +85,7 @@ class CodeDeltaService(project: Project) : CodeSceneService() {
         val currentCode = editor.document.text
 
         if (deltaJson == "null") {
-            Log.info("Received no response from $CODESCENE delta API.")
+            Log.info("Received null response from $CODESCENE delta API.")
 
             deltaCacheService.invalidate(path)
         } else {

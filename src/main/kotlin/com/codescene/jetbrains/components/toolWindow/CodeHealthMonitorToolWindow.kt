@@ -19,7 +19,6 @@ import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
 import kotlinx.coroutines.*
-import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Font
 import java.util.concurrent.ConcurrentHashMap
@@ -27,28 +26,20 @@ import javax.swing.BorderFactory
 import javax.swing.BoxLayout
 import javax.swing.JTextArea
 
-class CodeHealthMonitorToolWindow {
-    private lateinit var project: Project
-    private lateinit var contentPanel: JBPanel<JBPanel<*>>
-
-    private val treeBuilder = CodeHealthTreeBuilder()
-    private val healthMonitoringResults: ConcurrentHashMap<String, CodeDelta> = ConcurrentHashMap()
-
+class CodeHealthMonitorToolWindow(private val project: Project) {
     private var refreshJob: Job? = null
 
-    fun getContent(project: Project): JBScrollPane {
-        this.project = project
+    private val treeBuilder = CodeHealthTreeBuilder()
+    private var contentPanel = JBPanel<JBPanel<*>>().apply {
+        border = null
+        layout = BoxLayout(this, BoxLayout.Y_AXIS)
+        addPlaceholderText()
+    }
+    private val healthMonitoringResults: ConcurrentHashMap<String, CodeDelta> = ConcurrentHashMap()
 
-        contentPanel = JBPanel<JBPanel<*>>(BorderLayout()).apply {
-            layout = BoxLayout(this, BoxLayout.Y_AXIS)
-            renderContent()
-        }
-
-        return JBScrollPane(contentPanel).apply {
-            border = null
-            verticalScrollBarPolicy = JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
-            horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
-        }
+    fun getContent() = JBScrollPane(contentPanel).apply {
+        verticalScrollBarPolicy = JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
+        horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_NEVER
     }
 
     private fun JBPanel<JBPanel<*>>.renderContent() {
@@ -63,8 +54,6 @@ class CodeHealthMonitorToolWindow {
             Log.debug("Rendering code health information file tree for: $name.")
 
             val fileTreePanel = treeBuilder.createTree(name, delta, project)
-
-            fileTreePanel.alignmentX = Component.LEFT_ALIGNMENT
 
             add(fileTreePanel)
         }
@@ -129,11 +118,10 @@ class CodeHealthMonitorToolWindow {
         if (toolWindow != null) {
             val originalIcon = CODESCENE_TW
 
-            val notificationIcon = if (healthMonitoringResults.isNotEmpty()) {
+            val notificationIcon = if (healthMonitoringResults.isNotEmpty())
                 ExecutionUtil.getLiveIndicator(originalIcon, 0, 13)
-            } else {
+            else
                 originalIcon
-            }
 
             toolWindow.setIcon(notificationIcon)
         }

@@ -17,9 +17,7 @@ class FileChangeListener(private val project: Project) : AsyncFileListener {
 
         val hasRelevantEvents = renameEvents.isNotEmpty() || deleteEvents.isNotEmpty() || moveEvents.isNotEmpty()
 
-        if (!hasRelevantEvents) {
-            return null // No relevant events to process
-        }
+        if (!hasRelevantEvents) return null
 
         return FileEventProcessor(project, renameEvents, deleteEvents, moveEvents)
     }
