@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.codeInsight.codeVision
 
+import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.data.CodeSmell
@@ -12,7 +13,6 @@ import com.codescene.jetbrains.util.getTextRange
 import com.codescene.jetbrains.util.isFileSupported
 import com.intellij.codeInsight.codeVision.*
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
 import org.reflections.Reflections
@@ -155,7 +155,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
             codeSmell.category,
             id,
             { event, sourceEditor -> handleClick(sourceEditor, codeSmell.category, event) },
-            AllIcons.General.InspectionsWarningEmpty
+            CODE_SMELL
         )
 
     private fun markApiCallInProgress(filePath: String, apiCalls: MutableSet<String>) {

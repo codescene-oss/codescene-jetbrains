@@ -23,4 +23,7 @@ object CodeSceneIcons {
 
     @JvmField
     val CODE_HEALTH_LOW = getIcon("/images/codeHealthLow.svg", javaClass)
+
+    @JvmField
+    val CODE_SMELL = getIcon("/images/codeSmell.svg", javaClass)
 }

@@ -17,6 +17,7 @@ import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.util.maximumWidth
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
 import kotlinx.coroutines.*
@@ -39,7 +40,7 @@ class CodeHealthMonitorToolWindow(private val project: Project) {
 
     fun getContent() = JBScrollPane(contentPanel).apply {
         verticalScrollBarPolicy = JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
-        horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+        horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
     }
 
     private fun JBPanel<JBPanel<*>>.renderContent() {
@@ -68,6 +69,7 @@ class CodeHealthMonitorToolWindow(private val project: Project) {
             isEditable = false
             isOpaque = false
             lineWrap = true
+            maximumWidth = 300
             wrapStyleWord = true
             alignmentX = Component.CENTER_ALIGNMENT
             foreground = UIUtil.getTextAreaForeground()
