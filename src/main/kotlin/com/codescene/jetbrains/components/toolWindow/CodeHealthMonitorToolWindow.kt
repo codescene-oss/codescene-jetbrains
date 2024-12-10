@@ -15,14 +15,14 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.wm.ToolWindowManager
-import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.UIUtil
 import kotlinx.coroutines.*
 import java.awt.Component
 import java.awt.Font
 import java.util.concurrent.ConcurrentHashMap
-import javax.swing.BorderFactory
 import javax.swing.BoxLayout
 import javax.swing.JTextArea
 
@@ -31,7 +31,7 @@ class CodeHealthMonitorToolWindow(private val project: Project) {
 
     private val treeBuilder = CodeHealthTreeBuilder()
     private var contentPanel = JBPanel<JBPanel<*>>().apply {
-        border = null
+        border = JBUI.Borders.empty(10)
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
         addPlaceholderText()
     }
@@ -70,9 +70,8 @@ class CodeHealthMonitorToolWindow(private val project: Project) {
             lineWrap = true
             wrapStyleWord = true
             alignmentX = Component.CENTER_ALIGNMENT
-            font = Font("Arial", Font.PLAIN, 14)
-            foreground = JBColor.GRAY
-            border = BorderFactory.createEmptyBorder(0, 20, 0, 20)
+            foreground = UIUtil.getTextAreaForeground()
+            font = UIUtil.getFont(UIUtil.FontSize.NORMAL, Font.getFont("Arial"))
         }
 
         add(textArea)
