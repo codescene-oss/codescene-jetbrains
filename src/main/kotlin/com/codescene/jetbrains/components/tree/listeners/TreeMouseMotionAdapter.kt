@@ -7,7 +7,6 @@ import java.awt.event.MouseMotionAdapter
 
 class TreeMouseMotionAdapter(private val tree: Tree) : MouseMotionAdapter() {
     override fun mouseMoved(e: MouseEvent) {
-        println("Mouse moved!")
         val path = tree.getPathForLocation(e.x, e.y)
 
         tree.cursor = if (path != null)

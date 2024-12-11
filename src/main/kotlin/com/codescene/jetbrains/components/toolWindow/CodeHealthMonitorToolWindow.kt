@@ -32,7 +32,7 @@ import javax.swing.JTextArea
 class CodeHealthMonitorToolWindow(private val project: Project) {
     private var refreshJob: Job? = null
 
-    private val treeBuilder = CodeHealthTreeBuilder()
+    private val treeBuilder = CodeHealthTreeBuilder.getInstance(project)
     private var contentPanel = JBPanel<JBPanel<*>>().apply {
         border = JBUI.Borders.empty(10)
         layout = BoxLayout(this, BoxLayout.Y_AXIS)

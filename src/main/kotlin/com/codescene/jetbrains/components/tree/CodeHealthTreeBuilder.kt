@@ -5,11 +5,13 @@ import com.codescene.jetbrains.components.tree.listeners.TreeMouseMotionAdapter
 import com.codescene.jetbrains.data.ChangeType
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.services.CodeNavigationService
+import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.util.HealthDetails
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.getCodeHealth
 import com.codescene.jetbrains.util.getFunctionDeltaTooltip
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.treeStructure.Tree
 import java.awt.Component
@@ -45,6 +47,10 @@ data class CodeHealthFinding(
 class CodeHealthTreeBuilder {
     private lateinit var project: Project
     private val collapsedPaths: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
+    companion object {
+        fun getInstance(project: Project): CodeHealthTreeBuilder = project.service<CodeHealthTreeBuilder>()
+    }
 
     fun createTree(
         filePath: String,
