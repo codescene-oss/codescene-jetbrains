@@ -6,6 +6,7 @@ import com.codescene.jetbrains.data.ChangeType
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.services.CodeNavigationService
 import com.codescene.jetbrains.util.HealthDetails
+import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.getCodeHealth
 import com.codescene.jetbrains.util.getFunctionDeltaTooltip
 import com.intellij.openapi.project.Project
@@ -52,6 +53,8 @@ class CodeHealthTreeBuilder {
 
         val node = buildNode(filePath, delta)
 
+        Log.info("Collapsed paths on tree creation: $collapsedPaths")
+
         return Tree(DefaultTreeModel(node)).apply {
             isFocusable = false
             alignmentX = Component.LEFT_ALIGNMENT
@@ -61,6 +64,8 @@ class CodeHealthTreeBuilder {
             // Nodes are rendered expanded by default, so to preserve the collapsed state
             // between refreshes, we must manually collapse nodes based on the saved state.
             collapsedPaths.forEach {
+                Log.info("Collapsing $it")
+
                 if (it == filePath) collapsePath(TreePath(node))
             }
 
