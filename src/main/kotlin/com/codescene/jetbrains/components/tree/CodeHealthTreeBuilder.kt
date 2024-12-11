@@ -54,6 +54,7 @@ class CodeHealthTreeBuilder {
         val node = buildNode(filePath, delta)
 
         Log.info("Collapsed paths on tree creation: $collapsedPaths")
+        println("Collapsed paths on tree creation: $collapsedPaths")
 
         return Tree(DefaultTreeModel(node)).apply {
             isFocusable = false
@@ -65,6 +66,7 @@ class CodeHealthTreeBuilder {
             // between refreshes, we must manually collapse nodes based on the saved state.
             collapsedPaths.forEach {
                 Log.info("Collapsing $it")
+                println("Collapsing $it")
 
                 if (it == filePath) collapsePath(TreePath(node))
             }
@@ -72,6 +74,7 @@ class CodeHealthTreeBuilder {
             addTreeSelectionListener(::handleTreeSelectionEvent)
             addMouseMotionListener(TreeMouseMotionAdapter(this))
             addTreeExpansionListener(CustomTreeExpansionListener(collapsedPaths))
+            println("Registered CustomTreeExpansionListener")
         }
     }
 
