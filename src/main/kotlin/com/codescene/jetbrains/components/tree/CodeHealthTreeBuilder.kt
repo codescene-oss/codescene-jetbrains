@@ -9,6 +9,7 @@ import com.codescene.jetbrains.util.HealthDetails
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.getCodeHealth
 import com.codescene.jetbrains.util.getFunctionDeltaTooltip
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.treeStructure.Tree
 import java.awt.Component
@@ -40,6 +41,7 @@ data class CodeHealthFinding(
     val additionalText: String = ""
 )
 
+@Service(Service.Level.PROJECT)
 class CodeHealthTreeBuilder {
     private lateinit var project: Project
     private val collapsedPaths: MutableSet<String> = ConcurrentHashMap.newKeySet()
