@@ -9,12 +9,13 @@ import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
-import com.intellij.execution.runners.ExecutionUtil
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.ui.BadgeDotProvider
+import com.intellij.ui.BadgeIcon
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.util.maximumWidth
@@ -27,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.swing.BoxLayout
 import javax.swing.JTextArea
 
+@Suppress("UnstableApiUsage")
 class CodeHealthMonitorToolWindow(private val project: Project) {
     private var refreshJob: Job? = null
 
@@ -114,13 +116,22 @@ class CodeHealthMonitorToolWindow(private val project: Project) {
     }
 
     private fun updateToolWindowIcon() {
-        val toolWindow = ToolWindowManager.getInstance(project).getToolWindow(CODESCENE)
+        val toolWindowManager = ToolWindowManager.getInstance(project)
+        val toolWindow = toolWindowManager.getToolWindow(CODESCENE)
 
         if (toolWindow != null) {
             val originalIcon = CODESCENE_TW
 
+            // Using an internal API (BadgeIcon and BadgeDotProvider) for a notification badge.
+            // An alternative approach (ExecutionUtil.getIndicator) would not achieve the same look.
+            val badgeIcon = BadgeIcon(
+                originalIcon,
+                JBUI.CurrentTheme.IconBadge.INFORMATION,
+                BadgeDotProvider(1.0, 0.2, 0.15)
+            )
+
             val notificationIcon = if (healthMonitoringResults.isNotEmpty())
-                ExecutionUtil.getLiveIndicator(originalIcon, 0, 13)
+                badgeIcon
             else
                 originalIcon
 
