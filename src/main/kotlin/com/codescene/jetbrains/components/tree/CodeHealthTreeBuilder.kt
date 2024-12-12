@@ -46,6 +46,10 @@ class CodeHealthTreeBuilder {
     private lateinit var project: Project
     private val collapsedPaths: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
+    init {
+        println("Initializing tree builder")
+    }
+
     companion object {
         fun getInstance(project: Project): CodeHealthTreeBuilder = project.service<CodeHealthTreeBuilder>()
     }
@@ -66,7 +70,6 @@ class CodeHealthTreeBuilder {
 
             alignmentX = Component.LEFT_ALIGNMENT
             cellRenderer = CustomTreeCellRenderer()
-            minimumSize = Dimension(200, 80)
 
             // Nodes are rendered expanded by default, so to preserve the collapsed state
             // between refreshes, we must manually collapse nodes based on the saved state.
@@ -84,6 +87,8 @@ class CodeHealthTreeBuilder {
         tree.addTreeSelectionListener(::handleTreeSelectionEvent)
         tree.addMouseMotionListener(TreeMouseMotionAdapter(tree))
         tree.addTreeExpansionListener(CustomTreeExpansionListener(collapsedPaths, tree))
+
+        tree.updateUI()
 
         return tree
     }

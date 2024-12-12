@@ -7,6 +7,7 @@ import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_NEUTRAL
 import com.codescene.jetbrains.UiLabelsBundle
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.fileTypes.FileTypeManager
+import java.awt.Dimension
 import java.io.File
 import javax.swing.JComponent
 import javax.swing.JTree
@@ -14,6 +15,12 @@ import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeCellRenderer
 
 class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
+    override fun getPreferredSize(): Dimension {
+        val size = super.getPreferredSize()
+
+        return Dimension(size.width + 20, size.height)
+    }
+
     override fun getTreeCellRendererComponent(
         tree: JTree,
         value: Any?,
