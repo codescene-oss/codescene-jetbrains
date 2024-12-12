@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.components.tree
 
-import com.codescene.jetbrains.components.tree.listeners.CustomTreeExpansionListener
 import com.codescene.jetbrains.components.tree.listeners.TreeMouseMotionAdapter
 import com.codescene.jetbrains.data.ChangeType
 import com.codescene.jetbrains.data.CodeDelta
@@ -81,7 +80,7 @@ class CodeHealthTreeBuilder {
 
             addTreeSelectionListener(::handleTreeSelectionEvent)
             addMouseMotionListener(TreeMouseMotionAdapter(this))
-            addTreeExpansionListener(CustomTreeExpansionListener(collapsedPaths))
+//            addTreeExpansionListener(CustomTreeExpansionListener(collapsedPaths))
         }
     }
 
