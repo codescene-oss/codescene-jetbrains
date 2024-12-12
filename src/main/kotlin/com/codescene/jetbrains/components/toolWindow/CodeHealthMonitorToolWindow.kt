@@ -101,6 +101,7 @@ class CodeHealthMonitorToolWindow(private val project: Project) {
     }
 
     fun refreshContent(file: VirtualFile?, scope: CoroutineScope = CoroutineScope(Dispatchers.Main)) {
+        println("Calling refreshcontent")
         refreshJob?.cancel()
 
         refreshJob = scope.launch {
@@ -110,6 +111,8 @@ class CodeHealthMonitorToolWindow(private val project: Project) {
             contentPanel.renderContent()
             contentPanel.revalidate()
             contentPanel.repaint()
+
+            println("Refresh content from ${file?.path}")
 
             updateToolWindowIcon()
         }

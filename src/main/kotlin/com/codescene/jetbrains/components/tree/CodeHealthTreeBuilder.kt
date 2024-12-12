@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.components.tree
 
-import com.codescene.jetbrains.components.tree.listeners.TreeMouseMotionAdapter
+import com.codescene.jetbrains.components.tree.listeners.CustomTreeExpansionListener
 import com.codescene.jetbrains.data.ChangeType
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.services.CodeNavigationService
@@ -63,6 +63,7 @@ class CodeHealthTreeBuilder {
 
         return Tree(DefaultTreeModel(node)).apply {
             isFocusable = false
+
             alignmentX = Component.LEFT_ALIGNMENT
             cellRenderer = CustomTreeCellRenderer()
             minimumSize = Dimension(200, 80)
@@ -72,15 +73,15 @@ class CodeHealthTreeBuilder {
             if (collapsedPaths.contains(filePath)) {
                 SwingUtilities.invokeLater {
                     if (rowCount > 0) {
-                        println("The root $filePath has been collapsed before. Rendering it collapsed...")
+                        println("The root $filePath has been collapsed before. Rendering it collapsed... Collapsedpath")
                         collapseRow(0)
                     }
                 }
             }
 
             addTreeSelectionListener(::handleTreeSelectionEvent)
-            addMouseMotionListener(TreeMouseMotionAdapter(this))
-//            addTreeExpansionListener(CustomTreeExpansionListener(collapsedPaths))
+//            addMouseMotionListener(TreeMouseMotionAdapter(this))
+            addTreeExpansionListener(CustomTreeExpansionListener(collapsedPaths))
         }
     }
 
