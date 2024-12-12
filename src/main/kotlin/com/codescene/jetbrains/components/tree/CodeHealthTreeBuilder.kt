@@ -5,7 +5,6 @@ import com.codescene.jetbrains.components.tree.listeners.TreeMouseMotionAdapter
 import com.codescene.jetbrains.data.ChangeType
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.services.CodeNavigationService
-import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.util.HealthDetails
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.getCodeHealth
@@ -18,11 +17,11 @@ import java.awt.Component
 import java.awt.Dimension
 import java.util.concurrent.ConcurrentHashMap
 import javax.swing.JTree
+import javax.swing.SwingUtilities
 import javax.swing.event.TreeSelectionEvent
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
 import javax.swing.tree.TreeNode
-import javax.swing.tree.TreePath
 
 enum class NodeType {
     ROOT,
@@ -62,7 +61,6 @@ class CodeHealthTreeBuilder {
         val node = buildNode(filePath, delta)
 
         Log.info("Collapsed paths on tree creation: $collapsedPaths")
-        println("Collapsed paths on tree creation: $collapsedPaths")
 
         return Tree(DefaultTreeModel(node)).apply {
             isFocusable = false
@@ -72,17 +70,18 @@ class CodeHealthTreeBuilder {
 
             // Nodes are rendered expanded by default, so to preserve the collapsed state
             // between refreshes, we must manually collapse nodes based on the saved state.
-            collapsedPaths.forEach {
-                Log.info("Collapsing $it")
-                println("Collapsing $it")
-
-                if (it == filePath) collapsePath(TreePath(node))
+            if (collapsedPaths.contains(filePath)) {
+                SwingUtilities.invokeLater {
+                    if (rowCount > 0) {
+                        println("The root $filePath has been collapsed before. Rendering it collapsed...")
+                        collapseRow(0)
+                    }
+                }
             }
 
             addTreeSelectionListener(::handleTreeSelectionEvent)
             addMouseMotionListener(TreeMouseMotionAdapter(this))
             addTreeExpansionListener(CustomTreeExpansionListener(collapsedPaths))
-            println("Registered CustomTreeExpansionListener")
         }
     }
 

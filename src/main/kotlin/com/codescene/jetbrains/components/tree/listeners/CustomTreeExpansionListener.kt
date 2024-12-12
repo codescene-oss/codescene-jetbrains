@@ -9,7 +9,6 @@ import javax.swing.tree.DefaultMutableTreeNode
 class CustomTreeExpansionListener(private val collapsedPaths: MutableSet<String>) : TreeExpansionListener {
     override fun treeExpanded(event: TreeExpansionEvent) {
         Log.info("Expanded ${event.path.lastPathComponent}")
-        println("Expanded ${event.path.lastPathComponent}")
 
         val lastComponent = event.path.lastPathComponent
 
@@ -17,14 +16,12 @@ class CustomTreeExpansionListener(private val collapsedPaths: MutableSet<String>
             lastComponent.userObject.also {
                 if (it is CodeHealthFinding)
                     collapsedPaths.remove(it.filePath)
-                Log.info("Collapsed paths: $collapsedPaths")
-                println("Collapsed paths: $collapsedPaths")
+                Log.info("[treeExpanded] Collapsed paths: $collapsedPaths")
             }
     }
 
     override fun treeCollapsed(event: TreeExpansionEvent) {
         Log.info("Collapsed ${event.path.lastPathComponent}")
-        println("Collapsed ${event.path.lastPathComponent}")
 
         val lastComponent = event.path.lastPathComponent
 
@@ -33,8 +30,7 @@ class CustomTreeExpansionListener(private val collapsedPaths: MutableSet<String>
                 if (it is CodeHealthFinding)
                     collapsedPaths.add(it.filePath)
 
-                Log.info("Collapsed paths: $collapsedPaths")
-                println("Collapsed paths: $collapsedPaths")
+                Log.info("[treeCollapsed] Collapsed paths: $collapsedPaths")
             }
     }
 }
