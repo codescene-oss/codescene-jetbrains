@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.components.tree
 
 import com.codescene.jetbrains.components.tree.listeners.CustomTreeExpansionListener
+import com.codescene.jetbrains.components.tree.listeners.TreeMouseMotionAdapter
 import com.codescene.jetbrains.data.ChangeType
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.services.CodeNavigationService
@@ -61,7 +62,7 @@ class CodeHealthTreeBuilder {
 
         Log.info("Collapsed paths on tree creation: $collapsedPaths")
 
-        return Tree(DefaultTreeModel(node)).apply {
+        val tree = Tree(DefaultTreeModel(node)).apply {
             isFocusable = false
 
             alignmentX = Component.LEFT_ALIGNMENT
@@ -78,11 +79,13 @@ class CodeHealthTreeBuilder {
                     }
                 }
             }
-
-            addTreeSelectionListener(::handleTreeSelectionEvent)
-//            addMouseMotionListener(TreeMouseMotionAdapter(this))
-            addTreeExpansionListener(CustomTreeExpansionListener(collapsedPaths))
         }
+
+        tree.addTreeSelectionListener(::handleTreeSelectionEvent)
+        tree.addMouseMotionListener(TreeMouseMotionAdapter(tree))
+        tree.addTreeExpansionListener(CustomTreeExpansionListener(collapsedPaths))
+
+        return tree
     }
 
     private fun handleTreeSelectionEvent(event: TreeSelectionEvent) {
