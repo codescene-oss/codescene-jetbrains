@@ -27,6 +27,7 @@ import java.awt.Font
 import java.util.concurrent.ConcurrentHashMap
 import javax.swing.BoxLayout
 import javax.swing.JTextArea
+import javax.swing.SwingUtilities
 
 @Suppress("UnstableApiUsage")
 class CodeHealthMonitorToolWindow(private val project: Project) {
@@ -107,10 +108,12 @@ class CodeHealthMonitorToolWindow(private val project: Project) {
         refreshJob = scope.launch {
             if (file != null) withContext(Dispatchers.IO) { syncCache(file) }
 
-            contentPanel.removeAll()
-            contentPanel.renderContent()
-            contentPanel.revalidate()
-            contentPanel.repaint()
+            SwingUtilities.invokeLater {
+                contentPanel.removeAll()
+                contentPanel.renderContent()
+                contentPanel.revalidate()
+                contentPanel.repaint()
+            }
 
             println("Refresh content from ${file?.path}")
 

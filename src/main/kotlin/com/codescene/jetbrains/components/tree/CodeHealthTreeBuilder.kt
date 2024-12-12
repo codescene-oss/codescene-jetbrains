@@ -17,7 +17,6 @@ import java.awt.Component
 import java.awt.Dimension
 import java.util.concurrent.ConcurrentHashMap
 import javax.swing.JTree
-import javax.swing.SwingUtilities
 import javax.swing.event.TreeSelectionEvent
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
@@ -72,18 +71,19 @@ class CodeHealthTreeBuilder {
             // Nodes are rendered expanded by default, so to preserve the collapsed state
             // between refreshes, we must manually collapse nodes based on the saved state.
             if (collapsedPaths.contains(filePath)) {
-                SwingUtilities.invokeLater {
-                    if (rowCount > 0) {
-                        println("The root $filePath has been collapsed before. Rendering it collapsed... Collapsedpath")
-                        collapseRow(0)
-                    }
+                if (rowCount > 0) {
+                    println("The root $filePath has been collapsed before. Rendering it collapsed... Collapsedpath")
+                    collapseRow(0)
+
+                    revalidate()
+                    repaint()
                 }
             }
         }
 
         tree.addTreeSelectionListener(::handleTreeSelectionEvent)
         tree.addMouseMotionListener(TreeMouseMotionAdapter(tree))
-        tree.addTreeExpansionListener(CustomTreeExpansionListener(collapsedPaths))
+        tree.addTreeExpansionListener(CustomTreeExpansionListener(collapsedPaths, tree))
 
         return tree
     }
