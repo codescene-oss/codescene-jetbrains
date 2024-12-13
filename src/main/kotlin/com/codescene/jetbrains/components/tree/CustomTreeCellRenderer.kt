@@ -7,6 +7,7 @@ import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_NEUTRAL
 import com.codescene.jetbrains.UiLabelsBundle
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.fileTypes.FileTypeManager
+import com.intellij.ui.JBColor
 import java.io.File
 import javax.swing.JComponent
 import javax.swing.JTree
@@ -23,7 +24,8 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
         row: Int,
         hasFocus: Boolean
     ): JComponent {
-        super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus)
+        val component = super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus)
+        component.background = JBColor.CYAN
 
         val node = value as? DefaultMutableTreeNode
 

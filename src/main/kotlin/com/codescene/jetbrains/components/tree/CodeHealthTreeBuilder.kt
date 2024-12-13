@@ -65,26 +65,27 @@ class CodeHealthTreeBuilder {
             addTreeExpansionListener(CustomTreeExpansionListener(collapsedPaths))
         }
 
+        expandNodes(tree)
+
+        return tree
+    }
+
+    private fun expandNodes(tree: JTree) =
         SwingUtilities.invokeLater {
             val rootNode = tree.model.root as DefaultMutableTreeNode
-            for (i in 0 until rootNode.childCount) {
-                val child = rootNode.getChildAt(i) as DefaultMutableTreeNode
+            val childNodes = (0 until rootNode.childCount).map { rootNode.getChildAt(it) as DefaultMutableTreeNode }
+
+            childNodes.forEach { child ->
                 val userObject = child.userObject
 
                 if (userObject is CodeHealthFinding) {
                     val filePath = userObject.filePath
-                    val nodePath = TreePath(child.path).toString()
-                    if (!collapsedPaths.contains(filePath) && !child.isLeaf) {
-                        println("collapsedPaths $collapsedPaths, nodePath $nodePath")
+                    val shouldBeExpanded = !collapsedPaths.contains(filePath) && !child.isLeaf
 
-                        tree.expandPath(TreePath(child.path))
-                    }
+                    if (shouldBeExpanded) tree.expandPath(TreePath(child.path))
                 }
             }
         }
-
-        return tree
-    }
 
     private fun handleTreeSelectionEvent(event: TreeSelectionEvent) {
         val navigationService = CodeNavigationService.getInstance(project)
