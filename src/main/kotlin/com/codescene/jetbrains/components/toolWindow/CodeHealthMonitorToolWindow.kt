@@ -54,9 +54,9 @@ class CodeHealthMonitorToolWindow(private val project: Project) {
     private fun JBPanel<JBPanel<*>>.renderFileTree() {
         Log.debug("Rendering code health information file tree for: $name.")
 
-        val fileTreePanel = treeBuilder.createTree(healthMonitoringResults, project)
+        val fileTree = treeBuilder.createTree(healthMonitoringResults, project)
 
-        add(fileTreePanel)
+        add(fileTree)
     }
 
     private fun JBPanel<JBPanel<*>>.addPlaceholderText() {
