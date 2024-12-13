@@ -4,6 +4,7 @@ import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.codescene.jetbrains.services.cache.DeltaCacheService
 import com.codescene.jetbrains.services.cache.ReviewCacheService
 import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.cancelPendingReviews
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.AsyncFileListener
@@ -38,6 +39,10 @@ class FileEventProcessor(
         renameEvents: List<VFilePropertyChangeEvent>
     ) {
         handleEvent(renameEvents, {
+            ProgressManager.checkCanceled()
+
+            cancelPendingReviews(it.file, project)
+
             val newPath = "${it.file.parent.path}/${it.newValue}"
             val oldPath = "${it.file.parent.path}/${it.oldValue}"
 
@@ -49,6 +54,10 @@ class FileEventProcessor(
         moveEvents: List<VFileMoveEvent>
     ) {
         moveEvents.forEach {
+            ProgressManager.checkCanceled()
+
+            cancelPendingReviews(it.file, project)
+
             val newPath = it.newPath
             val oldPath = it.oldPath
 
@@ -78,6 +87,8 @@ class FileEventProcessor(
         scope.launch {
             events.forEach { event ->
                 ProgressManager.checkCanceled()
+
+                if (event.file != null) cancelPendingReviews(event.file!!, project)
 
                 action(event)
 

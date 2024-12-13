@@ -14,10 +14,11 @@ import java.awt.Component
 import java.awt.Dimension
 import java.util.concurrent.ConcurrentHashMap
 import javax.swing.JTree
+import javax.swing.SwingUtilities
 import javax.swing.event.TreeSelectionEvent
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
-import javax.swing.tree.TreeNode
+import javax.swing.tree.MutableTreeNode
 import javax.swing.tree.TreePath
 
 enum class NodeType {
@@ -44,31 +45,50 @@ class CodeHealthTreeBuilder {
     private val collapsedPaths: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
     fun createTree(
-        filePath: String,
-        delta: CodeDelta,
+        results: ConcurrentHashMap<String, CodeDelta>,
         project: Project
     ): Tree {
         this.project = project
 
-        val node = buildNode(filePath, delta)
+        val root = DefaultMutableTreeNode()
+        results.map { buildNode(it.key, it.value) }.forEach { root.add(it) }
 
-        return Tree(DefaultTreeModel(node)).apply {
+        val tree = Tree(DefaultTreeModel(root)).apply {
+            isRootVisible = false
             isFocusable = false
             alignmentX = Component.LEFT_ALIGNMENT
             cellRenderer = CustomTreeCellRenderer()
             minimumSize = Dimension(200, 80)
 
-            // Nodes are rendered expanded by default, so to preserve the collapsed state
-            // between refreshes, we must manually collapse nodes based on the saved state.
-            collapsedPaths.forEach {
-                if (it == filePath) collapsePath(TreePath(node))
-            }
-
             addTreeSelectionListener(::handleTreeSelectionEvent)
             addMouseMotionListener(TreeMouseMotionAdapter(this))
             addTreeExpansionListener(CustomTreeExpansionListener(collapsedPaths))
         }
+
+        expandNodes(tree)
+
+        return tree
     }
+
+    /**
+     * Nodes are rendered expanded by default, so to preserve the collapsed state
+     * between refreshes, we must manually collapse nodes based on the saved state.
+     */
+    private fun expandNodes(tree: JTree) =
+        SwingUtilities.invokeLater {
+            val rootNode = tree.model.root as DefaultMutableTreeNode
+            val childNodes = (0 until rootNode.childCount).map { rootNode.getChildAt(it) as DefaultMutableTreeNode }
+
+            childNodes.forEach { child ->
+                val userObject = child.userObject
+
+                if (userObject is CodeHealthFinding) {
+                    val filePath = userObject.filePath
+                    val shouldBeExpanded = !collapsedPaths.contains(filePath) && !child.isLeaf
+                    if (shouldBeExpanded) tree.expandPath(TreePath(child.path))
+                }
+            }
+        }
 
     private fun handleTreeSelectionEvent(event: TreeSelectionEvent) {
         val navigationService = CodeNavigationService.getInstance(project)
@@ -83,7 +103,7 @@ class CodeHealthTreeBuilder {
         }
     }
 
-    private fun buildNode(filePath: String, delta: CodeDelta): TreeNode {
+    private fun buildNode(filePath: String, delta: CodeDelta): MutableTreeNode {
         val root = CodeHealthFinding(
             filePath = filePath,
             tooltip = filePath,

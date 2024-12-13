@@ -21,13 +21,13 @@ import com.intellij.ui.util.maximumWidth
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
 import kotlinx.coroutines.*
+import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Font
 import java.util.concurrent.ConcurrentHashMap
 import javax.swing.BoxLayout
 import javax.swing.JTextArea
 
-@Suppress("UnstableApiUsage")
 class CodeHealthMonitorToolWindow(private val project: Project) {
     private var refreshJob: Job? = null
 
@@ -52,13 +52,15 @@ class CodeHealthMonitorToolWindow(private val project: Project) {
     }
 
     private fun JBPanel<JBPanel<*>>.renderFileTree() {
-        healthMonitoringResults.forEach { (name, delta) ->
-            Log.debug("Rendering code health information file tree for: $name.")
+        val files = healthMonitoringResults.map { it.key }
+        Log.debug("Rendering code health information file tree for: $files.")
 
-            val fileTreePanel = treeBuilder.createTree(name, delta, project)
+        val fileTree = treeBuilder.createTree(healthMonitoringResults, project)
 
-            add(fileTreePanel)
-        }
+        border = JBUI.Borders.empty(10, 0, 10, 10)
+        layout = BorderLayout()
+
+        add(fileTree)
     }
 
     private fun JBPanel<JBPanel<*>>.addPlaceholderText() {
@@ -76,6 +78,9 @@ class CodeHealthMonitorToolWindow(private val project: Project) {
             foreground = UIUtil.getTextAreaForeground()
             font = UIUtil.getFont(UIUtil.FontSize.NORMAL, Font.getFont("Arial"))
         }
+
+        border = JBUI.Borders.empty(10)
+        layout = BoxLayout(this, BoxLayout.Y_AXIS)
 
         add(textArea)
     }
