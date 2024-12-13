@@ -39,14 +39,10 @@ class FileEventProcessor(
         renameEvents: List<VFilePropertyChangeEvent>
     ) {
         handleEvent(renameEvents, {
-            ProgressManager.checkCanceled()
-
-            cancelPendingReviews(it.file, project)
-
             val newPath = "${it.file.parent.path}/${it.newValue}"
             val oldPath = "${it.file.parent.path}/${it.oldValue}"
 
-            updateMonitorAndCache(oldPath, newPath, it.file)
+            reflectChangesOnReview(oldPath, newPath, it.file)
         })
     }
 
@@ -54,14 +50,10 @@ class FileEventProcessor(
         moveEvents: List<VFileMoveEvent>
     ) {
         moveEvents.forEach {
-            ProgressManager.checkCanceled()
-
-            cancelPendingReviews(it.file, project)
-
             val newPath = it.newPath
             val oldPath = it.oldPath
 
-            updateMonitorAndCache(oldPath, newPath, it.file)
+            reflectChangesOnReview(oldPath, newPath, it.file)
         }
     }
 
@@ -88,7 +80,7 @@ class FileEventProcessor(
             events.forEach { event ->
                 ProgressManager.checkCanceled()
 
-                if (event.file != null) cancelPendingReviews(event.file!!, project)
+                event.file?.let { cancelPendingReviews(it, project) }
 
                 action(event)
 
@@ -97,7 +89,9 @@ class FileEventProcessor(
         }
     }
 
-    private fun updateMonitorAndCache(oldPath: String, newPath: String, file: VirtualFile) {
+    private fun reflectChangesOnReview(oldPath: String, newPath: String, file: VirtualFile) {
+        cancelPendingReviews(file, project)
+
         deltaCache.updateKey(oldPath, newPath)
         reviewCache.updateKey(oldPath, newPath)
 
