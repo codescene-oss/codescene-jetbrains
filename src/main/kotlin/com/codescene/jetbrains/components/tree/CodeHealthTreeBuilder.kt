@@ -72,6 +72,9 @@ class CodeHealthTreeBuilder {
 
     private fun expandNodes(tree: JTree) =
         SwingUtilities.invokeLater {
+            val preferredSize = tree.preferredSize
+            tree.minimumSize = Dimension(preferredSize.width, preferredSize.height)
+
             val rootNode = tree.model.root as DefaultMutableTreeNode
             val childNodes = (0 until rootNode.childCount).map { rootNode.getChildAt(it) as DefaultMutableTreeNode }
 
@@ -85,6 +88,9 @@ class CodeHealthTreeBuilder {
                     if (shouldBeExpanded) tree.expandPath(TreePath(child.path))
                 }
             }
+
+            tree.revalidate()
+            tree.repaint()
         }
 
     private fun handleTreeSelectionEvent(event: TreeSelectionEvent) {
