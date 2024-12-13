@@ -15,6 +15,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.util.maximumWidth
@@ -27,13 +28,13 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.swing.BoxLayout
 import javax.swing.JTextArea
 
-@Suppress("UnstableApiUsage")
 class CodeHealthMonitorToolWindow(private val project: Project) {
     private var refreshJob: Job? = null
 
     private val treeBuilder = CodeHealthTreeBuilder()
     private var contentPanel = JBPanel<JBPanel<*>>().apply {
         border = JBUI.Borders.empty(10)
+        background = JBColor.RED
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
         addPlaceholderText()
     }
@@ -54,9 +55,12 @@ class CodeHealthMonitorToolWindow(private val project: Project) {
     private fun JBPanel<JBPanel<*>>.renderFileTree() {
         Log.debug("Rendering code health information file tree for: $name.")
 
-        val fileTree = treeBuilder.createTree(healthMonitoringResults, project)
+        val fileTree = treeBuilder.createTree(healthMonitoringResults, contentPanel.width, project)
 
         add(fileTree)
+
+        revalidate()
+        repaint()
     }
 
     private fun JBPanel<JBPanel<*>>.addPlaceholderText() {

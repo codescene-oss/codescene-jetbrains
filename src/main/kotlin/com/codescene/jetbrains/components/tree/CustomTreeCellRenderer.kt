@@ -8,14 +8,13 @@ import com.codescene.jetbrains.UiLabelsBundle
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.ui.JBColor
-import java.awt.Dimension
 import java.io.File
 import javax.swing.JComponent
 import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeCellRenderer
 
-class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
+class CustomTreeCellRenderer(private val parentWidth: Int) : DefaultTreeCellRenderer() {
     override fun getTreeCellRendererComponent(
         tree: JTree,
         value: Any?,
@@ -27,7 +26,6 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
     ): JComponent {
         val component = super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus)
         component.background = JBColor.CYAN
-        preferredSize = Dimension(600, 600)
 
         val node = value as? DefaultMutableTreeNode
 
@@ -38,7 +36,8 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
                 text = getText(userObject)
                 icon = getIcon(userObject.nodeType)
 
-                preferredSize = Dimension(600, 600)
+                revalidate()
+                repaint()
             }
         }
 

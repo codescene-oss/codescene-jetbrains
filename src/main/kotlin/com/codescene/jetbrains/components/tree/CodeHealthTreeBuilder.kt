@@ -46,6 +46,7 @@ class CodeHealthTreeBuilder {
 
     fun createTree(
         results: ConcurrentHashMap<String, CodeDelta>,
+        parentWidth: Int,
         project: Project
     ): Tree {
         this.project = project
@@ -57,7 +58,7 @@ class CodeHealthTreeBuilder {
             isRootVisible = false
             isFocusable = false
             alignmentX = Component.LEFT_ALIGNMENT
-            cellRenderer = CustomTreeCellRenderer()
+            cellRenderer = CustomTreeCellRenderer(parentWidth)
             minimumSize = Dimension(200, 80)
 
             addTreeSelectionListener(::handleTreeSelectionEvent)
