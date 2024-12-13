@@ -1,11 +1,14 @@
 package com.codescene.jetbrains.components.tree.listeners
 
 import com.codescene.jetbrains.components.tree.CodeHealthFinding
+import javax.swing.JTree
+import javax.swing.SwingUtilities
 import javax.swing.event.TreeExpansionEvent
 import javax.swing.event.TreeExpansionListener
 import javax.swing.tree.DefaultMutableTreeNode
 
-class CustomTreeExpansionListener(private val collapsedPaths: MutableSet<String>) : TreeExpansionListener {
+class CustomTreeExpansionListener(private val tree: JTree, private val collapsedPaths: MutableSet<String>) :
+    TreeExpansionListener {
     override fun treeExpanded(event: TreeExpansionEvent) {
         val lastComponent = event.path.lastPathComponent
 
@@ -14,6 +17,11 @@ class CustomTreeExpansionListener(private val collapsedPaths: MutableSet<String>
                 if (it is CodeHealthFinding)
                     collapsedPaths.remove(it.filePath)
             }
+
+        SwingUtilities.invokeLater {
+            tree.revalidate()
+            tree.repaint()
+        }
     }
 
     override fun treeCollapsed(event: TreeExpansionEvent) {
@@ -24,5 +32,10 @@ class CustomTreeExpansionListener(private val collapsedPaths: MutableSet<String>
                 if (it is CodeHealthFinding)
                     collapsedPaths.add(it.filePath)
             }
+
+        SwingUtilities.invokeLater {
+            tree.revalidate()
+            tree.repaint()
+        }
     }
 }
