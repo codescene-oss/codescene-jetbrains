@@ -22,10 +22,10 @@ import com.intellij.ui.util.maximumWidth
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
 import kotlinx.coroutines.*
+import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Font
 import java.util.concurrent.ConcurrentHashMap
-import javax.swing.BoxLayout
 import javax.swing.JTextArea
 
 class CodeHealthMonitorToolWindow(private val project: Project) {
@@ -35,7 +35,7 @@ class CodeHealthMonitorToolWindow(private val project: Project) {
     private var contentPanel = JBPanel<JBPanel<*>>().apply {
         border = JBUI.Borders.empty(10)
         background = JBColor.RED
-        layout = BoxLayout(this, BoxLayout.Y_AXIS)
+        layout = BorderLayout()
         addPlaceholderText()
     }
     private val healthMonitoringResults: ConcurrentHashMap<String, CodeDelta> = ConcurrentHashMap()
@@ -57,10 +57,10 @@ class CodeHealthMonitorToolWindow(private val project: Project) {
 
         val fileTree = treeBuilder.createTree(healthMonitoringResults, width, project)
 
-        add(fileTree)
-
-        background = JBColor.RED
         border = JBUI.Borders.empty(0, 10)
+        layout = BorderLayout()
+
+        add(fileTree)
     }
 
     private fun JBPanel<JBPanel<*>>.addPlaceholderText() {
