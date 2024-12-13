@@ -8,6 +8,7 @@ import com.codescene.jetbrains.UiLabelsBundle
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.ui.JBColor
+import java.awt.Dimension
 import java.io.File
 import javax.swing.JComponent
 import javax.swing.JTree
@@ -35,9 +36,7 @@ class CustomTreeCellRenderer(private val parentWidth: Int) : DefaultTreeCellRend
                 toolTipText = getTooltip(userObject)
                 text = getText(userObject)
                 icon = getIcon(userObject.nodeType)
-
-                revalidate()
-                repaint()
+                size = Dimension(getText(userObject).length * 2, this.preferredSize.height)
             }
         }
 
