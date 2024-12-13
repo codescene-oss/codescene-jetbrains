@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ApiResponse(
+data class CodeReview(
     val score: Double,
     @SerialName("file-level-code-smells") val fileLevelCodeSmells: List<CodeSmell>,
     @SerialName("function-level-code-smells") val functionLevelCodeSmells: List<FunctionCodeSmell>,

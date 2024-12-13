@@ -1,11 +1,10 @@
 package com.codescene.jetbrains.codeInsight.annotator
 
 import com.codescene.jetbrains.codeInsight.intentions.ShowProblemIntentionAction
-import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
-import com.codescene.jetbrains.data.ApiResponse
+import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.data.CodeSmell
-import com.codescene.jetbrains.services.CacheQuery
-import com.codescene.jetbrains.services.ReviewCacheService
+import com.codescene.jetbrains.services.cache.ReviewCacheQuery
+import com.codescene.jetbrains.services.cache.ReviewCacheService
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.formatCodeSmellMessage
 import com.codescene.jetbrains.util.getTextRange
@@ -27,9 +26,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
         annotationContext: AnnotationContext,
         @NotNull holder: AnnotationHolder
     ) {
-        val settings = CodeSceneGlobalSettingsStore.getInstance().state
-
-        if (!isFileSupported(psiFile.project, psiFile.virtualFile, settings.excludeGitignoreFiles)) {
+        if (!isFileSupported(psiFile.project, psiFile.virtualFile)) {
             Log.warn("File type not supported: ${psiFile.virtualFile.name}. Skipping code smell annotation.")
             return
         }
@@ -37,7 +34,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
         annotateFile(psiFile, holder, annotationContext.cache)
     }
 
-    private fun annotateFile(psiFile: PsiFile, holder: AnnotationHolder, reviewCache: ApiResponse?) {
+    private fun annotateFile(psiFile: PsiFile, holder: AnnotationHolder, reviewCache: CodeReview?) {
         val document = FileDocumentManager.getInstance().getDocument(psiFile.virtualFile) ?: return
 
         if (reviewCache != null) {
@@ -66,11 +63,11 @@ class CodeSmellAnnotator : ExternalAnnotator<
         }
     }
 
-    private fun fetchCache(psiFile: PsiFile, content: String): ApiResponse? {
+    private fun fetchCache(psiFile: PsiFile, content: String): CodeReview? {
         val path = psiFile.virtualFile.path
-        val query = CacheQuery(content, path)
+        val query = ReviewCacheQuery(content, path)
 
-        return ReviewCacheService.getInstance(psiFile.project).getCachedResponse(query).also {
+        return ReviewCacheService.getInstance(psiFile.project).get(query).also {
             if (it == null) Log.info("No cache available for ${path}. Skipping annotation.")
         }
     }
@@ -92,5 +89,5 @@ class CodeSmellAnnotator : ExternalAnnotator<
     override fun doAnnotate(collectedInfo: AnnotationContext): AnnotationContext? =
         collectedInfo.takeIf { it.cache != null }
 
-    class AnnotationContext(val cache: ApiResponse?)
+    class AnnotationContext(val cache: CodeReview?)
 }

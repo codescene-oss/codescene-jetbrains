@@ -1,0 +1,8 @@
+{
+  "images": {
+    "expui": {
+      "iconTool.svg": "images/iconTool.svg",
+      "iconTool_dark.svg": "images/iconTool_dark.svg"
+    }
+  }
+}

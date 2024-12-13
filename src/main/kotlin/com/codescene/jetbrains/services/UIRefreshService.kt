@@ -35,18 +35,22 @@ class UIRefreshService(private val project: Project) {
             Log.debug("UI refresh complete for file: ${editor.virtualFile.name}")
         }
 
-    private fun refreshCodeVision(editor: Editor) {
+    suspend fun refreshCodeVision(
+        editor: Editor,
+        providers: List<String> = CodeSceneCodeVisionProvider.getProviders(),
+        dispatcher: CoroutineDispatcher = Dispatchers.Main
+    ) = withContext(dispatcher) {
         val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
         if (!settings.enableCodeLenses) {
-            Log.info("Code vision disabled in $CODESCENE settings. Skipping refresh...")
+            Log.debug("Code vision disabled in $CODESCENE settings. Skipping refresh...")
 
-            return
+            return@withContext
         }
 
         val invalidateSignal = CodeVisionHost.LensInvalidateSignal(
             editor,
-            providerIds = CodeSceneCodeVisionProvider.getProviders()
+            providerIds = providers
         )
 
         Log.info("Refreshing code lens display for file ${editor.virtualFile.name} with provider IDs: ${invalidateSignal.providerIds}")
@@ -54,11 +58,13 @@ class UIRefreshService(private val project: Project) {
         codeVisionHost.invalidateProvider(invalidateSignal)
     }
 
-    private fun refreshAnnotations(editor: Editor) {
-        val psiFile = ReadAction.compute<PsiFile, RuntimeException> { editor.virtualFile.findPsiFile(project) }
 
-        Log.info("Refreshing external annotations in file: ${psiFile.name}")
+    suspend fun refreshAnnotations(editor: Editor, dispatcher: CoroutineDispatcher = Dispatchers.Main) =
+        withContext(dispatcher) {
+            val psiFile = ReadAction.compute<PsiFile, RuntimeException> { editor.virtualFile.findPsiFile(project) }
 
-        DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
-    }
+            Log.info("Refreshing external annotations in file: ${psiFile.name}")
+
+            DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
+        }
 }
