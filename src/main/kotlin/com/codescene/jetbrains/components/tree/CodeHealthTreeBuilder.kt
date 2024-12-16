@@ -97,7 +97,6 @@ class CodeHealthTreeBuilder {
 
         val selectedNode = event.path.lastPathComponent as? DefaultMutableTreeNode
 
-        //TODO: logic for opening smell documentation tab
         (selectedNode?.takeIf { it.isLeaf }?.userObject as? CodeHealthFinding)?.also { finding ->
             navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
         }
