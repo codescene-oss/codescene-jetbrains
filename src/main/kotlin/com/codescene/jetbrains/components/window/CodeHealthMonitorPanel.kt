@@ -1,4 +1,4 @@
-package com.codescene.jetbrains.components.toolWindow
+package com.codescene.jetbrains.components.window
 
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW
 import com.codescene.jetbrains.UiLabelsBundle
@@ -28,18 +28,19 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.swing.BoxLayout
 import javax.swing.JTextArea
 
-class CodeHealthMonitorToolWindow(private val project: Project) {
+class CodeHealthMonitorPanel(private val project: Project) {
     private var refreshJob: Job? = null
 
     private val treeBuilder = CodeHealthTreeBuilder()
     private var contentPanel = JBPanel<JBPanel<*>>().apply {
-        border = JBUI.Borders.empty(10)
+        border = null
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
         addPlaceholderText()
     }
     private val healthMonitoringResults: ConcurrentHashMap<String, CodeDelta> = ConcurrentHashMap()
 
     fun getContent() = JBScrollPane(contentPanel).apply {
+        border = null
         verticalScrollBarPolicy = JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
         horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
     }
@@ -57,7 +58,6 @@ class CodeHealthMonitorToolWindow(private val project: Project) {
 
         val fileTree = treeBuilder.createTree(healthMonitoringResults, project)
 
-        border = JBUI.Borders.empty(10, 0, 10, 10)
         layout = BorderLayout()
 
         add(fileTree)
@@ -79,7 +79,6 @@ class CodeHealthMonitorToolWindow(private val project: Project) {
             font = UIUtil.getFont(UIUtil.FontSize.NORMAL, Font.getFont("Arial"))
         }
 
-        border = JBUI.Borders.empty(10)
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
 
         add(textArea)
