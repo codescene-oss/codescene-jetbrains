@@ -33,7 +33,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
 
     private val treeBuilder = CodeHealthTreeBuilder()
     private var contentPanel = JBPanel<JBPanel<*>>().apply {
-        border = null
+        border = JBUI.Borders.empty(10)
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
         addPlaceholderText()
     }
@@ -80,6 +80,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
         }
 
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
+        border = JBUI.Borders.empty(10)
 
         add(textArea)
     }
