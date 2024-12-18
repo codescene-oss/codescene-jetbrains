@@ -1,15 +1,14 @@
 package com.codescene.jetbrains.components.codehealth.slider
 
 import com.intellij.ui.JBColor
-import java.awt.Graphics
-import java.awt.Graphics2D
-import java.awt.LinearGradientPaint
-import java.awt.RenderingHints
+import java.awt.*
 import javax.swing.JSlider
 import javax.swing.plaf.basic.BasicSliderUI
 import kotlin.math.roundToInt
 
 class CustomSlider(value: Double) : JSlider() {
+    private val customOrange = JBColor(Color(250, 163, 125), Color(238, 147, 107))
+
     init {
         isOpaque = false
         isEnabled = false
@@ -22,9 +21,9 @@ class CustomSlider(value: Double) : JSlider() {
         setSliderPosition(value)
 
         setUI(object : BasicSliderUI(this) {
-            override fun paintThumb(g: Graphics) {} // Do not paint thumb
-            override fun paintTrack(g: Graphics) {} // Do not paint track
-            override fun paintFocus(g: Graphics) {} // Remove focus border
+            override fun paintThumb(g: Graphics) {}
+            override fun paintTrack(g: Graphics) {}
+            override fun paintFocus(g: Graphics) {}
         })
     }
 
@@ -51,12 +50,10 @@ class CustomSlider(value: Double) : JSlider() {
         val trackHeight = 8
         val yPosition = height / 2 - trackHeight / 2
 
-        val fractions = floatArrayOf(0.0f, 0.4f, 0.9f, 1.0f)
-        val colors = arrayOf(JBColor.RED, JBColor.RED, JBColor.ORANGE, JBColor.GREEN)
+        val fractions = floatArrayOf(0.0f, 0.399f, 0.4f, 0.899f, 0.9f, 1.0f)
+        val colors = arrayOf(JBColor.RED, JBColor.RED, customOrange, customOrange, JBColor.GREEN, JBColor.GREEN)
 
-        val gradient = LinearGradientPaint(0f, 0f, width.toFloat(), 0f, fractions, colors)
-
-        g2.paint = gradient
+        g2.paint = LinearGradientPaint(0f, 0f, width.toFloat(), 0f, fractions, colors)
         g2.fillRoundRect(0, yPosition, width, trackHeight, 10, 10)
     }
 
