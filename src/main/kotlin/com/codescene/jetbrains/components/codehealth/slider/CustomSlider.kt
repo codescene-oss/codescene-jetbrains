@@ -1,14 +1,18 @@
 package com.codescene.jetbrains.components.codehealth.slider
 
+import com.codescene.jetbrains.util.Constants.GREEN
+import com.codescene.jetbrains.util.Constants.ORANGE
+import com.codescene.jetbrains.util.Constants.RED
 import com.intellij.ui.JBColor
-import java.awt.*
+import java.awt.Graphics
+import java.awt.Graphics2D
+import java.awt.LinearGradientPaint
+import java.awt.RenderingHints
 import javax.swing.JSlider
 import javax.swing.plaf.basic.BasicSliderUI
 import kotlin.math.roundToInt
 
 class CustomSlider(value: Double) : JSlider() {
-    private val customOrange = JBColor(Color(250, 163, 125), Color(238, 147, 107))
-
     init {
         isOpaque = false
         isEnabled = false
@@ -51,7 +55,7 @@ class CustomSlider(value: Double) : JSlider() {
         val yPosition = height / 2 - trackHeight / 2
 
         val fractions = floatArrayOf(0.0f, 0.399f, 0.4f, 0.899f, 0.9f, 1.0f)
-        val colors = arrayOf(JBColor.RED, JBColor.RED, customOrange, customOrange, JBColor.GREEN, JBColor.GREEN)
+        val colors = arrayOf(RED, RED, ORANGE, ORANGE, GREEN, GREEN)
 
         g2.paint = LinearGradientPaint(0f, 0f, width.toFloat(), 0f, fractions, colors)
         g2.fillRoundRect(0, yPosition, width, trackHeight, 10, 10)
@@ -81,10 +85,10 @@ class CustomSlider(value: Double) : JSlider() {
         val rightLabel = "10"
         val rightX = width - g2.fontMetrics.stringWidth(rightLabel)
 
-        g2.color = JBColor.RED
+        g2.color = RED
         g2.drawString(leftLabel, leftX, labelPosition)
 
-        g2.color = JBColor.GREEN
+        g2.color = GREEN
         g2.drawString(rightLabel, rightX, labelPosition)
     }
 

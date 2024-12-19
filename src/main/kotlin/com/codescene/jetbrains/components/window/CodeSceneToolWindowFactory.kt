@@ -4,6 +4,7 @@ import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_DECREASE
 import com.codescene.jetbrains.actions.ShowSettingsAction
 import com.codescene.jetbrains.components.codehealth.slider.CustomSlider
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
+import com.codescene.jetbrains.util.Constants.ORANGE
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.fileTypes.FileTypeManager
@@ -66,7 +67,6 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
 
             val c = GridBagConstraints().apply {
                 fill = GridBagConstraints.HORIZONTAL
-                anchor = GridBagConstraints.WEST
                 insets = JBUI.emptyInsets()
                 weightx = 0.0
                 weighty = 0.0
@@ -81,17 +81,20 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
             c.gridx = 0
             c.gridwidth = 1
             c.ipadx = 15
+            c.ipady = 15
             add(
                 JLabel("JavaScript").apply { icon = FileTypeManager.getInstance().getFileTypeByExtension("js").icon },
                 c
             )
             c.ipadx = 0
 
+
             c.gridx = 1
             add(
                 JLabel("Code Health Declining").apply { icon = CODE_HEALTH_DECREASE },
                 c
             )
+            c.ipady = 0
 
             c.gridy = 2
             c.gridx = 0
@@ -102,15 +105,15 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
 
             c.gridy = 3
             c.gridx = 0
-            add(JLabel("<html><h1>5.08</h1></html>"), c)
 
-            c.gridx = 1
-            c.gridwidth = 1
             add(JPanel().apply {
-                layout = BoxLayout(this, BoxLayout.Y_AXIS)
+                layout = FlowLayout(FlowLayout.LEFT)
+                add(JLabel("<html><h1>5.08</h1></html>"), c)
+
+                add(Box.createHorizontalStrut(5))
 
                 add(JButton("Problematic").apply {
-                    foreground = JBColor(Color(250, 163, 125), Color(238, 147, 107))
+                    foreground = ORANGE
                     isContentAreaFilled = false
                     isFocusPainted = false
                     border = RoundedLineBorder(JBColor.ORANGE, 12)
@@ -144,18 +147,23 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
             c.gridx = 0
             c.gridwidth = 3
             c.weightx = 1.0
-            add(JLabel("<html>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque elementum ex sed nunc dictum, in tempus odio posuere. Nulla lacinia tincidunt ligula non sollicitudin. Fusce sed urna fermentum, iaculis leo id, fringilla risus. Proin tempor est sed tortor convallis finibus. Maecenas dignissim rutrum lorem in ullamcorper. Ut porttitor porttitor ipsum a volutpat. Cras congue tincidunt nulla a ornare. Donec accumsan tortor in pellentesque interdum. Nam at consequat sem..</html>"), c)
+            add(
+                JLabel("<html>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque elementum ex sed nunc dictum, in tempus odio posuere. Nulla lacinia tincidunt ligula non sollicitudin. Fusce sed urna fermentum, iaculis leo id, fringilla risus. Proin tempor est sed tortor convallis finibus. Maecenas dignissim rutrum lorem in ullamcorper. Ut porttitor porttitor ipsum a volutpat. Cras congue tincidunt nulla a ornare. Donec accumsan tortor in pellentesque interdum. Nam at consequat sem..</html>"),
+                c
+            )
 
             c.gridy = 8
             c.gridx = 0
             c.gridwidth = 3
             c.ipady = 15
-            val linkLabel = JLabel("<html><a href='https://codescene.com/product/code-health#:~:text=Code%20Health%20is%20an%20aggregated,negative%20outcomes%20for%20your%20project.'>Learn more about Code Health Analysis</a></html>").apply {
-                cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-            }
+            val linkLabel =
+                JLabel("<html><a href='https://codescene.com/product/code-health#:~:text=Code%20Health%20is%20an%20aggregated,negative%20outcomes%20for%20your%20project.'>Learn more about Code Health Analysis</a></html>").apply {
+                    cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+                }
             linkLabel.addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent?) {
-                    Desktop.getDesktop().browse(URI.create("https://codescene.com/product/code-health#:~:text=Code%20Health%20is%20an%20aggregated,negative%20outcomes%20for%20your%20project."))
+                    Desktop.getDesktop()
+                        .browse(URI.create("https://codescene.com/product/code-health#:~:text=Code%20Health%20is%20an%20aggregated,negative%20outcomes%20for%20your%20project."))
                 }
             })
 
