@@ -51,4 +51,11 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
         return arrayListOf(TextRange(0, 0) to entry)
     }
 
+    override fun handleClick(
+        editor: Editor,
+        textRange: TextRange,
+        entry: CodeVisionEntry
+    ) {
+        // TODO remove later, currently needs to do nothing
+    }
 }
