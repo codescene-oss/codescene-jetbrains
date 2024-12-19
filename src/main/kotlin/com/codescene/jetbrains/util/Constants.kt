@@ -33,5 +33,5 @@ object Constants {
     const val OVERALL_CODE_COMPLEXITY = "Overall Code Complexity"
     const val POTENTIALLY_LOW_COHESION = "Potentially Low Cohesion"
     const val PRIMITIVE_OBSESSION = "Primitive Obsession"
-    const val STRING_HEAVY_FUNCTION_ARGUMENTS = "String-Heavy Function Arguments"
+    const val STRING_HEAVY_FUNCTION_ARGUMENTS = "String Heavy Function Arguments"
 }
