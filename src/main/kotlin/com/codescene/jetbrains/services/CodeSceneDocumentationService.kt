@@ -7,6 +7,7 @@ import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.categoryToFileName
+import com.codescene.jetbrains.util.surroundingCharactersNotBackticks
 import com.intellij.ide.actions.OpenInRightSplitAction.Companion.openInRightSplit
 import com.intellij.ide.ui.LafManager
 import com.intellij.ide.ui.LafManagerListener
@@ -41,8 +42,8 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
 
         var functionLocation: FunctionLocation? = null
         var editor: Editor? = null
-        val threeTicks = MarkdownCodeDelimiter.MULTI_LINE.value
-        val oneTick = MarkdownCodeDelimiter.SINGLE_LINE.value
+        val threeBackticks = MarkdownCodeDelimiter.MULTI_LINE.value
+        val oneBacktick = MarkdownCodeDelimiter.SINGLE_LINE.value
     }
 
 
@@ -90,18 +91,18 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
 
             body = updateOneLineCodeParts(body)
 
-            if (body.contains(threeTicks)) {
-                val codePart = body.substring(body.indexOf(threeTicks), body.lastIndexOf(threeTicks) + 4)
+            if (body.contains(threeBackticks)) {
+                val codePart = body.substring(body.indexOf(threeBackticks), body.lastIndexOf(threeBackticks) + 4)
                 val languageString = codePart.substring(3, codePart.indexOf("\n"))
                 var highlightedBody: String = generateHighlightedHtml(
-                    codePart.substring(codePart.indexOf("\n") + 1, codePart.lastIndexOf(threeTicks)),
+                    codePart.substring(codePart.indexOf("\n") + 1, codePart.lastIndexOf(threeBackticks)),
                     languageString.uppercase(),
                     MarkdownCodeDelimiter.MULTI_LINE
                 )
-                val newBody = body.replace(codePart, highlightedBody)
-                appendSubpart(newContent, title, toHtmlConverter.convertMarkdownToHtml(newBody))
+                val newBody = toHtmlConverter.convertMarkdownToHtml(body.replace(codePart, highlightedBody))
+                appendSubpart(newContent, HtmlPart(title, newBody))
             } else {
-                appendSubpart(newContent, title, toHtmlConverter.convertMarkdownToHtml(body))
+                appendSubpart(newContent, HtmlPart(title, toHtmlConverter.convertMarkdownToHtml(body)))
             }
         }
         return newContent.append("\n</body></html>").toString()
@@ -111,14 +112,14 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
         var singleLineCodeResolved = body
         if (containsSingleBacktick(body)) {
             while (containsSingleBacktick(singleLineCodeResolved)) {
-                val firstIndex = singleLineCodeResolved.indexOf(oneTick)
+                val firstIndex = singleLineCodeResolved.indexOf(oneBacktick)
                 val codePart = singleLineCodeResolved.substring(
                     firstIndex,
-                    singleLineCodeResolved.indexOf(oneTick, firstIndex + 1) + 1
+                    singleLineCodeResolved.indexOf(oneBacktick, firstIndex + 1) + 1
                 )
 
                 var highlightedBody: String = generateHighlightedHtml(
-                    codePart.substring(codePart.indexOf(oneTick) + 1, codePart.lastIndexOf(oneTick)),
+                    codePart.substring(codePart.indexOf(oneBacktick) + 1, codePart.lastIndexOf(oneBacktick)),
                     "",
                     MarkdownCodeDelimiter.SINGLE_LINE
                 )
@@ -129,10 +130,10 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
     }
 
     private fun containsSingleBacktick(string: String): Boolean {
-        if (string.contains(oneTick)) {
+        if (string.contains(oneBacktick)) {
             for (i in string.indices) {
                 // checking if there is only single ` without other thick before or after
-                if (string[i] == '`' && (i + 1 >= string.length || (string[i + 1] != '`' && (i > 0 && string[i - 1] != '`')))) {
+                if (string[i] == '`' && surroundingCharactersNotBackticks(string, i)) {
                     return true
                 }
             }
@@ -140,15 +141,15 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
         return false
     }
 
-    private fun appendSubpart(content: StringBuilder, title: String, body: String) {
+    private fun appendSubpart(content: StringBuilder, htmlPart: HtmlPart) {
         content.append(
             """
             <div>
                 <details open>
-                    <summary>$title</summary>
+                    <summary>${htmlPart.title}</summary>
             """.trimIndent()
         )
-            .append(body)
+            .append(htmlPart.body)
             .append("\n</details></div>\n\n")
     }
 
@@ -219,4 +220,9 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
 data class FunctionLocation(
     val fileName: String,
     val codeSmell: CodeSmell
+)
+
+data class HtmlPart(
+    val title: String,
+    val body: String
 )

@@ -142,3 +142,15 @@ val codeSmellNames = listOf(
 fun Color.webRgba(alpha: Double = this.alpha.toDouble()): String {
     return "rgba($red, $green, $blue, $alpha)"
 }
+
+fun surroundingCharactersNotBackticks(string: String, indexOfTick: Int): Boolean {
+    return nextCharacterNotBacktick(string, indexOfTick) && previousCharacterNotBacktick(string, indexOfTick)
+}
+
+fun nextCharacterNotBacktick(string: String, indexOfTick: Int): Boolean {
+    return indexOfTick + 1 >= string.length || string[indexOfTick + 1] != '`'
+}
+
+fun previousCharacterNotBacktick(string: String, indexOfTick: Int): Boolean {
+    return indexOfTick > 0 && string[indexOfTick - 1] != '`'
+}
