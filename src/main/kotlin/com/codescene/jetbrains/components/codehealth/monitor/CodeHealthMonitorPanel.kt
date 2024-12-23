@@ -1,8 +1,8 @@
-package com.codescene.jetbrains.components.window
+package com.codescene.jetbrains.components.codehealth.monitor
 
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW
 import com.codescene.jetbrains.UiLabelsBundle
-import com.codescene.jetbrains.components.tree.CodeHealthTreeBuilder
+import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthTreeBuilder
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.cache.DeltaCacheQuery
@@ -15,6 +15,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.util.maximumWidth
@@ -37,7 +38,10 @@ class CodeHealthMonitorPanel(private val project: Project) {
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
         addPlaceholderText()
     }
-    private val healthMonitoringResults: ConcurrentHashMap<String, CodeDelta> = ConcurrentHashMap()
+
+    companion object {
+        val healthMonitoringResults: ConcurrentHashMap<String, CodeDelta> = ConcurrentHashMap()
+    }
 
     fun getContent() = JBScrollPane(contentPanel).apply {
         border = null
@@ -74,8 +78,8 @@ class CodeHealthMonitorPanel(private val project: Project) {
             lineWrap = true
             maximumWidth = 300
             wrapStyleWord = true
+            foreground = JBColor.GRAY
             alignmentX = Component.CENTER_ALIGNMENT
-            foreground = UIUtil.getTextAreaForeground()
             font = UIUtil.getFont(UIUtil.FontSize.NORMAL, Font.getFont("Arial"))
         }
 

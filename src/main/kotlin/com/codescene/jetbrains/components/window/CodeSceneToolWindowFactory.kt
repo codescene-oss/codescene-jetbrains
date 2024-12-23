@@ -2,6 +2,9 @@ package com.codescene.jetbrains.components.window
 
 import com.codescene.jetbrains.actions.ShowSettingsAction
 import com.codescene.jetbrains.components.codehealth.detail.CodeHealthDetailsPanel
+import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPanel
+import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
+import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
@@ -15,11 +18,14 @@ import com.intellij.ui.content.ContentFactory
 
 class CodeSceneToolWindowFactory : ToolWindowFactory {
     private lateinit var monitorPanel: CodeHealthMonitorPanel
+    private lateinit var healthPanel: CodeHealthDetailsPanel
 
     override fun init(toolWindow: ToolWindow) {
         super.init(toolWindow)
         monitorPanel = CodeHealthMonitorPanel(toolWindow.project)
-        subscribeToRefreshEvent(toolWindow.project)
+        healthPanel = CodeHealthDetailsPanel(toolWindow.project)
+        subscribeToMonitorRefreshEvent(toolWindow.project)
+        subscribeToHealthDetailsRefreshEvent(toolWindow.project)
     }
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
@@ -30,7 +36,7 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
         toolWindow.contentManager.addContent(content)
     }
 
-    private fun subscribeToRefreshEvent(project: Project) {
+    private fun subscribeToMonitorRefreshEvent(project: Project) {
         project.messageBus.connect().subscribe(ToolWindowRefreshNotifier.TOPIC, object : ToolWindowRefreshNotifier {
             override fun refresh(file: VirtualFile) {
                 monitorPanel.refreshContent(file)
@@ -42,13 +48,22 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
         })
     }
 
+    private fun subscribeToHealthDetailsRefreshEvent(project: Project) {
+        project.messageBus.connect()
+            .subscribe(CodeHealthDetailsRefreshNotifier.TOPIC, object : CodeHealthDetailsRefreshNotifier {
+                override fun refresh(finding: CodeHealthFinding?) {
+                    if (finding != null) healthPanel.refreshContent(finding)
+                }
+            })
+    }
+
     override fun shouldBeAvailable(project: Project) = true
 
     private fun getContent(): Content {
         val splitter = JBSplitter(true).apply {
             proportion = 0.5f
             firstComponent = monitorPanel.getContent()
-            secondComponent = CodeHealthDetailsPanel().getContent()
+            secondComponent = healthPanel.getContent()
         }
 
         return ContentFactory.getInstance().createContent(splitter, null, false)

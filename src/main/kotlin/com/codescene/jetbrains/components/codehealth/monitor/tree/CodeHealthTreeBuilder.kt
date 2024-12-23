@@ -1,9 +1,10 @@
-package com.codescene.jetbrains.components.tree
+package com.codescene.jetbrains.components.codehealth.monitor.tree
 
-import com.codescene.jetbrains.components.tree.listeners.CustomTreeExpansionListener
-import com.codescene.jetbrains.components.tree.listeners.TreeMouseMotionAdapter
+import com.codescene.jetbrains.components.codehealth.monitor.tree.listeners.CustomTreeExpansionListener
+import com.codescene.jetbrains.components.codehealth.monitor.tree.listeners.TreeMouseMotionAdapter
 import com.codescene.jetbrains.data.ChangeType
 import com.codescene.jetbrains.data.CodeDelta
+import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.CodeNavigationService
 import com.codescene.jetbrains.util.HealthDetails
 import com.codescene.jetbrains.util.getCodeHealth
@@ -97,9 +98,9 @@ class CodeHealthTreeBuilder {
 
         val selectedNode = event.path.lastPathComponent as? DefaultMutableTreeNode
 
-        //TODO: logic for opening smell documentation tab
         (selectedNode?.takeIf { it.isLeaf }?.userObject as? CodeHealthFinding)?.also { finding ->
             navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
+            project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(finding)
         }
     }
 

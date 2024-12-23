@@ -1,4 +1,4 @@
-package com.codescene.jetbrains.components.tree
+package com.codescene.jetbrains.components.codehealth.monitor.tree
 
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_DECREASE
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_HIGH

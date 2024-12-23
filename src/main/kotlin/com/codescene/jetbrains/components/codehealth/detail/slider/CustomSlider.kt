@@ -1,4 +1,4 @@
-package com.codescene.jetbrains.components.codehealth.slider
+package com.codescene.jetbrains.components.codehealth.detail.slider
 
 import com.codescene.jetbrains.util.Constants.GREEN
 import com.codescene.jetbrains.util.Constants.ORANGE

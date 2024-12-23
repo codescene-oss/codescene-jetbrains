@@ -1,6 +1,6 @@
-package com.codescene.jetbrains.components.tree.listeners
+package com.codescene.jetbrains.components.codehealth.monitor.tree.listeners
 
-import com.codescene.jetbrains.components.tree.CodeHealthFinding
+import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import javax.swing.event.TreeExpansionEvent
 import javax.swing.event.TreeExpansionListener
 import javax.swing.tree.DefaultMutableTreeNode
