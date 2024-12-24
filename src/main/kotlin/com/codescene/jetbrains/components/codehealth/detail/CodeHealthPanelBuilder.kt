@@ -124,7 +124,7 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails) {
             constraint.gridx = 0
             constraint.gridwidth = 3
 
-            add(JLabel("<html><h3>${item.heading}</h3></html>"), constraint)
+            add(JLabel("<html><h3>${item.heading}</h3></html>").apply { icon = item.icon }, constraint)
 
             constraint.ipady = 0
             constraint.gridy = currentRow++

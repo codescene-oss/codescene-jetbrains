@@ -72,11 +72,12 @@ private fun createSubHeader(
 private fun <T> extractUsingRegex(input: String, regex: Regex, extractor: (MatchResult.Destructured) -> T?): T? {
     val matchResult = regex.find(input)
 
-    return if (matchResult != null) {
+    return if (matchResult != null)
         extractor(matchResult.destructured)
-    } else null
+    else null
 }
 
+//TODO: check neutral status
 private fun resolveStatus(delta: CodeDelta, type: NodeType, percentage: String) =
     if (type == NodeType.CODE_HEALTH_NEUTRAL) {
         ""
@@ -144,6 +145,7 @@ private fun getFunctionFindingBody(delta: CodeDelta, finding: CodeHealthFinding)
             it.changeType.name.lowercase(Locale.getDefault()).replaceFirstChar { it.uppercaseChar() }
         val body =
             "${it.description.replace(finding.displayName, "<code>${finding.displayName}</code>")}"
+
         Paragraph(
             body = body,
             heading = "$changeType: ${it.category}",
@@ -155,19 +157,17 @@ private fun getFunctionFinding(
     file: Pair<String, String>?,
     finding: CodeHealthFinding,
     delta: CodeDelta
-): CodeHealthDetails {
-    return CodeHealthDetails(
-        header = finding.displayName,
-        subHeader = createSubHeader(
-            file,
-            "Multiple Code Smells",
-            AllIcons.General.Warning,
-            CodeHealthDetailsType.FUNCTION
-        ),
-        body = getFunctionFindingBody(delta, finding),
-        type = CodeHealthDetailsType.FUNCTION
-    )
-}
+): CodeHealthDetails = CodeHealthDetails(
+    header = finding.displayName,
+    subHeader = createSubHeader(
+        file,
+        "Multiple Code Smells",
+        AllIcons.General.Warning,
+        CodeHealthDetailsType.FUNCTION
+    ),
+    body = getFunctionFindingBody(delta, finding),
+    type = CodeHealthDetailsType.FUNCTION
+)
 
 private fun getFileFinding(
     file: Pair<String, String>?,
