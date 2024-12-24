@@ -12,7 +12,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
-import com.intellij.ui.JBSplitter
+import com.intellij.ui.OnePixelSplitter
 import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
 
@@ -60,7 +60,7 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
     override fun shouldBeAvailable(project: Project) = true
 
     private fun getContent(): Content {
-        val splitter = JBSplitter(true).apply {
+        val splitter = OnePixelSplitter(true).apply {
             proportion = 0.5f
             firstComponent = monitorPanel.getContent()
             secondComponent = healthPanel.getContent()

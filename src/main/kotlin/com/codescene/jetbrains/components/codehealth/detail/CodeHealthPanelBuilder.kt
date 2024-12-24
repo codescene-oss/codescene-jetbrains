@@ -1,6 +1,8 @@
 package com.codescene.jetbrains.components.codehealth.detail
 
 import com.codescene.jetbrains.components.codehealth.detail.slider.CustomSlider
+import com.codescene.jetbrains.components.layout.ResponsiveLayout
+import com.codescene.jetbrains.util.Constants.CODE_HEALTH_URL
 import com.codescene.jetbrains.util.resolveHealthBadge
 import com.intellij.ui.JBColor
 import com.intellij.ui.RoundedLineBorder
@@ -49,17 +51,22 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails) {
     private fun JPanel.addSubHeader(constraint: GridBagConstraints) {
         constraint.gridy = 1
         constraint.gridx = 0
-        constraint.gridwidth = 1
-        constraint.ipadx = 15
+        constraint.gridwidth = 3
+        constraint.fill = GridBagConstraints.HORIZONTAL
+        constraint.weightx = 1.0
         constraint.ipady = 15
 
-        add(JLabel(details.subHeader.fileName).apply { icon = details.subHeader.fileIcon }, constraint)
-        constraint.ipadx = 0
+        val subHeaderPanel = JPanel(ResponsiveLayout()).apply {
+            add(JLabel(details.subHeader.fileName).apply { icon = details.subHeader.fileIcon })
+            add(JLabel(details.subHeader.codeSmell).apply { icon = details.subHeader.codeSmellIcon })
+        }
 
-        constraint.gridx = 1
-        add(JLabel(details.subHeader.codeSmell).apply { icon = details.subHeader.codeSmellIcon }, constraint)
+        add(subHeaderPanel, constraint)
+
         constraint.ipady = 0
+        constraint.weightx = 0.0
     }
+
 
     private fun JPanel.addSeparator(constraint: GridBagConstraints) {
         constraint.gridy = 2
@@ -72,7 +79,7 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails) {
     }
 
     private fun JPanel.addCodeHealthHeader(constraint: GridBagConstraints) {
-        val score = details!!.healthData!!.header
+        val score = details.healthData!!.header
         constraint.gridy = 3
         constraint.gridx = 0
 
@@ -143,17 +150,14 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails) {
         constraint.gridwidth = 3
         constraint.ipady = 15
 
-        val url =
-            "https://codescene.com/product/code-health#:~:text=Code%20Health%20is%20an%20aggregated,negative%20outcomes%20for%20your%20project"
-
         val linkLabel =
-            JLabel("<html><a href='$url'>Learn more about Code Health Analysis</a></html>").apply {
+            JLabel("<html><a href='$CODE_HEALTH_URL'>Learn more about Code Health Analysis</a></html>").apply {
                 cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
             }
 
         linkLabel.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent?) {
-                Desktop.getDesktop().browse(URI.create(url))
+                Desktop.getDesktop().browse(URI.create(CODE_HEALTH_URL))
             }
         })
 
