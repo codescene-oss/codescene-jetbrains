@@ -152,6 +152,9 @@ None
 
 [Back to Top](#table-of-contents)
 
+> **_NOTE:_**  Decision overruled
+> by: [## DEC-2024-12-23-001: Update Supported Product Versions for the Plugin](#dec-2024-12-23-001-update-supported-product-versions-for-the-plugin).
+
 **Date**: 2024-09-18
 
 **Decision Maker(s)**: Dzenan Granulo, Selma Copra
@@ -216,3 +219,36 @@ provider.
 
 - For more information, please refer to the support ticket on the JetBrains
   forum: [Why CodeVision entry display only the last entry for a given line/provider?](https://intellij-support.jetbrains.com/hc/en-us/community/posts/17654953887762-Why-CodeVision-entry-display-only-the-last-entry-for-a-given-line-provider) [date of access: October 2024]
+
+## DEC-2024-12-23-001: Update Supported Product Versions for the Plugin
+
+[Back to Top](#table-of-contents)
+
+**Date**: 2024-12-23
+
+**Decision Maker(s)**: Dzenan Granulo, Selma Copra
+
+**Status**: Accepted
+
+**Decision**:
+The plugin will support IntelliJ IDEA versions from the last two major releases: 2024.X and 2023.3.
+
+**Context**:
+Refer to Context
+of [DEC-2024-09-18-001: Update Supported Product Versions for the Plugin](#dec-2024-09-18-001-update-supported-product-versions-for-the-plugin).
+The goal is to support the latest IntelliJ Platform SDK functionality, with respect to CodeScene's plugin functionality
+requirements, which is not available in versions earlier than 2023.3, including 2023.2, 2023.1, 2022.2, 2022.1, 2021.3, and 2021.2.
+
+**Rationale**:
+Refer to Rationale
+of [DEC-2024-09-18-001: Update Supported Product Versions for the Plugin](#dec-2024-09-18-001-update-supported-product-versions-for-the-plugin).
+
+**Consequences**:
+The plugin needs to be tested and maintained for compatibility with IntelliJ IDEA 2023.3, and 2024.X.
+
+**Alternatives Considered**:
+None
+
+**Related Decisions**:
+
+- [DEC-2024-09-18-001: Update Supported Product Versions for the Plugin](#dec-2024-09-18-001-update-supported-product-versions-for-the-plugin)

@@ -9,7 +9,15 @@ import com.intellij.openapi.fileTypes.SyntaxHighlighterFactory
 object CodeHighlighter {
 
     fun generateHighlightedHtml(code: String, languageId: String, delimiter: MarkdownCodeDelimiter): String {
-        val language = Language.findLanguageByID(languageId) ?: Language.ANY
+        var language = Language.ANY
+        // currently used languages for code examples in our documentation
+        // in case of new language used, it's mapping needs to be added here
+        // this is because language ids don't follow same pattern
+        // printSupportedLanguages method can be used for troubleshooting
+        when (languageId) {
+            "java" -> language = Language.findLanguageByID(languageId.uppercase()) ?: Language.ANY
+            "javascript" -> language = Language.findLanguageByID("JavaScript") ?: Language.ANY
+        }
 
         // Syntax highlighting
         val highlighter = SyntaxHighlighterFactory.getSyntaxHighlighter(language, null, null)
@@ -40,6 +48,12 @@ object CodeHighlighter {
         }
 
         return highlightedCode.toString().replace("\t", "    ")
+    }
+}
+
+private fun printSupportedLanguages() {
+    Language.getRegisteredLanguages().forEach {
+        println(it)
     }
 }
 

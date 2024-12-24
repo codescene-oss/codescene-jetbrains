@@ -105,7 +105,7 @@ fun formatCodeSmellMessage(category: String, details: String): String =
     if (details.isNotEmpty()) "$category ($details)" else category
 
 fun categoryToFileName(category: String): String {
-    return category.replace(" ", "-").replace(",", "").toLowerCasePreservingASCIIRules()
+    return category.trim().replace(" ", "-").replace(",", "").toLowerCasePreservingASCIIRules()
 }
 
 // this list needs to match documentation files for code smells (docs/codeSmells)
@@ -147,10 +147,10 @@ fun surroundingCharactersNotBackticks(string: String, indexOfTick: Int): Boolean
     return nextCharacterNotBacktick(string, indexOfTick) && previousCharacterNotBacktick(string, indexOfTick)
 }
 
-fun nextCharacterNotBacktick(string: String, indexOfTick: Int): Boolean {
+private fun nextCharacterNotBacktick(string: String, indexOfTick: Int): Boolean {
     return indexOfTick + 1 >= string.length || string[indexOfTick + 1] != '`'
 }
 
-fun previousCharacterNotBacktick(string: String, indexOfTick: Int): Boolean {
-    return indexOfTick > 0 && string[indexOfTick - 1] != '`'
+private fun previousCharacterNotBacktick(string: String, indexOfTick: Int): Boolean {
+    return indexOfTick == 0 || string[indexOfTick - 1] != '`'
 }

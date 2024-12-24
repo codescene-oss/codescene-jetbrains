@@ -96,7 +96,7 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
                 val languageString = codePart.substring(3, codePart.indexOf("\n"))
                 var highlightedBody: String = generateHighlightedHtml(
                     codePart.substring(codePart.indexOf("\n") + 1, codePart.lastIndexOf(threeBackticks)),
-                    languageString.uppercase(),
+                    languageString,
                     MarkdownCodeDelimiter.MULTI_LINE
                 )
                 val newBody = toHtmlConverter.convertMarkdownToHtml(body.replace(codePart, highlightedBody))
