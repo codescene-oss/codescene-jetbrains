@@ -38,6 +38,7 @@ enum class CodeHealthDetailsType {
 data class HealthData(
     val header: String,
     val status: String,
+    val score: Double,
 )
 
 data class CodeHealthDetails(
@@ -124,9 +125,9 @@ private fun getHealthFinding(
 
     return CodeHealthDetails(
         header = "Code Health Score",
-        subHeader = createSubHeader(file, healthHeader!!.text, healthHeader.icon, CodeHealthDetailsType.HEALTH),
+        subHeader = createSubHeader(file, healthHeader!!.subText, healthHeader.icon, CodeHealthDetailsType.HEALTH),
         healthData = HealthData(
-            healthHeader.subText, resolveStatus(delta, finding.nodeType, percentage = finding.additionalText),
+            healthHeader.subText, resolveStatus(delta, finding.nodeType, percentage = finding.additionalText), round(delta.newScore)
         ),
         body = listOf(
             Paragraph(

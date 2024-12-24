@@ -81,11 +81,11 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails) {
     }
 
     private fun JPanel.addCodeHealthHeader(constraint: GridBagConstraints) {
-        val score = details.subHeader.status
+        val score = details.healthData!!.score
         constraint.gridy = 3
         constraint.gridx = 0
 
-        val badgeDetails = resolveHealthBadge(score.toDouble())
+        val badgeDetails = resolveHealthBadge(score)
 
         add(JPanel().apply {
             layout = FlowLayout(FlowLayout.LEFT)
@@ -110,7 +110,7 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails) {
         constraint.weightx = 1.0
         constraint.gridwidth = 3
 
-        add(CustomSlider(details.subHeader.status.toDouble()), constraint)
+        add(CustomSlider(details.healthData!!.score), constraint)
 
         constraint.weightx = 0.0
     }
