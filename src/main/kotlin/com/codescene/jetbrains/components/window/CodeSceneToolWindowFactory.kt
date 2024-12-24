@@ -23,7 +23,7 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
     override fun init(toolWindow: ToolWindow) {
         super.init(toolWindow)
         monitorPanel = CodeHealthMonitorPanel(toolWindow.project)
-        healthPanel = CodeHealthDetailsPanel(toolWindow.project)
+        healthPanel = CodeHealthDetailsPanel()
         subscribeToMonitorRefreshEvent(toolWindow.project)
         subscribeToHealthDetailsRefreshEvent(toolWindow.project)
     }

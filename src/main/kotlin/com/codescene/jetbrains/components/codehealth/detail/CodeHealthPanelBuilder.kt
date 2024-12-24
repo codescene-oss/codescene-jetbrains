@@ -2,6 +2,8 @@ package com.codescene.jetbrains.components.codehealth.detail
 
 import com.codescene.jetbrains.components.codehealth.detail.slider.CustomSlider
 import com.codescene.jetbrains.components.layout.ResponsiveLayout
+import com.codescene.jetbrains.util.CodeHealthDetails
+import com.codescene.jetbrains.util.CodeHealthDetailsType
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_URL
 import com.codescene.jetbrains.util.resolveHealthBadge
 import com.intellij.ui.JBColor
@@ -29,7 +31,7 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails) {
 
         if (isCodeHealth) {
             addCodeHealthHeader(constraint)
-            if (details.healthData!!.subText.isNotEmpty()) addHealthDecline(constraint)
+            if (details.healthData!!.status.isNotEmpty()) addHealthDecline(constraint)
             addSlider(constraint)
         }
 
@@ -58,7 +60,7 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails) {
 
         val subHeaderPanel = JPanel(ResponsiveLayout()).apply {
             add(JLabel(details.subHeader.fileName).apply { icon = details.subHeader.fileIcon })
-            add(JLabel(details.subHeader.codeSmell).apply { icon = details.subHeader.codeSmellIcon })
+            add(JLabel(details.subHeader.status).apply { icon = details.subHeader.statusIcon })
         }
 
         add(subHeaderPanel, constraint)
@@ -79,7 +81,7 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails) {
     }
 
     private fun JPanel.addCodeHealthHeader(constraint: GridBagConstraints) {
-        val score = details.healthData!!.header
+        val score = details.subHeader.status
         constraint.gridy = 3
         constraint.gridx = 0
 
@@ -108,7 +110,7 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails) {
         constraint.weightx = 1.0
         constraint.gridwidth = 3
 
-        add(CustomSlider(details.healthData!!.header.toDouble()), constraint)
+        add(CustomSlider(details.subHeader.status.toDouble()), constraint)
 
         constraint.weightx = 0.0
     }
@@ -139,7 +141,7 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails) {
         constraint.gridx = 0
         constraint.gridwidth = 3
 
-        add(JLabel(details.healthData!!.subText).apply {
+        add(JLabel(details.healthData!!.status).apply {
             foreground = JBColor.GRAY
         }, constraint)
     }
