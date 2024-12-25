@@ -58,7 +58,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
             holder.newAnnotation(HighlightSeverity.WARNING, message)
                 .range(range)
                 .highlightType(ProblemHighlightType.WARNING)
-                .withFix(ShowProblemIntentionAction(codeSmell.category))
+                .withFix(ShowProblemIntentionAction(codeSmell))
                 .create()
         }
     }

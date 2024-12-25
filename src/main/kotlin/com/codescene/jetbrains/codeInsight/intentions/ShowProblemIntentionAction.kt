@@ -1,5 +1,7 @@
 package com.codescene.jetbrains.codeInsight.intentions
 
+import com.codescene.jetbrains.data.CodeSmell
+import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.intellij.codeInsight.intention.IntentionAction
 import com.intellij.codeInsight.intention.PriorityAction
@@ -7,8 +9,8 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 
-class ShowProblemIntentionAction(codeSmell: String) : IntentionAction, PriorityAction {
-    private val name = "$CODESCENE: $codeSmell"
+class ShowProblemIntentionAction(private val codeSmell: CodeSmell) : IntentionAction, PriorityAction {
+    private val name = "$CODESCENE: ${codeSmell.category}"
 
     override fun getText(): String = name
 
@@ -17,7 +19,10 @@ class ShowProblemIntentionAction(codeSmell: String) : IntentionAction, PriorityA
     override fun isAvailable(project: Project, editor: Editor?, file: PsiFile): Boolean = true
 
     override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {
-        //TODO: Open code smell details tab
+        val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
+        if (editor != null) {
+            codeSceneDocumentationService.openDocumentationPanel(editor, codeSmell)
+        }
     }
 
     override fun startInWriteAction(): Boolean = false

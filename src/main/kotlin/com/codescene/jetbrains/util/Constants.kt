@@ -4,6 +4,8 @@ object Constants {
     const val CODESCENE = "CodeScene"
     const val CODESCENE_SERVER_URL = "https://codescene.io"
     const val EXAMPLE_SERVER_URL = "https://domain.com"
+    const val DOCUMENTATION_BASE_PATH = "docs/codeSmells/"
+    const val STYLE_BASE_PATH = "docs/styles/"
 
     const val BRAIN_CLASS = "Brain Class"
     const val BRAIN_METHOD = "Brain Method"
@@ -31,5 +33,5 @@ object Constants {
     const val OVERALL_CODE_COMPLEXITY = "Overall Code Complexity"
     const val POTENTIALLY_LOW_COHESION = "Potentially Low Cohesion"
     const val PRIMITIVE_OBSESSION = "Primitive Obsession"
-    const val STRING_HEAVY_FUNCTION_ARGUMENTS = "String-Heavy Function Arguments"
+    const val STRING_HEAVY_FUNCTION_ARGUMENTS = "String Heavy Function Arguments"
 }

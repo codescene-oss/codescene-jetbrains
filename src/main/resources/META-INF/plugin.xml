@@ -5,12 +5,11 @@
     <vendor>CodeScene</vendor>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>org.intellij.plugins.markdown</depends>
 
     <!--  TODO: Add plugin icon  -->
 
     <resource-bundle>messages.UiLabelsBundle</resource-bundle>
-
-    <idea-version since-build="231" until-build="242.*"/>
 
     <depends>Git4Idea</depends>
 
@@ -104,6 +103,8 @@
                 implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.BrainClassCodeVisionProvider"/>
         <codeInsight.codeVisionProvider
                 implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.CodeHealthCodeVisionProvider"/>
+
+        <fileEditorProvider implementation="com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewerProvider" />
     </extensions>
 
     <projectListeners>
