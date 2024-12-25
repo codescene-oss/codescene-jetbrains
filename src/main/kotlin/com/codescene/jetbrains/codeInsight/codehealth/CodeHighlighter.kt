@@ -2,11 +2,21 @@ package com.codescene.jetbrains.codeInsight.codehealth
 
 import com.codescene.jetbrains.util.webRgba
 import com.intellij.lang.Language
+import com.intellij.lexer.Lexer
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorColorsScheme
+import com.intellij.openapi.fileTypes.SyntaxHighlighter
 import com.intellij.openapi.fileTypes.SyntaxHighlighterFactory
 
 object CodeHighlighter {
+    /**
+     * Method used to highlight code for different languages and replace non-highlighted code with highlighted one.
+     * It is using Intellij's [SyntaxHighlighter] and [Lexer] to do the job.
+     * Internally, code is being split into words and Lexer is then checking if the word is keyword,
+     * or any other special kind which needs highlighting.
+     * If needed, highlighting will be applied, if not default coloring will be left.
+     * Besides highlighting, code will be converted to HTML code block by manually adding HTML tags.
+     */
     fun generateHighlightedHtml(code: String, languageId: String, delimiter: MarkdownCodeDelimiter): String {
         var language = Language.ANY
         // currently used languages for code examples in our documentation
@@ -21,6 +31,7 @@ object CodeHighlighter {
         // Syntax highlighting
         val highlighter = SyntaxHighlighterFactory.getSyntaxHighlighter(language, null, null)
         val lexer = highlighter.highlightingLexer
+
         lexer.start(code)
         val colorScheme: EditorColorsScheme = EditorColorsManager.getInstance().globalScheme
         val highlightedCode = StringBuilder()

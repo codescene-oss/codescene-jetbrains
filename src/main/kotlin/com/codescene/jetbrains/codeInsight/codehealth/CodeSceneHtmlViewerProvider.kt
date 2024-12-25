@@ -7,7 +7,7 @@ import com.intellij.openapi.fileEditor.FileEditorProvider
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 
-@SuppressWarnings("ExperimentalApiUsage")
+@Suppress("UnstableApiUsage")
 class CodeSceneHtmlViewerProvider : FileEditorProvider {
 
     /**
