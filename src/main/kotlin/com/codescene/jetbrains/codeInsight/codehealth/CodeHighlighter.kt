@@ -1,4 +1,4 @@
-package com.codescene.jetbrains.codeInsight.codeHealth
+package com.codescene.jetbrains.codeInsight.codehealth
 
 import com.codescene.jetbrains.util.webRgba
 import com.intellij.lang.Language
@@ -7,7 +7,6 @@ import com.intellij.openapi.editor.colors.EditorColorsScheme
 import com.intellij.openapi.fileTypes.SyntaxHighlighterFactory
 
 object CodeHighlighter {
-
     fun generateHighlightedHtml(code: String, languageId: String, delimiter: MarkdownCodeDelimiter): String {
         var language = Language.ANY
         // currently used languages for code examples in our documentation
@@ -49,11 +48,11 @@ object CodeHighlighter {
 
         return highlightedCode.toString().replace("\t", "    ")
     }
-}
 
-private fun printSupportedLanguages() {
-    Language.getRegisteredLanguages().forEach {
-        println(it)
+    private fun printSupportedLanguages() {
+        Language.getRegisteredLanguages().forEach {
+            println(it)
+        }
     }
 }
 

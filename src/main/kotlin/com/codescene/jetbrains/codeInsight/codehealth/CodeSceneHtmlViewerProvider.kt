@@ -1,4 +1,4 @@
-package com.codescene.jetbrains.codeInsight.codeHealth
+package com.codescene.jetbrains.codeInsight.codehealth
 
 import com.codescene.jetbrains.util.codeSmellNames
 import com.intellij.openapi.fileEditor.FileEditor

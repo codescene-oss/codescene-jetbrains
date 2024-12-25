@@ -1,9 +1,9 @@
 package com.codescene.jetbrains.services
 
-import com.codescene.jetbrains.codeInsight.codeHealth.CodeHighlighter.generateHighlightedHtml
-import com.codescene.jetbrains.codeInsight.codeHealth.CodeSceneHtmlViewer
-import com.codescene.jetbrains.codeInsight.codeHealth.MarkdownCodeDelimiter
-import com.codescene.jetbrains.codeInsight.codeHealth.PreviewThemeStyles
+import com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewer
+import com.codescene.jetbrains.codeInsight.codehealth.MarkdownCodeDelimiter
+import com.codescene.jetbrains.codeInsight.codehealth.PreviewThemeStyles
+import com.codescene.jetbrains.codeInsight.codehealth.CodeHighlighter.generateHighlightedHtml
 import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Log

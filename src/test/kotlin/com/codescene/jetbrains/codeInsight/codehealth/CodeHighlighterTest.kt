@@ -1,5 +1,6 @@
-package com.codescene.jetbrains.codeInsight.codeHealth
+package com.codescene.jetbrains.codeInsight.codehealth
 
+import com.codescene.jetbrains.codeInsight.codehealth.CodeHighlighter.generateHighlightedHtml
 import com.intellij.lang.Language
 import com.intellij.lexer.Lexer
 import com.intellij.openapi.editor.colors.EditorColorsManager
@@ -18,6 +19,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.awt.Color
+
 
 class CodeHighlighterTest {
 
@@ -67,14 +69,14 @@ class CodeHighlighterTest {
 
         setupMocksForMultipleTokens()
 
-        val result = CodeHighlighter.generateHighlightedHtml(code, "javascript", MarkdownCodeDelimiter.SINGLE_LINE)
+        val result = generateHighlightedHtml(code, "javascript", MarkdownCodeDelimiter.SINGLE_LINE)
         assertEquals(expectedOutput, result)
     }
 
     private fun doTestWithSingleLineDelimiter(code: String, languageId: String, delimiter: MarkdownCodeDelimiter): String {
         setupMocksForSimpleHighlighting(code)
 
-        return CodeHighlighter.generateHighlightedHtml(code, languageId, delimiter)
+        return generateHighlightedHtml(code, languageId, delimiter)
     }
 
     private fun setupMocksForSimpleHighlighting(code: String) {
