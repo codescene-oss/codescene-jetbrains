@@ -1,4 +1,4 @@
-package com.codescene.jetbrains.codeInsight.codehealth
+package com.codescene.jetbrains.codeInsight.codeHealth
 
 import com.codescene.jetbrains.services.CodeNavigationService
 import com.codescene.jetbrains.services.CodeSceneDocumentationService

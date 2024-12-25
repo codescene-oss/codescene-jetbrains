@@ -106,7 +106,7 @@
         <codeInsight.codeVisionProvider
                 implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.CodeHealthCodeVisionProvider"/>
 
-        <fileEditorProvider implementation="com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewerProvider" />
+        <fileEditorProvider implementation="com.codescene.jetbrains.codeInsight.codeHealth.CodeSceneHtmlViewerProvider" />
     </extensions>
 
     <projectListeners>

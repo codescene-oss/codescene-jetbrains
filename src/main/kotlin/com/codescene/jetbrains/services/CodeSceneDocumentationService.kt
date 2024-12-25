@@ -1,8 +1,9 @@
 package com.codescene.jetbrains.services
 
-import com.codescene.jetbrains.codeInsight.codehealth.CodeHighlighter.generateHighlightedHtml
-import com.codescene.jetbrains.codeInsight.codehealth.MarkdownCodeDelimiter
-import com.codescene.jetbrains.codeInsight.codehealth.PreviewThemeStyles
+import com.codescene.jetbrains.codeInsight.codeHealth.CodeHighlighter.generateHighlightedHtml
+import com.codescene.jetbrains.codeInsight.codeHealth.CodeSceneHtmlViewer
+import com.codescene.jetbrains.codeInsight.codeHealth.MarkdownCodeDelimiter
+import com.codescene.jetbrains.codeInsight.codeHealth.PreviewThemeStyles
 import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Log
@@ -46,7 +47,13 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
         val oneBacktick = MarkdownCodeDelimiter.SINGLE_LINE.value
     }
 
-
+    /**
+     * Method will be called when code lens or annotation related to specific
+     * [CodeSmell] is clicked. It will open virtual file in right split of the original file
+     * where lens or annotation is shown.
+     * Documentation file opened will be showing HTML content for that CodeSmell,
+     * using custom [CodeSceneHtmlViewer]
+     */
     fun openDocumentationPanel(editor: Editor, codeSmell: CodeSmell) {
         Companion.editor = editor
         val project = editor.project!!
@@ -66,6 +73,10 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
         }
     }
 
+    /**
+     * Reading raw documentation md files and creating HTML content out of it,
+     * which is then added to separately created header as base for all styling.
+     */
     private fun prepareMarkdownContent(editor: Editor, codeSmell: CodeSmell): String {
         val codeSmellName = codeSmell.category
         val codeSmellFileName = categoryToFileName(codeSmellName) + ".md"
@@ -80,6 +91,9 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
         return "$header$markdownContent"
     }
 
+    /**
+     * Transforming Markdown content into HTML content by reorganizing it and inserting HTML tags.
+     */
     private fun transformMarkdownToHtml(originalContent: String, codeSmellName: String): String {
         val content = "$codeSmellName\n\n$originalContent"
         val parts = content.split("## ")
@@ -108,6 +122,10 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
         return newContent.append("\n</body></html>").toString()
     }
 
+    /**
+     * Method to transform single line Markdown code into single line HTML code by
+     * highlighting it and replacing original code in the string with highlighted one.
+     */
     private fun updateOneLineCodeParts(body: String): String {
         var singleLineCodeResolved = body
         if (containsSingleBacktick(body)) {
@@ -129,6 +147,10 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
         return singleLineCodeResolved
     }
 
+    /**
+     * Checking if there is only single backtick (`) character in the string.
+     * Multiple backticks should result false.
+     */
     private fun containsSingleBacktick(string: String): Boolean {
         if (string.contains(oneBacktick)) {
             for (i in string.indices) {
@@ -141,6 +163,9 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
         return false
     }
 
+    /**
+     * Method to append single collapsable part to the current HTML content.
+     */
     private fun appendSubpart(content: StringBuilder, htmlPart: HtmlPart) {
         content.append(
             """
@@ -153,7 +178,11 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
             .append("\n</details></div>\n\n")
     }
 
-
+    /**
+     * Method to generate header part of documentation file.
+     * It is fetching three different styles, static, theme dependent and scrollbar and applying them.
+     * Also, it generates header HTML content.
+     */
     private fun prepareHeader(editor: Editor, codeSmell: CodeSmell): String {
         val codeSmellName = codeSmell.category
         val fileName = editor.virtualFile.name
@@ -199,6 +228,9 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
         return content
     }
 
+    /**
+     * Method to create virtual file for our generated documentation content.
+     */
     private fun createTempFile(project: Project, name: String, content: String): VirtualFile {
         val file = LightVirtualFile(name, content)
         val psiFile = PsiManager.getInstance(project).findFile(file) ?: return file
@@ -210,6 +242,10 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
         return file
     }
 
+    /**
+     * Listener for look and feel changes (theme change).
+     * In case of theme change we refresh currently opened documentation file to fetch new look and feel.
+     */
     override fun lookAndFeelChanged(p0: LafManager) {
         if (functionLocation?.codeSmell != null && editor != null) {
             this.openDocumentationPanel(editor!!, functionLocation!!.codeSmell)
