@@ -94,13 +94,15 @@ class CodeHealthTreeBuilder {
     private fun handleTreeSelectionEvent(event: TreeSelectionEvent) {
         val navigationService = CodeNavigationService.getInstance(project)
 
-        (event.source as? JTree)?.clearSelection()
-
         val selectedNode = event.path.lastPathComponent as? DefaultMutableTreeNode
+        val finding = selectedNode?.userObject as? CodeHealthFinding ?: return
 
-        (selectedNode?.takeIf { it.isLeaf }?.userObject as? CodeHealthFinding)?.also { finding ->
+        if (selectedNode.isLeaf) {
             navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
             project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(finding)
+        } else {
+            (event.source as? JTree)?.clearSelection()
+            project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
         }
     }
 

@@ -52,7 +52,7 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
         project.messageBus.connect()
             .subscribe(CodeHealthDetailsRefreshNotifier.TOPIC, object : CodeHealthDetailsRefreshNotifier {
                 override fun refresh(finding: CodeHealthFinding?) {
-                    if (finding != null) healthPanel.refreshContent(finding)
+                    healthPanel.refreshContent(finding)
                 }
             })
     }

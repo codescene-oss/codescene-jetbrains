@@ -60,10 +60,12 @@ class CodeHealthDetailsPanel {
         add(panel, BorderLayout.CENTER)
     }
 
-    fun refreshContent(finding: CodeHealthFinding) {
-        val data = CodeHealthMonitorPanel.healthMonitoringResults[finding.filePath]
-
-        if (data != null) details = getHealthFinding(data, finding)
+    fun refreshContent(finding: CodeHealthFinding?) {
+        details = finding?.let { f ->
+            CodeHealthMonitorPanel.healthMonitoringResults[f.filePath]?.let { data ->
+                getHealthFinding(data, f)
+            }
+        }
 
         contentPanel.removeAll()
         contentPanel.renderContent()

@@ -29,7 +29,10 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
 
         node?.userObject?.let { userObject ->
             if (userObject is CodeHealthFinding) {
+                background = null
+                backgroundSelectionColor = null
                 backgroundNonSelectionColor = null
+
                 toolTipText = getTooltip(userObject)
                 text = getText(userObject)
                 icon = getIcon(userObject.nodeType)

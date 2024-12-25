@@ -7,22 +7,23 @@ import javax.swing.tree.DefaultMutableTreeNode
 
 class CustomTreeExpansionListener(private val collapsedPaths: MutableSet<String>) : TreeExpansionListener {
     override fun treeExpanded(event: TreeExpansionEvent) {
-        val lastComponent = event.path.lastPathComponent
-
-        if (lastComponent is DefaultMutableTreeNode)
-            lastComponent.userObject.also {
-                if (it is CodeHealthFinding)
-                    collapsedPaths.remove(it.filePath)
-            }
+        handleTreeExpansion(event, false)
     }
 
     override fun treeCollapsed(event: TreeExpansionEvent) {
+        handleTreeExpansion(event, true)
+    }
+
+    private fun handleTreeExpansion(event: TreeExpansionEvent, isCollapsed: Boolean) {
         val lastComponent = event.path.lastPathComponent
 
-        if (lastComponent is DefaultMutableTreeNode)
-            lastComponent.userObject.also {
-                if (it is CodeHealthFinding)
-                    collapsedPaths.add(it.filePath)
+        if (lastComponent is DefaultMutableTreeNode) {
+            (lastComponent.userObject as? CodeHealthFinding)?.let { finding ->
+                if (isCollapsed)
+                    collapsedPaths.add(finding.filePath)
+                else
+                    collapsedPaths.remove(finding.filePath)
             }
+        }
     }
 }
