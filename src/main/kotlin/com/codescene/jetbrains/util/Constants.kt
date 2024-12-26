@@ -7,6 +7,8 @@ object Constants {
     const val CODESCENE = "CodeScene"
     const val CODESCENE_SERVER_URL = "https://codescene.io"
     const val EXAMPLE_SERVER_URL = "https://domain.com"
+    const val DOCUMENTATION_BASE_PATH = "docs/codeSmells/"
+    const val STYLE_BASE_PATH = "docs/styles/"
     const val CODE_HEALTH_URL = "https://codescene.com/product/code-health#:~:text=Code%20Health%20is%20an%20aggregated,negative%20outcomes%20for%20your%20project"
     val RED = JBColor(Color(224, 82, 92), Color(224, 82, 92))
     val GREEN = JBColor(Color(79, 159, 120), Color(79, 159, 120))
@@ -38,5 +40,5 @@ object Constants {
     const val OVERALL_CODE_COMPLEXITY = "Overall Code Complexity"
     const val POTENTIALLY_LOW_COHESION = "Potentially Low Cohesion"
     const val PRIMITIVE_OBSESSION = "Primitive Obsession"
-    const val STRING_HEAVY_FUNCTION_ARGUMENTS = "String-Heavy Function Arguments"
+    const val STRING_HEAVY_FUNCTION_ARGUMENTS = "String Heavy Function Arguments"
 }

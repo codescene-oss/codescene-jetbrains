@@ -1,0 +1,65 @@
+body {
+  font-family: Helvetica;
+  line-height: 1.6;
+  margin: 0 2em;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:hover,
+a:active {
+  text-decoration: underline;
+}
+
+details {
+  margin-bottom: 30px;
+}
+
+summary {
+  display: block;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+summary::before {
+  margin-right: 10px;
+  display: inline-block;
+  content: '\2335';
+  transition: 0.2s;
+  transform: rotate(-90deg);
+}
+
+details[open] > summary::before {
+  transform: rotate(0deg);
+}
+
+hr {
+  border: none;
+  height: 1px;
+}
+
+pre {
+  line-height: 1.3;
+  padding: 1em;
+  width: 100%
+  font-family: monospace;
+  border-radius: 3px;
+  overflow-x: auto;
+}
+
+code {
+  line-height: 1.3;
+  padding: 2px;
+  margin: 1px;
+  border-radius: 3px;
+}
+
+#function-location {
+  font-size: smaller;
+  cursor: pointer;
+  padding: 4px;
+  margin: 4px 0;
+  border-radius: 4px;
+}

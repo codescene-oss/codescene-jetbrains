@@ -3,6 +3,8 @@ package com.codescene.jetbrains.codeInsight.codeVision.providers
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.data.CodeReview
+import com.codescene.jetbrains.data.CodeSmell
+import com.codescene.jetbrains.data.HighlightRange
 import com.codescene.jetbrains.util.HealthDetails
 import com.codescene.jetbrains.util.getCachedDelta
 import com.codescene.jetbrains.util.getCodeHealth
@@ -10,17 +12,18 @@ import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
-import java.awt.event.MouseEvent
 
 const val HEALTH_SCORE = "Health Score"
 
 class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override val categoryToFilter = HEALTH_SCORE
 
+        val codeHealth = CodeSmell("Code Health", HighlightRange(1, 1, 1, 1), "")
+
     private fun getCodeVisionEntry(description: String) = ClickableTextCodeVisionEntry(
         "Code Health: $description",
         id,
-        { event, sourceEditor -> handleClick(sourceEditor, categoryToFilter, event) },
+        { event, sourceEditor -> handleClick(sourceEditor, codeHealth) },
         CODE_HEALTH
     )
 
@@ -48,7 +51,11 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
         return arrayListOf(TextRange(0, 0) to entry)
     }
 
-    override fun handleClick(editor: Editor, category: String, event: MouseEvent?) {
-        //TODO
+    override fun handleClick(
+        editor: Editor,
+        textRange: TextRange,
+        entry: CodeVisionEntry
+    ) {
+        // TODO remove later, currently needs to do nothing
     }
 }
