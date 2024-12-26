@@ -15,17 +15,18 @@ import com.intellij.util.ui.JBUI
 fun handleChange(project: Project) {
     val details = CodeHealthDetailsPanel.details!!
     val results = healthMonitoringResults[details.filePath]
+    var data: CodeHealthFinding? = null
 
     if (results != null) {
-        val data = when (CodeHealthDetailsPanel.details?.type) {
+        data = when (CodeHealthDetailsPanel.details?.type) {
             CodeHealthDetailsType.FILE -> getFileDetails(details, results)
             CodeHealthDetailsType.HEALTH -> getHealthDetails(details, results)
             CodeHealthDetailsType.FUNCTION -> getFunctionDetails(details, results)
             null -> null
         }
-
-        data?.let { project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(data) }
     }
+
+    project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(data)
 }
 
 private fun getFunctionDetails(details: CodeHealthDetails, result: CodeDelta): CodeHealthFinding? {

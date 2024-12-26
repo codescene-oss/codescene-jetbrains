@@ -64,10 +64,8 @@ class CodeHealthDetailsPanel {
     }
 
     fun refreshContent(finding: CodeHealthFinding?) {
-        details = finding?.let { f ->
-            CodeHealthMonitorPanel.healthMonitoringResults[f.filePath]?.let { data ->
-                getHealthFinding(data, f)
-            }
+        details = finding?.let {
+            CodeHealthMonitorPanel.healthMonitoringResults[it.filePath]?.let { data -> getHealthFinding(data, it) }
         }
 
         contentPanel.removeAll()
