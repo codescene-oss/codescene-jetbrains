@@ -9,16 +9,20 @@ import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindow
+import com.intellij.openapi.wm.ToolWindowAnchor
 import com.intellij.openapi.wm.ToolWindowFactory
+import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.openapi.wm.ex.ToolWindowManagerListener
 import com.intellij.ui.OnePixelSplitter
-import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
 
 class CodeSceneToolWindowFactory : ToolWindowFactory {
     private lateinit var monitorPanel: CodeHealthMonitorPanel
     private lateinit var healthPanel: CodeHealthDetailsPanel
+    private lateinit var splitPane: OnePixelSplitter
 
     override fun init(toolWindow: ToolWindow) {
         super.init(toolWindow)
@@ -29,11 +33,43 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
     }
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val content = getContent()
+        splitPane = createSplitter(toolWindow)
+
+        val content = ContentFactory.getInstance().createContent(splitPane, null, false)
         val actions = getTitleActions()
 
         toolWindow.setTitleActions(actions)
         toolWindow.contentManager.addContent(content)
+        subscribeToAnchorChangeListener(project, toolWindow)
+    }
+
+    private fun createSplitter(toolWindow: ToolWindow) =
+        OnePixelSplitter(isSplitterVertical(toolWindow.anchor), "CodeSceneToolWindow.Splitter", 0.5f).apply {
+            firstComponent = monitorPanel.getContent()
+            secondComponent = healthPanel.getContent()
+        }
+
+    private fun isSplitterVertical(anchor: ToolWindowAnchor?) =
+        anchor == ToolWindowAnchor.LEFT || anchor == ToolWindowAnchor.RIGHT
+
+    private fun subscribeToAnchorChangeListener(project: Project, toolWindow: ToolWindow) {
+        val parentDisposable = Disposer.newDisposable("CodeSceneToolWindowDisposable")
+
+        project.messageBus.connect(parentDisposable).subscribe(
+            ToolWindowManagerListener.TOPIC,
+            object : ToolWindowManagerListener {
+                override fun stateChanged(toolWindowManager: ToolWindowManager) {
+                    val updatedAnchor = toolWindow.anchor
+                    val isVertical = isSplitterVertical(updatedAnchor)
+
+                    splitPane.orientation = isVertical
+                    splitPane.parent?.revalidate()
+                    splitPane.parent?.repaint()
+                }
+            }
+        )
+
+        Disposer.register(toolWindow.disposable, parentDisposable)
     }
 
     private fun subscribeToMonitorRefreshEvent(project: Project) {
@@ -58,16 +94,6 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
     }
 
     override fun shouldBeAvailable(project: Project) = true
-
-    private fun getContent(): Content {
-        val splitter = OnePixelSplitter(true).apply {
-            proportion = 0.5f
-            firstComponent = monitorPanel.getContent()
-            secondComponent = healthPanel.getContent()
-        }
-
-        return ContentFactory.getInstance().createContent(splitter, null, false)
-    }
 
     private fun getTitleActions(): List<AnAction> {
         val action = ShowSettingsAction::class.java.simpleName
