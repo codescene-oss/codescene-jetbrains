@@ -18,7 +18,10 @@ import javax.swing.JPanel
 import javax.swing.JTextArea
 
 class CodeHealthDetailsPanel {
-    private var details: CodeHealthDetails? = null
+    companion object {
+        var details: CodeHealthDetails? = null
+    }
+
     private var contentPanel = JBPanel<JBPanel<*>>().apply {
         layout = BorderLayout()
         addPlaceholder()

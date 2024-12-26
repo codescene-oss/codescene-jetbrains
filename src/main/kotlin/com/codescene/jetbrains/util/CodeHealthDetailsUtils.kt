@@ -42,6 +42,7 @@ data class HealthData(
 )
 
 data class CodeHealthDetails(
+    val filePath: String,
     val header: String,
     val subHeader: SubHeader,
     val body: List<Paragraph>,
@@ -124,6 +125,7 @@ private fun getHealthFinding(
     val healthHeader = resolveCodeHealthHeader(finding.nodeType, delta.newScore, delta.oldScore)
 
     return CodeHealthDetails(
+        filePath = finding.filePath,
         header = "Code Health Score",
         subHeader = createSubHeader(file, healthHeader!!.subText, healthHeader.icon, CodeHealthDetailsType.HEALTH),
         healthData = HealthData(
@@ -159,6 +161,7 @@ private fun getFunctionFinding(
     finding: CodeHealthFinding,
     delta: CodeDelta
 ): CodeHealthDetails = CodeHealthDetails(
+    filePath = finding.filePath,
     header = finding.displayName,
     subHeader = createSubHeader(
         file,
@@ -177,6 +180,7 @@ private fun getFileFinding(
     val fileType = FileTypeManager.getInstance().getFileTypeByExtension(file!!.second)
 
     return CodeHealthDetails(
+        filePath = finding.filePath,
         header = finding.displayName,
         subHeader = createSubHeader(file, "Multiple Code Smells", fileType.icon, CodeHealthDetailsType.FILE),
         body = listOf(Paragraph(finding.tooltip, "Problem")),

@@ -2,13 +2,12 @@ package com.codescene.jetbrains.components.codehealth.monitor.tree
 
 import com.codescene.jetbrains.components.codehealth.monitor.tree.listeners.CustomTreeExpansionListener
 import com.codescene.jetbrains.components.codehealth.monitor.tree.listeners.TreeMouseMotionAdapter
-import com.codescene.jetbrains.data.ChangeType
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.CodeNavigationService
-import com.codescene.jetbrains.util.HealthDetails
-import com.codescene.jetbrains.util.getCodeHealth
-import com.codescene.jetbrains.util.getFunctionDeltaTooltip
+import com.codescene.jetbrains.util.getFileFinding
+import com.codescene.jetbrains.util.getFunctionFinding
+import com.codescene.jetbrains.util.getHealthFinding
 import com.intellij.openapi.project.Project
 import com.intellij.ui.treeStructure.Tree
 import java.awt.Component
@@ -97,12 +96,14 @@ class CodeHealthTreeBuilder {
         val selectedNode = event.path.lastPathComponent as? DefaultMutableTreeNode
         val finding = selectedNode?.userObject as? CodeHealthFinding ?: return
 
+        val notifier = project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC)
+
         if (selectedNode.isLeaf) {
             navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
-            project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(finding)
+            notifier.refresh(finding)
         } else {
             (event.source as? JTree)?.clearSelection()
-            project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
+            notifier.refresh(null)
         }
     }
 
@@ -122,48 +123,22 @@ class CodeHealthTreeBuilder {
     }
 
     private fun DefaultMutableTreeNode.addCodeHealthLeaf(filePath: String, delta: CodeDelta) {
-        val healthDetails = HealthDetails(delta.oldScore, delta.newScore)
-        val (change, percentage) = getCodeHealth(healthDetails)
-
-        val health = CodeHealthFinding(
-            filePath = filePath,
-            displayName = "Code Health: $change",
-            additionalText = percentage,
-            nodeType = resolveNodeType(delta.oldScore, delta.newScore)
-        )
+        val health = getHealthFinding(filePath, delta)
 
         add(DefaultMutableTreeNode(health))
     }
 
     private fun DefaultMutableTreeNode.addFileLeaves(filePath: String, delta: CodeDelta) =
         delta.fileLevelFindings.forEach {
-            val positiveChange = it.changeType == ChangeType.FIXED || it.changeType == ChangeType.IMPROVED
-
-            val finding = CodeHealthFinding(
-                tooltip = it.description,
-                filePath,
-                displayName = it.category,
-                nodeType = if (positiveChange) NodeType.FILE_FINDING_FIXED else NodeType.FILE_FINDING
-            )
+            val finding = getFileFinding(filePath, it)
 
             add(DefaultMutableTreeNode(finding))
         }
 
     private fun DefaultMutableTreeNode.addFunctionLeaves(filePath: String, delta: CodeDelta) =
         delta.functionLevelFindings.forEach { (function, details) ->
-            val finding = CodeHealthFinding(
-                tooltip = getFunctionDeltaTooltip(function, details),
-                filePath,
-                displayName = function.name,
-                focusLine = function.range.startLine,
-                nodeType = NodeType.FUNCTION_FINDING
-            )
+            val finding = getFunctionFinding(filePath, function, details)
 
             add(DefaultMutableTreeNode(finding))
         }
-
-    private fun resolveNodeType(oldScore: Double, newScore: Double): NodeType =
-        if (oldScore > newScore) NodeType.CODE_HEALTH_DECREASE
-        else if (oldScore == newScore) NodeType.CODE_HEALTH_NEUTRAL
-        else NodeType.CODE_HEALTH_INCREASE
 }
