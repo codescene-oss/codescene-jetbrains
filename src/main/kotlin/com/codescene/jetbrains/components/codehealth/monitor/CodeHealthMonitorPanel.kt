@@ -1,19 +1,20 @@
 package com.codescene.jetbrains.components.codehealth.monitor
 
+import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW
 import com.codescene.jetbrains.UiLabelsBundle
-import com.codescene.jetbrains.components.codehealth.detail.CodeHealthDetailsPanel
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthTreeBuilder
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
+import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
-import com.codescene.jetbrains.util.handleChange
-import com.codescene.jetbrains.util.updateToolWindowIcon
+import com.intellij.execution.runners.ExecutionUtil
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
+import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
@@ -119,8 +120,22 @@ class CodeHealthMonitorPanel(private val project: Project) {
             contentPanel.repaint()
 
             updateToolWindowIcon(project)
+        }
+    }
 
-            if (CodeHealthDetailsPanel.details != null) handleChange(project)
+    private fun updateToolWindowIcon(project: Project) {
+        val toolWindowManager = ToolWindowManager.getInstance(project)
+        val toolWindow = toolWindowManager.getToolWindow(CODESCENE)
+
+        if (toolWindow != null) {
+            val originalIcon = CODESCENE_TW
+
+            val notificationIcon = if (healthMonitoringResults.isNotEmpty())
+                ExecutionUtil.getIndicator(originalIcon, 10, 10, JBUI.CurrentTheme.IconBadge.INFORMATION)
+            else
+                originalIcon
+
+            toolWindow.setIcon(notificationIcon)
         }
     }
 

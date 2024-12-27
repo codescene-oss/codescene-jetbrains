@@ -42,6 +42,10 @@ data class CodeHealthFinding(
 
 class CodeHealthTreeBuilder {
     private lateinit var project: Project
+    private lateinit var notifier: CodeHealthDetailsRefreshNotifier
+
+    private var suppressFocusOnLine: Boolean = false
+    private var selectedNode: CodeHealthFinding? = null
     private val collapsedPaths: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
     fun createTree(
@@ -49,10 +53,15 @@ class CodeHealthTreeBuilder {
         project: Project
     ): Tree {
         this.project = project
+        this.notifier = project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC)
 
         val root = DefaultMutableTreeNode()
         results.map { buildNode(it.key, it.value) }.forEach { root.add(it) }
 
+        return getTree(root)
+    }
+
+    private fun getTree(root: DefaultMutableTreeNode): Tree {
         val tree = Tree(DefaultTreeModel(root)).apply {
             isRootVisible = false
             isFocusable = false
@@ -66,6 +75,7 @@ class CodeHealthTreeBuilder {
         }
 
         expandNodes(tree)
+        if (selectedNode != null) selectNode(tree)
 
         return tree
     }
@@ -77,33 +87,83 @@ class CodeHealthTreeBuilder {
     private fun expandNodes(tree: JTree) =
         SwingUtilities.invokeLater {
             val rootNode = tree.model.root as DefaultMutableTreeNode
-            val childNodes = (0 until rootNode.childCount).map { rootNode.getChildAt(it) as DefaultMutableTreeNode }
+            val parentNodes = (0 until rootNode.childCount).map { rootNode.getChildAt(it) as DefaultMutableTreeNode }
 
-            childNodes.forEach { child ->
-                val userObject = child.userObject
+            parentNodes.forEach {
+                val userObject = it.userObject
 
                 if (userObject is CodeHealthFinding) {
                     val filePath = userObject.filePath
-                    val shouldBeExpanded = !collapsedPaths.contains(filePath) && !child.isLeaf
-                    if (shouldBeExpanded) tree.expandPath(TreePath(child.path))
+                    val shouldBeExpanded = !collapsedPaths.contains(filePath) && !it.isLeaf
+                    if (shouldBeExpanded) tree.expandPath(TreePath(it.path))
                 }
             }
         }
 
+    /**
+     * The tree is rendered between each review. To preserve the selected node state
+     * between refreshes, we must manually select the node based on the saved state.
+     */
+    private fun selectNode(tree: JTree) =
+        SwingUtilities.invokeLater {
+            val root = tree.model.root as DefaultMutableTreeNode
+            val parents = (0 until root.childCount).map { root.getChildAt(it) as DefaultMutableTreeNode }
+            val selectedNodeParent =
+                parents.find { (it.userObject as CodeHealthFinding).filePath == selectedNode!!.filePath }
+
+            if (selectedNodeParent != null) {
+                val found = getSelectedNode(selectedNodeParent)
+
+                if (found != null) {
+                    suppressFocusOnLine = true
+
+                    tree.selectionModel.selectionPath = TreePath(found.path)
+
+                    suppressFocusOnLine = false
+                } else {
+                    selectedNode = null
+                    notifier.refresh(null)
+                }
+            }
+        }
+
+    private fun getSelectedNode(node: DefaultMutableTreeNode): DefaultMutableTreeNode? {
+        val type = selectedNode!!.nodeType
+        val isHealthNode =
+            type == NodeType.CODE_HEALTH_NEUTRAL || type == NodeType.CODE_HEALTH_DECREASE || type == NodeType.CODE_HEALTH_INCREASE
+
+        if (isHealthNode) {
+            return node.getChildAt(0) as DefaultMutableTreeNode
+        }
+
+        (1 until node.childCount).map {
+            val child = node.getChildAt(it) as DefaultMutableTreeNode
+            val finding = child.userObject as CodeHealthFinding
+
+            if (selectedNode!!.displayName == finding.displayName) {
+                return child
+            }
+        }
+
+        return null
+    }
+
     private fun handleTreeSelectionEvent(event: TreeSelectionEvent) {
         val navigationService = CodeNavigationService.getInstance(project)
 
-        val selectedNode = event.path.lastPathComponent as? DefaultMutableTreeNode
-        val finding = selectedNode?.userObject as? CodeHealthFinding ?: return
+        val targetNode = event.path.lastPathComponent as? DefaultMutableTreeNode
+        val finding = targetNode?.userObject as? CodeHealthFinding ?: return
 
-        val notifier = project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC)
+        if (targetNode.isLeaf) {
+            if (!suppressFocusOnLine) navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
 
-        if (selectedNode.isLeaf) {
-            navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
             notifier.refresh(finding)
+            selectedNode = targetNode.userObject as CodeHealthFinding
         } else {
             (event.source as? JTree)?.clearSelection()
+
             notifier.refresh(null)
+            selectedNode = null
         }
     }
 
