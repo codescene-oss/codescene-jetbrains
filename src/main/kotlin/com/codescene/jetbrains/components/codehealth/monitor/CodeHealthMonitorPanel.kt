@@ -4,6 +4,7 @@ import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthTreeBuilder
 import com.codescene.jetbrains.data.CodeDelta
+import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
@@ -50,9 +51,10 @@ class CodeHealthMonitorPanel(private val project: Project) {
     }
 
     private fun JBPanel<JBPanel<*>>.renderContent() {
-        if (healthMonitoringResults.isEmpty())
+        if (healthMonitoringResults.isEmpty()) {
             addPlaceholderText()
-        else
+            project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
+        } else
             renderFileTree()
     }
 

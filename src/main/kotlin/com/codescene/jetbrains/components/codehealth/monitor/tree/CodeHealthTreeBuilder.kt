@@ -107,25 +107,25 @@ class CodeHealthTreeBuilder {
     private fun selectNode(tree: JTree) =
         SwingUtilities.invokeLater {
             val root = tree.model.root as DefaultMutableTreeNode
-            val parents = (0 until root.childCount).map { root.getChildAt(it) as DefaultMutableTreeNode }
-            val selectedNodeParent =
-                parents.find { (it.userObject as CodeHealthFinding).filePath == selectedNode!!.filePath }
+            val selectedNodeParent = (0 until root.childCount)
+                .map { root.getChildAt(it) as DefaultMutableTreeNode }
+                .find { (it.userObject as CodeHealthFinding).filePath == selectedNode?.filePath }
 
-            if (selectedNodeParent != null) {
-                val found = getSelectedNode(selectedNodeParent)
-
-                if (found != null) {
+            selectedNodeParent?.let { parent ->
+                getSelectedNode(parent)?.let { found ->
                     suppressFocusOnLine = true
 
                     tree.selectionModel.selectionPath = TreePath(found.path)
 
                     suppressFocusOnLine = false
-                } else {
-                    selectedNode = null
-                    notifier.refresh(null)
-                }
-            }
+                } ?: run { resetSelectedNode() }
+            } ?: resetSelectedNode()
         }
+
+    private fun resetSelectedNode() {
+        selectedNode = null
+        notifier.refresh(null)
+    }
 
     private fun getSelectedNode(node: DefaultMutableTreeNode): DefaultMutableTreeNode? {
         val type = selectedNode!!.nodeType
