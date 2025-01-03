@@ -1,6 +1,10 @@
+import groovy.json.JsonSlurper
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import java.net.HttpURLConnection
+import java.net.URL
+import java.util.zip.ZipInputStream
 
 plugins {
     alias(libs.plugins.kotlin) // Kotlin support
@@ -170,4 +174,99 @@ intellijPlatformTesting {
             }
         }
     }
+}
+
+tasks.register("fetchDocs") {
+    group = "documentation"
+    description = "Get the docs asset from the latest GitHub release."
+
+    val user = "empear-analytics"
+    val repo = "codescene-ide-protocol"
+    val token = System.getenv("GH_PACKAGE_TOKEN")
+
+    doLast {
+        val apiUrl = "https://api.github.com/repos/$user/$repo/releases"
+
+        val releasesJson = run {
+            val connection = URL(apiUrl).openConnection() as HttpURLConnection
+            connection.setRequestProperty("Authorization", "token $token")
+            connection.inputStream.reader().readText()
+        }
+
+        val (tag, assetUrl) = parseResponse(releasesJson)
+        saveDocs(tag, assetUrl, token)
+    }
+}
+
+@Suppress("UNCHECKED_CAST")
+fun parseResponse(json: String): Pair<String, String> {
+    val releases = JsonSlurper().parseText(json) as List<Map<String, Any>>
+    val release = releases.find { it["prerelease"] == false && it["draft"] == false }
+        ?: throw GradleException("No suitable release found.")
+    val tag = release["tag_name"] as String
+
+    val assets = release["assets"] as List<Map<String, Any>>
+    val docsAsset = assets.find { (it["name"] as String) == "docs.zip" }
+        ?: throw GradleException("No docs found in the latest release.")
+    val assetUrl = docsAsset["url"] as String
+
+    println("Found docs for release $tag")
+
+    return tag to assetUrl
+}
+
+fun saveDocs(tag: String, assetUrl: String, token: String) {
+    println("Downloading assets for release: $tag")
+
+    val docsDirectory = File("src/main/resources")
+    if (!docsDirectory.exists()) {
+        docsDirectory.mkdirs()
+    }
+    val outputFile = File(docsDirectory, "$tag.zip")
+
+    val docs = URL(assetUrl).openConnection().apply {
+        setRequestProperty("Authorization", "token $token")
+        setRequestProperty("Accept", "application/octet-stream")
+        connect()
+    }
+
+    outputFile.outputStream().use {
+        docs.inputStream.use { input ->
+            input.copyTo(it)
+        }
+    }
+
+    println("Download completed: ${outputFile.absolutePath}")
+
+    unzip(outputFile, docsDirectory)
+}
+
+fun unzip(zipFile: File, outputDir: File) {
+    println("Unzipping ${zipFile.name}...")
+
+    ZipInputStream(zipFile.inputStream()).use { zis ->
+        var entry = zis.nextEntry
+
+        while (entry != null) {
+            val outFile = File(outputDir, entry.name)
+
+            if (entry.isDirectory) {
+                outFile.mkdirs()
+            } else {
+                outFile.parentFile.mkdirs()
+                outFile.outputStream().use { fos -> zis.copyTo(fos) }
+            }
+
+            zis.closeEntry()
+            entry = zis.nextEntry
+        }
+    }
+
+    println("Unzip completed to ${outputDir.absolutePath}")
+
+    if (zipFile.exists() && zipFile.delete())
+        println("Cleaned up ZIP file: ${zipFile.absolutePath}")
+    else
+        println("Failed to delete ZIP file: ${zipFile.absolutePath}")
+
 }
