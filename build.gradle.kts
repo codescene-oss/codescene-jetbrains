@@ -1,6 +1,8 @@
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import java.net.HttpURLConnection
+import java.net.URL
 
 plugins {
     alias(libs.plugins.kotlin) // Kotlin support
@@ -169,5 +171,52 @@ intellijPlatformTesting {
                 robotServerPlugin()
             }
         }
+    }
+}
+
+tasks.register("fetchDocs") {
+    group = "documentation"
+    description = "Get the docs asset from the latest GitHub release."
+
+    val user = "empear-analytics"
+    val repo = "codescene-ide-protocol"
+
+    doLast {
+        val apiUrl = "https://api.github.com/repos/$user/$repo/releases"
+        val token = System.getenv("GITHUB_TOKEN") ?: throw GradleException("GitHub token not found!")
+
+        val releasesJson = run {
+            val connection = URL(apiUrl).openConnection() as HttpURLConnection
+            connection.setRequestProperty("Authorization", "token $token")
+            connection.inputStream.reader().readText()
+        }
+
+        val releases = groovy.json.JsonSlurper().parseText(releasesJson) as List<Map<String, Any>>
+        val release = releases.find { it["prerelease"] == false && it["draft"] == false }
+            ?: throw GradleException("No suitable release found.")
+
+        println("Downloading assets for release: ${release["tag_name"]}")
+
+        @Suppress("UNCHECKED_CAST")
+        val assets = release["assets"] as List<Map<String, Any>>
+        val docsAsset = assets.find { (it["name"] as String) == "docs.zip" }
+            ?: throw GradleException("No asset named 'docs.zip' found in the latest release.")
+
+        val assetUrl = docsAsset["browser_download_url"] as String
+
+        val outputFile = file("docs.zip")
+
+        val connection2 = URL(assetUrl).openConnection()
+        connection2.setRequestProperty("Authorization", "Bearer $token")
+        connection2.connect()
+
+        outputFile.outputStream().use { outputStream ->
+            connection2.inputStream.use { inputStream ->
+                inputStream.copyTo(outputStream)
+            }
+
+        }
+
+        println("Download completed: ${outputFile.absolutePath}")
     }
 }

@@ -26,7 +26,8 @@ concurrency:
 env:
   GH_USERNAME: ${{ secrets.GH_USERNAME }}
   GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
-  
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
 
   # Prepare environment and build the plugin
@@ -59,6 +60,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-home-cache-cleanup: true
+
+      # Fetch and extract documentation
+      - name: Fetch and Extract Documentation
+        run: ./gradlew fetchDocs
 
       # Set environment variables
       - name: Export Properties
@@ -256,8 +261,6 @@ jobs:
 
       # Remove old release drafts by using the curl request for the available releases with a draft flag
       - name: Remove Old Release Drafts
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh api repos/{owner}/{repo}/releases \
             --jq '.[] | select(.draft == true) | .id' \
@@ -265,8 +268,6 @@ jobs:
 
       # Create a new release draft which is not publicly visible and requires manual acceptance
       - name: Create Release Draft
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "v${{ needs.build.outputs.version }}" \
             --draft \
