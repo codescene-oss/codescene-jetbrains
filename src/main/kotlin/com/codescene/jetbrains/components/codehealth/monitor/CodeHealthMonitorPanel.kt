@@ -28,26 +28,30 @@ import java.awt.Component
 import java.awt.Font
 import java.util.concurrent.ConcurrentHashMap
 import javax.swing.BoxLayout
+import javax.swing.JComponent
 import javax.swing.JTextArea
 
 class CodeHealthMonitorPanel(private val project: Project) {
     private var refreshJob: Job? = null
 
     private val treeBuilder = CodeHealthTreeBuilder()
-    private var contentPanel = JBPanel<JBPanel<*>>().apply {
-        border = JBUI.Borders.empty(10)
-        layout = BoxLayout(this, BoxLayout.Y_AXIS)
-        addPlaceholderText()
-    }
 
     companion object {
         val healthMonitoringResults: ConcurrentHashMap<String, CodeDelta> = ConcurrentHashMap()
+        var contentPanel = JBPanel<JBPanel<*>>().apply {
+            border = JBUI.Borders.empty(10)
+            layout = BoxLayout(this, BoxLayout.Y_AXIS)
+        }
     }
 
-    fun getContent() = JBScrollPane(contentPanel).apply {
-        border = null
-        verticalScrollBarPolicy = JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
-        horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
+    fun getContent(): JComponent {
+        contentPanel.renderContent()
+
+        return JBScrollPane(contentPanel).apply {
+            border = null
+            verticalScrollBarPolicy = JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
+            horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
+        }
     }
 
     private fun JBPanel<JBPanel<*>>.renderContent() {

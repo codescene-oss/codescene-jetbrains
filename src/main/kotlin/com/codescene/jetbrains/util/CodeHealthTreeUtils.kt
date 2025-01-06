@@ -6,6 +6,9 @@ import com.codescene.jetbrains.data.ChangeDetails
 import com.codescene.jetbrains.data.ChangeType
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.data.Function
+import javax.swing.JTree
+import javax.swing.tree.DefaultMutableTreeNode
+import javax.swing.tree.TreePath
 
 fun getHealthFinding(filePath: String, delta: CodeDelta): CodeHealthFinding {
     val healthDetails = HealthDetails(delta.oldScore, delta.newScore)
@@ -42,3 +45,16 @@ fun getFunctionFinding(filePath: String, function: Function, details: List<Chang
     focusLine = function.range.startLine,
     nodeType = NodeType.FUNCTION_FINDING
 )
+
+fun selectNode(tree: JTree, filePath: String) {
+    val root = tree.model.root as DefaultMutableTreeNode
+    val targetNode = findHealthNodeForPath(root, filePath)
+
+    tree.selectionModel.selectionPath = TreePath(targetNode.path)
+}
+
+private fun findHealthNodeForPath(root: DefaultMutableTreeNode, filePath: String) =
+    (0 until root.childCount)
+        .map { root.getChildAt(it) as DefaultMutableTreeNode }
+        .find { (it.userObject as CodeHealthFinding).filePath == filePath }
+        ?.getChildAt(0) as DefaultMutableTreeNode

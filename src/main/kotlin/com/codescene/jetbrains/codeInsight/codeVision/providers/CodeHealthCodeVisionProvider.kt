@@ -2,30 +2,35 @@ package com.codescene.jetbrains.codeInsight.codeVision.providers
 
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
+import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPanel
 import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.data.HighlightRange
 import com.codescene.jetbrains.util.HealthDetails
 import com.codescene.jetbrains.util.getCachedDelta
 import com.codescene.jetbrains.util.getCodeHealth
+import com.codescene.jetbrains.util.selectNode
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
+import javax.swing.JTree
 
 const val HEALTH_SCORE = "Health Score"
 
 class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override val categoryToFilter = HEALTH_SCORE
 
+    private fun getCodeVisionEntry(description: String): ClickableTextCodeVisionEntry {
         val codeHealth = CodeSmell("Code Health", HighlightRange(1, 1, 1, 1), "")
 
-    private fun getCodeVisionEntry(description: String) = ClickableTextCodeVisionEntry(
-        "Code Health: $description",
-        id,
-        { event, sourceEditor -> handleClick(sourceEditor, codeHealth) },
-        CODE_HEALTH
-    )
+        return ClickableTextCodeVisionEntry(
+            "Code Health: $description",
+            id,
+            { _, sourceEditor -> handleLensClick(sourceEditor, codeHealth) },
+            CODE_HEALTH
+        )
+    }
 
     private fun getDescription(editor: Editor, result: CodeReview?): String? {
         val cachedDelta = getCachedDelta(editor)
@@ -38,6 +43,7 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
                     cachedDelta.newScore
                 )
             ).change
+
             result != null -> result.score.toString()
             else -> null
         }
@@ -51,11 +57,11 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
         return arrayListOf(TextRange(0, 0) to entry)
     }
 
-    override fun handleClick(
-        editor: Editor,
-        textRange: TextRange,
-        entry: CodeVisionEntry
-    ) {
-        // TODO remove later, currently needs to do nothing
+    override fun handleLensClick(editor: Editor, category: CodeSmell) {
+        CodeHealthMonitorPanel.contentPanel.components
+            .filterIsInstance<JTree>()
+            .firstOrNull()?.let {
+                selectNode(it, editor.virtualFile.path)
+            }
     }
 }

@@ -152,11 +152,11 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         ClickableTextCodeVisionEntry(
             codeSmell.category,
             id,
-            { _, sourceEditor -> handleClick(sourceEditor, codeSmell) },
+            { _, sourceEditor -> handleLensClick(sourceEditor, codeSmell) },
             AllIcons.General.InspectionsWarningEmpty
         )
 
-    fun handleClick(editor: Editor, category: CodeSmell) {
+    open fun handleLensClick(editor: Editor, category: CodeSmell) {
         val project = editor.project ?: return
         val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
 
