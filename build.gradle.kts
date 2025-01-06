@@ -210,19 +210,25 @@ fun parseResponse(json: String): Pair<String, String> {
         ?: throw GradleException("No docs found in the latest release.")
     val assetUrl = docsAsset["url"] as String
 
-    println("Found docs for release $tag")
+    logger.trace("Found docs for release $tag")
 
     return tag to assetUrl
 }
 
 fun saveDocs(tag: String, assetUrl: String, token: String) {
-    println("Downloading assets for release: $tag")
+    logger.lifecycle("Downloading assets for release: $tag")
 
-    val docsDirectory = File("src/main/resources")
-    if (!docsDirectory.exists()) {
-        docsDirectory.mkdirs()
+    val resources = File("src/main/resources")
+    val docsFolder = File(resources, "docs")
+    val outputFile = File(docsFolder, "$tag.zip")
+
+    if (docsFolder.exists()) {
+        docsFolder.listFiles()?.forEach { it.deleteRecursively() }
+        logger.debug("Deleted old documentation files: ${docsFolder.absolutePath}")
+    } else {
+        docsFolder.mkdirs()
+        logger.debug("Created docs folder: ${docsFolder.absolutePath}")
     }
-    val outputFile = File(docsDirectory, "$tag.zip")
 
     val docs = URL(assetUrl).openConnection().apply {
         setRequestProperty("Authorization", "token $token")
@@ -236,13 +242,13 @@ fun saveDocs(tag: String, assetUrl: String, token: String) {
         }
     }
 
-    println("Download completed: ${outputFile.absolutePath}")
+    logger.lifecycle("Download completed: ${outputFile.absolutePath}")
 
-    unzip(outputFile, docsDirectory)
+    unzip(outputFile, resources)
 }
 
 fun unzip(zipFile: File, outputDir: File) {
-    println("Unzipping ${zipFile.name}...")
+    logger.info("Unzipping ${zipFile.name}...")
 
     ZipInputStream(zipFile.inputStream()).use { zis ->
         var entry = zis.nextEntry
@@ -262,11 +268,10 @@ fun unzip(zipFile: File, outputDir: File) {
         }
     }
 
-    println("Unzip completed to ${outputDir.absolutePath}")
+    logger.info("Unzip completed to: ${outputDir.absolutePath}")
 
     if (zipFile.exists() && zipFile.delete())
-        println("Cleaned up ZIP file: ${zipFile.absolutePath}")
+        logger.debug("Cleaned up ZIP file: ${zipFile.absolutePath}")
     else
-        println("Failed to delete ZIP file: ${zipFile.absolutePath}")
-
+        logger.warn("Failed to delete ZIP file: ${zipFile.absolutePath}")
 }

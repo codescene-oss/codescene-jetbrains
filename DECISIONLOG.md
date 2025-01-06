@@ -14,6 +14,7 @@ members, ensuring transparency and consistency throughout the project lifecycle.
 3. [DEC-2024-09-12-003: Choose JDK 17 for Plugin Development](#dec-2024-09-12-003-choose-jdk-17-for-plugin-development)
 4. [DEC-2024-09-18-001: Update Supported Product Versions for the Plugin](#dec-2024-09-18-001-update-supported-product-versions-for-the-plugin)
 5. [DEC-2024-10-04-001: Multiple CodeVision Providers for Distinct Code Smells](#dec-2024-10-04-001-multiple-codevision-providers-for-distinct-code-smells)
+6. [DEC-2025-01-03-001: Code Smell Documentation Location Update](#dec-2025-01-03-001-code-smell-documentation-location-update)
 
 ---
 
@@ -252,3 +253,30 @@ None
 **Related Decisions**:
 
 - [DEC-2024-09-18-001: Update Supported Product Versions for the Plugin](#dec-2024-09-18-001-update-supported-product-versions-for-the-plugin)
+
+## DEC-2025-01-03-001: Code Smell Documentation Location Update
+
+[Back to Top](#table-of-contents)
+
+**Date**: 2025-01-03
+
+**Decision Maker(s)**: Dzenan Granulo, Selma Copra
+
+**Status**: DRAFT
+
+**Decision**:
+The code smell documentation is to be moved to a common place (IDE Protocol repository), to streamline updates between both VS Code and JetBrains extensions. 
+
+**Context**:
+Previously, there was only the Visual Studio Code extension, so the documentation files were kept within its repository. Redundancy is now present since the extension is being implemented across several IDEs, requiring the duplication of documentation assets across repositories. To address this, it was decided to store these documentation files in a centralized location: IDE Protocol repository.
+
+**Rationale**:
+- Avoid redundancy by maintaining a single source of truth for documentation.
+- Simplify updates by reducing the need for manual synchronization between two repositories.
+- Enable potential future public access to documentation for broader community use.
+
+**Consequences**:
+To run the extension locally, users will need to ensure the documentation is populated by executing the `./gradlew fetchDocs` command. This process requires appropriate permissions to access the IDE Protocol repository.
+
+**Alternatives Considered**:
+None
