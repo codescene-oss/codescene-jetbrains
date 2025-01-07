@@ -5,6 +5,7 @@ import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPa
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.util.CodeHealthDetails
 import com.codescene.jetbrains.util.getHealthFinding
+import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
@@ -17,7 +18,7 @@ import java.awt.GridBagLayout
 import javax.swing.JPanel
 import javax.swing.JTextArea
 
-class CodeHealthDetailsPanel {
+class CodeHealthDetailsPanel(private val project: Project) {
     companion object {
         var details: CodeHealthDetails? = null
     }
@@ -31,7 +32,7 @@ class CodeHealthDetailsPanel {
         layout = BorderLayout()
         add(contentPanel)
     }).apply {
-        border = JBUI.Borders.empty(10)
+        border = JBUI.Borders.empty()
         verticalScrollBarPolicy = JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
         horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_NEVER
     }
@@ -39,12 +40,13 @@ class CodeHealthDetailsPanel {
     private fun JPanel.renderContent() {
         layout = BorderLayout()
         if (details == null) addPlaceholder()
-        else add(CodeHealthPanelBuilder(details!!).getPanel(), BorderLayout.NORTH)
+        else add(CodeHealthPanelBuilder(details!!, project).getPanel(), BorderLayout.NORTH)
     }
 
     private fun JPanel.addPlaceholder() {
         val panel = JPanel().apply {
             layout = GridBagLayout()
+            border = JBUI.Borders.empty(10, 10, 10, 0)
             val message = UiLabelsBundle.message("selectAFunction")
 
             add(JTextArea(message).apply {

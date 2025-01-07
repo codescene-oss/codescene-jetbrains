@@ -2,10 +2,16 @@ package com.codescene.jetbrains.components.codehealth.detail
 
 import com.codescene.jetbrains.components.codehealth.detail.slider.CustomSlider
 import com.codescene.jetbrains.components.layout.ResponsiveLayout
+import com.codescene.jetbrains.data.CodeSmell
+import com.codescene.jetbrains.data.HighlightRange
+import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.util.CodeHealthDetails
 import com.codescene.jetbrains.util.CodeHealthDetailsType
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_URL
+import com.codescene.jetbrains.util.Paragraph
 import com.codescene.jetbrains.util.resolveHealthBadge
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.ui.RoundedLineBorder
 import com.intellij.util.ui.JBUI
@@ -15,7 +21,7 @@ import java.awt.event.MouseEvent
 import java.net.URI
 import javax.swing.*
 
-class CodeHealthPanelBuilder(private val details: CodeHealthDetails) {
+class CodeHealthPanelBuilder(private val details: CodeHealthDetails, private val project: Project) {
     fun getPanel() = JPanel().apply {
         val isCodeHealth = details.type == CodeHealthDetailsType.HEALTH
 
@@ -37,9 +43,7 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails) {
 
         addBody(constraint)
 
-        if (isCodeHealth) {
-            addLink(constraint)
-        }
+        if (isCodeHealth) addLink(constraint)
     }
 
     private fun JPanel.addHeader(constraint: GridBagConstraints) {
@@ -88,10 +92,15 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails) {
         val badgeDetails = resolveHealthBadge(score)
 
         add(JPanel().apply {
-            layout = FlowLayout(FlowLayout.LEFT)
-            add(JLabel("<html><h1>$score</h1></html>"), constraint)
+            layout = BoxLayout(this, BoxLayout.X_AXIS)
 
-            add(Box.createHorizontalStrut(5))
+            constraint.insets = JBUI.insetsTop(16)
+
+            add(JLabel(score.toString()).apply {
+                font = Font("Arial", Font.BOLD, 24)
+            }, constraint)
+
+            add(Box.createHorizontalStrut(8), constraint)
 
             add(JButton(badgeDetails.first).apply {
                 foreground = badgeDetails.second
@@ -101,6 +110,8 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails) {
                 isOpaque = false
             })
         }, constraint)
+
+        constraint.insets = JBUI.emptyInsets()
     }
 
     private fun JPanel.addSlider(constraint: GridBagConstraints) {
@@ -115,6 +126,12 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails) {
         constraint.weightx = 0.0
     }
 
+    private fun splitString(input: String, delimiter: String, limit: Int = 2): Pair<String, String> {
+        val parts = input.split(delimiter, limit = limit)
+
+        return Pair(parts[0], parts[1])
+    }
+
     private fun JPanel.addBody(constraint: GridBagConstraints) {
         var currentRow = 6
 
@@ -124,7 +141,8 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails) {
             constraint.gridx = 0
             constraint.gridwidth = 3
 
-            add(JLabel("<html><h3>${item.heading}</h3></html>").apply { icon = item.icon }, constraint)
+            if (details.type == CodeHealthDetailsType.FUNCTION) addFunctionTitle(item, constraint)
+            else addTitle(item, constraint)
 
             constraint.ipady = 0
             constraint.gridy = currentRow++
@@ -133,17 +151,87 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails) {
             constraint.weightx = 1.0
 
             add(JLabel("<html>${item.body}</html>"), constraint)
+
+            constraint.gridy = currentRow++
+            add(Box.createVerticalStrut(15), constraint)
         }
     }
 
     private fun JPanel.addHealthDecline(constraint: GridBagConstraints) {
         constraint.gridy = 4
         constraint.gridx = 0
-        constraint.gridwidth = 3
 
+        constraint.insets = JBUI.insetsTop(8)
         add(JLabel(details.healthData!!.status).apply {
             foreground = JBColor.GRAY
         }, constraint)
+
+        constraint.insets = JBUI.emptyInsets()
+    }
+
+    private fun JPanel.addFunctionTitle(item: Paragraph, constraint: GridBagConstraints) {
+        add(JPanel().apply {
+            layout = BoxLayout(this, BoxLayout.X_AXIS)
+            border = JBUI.Borders.empty()
+
+            val (first, second) = splitString(item.heading, " ")
+            val firstLabel = JLabel(first).apply {
+                font = Font("Arial", Font.BOLD, JBUI.Fonts.label().size)
+                icon = item.icon
+            }
+
+            add(firstLabel)
+
+            add(Box.createHorizontalStrut(7))
+
+            val secondLabel = JLabel(second).apply {
+                font = Font("Arial", Font.BOLD, JBUI.Fonts.label().size)
+                foreground = JBUI.CurrentTheme.Link.FOCUSED_BORDER_COLOR
+
+                addMouseListener(
+                    getMouseAdapter(
+                        project, CodeSmell(
+                            category = "Complex Conditional", highlightRange = HighlightRange(
+                                startLine = 1, startColumn = 1, endLine = 1, endColumn = 1
+                            ), details = ""
+                        )
+                    )
+                )
+            }
+
+            add(secondLabel)
+        }, constraint)
+    }
+
+    private fun getMouseAdapter(
+        project: Project, codeSmell: CodeSmell
+    ) = object : MouseAdapter() {
+        override fun mouseClicked(e: MouseEvent) {
+            val editor = FileEditorManager.getInstance(project).selectedTextEditor
+            if (editor != null) {
+                CodeSceneDocumentationService.getInstance(project).openDocumentationPanel(editor, codeSmell)
+            }
+        }
+
+        override fun mouseEntered(e: MouseEvent) {
+            e.component.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        }
+
+        override fun mouseExited(e: MouseEvent) {
+            e.component.cursor = Cursor.getDefaultCursor()
+        }
+
+    }
+
+    private fun JPanel.addTitle(item: Paragraph, constraint: GridBagConstraints) {
+        constraint.insets = JBUI.insetsTop(15)
+
+        add(JLabel(item.heading).apply {
+            icon = item.icon
+            font = Font("Arial", Font.BOLD, JBUI.Fonts.label().size)
+        }, constraint)
+
+        constraint.insets = JBUI.emptyInsets()
     }
 
     private fun JPanel.addLink(constraint: GridBagConstraints) {
