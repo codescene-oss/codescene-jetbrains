@@ -12,9 +12,11 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
 import java.awt.BorderLayout
+import java.awt.Component
+import java.awt.Dimension
 import java.awt.Font
-import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
+import javax.swing.Box
+import javax.swing.BoxLayout
 import javax.swing.JPanel
 import javax.swing.JTextArea
 
@@ -44,22 +46,26 @@ class CodeHealthDetailsPanel(private val project: Project) {
     }
 
     private fun JPanel.addPlaceholder() {
-        val panel = JPanel().apply {
-            layout = GridBagLayout()
-            border = JBUI.Borders.empty(10, 10, 10, 0)
-            val message = UiLabelsBundle.message("selectAFunction")
+        val message = UiLabelsBundle.message("selectAFunction")
 
-            add(JTextArea(message).apply {
-                lineWrap = true
-                isOpaque = false
+        val panel = JPanel().apply {
+            layout = BoxLayout(this, BoxLayout.Y_AXIS)
+            border = JBUI.Borders.empty(10)
+
+            val textArea = JTextArea(message).apply {
                 isEditable = false
+                isOpaque = false
+                lineWrap = true
                 wrapStyleWord = true
+                maximumSize = Dimension(550, 25)
                 foreground = JBColor.GRAY
-                font = UIUtil.getFont(UIUtil.FontSize.NORMAL, Font("Arial", Font.PLAIN, 12))
-            }, GridBagConstraints().apply {
-                weightx = 1.0
-                fill = GridBagConstraints.BOTH
-            })
+                alignmentX = Component.CENTER_ALIGNMENT
+                font = UIUtil.getFont(UIUtil.FontSize.NORMAL, Font.getFont("Arial"))
+            }
+
+            add(Box.createVerticalGlue())
+            add(textArea)
+            add(Box.createVerticalGlue())
         }
 
         add(panel, BorderLayout.CENTER)
