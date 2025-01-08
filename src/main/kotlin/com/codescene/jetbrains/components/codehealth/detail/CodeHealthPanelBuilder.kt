@@ -3,14 +3,8 @@ package com.codescene.jetbrains.components.codehealth.detail
 import com.codescene.jetbrains.components.codehealth.detail.slider.CustomSlider
 import com.codescene.jetbrains.components.layout.ResponsiveLayout
 import com.codescene.jetbrains.data.CodeSmell
-import com.codescene.jetbrains.data.HighlightRange
-import com.codescene.jetbrains.services.CodeSceneDocumentationService
-import com.codescene.jetbrains.util.CodeHealthDetails
-import com.codescene.jetbrains.util.CodeHealthDetailsType
+import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_URL
-import com.codescene.jetbrains.util.Paragraph
-import com.codescene.jetbrains.util.resolveHealthBadge
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.ui.RoundedLineBorder
@@ -141,7 +135,12 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails, private val
             constraint.gridx = 0
             constraint.gridwidth = 3
 
-            if (details.type == CodeHealthDetailsType.FUNCTION) addFunctionTitle(item, constraint)
+            if (details.type == CodeHealthDetailsType.FUNCTION && item.codeSmell != null) addFunctionTitle(
+                item,
+                details.filePath,
+                item.codeSmell,
+                constraint
+            )
             else addTitle(item, constraint)
 
             constraint.ipady = 0
@@ -167,7 +166,12 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails, private val
         constraint.insets = JBUI.emptyInsets()
     }
 
-    private fun JPanel.addFunctionTitle(item: Paragraph, constraint: GridBagConstraints) {
+    private fun JPanel.addFunctionTitle(
+        item: Paragraph,
+        filePath: String,
+        codeSmell: CodeSmell,
+        constraint: GridBagConstraints
+    ) {
         add(JPanel().apply {
             layout = BoxLayout(this, BoxLayout.X_AXIS)
             border = JBUI.Borders.empty()
@@ -186,39 +190,11 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails, private val
                 font = Font("Arial", Font.BOLD, JBUI.Fonts.label().size)
                 foreground = JBUI.CurrentTheme.Link.FOCUSED_BORDER_COLOR
 
-                addMouseListener(
-                    getMouseAdapter(
-                        project, CodeSmell(
-                            category = "Complex Conditional", highlightRange = HighlightRange(
-                                startLine = 1, startColumn = 1, endLine = 1, endColumn = 1
-                            ), details = ""
-                        )
-                    )
-                )
+                addMouseListener(getMouseAdapter(project, codeSmell, filePath))
             }
 
             add(secondLabel)
         }, constraint)
-    }
-
-    private fun getMouseAdapter(
-        project: Project, codeSmell: CodeSmell
-    ) = object : MouseAdapter() {
-        override fun mouseClicked(e: MouseEvent) {
-            val editor = FileEditorManager.getInstance(project).selectedTextEditor
-            if (editor != null) {
-                CodeSceneDocumentationService.getInstance(project).openDocumentationPanel(editor, codeSmell)
-            }
-        }
-
-        override fun mouseEntered(e: MouseEvent) {
-            e.component.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-        }
-
-        override fun mouseExited(e: MouseEvent) {
-            e.component.cursor = Cursor.getDefaultCursor()
-        }
-
     }
 
     private fun JPanel.addTitle(item: Paragraph, constraint: GridBagConstraints) {

@@ -4,15 +4,26 @@ import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_DECREASE
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_INCREASE
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_NEUTRAL
 import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL_FOUND
+import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.components.codehealth.monitor.tree.NodeType
 import com.codescene.jetbrains.data.CodeDelta
+import com.codescene.jetbrains.data.CodeSmell
+import com.codescene.jetbrains.data.HighlightRange
+import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.util.Constants.GREEN
 import com.codescene.jetbrains.util.Constants.ORANGE
 import com.codescene.jetbrains.util.Constants.RED
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.fileTypes.FileTypeManager
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.ui.JBColor
+import java.awt.Cursor
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import java.util.*
 import javax.swing.Icon
 
@@ -26,7 +37,8 @@ data class SubHeader(
 data class Paragraph(
     val body: String,
     val heading: String,
-    val icon: Icon? = null
+    val icon: Icon? = null,
+    val codeSmell: CodeSmell? = null
 )
 
 enum class CodeHealthDetailsType {
@@ -47,13 +59,31 @@ data class CodeHealthDetails(
     val subHeader: SubHeader,
     val body: List<Paragraph>,
     val type: CodeHealthDetailsType,
-    val healthData: HealthData? = null
+    val healthData: HealthData? = null,
 )
 
-fun resolveHealthBadge(score: Double): Pair<String, JBColor> =
-    if (score < 4.0) "Unhealthy" to RED
-    else if (score >= 4.0 && score < 9.0) "Problematic" to ORANGE
-    else "Healthy" to GREEN
+enum class HealthState(val label: String, val color: JBColor) {
+    UNHEALTHY("Unhealthy", RED),
+    PROBLEMATIC("Problematic", ORANGE),
+    HEALTHY("Healthy", GREEN);
+
+    companion object {
+        fun fromScore(score: Double): HealthState =
+            when {
+                score < 4.0 -> UNHEALTHY
+                score in 4.0..8.9 -> PROBLEMATIC
+                else -> HEALTHY
+            }
+    }
+}
+
+data class CodeHealthHeader(
+    val subText: String,
+    val text: String,
+    val icon: Icon
+)
+
+fun resolveHealthBadge(score: Double): Pair<String, JBColor> = HealthState.fromScore(score).let { it.label to it.color }
 
 private fun createSubHeader(
     file: Pair<String, String>?,
@@ -79,21 +109,17 @@ private fun <T> extractUsingRegex(input: String, regex: Regex, extractor: (Match
     else null
 }
 
-//TODO: check neutral status
 private fun resolveStatus(delta: CodeDelta, type: NodeType, percentage: String) =
-    if (type == NodeType.CODE_HEALTH_NEUTRAL) {
-        ""
-    } else if (type == NodeType.CODE_HEALTH_INCREASE) {
-        "Increased to ${round(delta.newScore)} $percentage"
-    } else {
-        "Declined from ${round(delta.oldScore)} $percentage"
-    }
+    when (type) {
+        NodeType.CODE_HEALTH_NEUTRAL -> ""
+        NodeType.CODE_HEALTH_INCREASE ->
+            "Increased to ${round(delta.newScore)} $percentage"
 
-data class CodeHealthHeader(
-    val subText: String,
-    val text: String,
-    val icon: Icon
-)
+        NodeType.CODE_HEALTH_DECREASE ->
+            "Declined from ${round(delta.oldScore)} $percentage"
+
+        else -> throw IllegalArgumentException("Unexpected node type: $type")
+    }
 
 private fun resolveCodeHealthHeader(type: NodeType, newScore: Double, oldScore: Double): CodeHealthHeader? =
     when (type) {
@@ -126,7 +152,7 @@ private fun getHealthFinding(
 
     return CodeHealthDetails(
         filePath = finding.filePath,
-        header = "Code Health Score",
+        header = UiLabelsBundle.message("healthScore"),
         subHeader = createSubHeader(file, healthHeader!!.subText, healthHeader.icon, CodeHealthDetailsType.HEALTH),
         healthData = HealthData(
             healthHeader.subText,
@@ -135,9 +161,9 @@ private fun getHealthFinding(
         ),
         body = listOf(
             Paragraph(
-                body = "This score indicates that your development speed could be about 40% slower and you might experience 25% more defects compared to a perfect Code Health score of 10. Improving this score can lead to faster progress and fewer bugs.",
-                heading = "Why this is important",
-                icon = null
+                icon = null,
+                body = UiLabelsBundle.message("healthScoreDetails"),
+                heading = UiLabelsBundle.message("whyThisIsImportant")
             )
         ),
         type = CodeHealthDetailsType.HEALTH
@@ -150,11 +176,18 @@ private fun getFunctionFindingBody(delta: CodeDelta, finding: CodeHealthFinding)
             it.changeType.name.lowercase(Locale.getDefault()).replaceFirstChar { it.uppercaseChar() }
         val body =
             "${it.description.replace(finding.displayName, "<code>${finding.displayName}</code>")}"
+        val highlightRange = HighlightRange(
+            startLine = it.position.line,
+            endLine = it.position.line,
+            startColumn = it.position.column,
+            endColumn = it.position.column
+        )
 
         Paragraph(
             body = body,
             heading = "$changeType: ${it.category}",
-            icon = CODE_SMELL_FOUND
+            icon = CODE_SMELL_FOUND,
+            codeSmell = CodeSmell(category = it.category, highlightRange, details = it.description)
         )
     } ?: listOf()
 
@@ -164,7 +197,10 @@ private fun getFunctionFinding(
     delta: CodeDelta
 ): CodeHealthDetails {
     val smells = delta.functionLevelFindings.find { it.function.name == finding.displayName }?.changeDetails
-    val subHeaderLabel = if (smells != null && smells.size > 1) "Multiple Code Smells" else "Function Smell"
+    val subHeaderLabel = if (smells != null && smells.size > 1)
+        UiLabelsBundle.message("multipleCodeSmells")
+    else
+        UiLabelsBundle.message("functionSmell")
 
     return CodeHealthDetails(
         filePath = finding.filePath,
@@ -189,7 +225,12 @@ private fun getFileFinding(
     return CodeHealthDetails(
         filePath = finding.filePath,
         header = finding.displayName,
-        subHeader = createSubHeader(file, "File-level issue", fileType.icon, CodeHealthDetailsType.FILE),
+        subHeader = createSubHeader(
+            file,
+            UiLabelsBundle.message("fileIssue"),
+            fileType.icon,
+            CodeHealthDetailsType.FILE
+        ),
         body = listOf(Paragraph(finding.tooltip, "Problem")),
         type = CodeHealthDetailsType.FILE
     )
@@ -207,5 +248,41 @@ fun getHealthFinding(delta: CodeDelta, finding: CodeHealthFinding): CodeHealthDe
         NodeType.FILE_FINDING, NodeType.FILE_FINDING_FIXED -> getFileFinding(file, finding)
         NodeType.FUNCTION_FINDING -> getFunctionFinding(file, finding, delta)
         else -> null
+    }
+}
+
+private fun handleMouseClick(project: Project, codeSmell: CodeSmell, filePath: String) {
+    val editorManager = FileEditorManager.getInstance(project)
+    val file = LocalFileSystem.getInstance().findFileByPath(filePath)
+    val documentationService = CodeSceneDocumentationService.getInstance(project)
+
+    file?.let {
+        if (!editorManager.isFileOpen(file)) editorManager.openFile(file, true)
+
+        val fileDescriptor = OpenFileDescriptor(
+            project,
+            file,
+            codeSmell.highlightRange.startLine - 1,
+            codeSmell.highlightRange.startColumn - 1
+        )
+
+        editorManager.openTextEditor(fileDescriptor, true)
+        editorManager.selectedTextEditor?.let { documentationService.openDocumentationPanel(it, codeSmell) }
+    }
+}
+
+fun getMouseAdapter(
+    project: Project, codeSmell: CodeSmell, filePath: String
+) = object : MouseAdapter() {
+    override fun mouseClicked(e: MouseEvent) {
+        handleMouseClick(project, codeSmell, filePath)
+    }
+
+    override fun mouseEntered(e: MouseEvent) {
+        e.component.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+    }
+
+    override fun mouseExited(e: MouseEvent) {
+        e.component.cursor = Cursor.getDefaultCursor()
     }
 }
