@@ -39,7 +39,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
     companion object {
         val healthMonitoringResults: ConcurrentHashMap<String, CodeDelta> = ConcurrentHashMap()
         var contentPanel = JBPanel<JBPanel<*>>().apply {
-            border = JBUI.Borders.empty(10)
+            border = null
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
         }
     }
@@ -48,7 +48,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
         contentPanel.renderContent()
 
         return JBScrollPane(contentPanel).apply {
-            border = null
+            border = JBUI.Borders.empty(10)
             verticalScrollBarPolicy = JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
             horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
         }
@@ -90,7 +90,6 @@ class CodeHealthMonitorPanel(private val project: Project) {
         }
 
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
-        border = JBUI.Borders.empty(10)
 
         add(textArea)
     }
