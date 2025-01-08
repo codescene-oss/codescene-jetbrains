@@ -146,8 +146,6 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails, private val
 
             constraint.ipady = 0
             constraint.gridy = currentRow++
-            constraint.gridx = 0
-            constraint.gridwidth = 3
             constraint.weightx = 1.0
 
             add(JLabel("<html>${item.body}</html>"), constraint)

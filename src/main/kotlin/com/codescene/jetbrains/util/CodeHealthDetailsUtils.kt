@@ -129,7 +129,9 @@ private fun getHealthFinding(
         header = "Code Health Score",
         subHeader = createSubHeader(file, healthHeader!!.subText, healthHeader.icon, CodeHealthDetailsType.HEALTH),
         healthData = HealthData(
-            healthHeader.subText, resolveStatus(delta, finding.nodeType, percentage = finding.additionalText), round(delta.newScore)
+            healthHeader.subText,
+            resolveStatus(delta, finding.nodeType, percentage = finding.additionalText),
+            round(delta.newScore)
         ),
         body = listOf(
             Paragraph(
@@ -160,18 +162,23 @@ private fun getFunctionFinding(
     file: Pair<String, String>?,
     finding: CodeHealthFinding,
     delta: CodeDelta
-): CodeHealthDetails = CodeHealthDetails(
-    filePath = finding.filePath,
-    header = finding.displayName,
-    subHeader = createSubHeader(
-        file,
-        "Multiple Code Smells",
-        AllIcons.General.Warning,
-        CodeHealthDetailsType.FUNCTION
-    ),
-    body = getFunctionFindingBody(delta, finding),
-    type = CodeHealthDetailsType.FUNCTION
-)
+): CodeHealthDetails {
+    val smells = delta.functionLevelFindings.find { it.function.name == finding.displayName }?.changeDetails
+    val subHeaderLabel = if (smells != null && smells.size > 1) "Multiple Code Smells" else "Function Smell"
+
+    return CodeHealthDetails(
+        filePath = finding.filePath,
+        header = finding.displayName,
+        subHeader = createSubHeader(
+            file,
+            subHeaderLabel,
+            AllIcons.General.Warning,
+            CodeHealthDetailsType.FUNCTION
+        ),
+        body = getFunctionFindingBody(delta, finding),
+        type = CodeHealthDetailsType.FUNCTION
+    )
+}
 
 private fun getFileFinding(
     file: Pair<String, String>?,
@@ -182,7 +189,7 @@ private fun getFileFinding(
     return CodeHealthDetails(
         filePath = finding.filePath,
         header = finding.displayName,
-        subHeader = createSubHeader(file, "Multiple Code Smells", fileType.icon, CodeHealthDetailsType.FILE),
+        subHeader = createSubHeader(file, "File-level issue", fileType.icon, CodeHealthDetailsType.FILE),
         body = listOf(Paragraph(finding.tooltip, "Problem")),
         type = CodeHealthDetailsType.FILE
     )
