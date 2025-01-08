@@ -50,11 +50,13 @@ fun selectNode(tree: JTree, filePath: String) {
     val root = tree.model.root as DefaultMutableTreeNode
     val targetNode = findHealthNodeForPath(root, filePath)
 
-    tree.selectionModel.selectionPath = TreePath(targetNode.path)
+    targetNode?.let {
+        tree.selectionModel.selectionPath = TreePath(it.path)
+    }
 }
 
-private fun findHealthNodeForPath(root: DefaultMutableTreeNode, filePath: String) =
+private fun findHealthNodeForPath(root: DefaultMutableTreeNode, filePath: String): DefaultMutableTreeNode? =
     (0 until root.childCount)
-        .map { root.getChildAt(it) as DefaultMutableTreeNode }
-        .find { (it.userObject as CodeHealthFinding).filePath == filePath }
-        ?.getChildAt(0) as DefaultMutableTreeNode
+        .mapNotNull { root.getChildAt(it) as? DefaultMutableTreeNode }
+        .firstOrNull { (it.userObject as? CodeHealthFinding)?.filePath == filePath }
+        ?.getChildAt(0) as? DefaultMutableTreeNode
