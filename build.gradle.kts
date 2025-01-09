@@ -182,7 +182,10 @@ tasks.register("fetchDocs") {
 
     val user = "empear-analytics"
     val repo = "codescene-ide-protocol"
-    val token = System.getenv("GH_PACKAGE_TOKEN")
+    val token = if (System.getenv("CI") == "true")
+        System.getenv("CODESCENE_IDE_DOCS_TOKEN")
+    else
+        System.getenv("GH_PACKAGE_TOKEN")
 
     doLast {
         val apiUrl = "https://api.github.com/repos/$user/$repo/releases"
