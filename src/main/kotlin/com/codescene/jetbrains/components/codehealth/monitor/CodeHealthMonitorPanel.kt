@@ -124,11 +124,11 @@ class CodeHealthMonitorPanel(private val project: Project) {
             contentPanel.revalidate()
             contentPanel.repaint()
 
-            updateToolWindowIcon(project)
+            updateToolWindowIcon()
         }
     }
 
-    private fun updateToolWindowIcon(project: Project) {
+    private fun updateToolWindowIcon() {
         val toolWindowManager = ToolWindowManager.getInstance(project)
         val toolWindow = toolWindowManager.getToolWindow(CODESCENE)
 
