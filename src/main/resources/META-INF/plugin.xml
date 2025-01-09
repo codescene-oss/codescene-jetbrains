@@ -11,6 +11,8 @@
 
     <resource-bundle>messages.UiLabelsBundle</resource-bundle>
 
+    <idea-version since-build="223.8214.6"/>
+
     <depends>Git4Idea</depends>
 
     <actions>

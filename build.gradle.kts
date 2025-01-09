@@ -103,9 +103,9 @@ intellijPlatform {
             }
         }
 
-        ideaVersion {
-            sinceBuild = providers.gradleProperty("pluginSinceBuild")
-        }
+//        ideaVersion {
+//            sinceBuild = providers.gradleProperty("pluginSinceBuild")
+//        }
     }
 
     signing {
