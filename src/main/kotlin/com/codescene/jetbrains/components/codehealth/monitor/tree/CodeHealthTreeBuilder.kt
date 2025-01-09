@@ -152,17 +152,9 @@ class CodeHealthTreeBuilder {
         val navigationService = CodeNavigationService.getInstance(project)
 
         val targetNode = event.path.lastPathComponent as? DefaultMutableTreeNode
-        val nodeType = (targetNode?.userObject as CodeHealthFinding).nodeType
-        val finding = targetNode.userObject as? CodeHealthFinding ?: return
+        val finding = targetNode?.userObject as? CodeHealthFinding ?: return
 
-        /*
-           For now, we are only displaying function details to align with the VS Code extension's implementation.
-           Once that implementation is complete, we will remove the filtering of file and health nodes.
-         */
-        val shouldSelectNode =
-            targetNode.isLeaf && !isHealthNode(nodeType) && nodeType != NodeType.FILE_FINDING
-
-        if (shouldSelectNode) {
+        if (targetNode.isLeaf) {
             if (!suppressFocusOnLine) navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
 
             notifier.refresh(finding)

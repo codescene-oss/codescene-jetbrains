@@ -55,7 +55,7 @@ fun selectNode(tree: JTree, filePath: String) {
     }
 }
 
-private fun findHealthNodeForPath(root: DefaultMutableTreeNode, filePath: String): DefaultMutableTreeNode? =
+fun findHealthNodeForPath(root: DefaultMutableTreeNode, filePath: String): DefaultMutableTreeNode? =
     (0 until root.childCount)
         .mapNotNull { root.getChildAt(it) as? DefaultMutableTreeNode }
         .firstOrNull { (it.userObject as? CodeHealthFinding)?.filePath == filePath }
