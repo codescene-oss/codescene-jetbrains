@@ -5,9 +5,7 @@ import com.codescene.jetbrains.components.codehealth.monitor.tree.listeners.Tree
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.CodeNavigationService
-import com.codescene.jetbrains.util.getFileFinding
-import com.codescene.jetbrains.util.getFunctionFinding
-import com.codescene.jetbrains.util.getHealthFinding
+import com.codescene.jetbrains.util.*
 import com.intellij.openapi.project.Project
 import com.intellij.ui.treeStructure.Tree
 import java.awt.Component
@@ -107,46 +105,18 @@ class CodeHealthTreeBuilder {
     private fun selectNode(tree: JTree) =
         SwingUtilities.invokeLater {
             val root = tree.model.root as DefaultMutableTreeNode
-            val selectedNodeParent = (0 until root.childCount)
-                .map { root.getChildAt(it) as DefaultMutableTreeNode }
-                .find { (it.userObject as CodeHealthFinding).filePath == selectedNode?.filePath }
+            val parent = getParentNode(root, selectedNode!!)
+            val selectedChild = getSelectedNode(parent, selectedNode!!)
 
-            selectedNodeParent?.let { parent ->
-                getSelectedNode(parent)?.let { found ->
-                    suppressFocusOnLine = true
-
-                    tree.selectionModel.selectionPath = TreePath(found.path)
-
-                    suppressFocusOnLine = false
-                } ?: run { resetSelectedNode() }
-            } ?: resetSelectedNode()
-        }
-
-    private fun resetSelectedNode() {
-        selectedNode = null
-        notifier.refresh(null)
-    }
-
-    private fun isHealthNode(type: NodeType) =
-        type == NodeType.CODE_HEALTH_NEUTRAL || type == NodeType.CODE_HEALTH_DECREASE || type == NodeType.CODE_HEALTH_INCREASE
-
-    private fun getSelectedNode(node: DefaultMutableTreeNode): DefaultMutableTreeNode? {
-        val type = selectedNode!!.nodeType
-
-        if (isHealthNode(type))
-            return node.getChildAt(0) as DefaultMutableTreeNode
-
-        (1 until node.childCount).map {
-            val child = node.getChildAt(it) as DefaultMutableTreeNode
-            val finding = child.userObject as CodeHealthFinding
-
-            if (selectedNode!!.displayName == finding.displayName) {
-                return child
+            if (selectedChild != null) {
+                suppressFocusOnLine = true
+                tree.selectionModel.selectionPath = TreePath(selectedChild.path)
+                suppressFocusOnLine = false
+            } else {
+                selectedNode = null
+                notifier.refresh(null)
             }
         }
-
-        return null
-    }
 
     private fun handleTreeSelectionEvent(event: TreeSelectionEvent) {
         val navigationService = CodeNavigationService.getInstance(project)

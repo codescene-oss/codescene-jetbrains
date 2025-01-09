@@ -11,8 +11,8 @@ import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
 import javax.swing.tree.TreePath
 
-class SelectNodeTest {
-    private lateinit var tree:JTree
+class CodeHealthTreeUtilsTest {
+    private lateinit var tree: JTree
 
     private val root = DefaultMutableTreeNode(
         CodeHealthFinding(
@@ -84,6 +84,14 @@ class SelectNodeTest {
         )
     )
 
+    private val nonExistentFinding = CodeHealthFinding(
+        tooltip = "Non-existent node",
+        filePath = "src/main/File3.kt",
+        focusLine = 1,
+        displayName = "Non-existent",
+        nodeType = NodeType.FILE_FINDING
+    )
+
     @Before
     fun setupTree() {
         node1.add(child11)
@@ -98,7 +106,7 @@ class SelectNodeTest {
     }
 
     @After
-    fun clearTree(){
+    fun clearTree() {
         root.removeAllChildren()
         node1.removeAllChildren()
         node2.removeAllChildren()
@@ -137,5 +145,49 @@ class SelectNodeTest {
         selectNode(tree, path)
 
         assertNull(tree.selectionModel.selectionPath)
+    }
+
+    @Test
+    fun `should return first child when selected node is a health node`() {
+        val selectedNode = child11.userObject as CodeHealthFinding
+
+        val result = getSelectedNode(node1, selectedNode)
+
+        assertNotNull(result)
+        assertEquals(child11, result)
+    }
+
+    @Test
+    fun `should return correct child node when display name matches`() {
+        val selectedNode = child22.userObject as CodeHealthFinding
+
+        val result = getSelectedNode(node2, selectedNode)
+
+        assertNotNull(result)
+        assertEquals(child22, result)
+    }
+
+    @Test
+    fun `should return null if no child matches display name`() {
+        val result = getSelectedNode(node1, nonExistentFinding)
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `should return parent node when present`() {
+        val selectedNode = child22.userObject as CodeHealthFinding
+
+        val result = getParentNode(root, selectedNode)
+
+        assertNotNull(result)
+        assertEquals(node2, result)
+    }
+
+    @Test
+    fun `should return null when parent node is not present`() {
+        val result = getParentNode(root, nonExistentFinding)
+
+        assertNull(result)
     }
 }

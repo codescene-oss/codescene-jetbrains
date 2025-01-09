@@ -60,3 +60,30 @@ fun findHealthNodeForPath(root: DefaultMutableTreeNode, filePath: String): Defau
         .mapNotNull { root.getChildAt(it) as? DefaultMutableTreeNode }
         .firstOrNull { (it.userObject as? CodeHealthFinding)?.filePath == filePath }
         ?.getChildAt(0) as? DefaultMutableTreeNode
+
+fun getParentNode(root: DefaultMutableTreeNode, selectedNode: CodeHealthFinding) =
+    (0 until root.childCount)
+        .map { root.getChildAt(it) as DefaultMutableTreeNode }
+        .find { (it.userObject as CodeHealthFinding).filePath == selectedNode.filePath }
+
+fun getSelectedNode(parent: DefaultMutableTreeNode?, selectedNode: CodeHealthFinding): DefaultMutableTreeNode? {
+    if (parent == null) return null
+
+    val type = selectedNode.nodeType
+
+    if (isHealthNode(type)) return parent.getChildAt(0) as DefaultMutableTreeNode
+
+    (1 until parent.childCount).map {
+        val child = parent.getChildAt(it) as DefaultMutableTreeNode
+        val finding = child.userObject as CodeHealthFinding
+
+        if (selectedNode.displayName == finding.displayName) {
+            return child
+        }
+    }
+
+    return null
+}
+
+private fun isHealthNode(type: NodeType) =
+    type == NodeType.CODE_HEALTH_NEUTRAL || type == NodeType.CODE_HEALTH_DECREASE || type == NodeType.CODE_HEALTH_INCREASE
