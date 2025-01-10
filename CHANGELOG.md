@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- About tab contents in Tools > CodeScene > About
+- General tab contents in Tools > CodeScene > General
+
+### Changed
+- Removed unused/unimplemented settings from Tools > CodeScene > Settings
+
+## [0.0.3-beta] - 2024-01-10
+### Added
 - Code health details view (health, file, function-level) in CodeScene tool window
 
 ### Changed
