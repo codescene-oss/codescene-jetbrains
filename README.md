@@ -8,6 +8,7 @@
 
 - [Getting started](#getting-started)
 - [Gradle configuration](#gradle-configuration)
+- [Documentation management](#documentation-management)
 - [Plugin template structure](#plugin-template-structure)
 - [Plugin configuration file](#plugin-configuration-file)
 - [Testing](#testing)
@@ -72,6 +73,16 @@ Alternatively, you can run the following command:
 ```bash
 ./gradlew runIde
 ```
+
+### Documentation management
+The documentation for the extension, including details about code smells and other features, is maintained in a centralized repository: the *IDE Protocol repository*. This ensures consistency and reduces redundancy across different IDE extensions (e.g., Visual Studio Code).
+
+To fetch the latest documentation for local development, run the following command:
+
+```bash
+./gradlew fetchDocs
+```
+**Note:** Access to the documentation repository currently requires appropriate permissions.
 
 ### Environment variables
 

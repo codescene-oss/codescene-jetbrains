@@ -1,4 +1,4 @@
-package com.codescene.jetbrains.components.tree
+package com.codescene.jetbrains.components.codehealth.monitor.tree
 
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_DECREASE
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_HIGH
@@ -29,7 +29,10 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
 
         node?.userObject?.let { userObject ->
             if (userObject is CodeHealthFinding) {
+                background = null
+                backgroundSelectionColor = null
                 backgroundNonSelectionColor = null
+
                 toolTipText = getTooltip(userObject)
                 text = getText(userObject)
                 icon = getIcon(userObject.nodeType)

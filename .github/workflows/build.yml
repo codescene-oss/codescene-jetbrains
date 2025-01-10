@@ -26,6 +26,7 @@ concurrency:
 env:
   GH_USERNAME: ${{ secrets.GH_USERNAME }}
   GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
+  CODESCENE_IDE_DOCS_TOKEN: ${{ secrets.CODESCENE_IDE_DOCS_TOKEN }}
   
 jobs:
 

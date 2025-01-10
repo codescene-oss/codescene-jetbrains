@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.codeInsight.codeVision
 
+import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.data.CodeSmell
@@ -13,7 +14,6 @@ import com.codescene.jetbrains.util.getTextRange
 import com.codescene.jetbrains.util.isFileSupported
 import com.intellij.codeInsight.codeVision.*
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
 import org.reflections.Reflections
@@ -152,11 +152,11 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         ClickableTextCodeVisionEntry(
             codeSmell.category,
             id,
-            { _, sourceEditor -> handleClick(sourceEditor, codeSmell) },
-            AllIcons.General.InspectionsWarningEmpty
+            { _, sourceEditor -> handleLensClick(sourceEditor, codeSmell) },
+            CODE_SMELL
         )
 
-    fun handleClick(editor: Editor, category: CodeSmell) {
+    open fun handleLensClick(editor: Editor, category: CodeSmell) {
         val project = editor.project ?: return
         val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
 

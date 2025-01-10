@@ -1,4 +1,4 @@
-package com.codescene.jetbrains.components.tree.listeners
+package com.codescene.jetbrains.components.codehealth.monitor.tree.listeners
 
 import com.intellij.ui.treeStructure.Tree
 import java.awt.Cursor

@@ -1,9 +1,10 @@
-package com.codescene.jetbrains.components.toolWindow
+package com.codescene.jetbrains.components.codehealth.monitor
 
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW
 import com.codescene.jetbrains.UiLabelsBundle
-import com.codescene.jetbrains.components.tree.CodeHealthTreeBuilder
+import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthTreeBuilder
 import com.codescene.jetbrains.data.CodeDelta
+import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
@@ -15,6 +16,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.util.maximumWidth
@@ -26,28 +28,37 @@ import java.awt.Component
 import java.awt.Font
 import java.util.concurrent.ConcurrentHashMap
 import javax.swing.BoxLayout
+import javax.swing.JComponent
 import javax.swing.JTextArea
 
-class CodeHealthMonitorToolWindow(private val project: Project) {
+class CodeHealthMonitorPanel(private val project: Project) {
     private var refreshJob: Job? = null
 
     private val treeBuilder = CodeHealthTreeBuilder()
-    private var contentPanel = JBPanel<JBPanel<*>>().apply {
-        border = JBUI.Borders.empty(10)
-        layout = BoxLayout(this, BoxLayout.Y_AXIS)
-        addPlaceholderText()
-    }
-    private val healthMonitoringResults: ConcurrentHashMap<String, CodeDelta> = ConcurrentHashMap()
 
-    fun getContent() = JBScrollPane(contentPanel).apply {
-        verticalScrollBarPolicy = JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
-        horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
+    companion object {
+        val healthMonitoringResults: ConcurrentHashMap<String, CodeDelta> = ConcurrentHashMap()
+        var contentPanel = JBPanel<JBPanel<*>>().apply {
+            border = null
+            layout = BoxLayout(this, BoxLayout.Y_AXIS)
+        }
+    }
+
+    fun getContent(): JComponent {
+        contentPanel.renderContent()
+
+        return JBScrollPane(contentPanel).apply {
+            border = JBUI.Borders.empty(10)
+            verticalScrollBarPolicy = JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
+            horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
+        }
     }
 
     private fun JBPanel<JBPanel<*>>.renderContent() {
-        if (healthMonitoringResults.isEmpty())
+        if (healthMonitoringResults.isEmpty()) {
             addPlaceholderText()
-        else
+            project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
+        } else
             renderFileTree()
     }
 
@@ -57,7 +68,6 @@ class CodeHealthMonitorToolWindow(private val project: Project) {
 
         val fileTree = treeBuilder.createTree(healthMonitoringResults, project)
 
-        border = JBUI.Borders.empty(10, 0, 10, 10)
         layout = BorderLayout()
 
         add(fileTree)
@@ -74,12 +84,11 @@ class CodeHealthMonitorToolWindow(private val project: Project) {
             lineWrap = true
             maximumWidth = 300
             wrapStyleWord = true
+            foreground = JBColor.GRAY
             alignmentX = Component.CENTER_ALIGNMENT
-            foreground = UIUtil.getTextAreaForeground()
             font = UIUtil.getFont(UIUtil.FontSize.NORMAL, Font.getFont("Arial"))
         }
 
-        border = JBUI.Borders.empty(10)
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
 
         add(textArea)
