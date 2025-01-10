@@ -75,10 +75,6 @@ jobs:
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      # Get the docs from the latest release
-      - name: Fetch Docs from GitHub
-        run: ./gradlew fetchDocs
-
       # Build plugin
       - name: Build plugin
         run: ./gradlew buildPlugin

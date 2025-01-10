@@ -105,6 +105,7 @@ intellijPlatform {
 
         ideaVersion {
             sinceBuild = providers.gradleProperty("pluginSinceBuild")
+            untilBuild = provider { null }
         }
     }
 
@@ -152,6 +153,10 @@ tasks {
     register<JavaExec>("run") {
         mainClass.set("com.codescene.Main")
         classpath += sourceSets["main"].runtimeClasspath
+    }
+
+    buildPlugin {
+        dependsOn("fetchDocs")
     }
 }
 
