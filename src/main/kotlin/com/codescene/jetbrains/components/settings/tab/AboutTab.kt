@@ -25,7 +25,7 @@ class AboutTab : Configurable {
         font = Font("Arial", Font.PLAIN, 15)
     }
 
-    private val leftPanel = JLabel().apply { icon = LOGO }
+    private val leftPanel = JLabel(LOGO)
 
     private val header = JLabel(CODESCENE).apply { font = Font("Arial", Font.BOLD, 18) }
 
