@@ -58,6 +58,8 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
         Companion.editor = editor
         val project = editor.project!!
 
+        TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_DOCS_PANEL}")
+
         functionLocation = FunctionLocation(editor.virtualFile.name, codeSmell)
         val codeSmellFileName = codeSmell.category + ".md"
 

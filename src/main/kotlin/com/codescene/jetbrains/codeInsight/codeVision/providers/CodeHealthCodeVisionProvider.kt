@@ -6,6 +6,8 @@ import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPa
 import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.data.HighlightRange
+import com.codescene.jetbrains.services.TelemetryService
+import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.HealthDetails
 import com.codescene.jetbrains.util.getCachedDelta
 import com.codescene.jetbrains.util.getCodeHealth
@@ -14,6 +16,7 @@ import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
+import com.intellij.platform.ide.progress.ModalTaskOwner.project
 import javax.swing.JTree
 
 const val HEALTH_SCORE = "Health Score"
@@ -63,5 +66,7 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
             .firstOrNull()?.let {
                 selectNode(it, editor.virtualFile.path)
             }
+
+        TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_CODE_HEALTH_DOCS}")
     }
 }

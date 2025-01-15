@@ -5,6 +5,7 @@ import java.awt.Color
 
 object Constants {
     const val CODESCENE = "CodeScene"
+    const val CODESCENE_PLUGIN_ID = "com.codescene.vanilla"
     const val CODESCENE_SERVER_URL = "https://codescene.io"
     const val DOCUMENTATION_URL = "$CODESCENE_SERVER_URL/docs/"
     const val EXAMPLE_SERVER_URL = "https://domain.com"
@@ -47,4 +48,10 @@ object Constants {
     const val POTENTIALLY_LOW_COHESION = "Potentially Low Cohesion"
     const val PRIMITIVE_OBSESSION = "Primitive Obsession"
     const val STRING_HEAVY_FUNCTION_ARGUMENTS = "String Heavy Function Arguments"
+
+    // telemetry constants
+    const val TELEMETRY_EDITOR_TYPE = "intellij"
+    const val TELEMETRY_OPEN_DOCS_PANEL = "open_interactive_docs_panel"
+    const val TELEMETRY_OPEN_CODE_HEALTH_DOCS = "open_code_health_docs"
+    const val TELEMETRY_ON_ACTIVATE_EXTENSION = "on_activate_extension"
 }
