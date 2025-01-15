@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.components.settings.tab
 
-import com.codescene.jetbrains.CodeSceneIcons.STATUS
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.util.Constants.CONTACT_URL
 import com.codescene.jetbrains.util.Constants.DOCUMENTATION_URL
@@ -10,7 +9,6 @@ import com.codescene.jetbrains.util.Log
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.options.Configurable
 import com.intellij.ui.JBColor
-import com.intellij.util.IconUtil
 import com.intellij.util.ui.JBUI
 import java.awt.*
 import java.awt.event.MouseAdapter
@@ -21,9 +19,6 @@ import javax.swing.border.AbstractBorder
 
 class GeneralTab : Configurable {
     override fun getDisplayName(): String = UiLabelsBundle.message("generalTitle")
-    private val globeIcon = IconUtil.colorize(AllIcons.Actions.InlayGlobe, JBUI.CurrentTheme.IconBadge.INFORMATION)
-    private val usersIcon = IconUtil.colorize(AllIcons.General.User, JBUI.CurrentTheme.IconBadge.INFORMATION)
-    private val statusIcon = IconUtil.colorize(STATUS, JBUI.CurrentTheme.IconBadge.INFORMATION)
 
     private val more = listOf(
         UiLabelsBundle.message("documentation") to DOCUMENTATION_URL,
@@ -42,11 +37,13 @@ class GeneralTab : Configurable {
     private fun getMoreSection() = JPanel().apply {
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
 
-        val message = UiLabelsBundle.message("more")
-        val icon = IconUtil.scale(globeIcon, null, 1.2f)
-
-        add(Box.createVerticalStrut(10))
-        addHeader(message, icon)
+        /*
+        TODO: uncomment when we have more than 1 section:
+                val message = UiLabelsBundle.message("more")
+                val icon = IconUtil.scale(globeIcon, null, 1.2f)
+                add(Box.createVerticalStrut(10))
+                addHeader(message, icon)
+         */
         add(Box.createVerticalStrut(10))
 
         more.map {
