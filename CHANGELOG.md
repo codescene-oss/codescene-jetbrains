@@ -1,19 +1,11 @@
-# Changelog
+# CodeScene Intellij Plugin Changelog
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.4-beta] - 2024-01-16
-### Added
-- About tab contents in Tools > CodeScene > About
-- General tab contents in Tools > CodeScene > General
-
-### Changed
-- Removed unused/unimplemented settings from Tools > CodeScene > Settings
-
-## [0.0.3-beta] - 2024-01-10
+## [Unreleased]
 ### Added
 - Code health details view (health, file, function-level) in CodeScene tool window
 
