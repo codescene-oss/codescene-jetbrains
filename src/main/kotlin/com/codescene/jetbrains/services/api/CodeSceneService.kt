@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.services.api
 
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
+import com.codescene.jetbrains.services.BaseService
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
 import com.intellij.openapi.Disposable
@@ -8,7 +9,7 @@ import com.intellij.openapi.editor.Editor
 import kotlinx.coroutines.*
 import java.util.concurrent.TimeUnit
 
-abstract class CodeSceneService : Disposable {
+abstract class CodeSceneService : BaseService(), Disposable {
     abstract val scope: CoroutineScope
     abstract val activeReviewCalls: MutableMap<String, Job>
 
@@ -58,39 +59,7 @@ abstract class CodeSceneService : Disposable {
 
     protected abstract fun getActiveApiCalls(): MutableSet<String>
 
-    /**
-     * Executes the given action using the plugin's ClassLoader to avoid class-loading issues.
-     * This is necessary when calling CodeScene dependencies to resolve conflicts such as:
-     * - ANTLR version mismatches causing ClassCastException (e.g., ANTLRInputStream vs CharStream).
-     * - Clojure dependencies failing due to incompatible URLConnection handling
-     *   (e.g., ZipResourceFile$MyURLConnection vs JarURLConnection).
-     */
-    protected fun <T> runWithClassLoaderChange(action: () -> T): T {
-        val originalClassLoader = Thread.currentThread().contextClassLoader
-        val classLoader = this@CodeSceneService.javaClass.classLoader
-        Thread.currentThread().contextClassLoader = classLoader
 
-        return try {
-            Log.debug("[$serviceImplementation] Switching to plugin's ClassLoader: ${classLoader.javaClass.name}")
-
-            val startTime = System.currentTimeMillis()
-
-            val result = action()
-
-            val elapsedTime = System.currentTimeMillis() - startTime
-            Log.info("[$serviceImplementation] Received response from CodeScene API in ${elapsedTime}ms")
-
-            result
-        } catch (e: Exception) {
-            Log.error("[$serviceImplementation] Exception during ClassLoader change operation: ${e.message}")
-
-            throw (e)
-        } finally {
-            Thread.currentThread().contextClassLoader = originalClassLoader
-
-            Log.debug("[$serviceImplementation] Reverted to original ClassLoader: ${originalClassLoader.javaClass.name}")
-        }
-    }
 
     fun cancelFileReview(filePath: String, calls: MutableSet<String>) {
         activeReviewCalls[filePath]?.let { job ->

@@ -125,6 +125,7 @@ class CodeHealthTreeBuilder {
         val finding = targetNode?.userObject as? CodeHealthFinding ?: return
 
         if (targetNode.isLeaf) {
+//            finding. 99
             if (!suppressFocusOnLine) navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
 
             notifier.refresh(finding)

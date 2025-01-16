@@ -17,6 +17,7 @@ group = providers.gradleProperty("pluginGroup").get()
 version = providers.gradleProperty("pluginVersion").get()
 
 val codeSceneDevToolsVersion = providers.gradleProperty("codeSceneDevToolsVersion").get()
+val codeSceneExtensionAPIVersion = providers.gradleProperty("codeSceneExtensionAPIVersion").get()
 val codeSceneRepository = providers.gradleProperty("codeSceneRepository").get()
 val kotlinxSerializationVersion = providers.gradleProperty("kotlinxSerializationVersion").get()
 val reflectionsVersion = providers.gradleProperty("reflectionsVersion").get()
@@ -51,6 +52,7 @@ dependencies {
     implementation("org.reflections:reflections:$reflectionsVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
     implementation("codescene.devtools.ide:api:$codeSceneDevToolsVersion")
+    implementation("codescene.extension:api:$codeSceneExtensionAPIVersion")
 
     testImplementation(libs.junit)
     testImplementation("io.mockk:mockk:${mockkVersion}")

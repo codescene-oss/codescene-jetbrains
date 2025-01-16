@@ -16,7 +16,6 @@ import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
-import com.intellij.platform.ide.progress.ModalTaskOwner.project
 import javax.swing.JTree
 
 const val HEALTH_SCORE = "Health Score"
