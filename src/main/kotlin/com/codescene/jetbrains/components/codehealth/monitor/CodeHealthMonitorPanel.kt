@@ -38,7 +38,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
     private var refreshJob: Job? = null
 
     init {
-        println("Initializing CodeHealthMonitorPanel for ${project.name}")
+        Log.warn("Initializing CodeHealthMonitorPanel for ${project.name}")
     }
 
     companion object {
@@ -47,10 +47,13 @@ class CodeHealthMonitorPanel(private val project: Project) {
             border = null
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
         }
+
         fun getInstance(project: Project): CodeHealthMonitorPanel = project.service<CodeHealthMonitorPanel>()
     }
 
     fun getContent(): JComponent {
+        Log.warn("Calling getContent in CodeHealthMonitorPanel with $healthMonitoringResults in project ${project.name}")
+
         contentPanel.renderContent()
 
         return JBScrollPane(contentPanel).apply {
@@ -61,6 +64,8 @@ class CodeHealthMonitorPanel(private val project: Project) {
     }
 
     private fun JBPanel<JBPanel<*>>.renderContent() {
+        Log.warn("Calling renderContent in CodeHealthMonitorPanel with $healthMonitoringResults in project ${project.name}")
+
         if (healthMonitoringResults.isEmpty()) {
             addPlaceholderText()
             project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
@@ -71,6 +76,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
     private fun JBPanel<JBPanel<*>>.renderFileTree() {
         val files = healthMonitoringResults.map { it.key }
         Log.debug("Rendering code health information file tree for: $files.")
+        Log.debug("Recreating tree in CodeHealthMonitorPanel for ${project.name} with results $healthMonitoringResults")
 
         val fileTree = CodeHealthTreeBuilder.getInstance(project)
             .createTree(healthMonitoringResults, project)
@@ -114,10 +120,13 @@ class CodeHealthMonitorPanel(private val project: Project) {
         val cachedDelta = DeltaCacheService.getInstance(project)
             .get(DeltaCacheQuery(path, headCommit, code))
 
-        if (cachedDelta != null)
+        if (cachedDelta != null) {
+            Log.warn("Updating values with cache $cachedDelta in ${project.name} for $healthMonitoringResults")
             healthMonitoringResults[path] = cachedDelta
-        else
+        } else {
+            Log.warn("Removing value on $path with cache $cachedDelta in ${project.name} for $healthMonitoringResults")
             healthMonitoringResults.remove(path)
+        }
     }
 
     fun refreshContent(file: VirtualFile?, scope: CoroutineScope = CoroutineScope(Dispatchers.Main)) {
@@ -125,6 +134,8 @@ class CodeHealthMonitorPanel(private val project: Project) {
 
         refreshJob = scope.launch {
             if (file != null) withContext(Dispatchers.IO) { syncCache(file) }
+
+            Log.warn("Refreshing content in ${project.name} for $healthMonitoringResults")
 
             contentPanel.removeAll()
             contentPanel.renderContent()
@@ -155,5 +166,9 @@ class CodeHealthMonitorPanel(private val project: Project) {
         healthMonitoringResults.remove(fileToInvalidate)
 
         refreshContent(file)
+    }
+
+    private fun testing(a: String, b: String, c: String, d: String, e: String) {
+
     }
 }
