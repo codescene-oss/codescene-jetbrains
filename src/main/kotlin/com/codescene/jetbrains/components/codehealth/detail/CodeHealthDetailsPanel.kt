@@ -30,6 +30,10 @@ class CodeHealthDetailsPanel(private val project: Project) {
         addPlaceholder()
     }
 
+    init {
+        println("Initializing CodeHealthDetailsPanel for ${project.name}")
+    }
+
     companion object {
         fun getInstance(project: Project): CodeHealthDetailsPanel = project.service<CodeHealthDetailsPanel>()
     }

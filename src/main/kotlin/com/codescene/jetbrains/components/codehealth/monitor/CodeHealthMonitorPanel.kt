@@ -37,6 +37,10 @@ import javax.swing.JTextArea
 class CodeHealthMonitorPanel(private val project: Project) {
     private var refreshJob: Job? = null
 
+    init {
+        println("Initializing CodeHealthMonitorPanel for ${project.name}")
+    }
+
     companion object {
         val healthMonitoringResults: ConcurrentHashMap<String, CodeDelta> = ConcurrentHashMap()
         var contentPanel = JBPanel<JBPanel<*>>().apply {
