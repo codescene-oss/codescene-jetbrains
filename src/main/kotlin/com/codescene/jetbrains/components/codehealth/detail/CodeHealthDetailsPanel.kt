@@ -5,6 +5,8 @@ import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPa
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.util.CodeHealthDetails
 import com.codescene.jetbrains.util.getHealthFinding
+import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
@@ -20,11 +22,16 @@ import javax.swing.BoxLayout
 import javax.swing.JPanel
 import javax.swing.JTextArea
 
+@Service(Service.Level.PROJECT)
 class CodeHealthDetailsPanel(private val project: Project) {
     private var details: CodeHealthDetails? = null
     private var contentPanel = JBPanel<JBPanel<*>>().apply {
         layout = BorderLayout()
         addPlaceholder()
+    }
+
+    companion object {
+        fun getInstance(project: Project): CodeHealthDetailsPanel = project.service<CodeHealthDetailsPanel>()
     }
 
     fun getContent() = JBScrollPane(JPanel().apply {

@@ -6,6 +6,8 @@ import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.CodeNavigationService
 import com.codescene.jetbrains.util.*
+import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.treeStructure.Tree
 import java.awt.Component
@@ -38,19 +40,22 @@ data class CodeHealthFinding(
     val additionalText: String = ""
 )
 
-class CodeHealthTreeBuilder {
-    private lateinit var project: Project
+@Service(Service.Level.PROJECT)
+class CodeHealthTreeBuilder(private val project: Project) {
     private lateinit var notifier: CodeHealthDetailsRefreshNotifier
 
     private var suppressFocusOnLine: Boolean = false
     private var selectedNode: CodeHealthFinding? = null
     private val collapsedPaths: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
+    companion object {
+        fun getInstance(project: Project): CodeHealthTreeBuilder = project.service<CodeHealthTreeBuilder>()
+    }
+
     fun createTree(
         results: ConcurrentHashMap<String, CodeDelta>,
         project: Project
     ): Tree {
-        this.project = project
         this.notifier = project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC)
 
         val root = DefaultMutableTreeNode()

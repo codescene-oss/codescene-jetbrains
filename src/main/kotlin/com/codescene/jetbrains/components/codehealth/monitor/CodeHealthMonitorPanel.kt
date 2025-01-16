@@ -12,6 +12,8 @@ import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
 import com.intellij.execution.runners.ExecutionUtil
 import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
@@ -31,10 +33,9 @@ import javax.swing.BoxLayout
 import javax.swing.JComponent
 import javax.swing.JTextArea
 
+@Service(Service.Level.PROJECT)
 class CodeHealthMonitorPanel(private val project: Project) {
     private var refreshJob: Job? = null
-
-    private val treeBuilder = CodeHealthTreeBuilder()
 
     companion object {
         val healthMonitoringResults: ConcurrentHashMap<String, CodeDelta> = ConcurrentHashMap()
@@ -42,6 +43,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
             border = null
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
         }
+        fun getInstance(project: Project): CodeHealthMonitorPanel = project.service<CodeHealthMonitorPanel>()
     }
 
     fun getContent(): JComponent {
@@ -66,7 +68,8 @@ class CodeHealthMonitorPanel(private val project: Project) {
         val files = healthMonitoringResults.map { it.key }
         Log.debug("Rendering code health information file tree for: $files.")
 
-        val fileTree = treeBuilder.createTree(healthMonitoringResults, project)
+        val fileTree = CodeHealthTreeBuilder.getInstance(project)
+            .createTree(healthMonitoringResults, project)
 
         layout = BorderLayout()
 
