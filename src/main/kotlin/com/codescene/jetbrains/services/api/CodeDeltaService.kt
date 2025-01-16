@@ -23,7 +23,7 @@ import kotlinx.coroutines.Job
 import kotlinx.serialization.json.Json
 
 @Service(Service.Level.PROJECT)
-class CodeDeltaService(project: Project) : CodeSceneService() {
+class CodeDeltaService(private val project: Project) : CodeSceneService() {
     private val uiRefreshService: UIRefreshService = UIRefreshService.getInstance(project)
     private val deltaCacheService: DeltaCacheService = DeltaCacheService.getInstance(project)
     private val reviewCacheService: ReviewCacheService = ReviewCacheService.getInstance(project)
@@ -40,7 +40,7 @@ class CodeDeltaService(project: Project) : CodeSceneService() {
         reviewFile(editor) {
             performDeltaAnalysis(editor)
 
-            editor.project!!.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC)
+            project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC)
                 .refresh(editor.virtualFile)
         }
     }
@@ -50,7 +50,7 @@ class CodeDeltaService(project: Project) : CodeSceneService() {
     private suspend fun performDeltaAnalysis(editor: Editor) {
         val path = editor.virtualFile.path
 
-        val oldCode = GitService.getInstance(editor.project!!).getHeadCommit(editor.virtualFile)
+        val oldCode = GitService.getInstance(project).getHeadCommit(editor.virtualFile)
 
         val cachedReview = reviewCacheService.get(ReviewCacheQuery(editor.document.text, path))
             .also { if (it != null) Log.debug("Found cached review for new file: ${path}") }

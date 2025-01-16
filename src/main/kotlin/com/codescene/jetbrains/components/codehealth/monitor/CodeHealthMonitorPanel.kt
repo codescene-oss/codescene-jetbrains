@@ -136,7 +136,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
         refreshJob = scope.launch {
             if (file != null) withContext(Dispatchers.IO) { syncCache(file) }
 
-            Log.warn("Refreshing content in ${project.name} for $healthMonitoringResults")
+            Log.warn("[${project.name}] Refreshing content for $healthMonitoringResults")
 
             contentPanel.removeAll()
             contentPanel.renderContent()
