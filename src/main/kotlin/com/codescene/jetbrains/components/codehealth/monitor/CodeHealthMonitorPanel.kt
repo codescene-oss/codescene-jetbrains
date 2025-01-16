@@ -31,23 +31,24 @@ import java.awt.Font
 import java.util.concurrent.ConcurrentHashMap
 import javax.swing.BoxLayout
 import javax.swing.JComponent
+import javax.swing.JLabel
 import javax.swing.JTextArea
 
 @Service(Service.Level.PROJECT)
 class CodeHealthMonitorPanel(private val project: Project) {
     private var refreshJob: Job? = null
 
+     var contentPanel = JBPanel<JBPanel<*>>().apply {
+        border = null
+        layout = BoxLayout(this, BoxLayout.Y_AXIS)
+    }
+    val healthMonitoringResults: ConcurrentHashMap<String, CodeDelta> = ConcurrentHashMap()
+
     init {
         Log.warn("Initializing CodeHealthMonitorPanel for ${project.name}")
     }
 
     companion object {
-        val healthMonitoringResults: ConcurrentHashMap<String, CodeDelta> = ConcurrentHashMap()
-        var contentPanel = JBPanel<JBPanel<*>>().apply {
-            border = null
-            layout = BoxLayout(this, BoxLayout.Y_AXIS)
-        }
-
         fun getInstance(project: Project): CodeHealthMonitorPanel = project.service<CodeHealthMonitorPanel>()
     }
 
@@ -104,6 +105,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
 
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
 
+        add(JLabel(project.name))
         add(textArea)
     }
 
@@ -166,9 +168,5 @@ class CodeHealthMonitorPanel(private val project: Project) {
         healthMonitoringResults.remove(fileToInvalidate)
 
         refreshContent(file)
-    }
-
-    private fun testing(a: String, b: String, c: String, d: String, e: String) {
-
     }
 }
