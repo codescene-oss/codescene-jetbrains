@@ -4,6 +4,7 @@ import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPanel
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.util.CodeHealthDetails
+import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.getHealthFinding
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -48,9 +49,11 @@ class CodeHealthDetailsPanel(private val project: Project) {
     }
 
     private fun JPanel.renderContent() {
+        val panelBuilder = CodeHealthPanelBuilder.getInstance(project)
         layout = BorderLayout()
+
         if (details == null) addPlaceholder()
-        else add(CodeHealthPanelBuilder(details!!, project).getPanel(), BorderLayout.NORTH)
+        else add(panelBuilder.getPanel(details!!), BorderLayout.NORTH)
     }
 
     private fun JPanel.addPlaceholder() {
@@ -80,6 +83,7 @@ class CodeHealthDetailsPanel(private val project: Project) {
     }
 
     fun refreshContent(finding: CodeHealthFinding?) {
+        Log.warn("Refreshing content for project ${project.name} for finding $finding in CodeHealthDetailsPanel")
         details = finding?.let {
             CodeHealthMonitorPanel.getInstance(project).healthMonitoringResults[it.filePath]?.let { data ->
                 getHealthFinding(

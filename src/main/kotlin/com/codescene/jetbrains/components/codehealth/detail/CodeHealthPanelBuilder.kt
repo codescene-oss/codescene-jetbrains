@@ -5,6 +5,8 @@ import com.codescene.jetbrains.components.layout.ResponsiveLayout
 import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_URL
+import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.ui.RoundedLineBorder
@@ -15,8 +17,13 @@ import java.awt.event.MouseEvent
 import java.net.URI
 import javax.swing.*
 
-class CodeHealthPanelBuilder(private val details: CodeHealthDetails, private val project: Project) {
-    fun getPanel() = JPanel().apply {
+@Service(Service.Level.PROJECT)
+class CodeHealthPanelBuilder(private val project: Project) {
+    companion object {
+        fun getInstance(project: Project): CodeHealthPanelBuilder = project.service<CodeHealthPanelBuilder>()
+    }
+
+    fun getPanel(details: CodeHealthDetails) = JPanel().apply {
         val isCodeHealth = details.type == CodeHealthDetailsType.HEALTH
 
         layout = GridBagLayout()
@@ -24,23 +31,23 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails, private val
 
         val constraint = getGridBagConstraints()
 
-        addHeader(constraint)
-        addSubHeader(constraint)
+        addHeader(details, constraint)
+        addSubHeader(details, constraint)
 
         addSeparator(constraint)
 
         if (isCodeHealth) {
-            addCodeHealthHeader(constraint)
-            if (details.healthData!!.status.isNotEmpty()) addHealthDecline(constraint)
-            addSlider(constraint)
+            addCodeHealthHeader(details, constraint)
+            if (details.healthData!!.status.isNotEmpty()) addHealthDecline(details, constraint)
+            addSlider(details, constraint)
         }
 
-        addBody(constraint)
+        addBody(details, constraint)
 
         if (isCodeHealth) addLink(constraint)
     }
 
-    private fun JPanel.addHeader(constraint: GridBagConstraints) {
+    private fun JPanel.addHeader(details: CodeHealthDetails, constraint: GridBagConstraints) {
         constraint.gridy = 0
         constraint.gridx = 0
         constraint.gridwidth = 3
@@ -48,7 +55,7 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails, private val
         add(JLabel("<html><h2>${details.header}</h2></html>"), constraint)
     }
 
-    private fun JPanel.addSubHeader(constraint: GridBagConstraints) {
+    private fun JPanel.addSubHeader(details: CodeHealthDetails, constraint: GridBagConstraints) {
         constraint.gridy = 1
         constraint.gridx = 0
         constraint.gridwidth = 3
@@ -78,7 +85,7 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails, private val
         constraint.ipady = 0
     }
 
-    private fun JPanel.addCodeHealthHeader(constraint: GridBagConstraints) {
+    private fun JPanel.addCodeHealthHeader(details: CodeHealthDetails, constraint: GridBagConstraints) {
         val score = details.healthData!!.score
         constraint.gridy = 3
         constraint.gridx = 0
@@ -108,7 +115,7 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails, private val
         constraint.insets = JBUI.emptyInsets()
     }
 
-    private fun JPanel.addSlider(constraint: GridBagConstraints) {
+    private fun JPanel.addSlider(details: CodeHealthDetails, constraint: GridBagConstraints) {
         constraint.gridy = 5
         constraint.gridx = 0
         constraint.ipady = 30
@@ -126,7 +133,7 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails, private val
         return Pair(parts[0], parts[1])
     }
 
-    private fun JPanel.addBody(constraint: GridBagConstraints) {
+    private fun JPanel.addBody(details: CodeHealthDetails, constraint: GridBagConstraints) {
         var currentRow = 6
 
         details.body.forEach { item ->
@@ -154,7 +161,7 @@ class CodeHealthPanelBuilder(private val details: CodeHealthDetails, private val
         }
     }
 
-    private fun JPanel.addHealthDecline(constraint: GridBagConstraints) {
+    private fun JPanel.addHealthDecline(details: CodeHealthDetails, constraint: GridBagConstraints) {
         constraint.gridy = 4
         constraint.gridx = 0
 

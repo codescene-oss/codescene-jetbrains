@@ -79,8 +79,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
         Log.debug("Rendering code health information file tree for: $files.")
         Log.debug("Recreating tree in CodeHealthMonitorPanel for ${project.name} with results $healthMonitoringResults")
 
-        val fileTree = CodeHealthTreeBuilder.getInstance(project)
-            .createTree(healthMonitoringResults, project)
+        val fileTree = CodeHealthTreeBuilder.getInstance(project).createTree(healthMonitoringResults)
 
         layout = BorderLayout()
 

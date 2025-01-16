@@ -42,8 +42,6 @@ data class CodeHealthFinding(
 
 @Service(Service.Level.PROJECT)
 class CodeHealthTreeBuilder(private val project: Project) {
-    private lateinit var notifier: CodeHealthDetailsRefreshNotifier
-
     private var suppressFocusOnLine: Boolean = false
     private var selectedNode: CodeHealthFinding? = null
     private val collapsedPaths: MutableSet<String> = ConcurrentHashMap.newKeySet()
@@ -53,11 +51,8 @@ class CodeHealthTreeBuilder(private val project: Project) {
     }
 
     fun createTree(
-        results: ConcurrentHashMap<String, CodeDelta>,
-        project: Project
+        results: ConcurrentHashMap<String, CodeDelta>
     ): Tree {
-        this.notifier = project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC)
-
         val root = DefaultMutableTreeNode()
         results.map { buildNode(it.key, it.value) }.forEach { root.add(it) }
 
@@ -119,7 +114,7 @@ class CodeHealthTreeBuilder(private val project: Project) {
                 suppressFocusOnLine = false
             } else {
                 selectedNode = null
-                notifier.refresh(null)
+                project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
             }
         }
 
@@ -130,14 +125,18 @@ class CodeHealthTreeBuilder(private val project: Project) {
         val finding = targetNode?.userObject as? CodeHealthFinding ?: return
 
         if (targetNode.isLeaf) {
+            Log.warn("Selected node in project ${project.name} with finding $finding")
+
             if (!suppressFocusOnLine) navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
 
-            notifier.refresh(finding)
+            project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(finding)
             selectedNode = targetNode.userObject as CodeHealthFinding
         } else {
+            Log.warn("Selected node in project ${project.name} with finding $finding is not a leaf")
+
             (event.source as? JTree)?.clearSelection()
 
-            notifier.refresh(null)
+            project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
             selectedNode = null
         }
     }
