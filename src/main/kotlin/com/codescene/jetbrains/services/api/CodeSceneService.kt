@@ -38,19 +38,19 @@ abstract class CodeSceneService : Disposable {
                 withTimeoutOrNull(timeout) {
                     delay(debounceDelay)
 
-                    Log.info("[$serviceImplementation] Initiating review for file $fileName at path $filePath.")
+                    Log.info("[$serviceImplementation - ${editor.project!!.name}] Initiating review for file $fileName at path $filePath.")
                     performAction()
 
                     CodeSceneCodeVisionProvider.markApiCallComplete(
                         filePath,
                         getActiveApiCalls()
                     )
-                } ?: Log.warn("[$serviceImplementation] Review task timed out for file: $filePath")
+                } ?: Log.warn("[$serviceImplementation - ${editor.project!!.name}] Review task timed out for file: $filePath")
             }
         } catch (e: CancellationException) {
-            Log.info("[$serviceImplementation] Review canceled for file $fileName.")
+            Log.info("[$serviceImplementation - ${editor.project!!.name}] Review canceled for file $fileName.")
         } catch (e: Exception) {
-            Log.error("[$serviceImplementation] Error during review for file $fileName - ${e.message}")
+            Log.error("[$serviceImplementation - ${editor.project!!.name}] Error during review for file $fileName - ${e.message}")
         } finally {
             activeReviewCalls.remove(filePath)
         }

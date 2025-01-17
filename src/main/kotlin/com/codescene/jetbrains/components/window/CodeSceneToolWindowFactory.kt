@@ -21,14 +21,10 @@ import com.intellij.ui.OnePixelSplitter
 import com.intellij.ui.content.ContentFactory
 
 class CodeSceneToolWindowFactory : ToolWindowFactory {
-    private lateinit var monitorPanel: CodeHealthMonitorPanel
-    private lateinit var healthPanel: CodeHealthDetailsPanel
     private lateinit var splitPane: OnePixelSplitter
 
     override fun init(toolWindow: ToolWindow) {
         super.init(toolWindow)
-        monitorPanel = CodeHealthMonitorPanel.getInstance(toolWindow.project)
-        healthPanel = CodeHealthDetailsPanel.getInstance(toolWindow.project)
         subscribeToMonitorRefreshEvent(toolWindow.project)
         subscribeToHealthDetailsRefreshEvent(toolWindow.project)
     }
@@ -46,8 +42,8 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
 
     private fun createSplitter(toolWindow: ToolWindow) =
         OnePixelSplitter(isSplitterVertical(toolWindow.anchor), "CodeSceneToolWindow.Splitter", 0.5f).apply {
-            firstComponent = monitorPanel.getContent()
-            secondComponent = healthPanel.getContent()
+            firstComponent = CodeHealthMonitorPanel.getInstance(toolWindow.project).getContent()
+            secondComponent = CodeHealthMonitorPanel.getInstance(toolWindow.project).getContent()
         }
 
     private fun isSplitterVertical(anchor: ToolWindowAnchor?) =
@@ -78,13 +74,13 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
             override fun refresh(file: VirtualFile) {
                 Log.warn("[Tool Window Factory - ${project.name}] Refreshing code health monitor...")
 
-                monitorPanel.refreshContent(file)
+                CodeHealthMonitorPanel.getInstance(project).refreshContent(file)
             }
 
             override fun invalidateAndRefresh(fileToInvalidate: String, file: VirtualFile?) {
                 Log.warn("[Tool Window Factory - ${project.name}] Refreshing & invalidating code health monitor...")
 
-                monitorPanel.invalidateAndRefreshContent(fileToInvalidate, file)
+                CodeHealthMonitorPanel.getInstance(project).invalidateAndRefreshContent(fileToInvalidate, file)
             }
         })
     }
@@ -95,7 +91,7 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
                 override fun refresh(finding: CodeHealthFinding?) {
                     Log.warn("[Tool Window Factory - ${project.name}] Refreshing code health details...")
 
-                    healthPanel.refreshContent(finding)
+                    CodeHealthDetailsPanel.getInstance(project).refreshContent(finding)
                 }
             })
     }
