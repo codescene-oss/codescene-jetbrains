@@ -43,7 +43,7 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
     private fun createSplitter(toolWindow: ToolWindow) =
         OnePixelSplitter(isSplitterVertical(toolWindow.anchor), "CodeSceneToolWindow.Splitter", 0.5f).apply {
             firstComponent = CodeHealthMonitorPanel.getInstance(toolWindow.project).getContent()
-            secondComponent = CodeHealthMonitorPanel.getInstance(toolWindow.project).getContent()
+            secondComponent = CodeHealthDetailsPanel.getInstance(toolWindow.project).getContent()
         }
 
     private fun isSplitterVertical(anchor: ToolWindowAnchor?) =
