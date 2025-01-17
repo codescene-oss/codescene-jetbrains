@@ -19,11 +19,19 @@ import javax.swing.*
 
 @Service(Service.Level.PROJECT)
 class CodeHealthPanelBuilder(private val project: Project) {
+    private val service = "Code Health Panel Builder - ${project.name}"
+
+    init {
+        Log.info("[$service] Initializing...")
+    }
+
     companion object {
         fun getInstance(project: Project): CodeHealthPanelBuilder = project.service<CodeHealthPanelBuilder>()
     }
 
     fun getPanel(details: CodeHealthDetails) = JPanel().apply {
+        Log.info("[$service] Rendering panel for $details...")
+
         val isCodeHealth = details.type == CodeHealthDetailsType.HEALTH
 
         layout = GridBagLayout()

@@ -6,6 +6,7 @@ import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPa
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
+import com.codescene.jetbrains.util.Log
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.project.Project
@@ -75,10 +76,14 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
     private fun subscribeToMonitorRefreshEvent(project: Project) {
         project.messageBus.connect().subscribe(ToolWindowRefreshNotifier.TOPIC, object : ToolWindowRefreshNotifier {
             override fun refresh(file: VirtualFile) {
+                Log.warn("[Tool Window Factory - ${project.name}] Refreshing code health monitor...")
+
                 monitorPanel.refreshContent(file)
             }
 
             override fun invalidateAndRefresh(fileToInvalidate: String, file: VirtualFile?) {
+                Log.warn("[Tool Window Factory - ${project.name}] Refreshing & invalidating code health monitor...")
+
                 monitorPanel.invalidateAndRefreshContent(fileToInvalidate, file)
             }
         })
@@ -88,6 +93,8 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
         project.messageBus.connect()
             .subscribe(CodeHealthDetailsRefreshNotifier.TOPIC, object : CodeHealthDetailsRefreshNotifier {
                 override fun refresh(finding: CodeHealthFinding?) {
+                    Log.warn("[Tool Window Factory - ${project.name}] Refreshing code health details...")
+
                     healthPanel.refreshContent(finding)
                 }
             })

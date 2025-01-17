@@ -30,9 +30,10 @@ class CodeHealthDetailsPanel(private val project: Project) {
         layout = BorderLayout()
         addPlaceholder()
     }
+    private val service = "Code Health Details - ${project.name}"
 
     init {
-        println("Initializing CodeHealthDetailsPanel for ${project.name}")
+        println("[$service] Initializing ...")
     }
 
     companion object {
@@ -49,6 +50,8 @@ class CodeHealthDetailsPanel(private val project: Project) {
     }
 
     private fun JPanel.renderContent() {
+        Log.info("[$service] Rendering content...")
+
         val panelBuilder = CodeHealthPanelBuilder.getInstance(project)
         layout = BorderLayout()
 
@@ -58,6 +61,8 @@ class CodeHealthDetailsPanel(private val project: Project) {
 
     private fun JPanel.addPlaceholder() {
         val message = UiLabelsBundle.message("selectAFunction")
+
+        Log.info("[$service] No finding found, rendering placeholder...")
 
         val panel = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
@@ -83,8 +88,9 @@ class CodeHealthDetailsPanel(private val project: Project) {
     }
 
     fun refreshContent(finding: CodeHealthFinding?) {
-        Log.warn("Refreshing content for project ${project.name} for finding $finding in CodeHealthDetailsPanel")
         details = finding?.let {
+            Log.info("[$service] Refreshing content for finding $finding ")
+
             CodeHealthMonitorPanel.getInstance(project).healthMonitoringResults[it.filePath]?.let { data ->
                 getHealthFinding(
                     data,

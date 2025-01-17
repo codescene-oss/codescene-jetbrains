@@ -37,6 +37,7 @@ import javax.swing.JTextArea
 @Service(Service.Level.PROJECT)
 class CodeHealthMonitorPanel(private val project: Project) {
     private var refreshJob: Job? = null
+    private val service = "Code Health Monitor - ${project.name}"
 
      var contentPanel = JBPanel<JBPanel<*>>().apply {
         border = null
@@ -45,7 +46,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
     val healthMonitoringResults: ConcurrentHashMap<String, CodeDelta> = ConcurrentHashMap()
 
     init {
-        Log.warn("Initializing CodeHealthMonitorPanel for ${project.name}")
+        Log.warn("[$service] Initializing...")
     }
 
     companion object {
@@ -53,7 +54,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
     }
 
     fun getContent(): JComponent {
-        Log.warn("Calling getContent in CodeHealthMonitorPanel with $healthMonitoringResults in project ${project.name}")
+        Log.warn("[$service] Calling getContent in CodeHealthMonitorPanel with $healthMonitoringResults in project ${project.name}")
 
         contentPanel.renderContent()
 
@@ -65,7 +66,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
     }
 
     private fun JBPanel<JBPanel<*>>.renderContent() {
-        Log.warn("Calling renderContent in CodeHealthMonitorPanel with $healthMonitoringResults in project ${project.name}")
+        Log.warn("[$service] Rendering content with results $healthMonitoringResults")
 
         if (healthMonitoringResults.isEmpty()) {
             addPlaceholderText()
@@ -76,8 +77,8 @@ class CodeHealthMonitorPanel(private val project: Project) {
 
     private fun JBPanel<JBPanel<*>>.renderFileTree() {
         val files = healthMonitoringResults.map { it.key }
-        Log.debug("Rendering code health information file tree for: $files.")
-        Log.debug("Recreating tree in CodeHealthMonitorPanel for ${project.name} with results $healthMonitoringResults")
+        Log.debug("[$service] Rendering code health information file tree for: $files.")
+        Log.debug("[$service] Recreating tree in CodeHealthMonitorPanel for ${project.name} with results $healthMonitoringResults")
 
         val fileTree = CodeHealthTreeBuilder.getInstance(project).createTree(healthMonitoringResults)
 
@@ -87,7 +88,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
     }
 
     private fun JBPanel<JBPanel<*>>.addPlaceholderText() {
-        Log.debug("Found no code health information for: $name, rendering placeholder text...")
+        Log.debug("[$service] Found no code health information, rendering placeholder text...")
 
         val message = UiLabelsBundle.message("nothingToShow")
 
@@ -112,7 +113,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
         val path = file.path
         val code = runReadAction { file.findDocument()?.text }
             ?: run {
-                Log.warn("Could not find document for file ${file.path}. Skipping code health monitor refresh.")
+                Log.warn("[$service] Could not find document for file ${file.path}. Skipping code health monitor refresh.")
                 return
             }
 
@@ -122,10 +123,10 @@ class CodeHealthMonitorPanel(private val project: Project) {
             .get(DeltaCacheQuery(path, headCommit, code))
 
         if (cachedDelta != null) {
-            Log.warn("Updating values with cache $cachedDelta in ${project.name} for $healthMonitoringResults")
+            Log.warn("[$service] Updating values with cache $cachedDelta in ${project.name} for $healthMonitoringResults")
             healthMonitoringResults[path] = cachedDelta
         } else {
-            Log.warn("Removing value on $path with cache $cachedDelta in ${project.name} for $healthMonitoringResults")
+            Log.warn("[$service] Removing value on $path with cache $cachedDelta in ${project.name} for $healthMonitoringResults")
             healthMonitoringResults.remove(path)
         }
     }
@@ -136,7 +137,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
         refreshJob = scope.launch {
             if (file != null) withContext(Dispatchers.IO) { syncCache(file) }
 
-            Log.warn("[${project.name}] Refreshing content for $healthMonitoringResults")
+            Log.warn("[$service] Refreshing content for $healthMonitoringResults")
 
             contentPanel.removeAll()
             contentPanel.renderContent()

@@ -45,6 +45,7 @@ class CodeHealthTreeBuilder(private val project: Project) {
     private var suppressFocusOnLine: Boolean = false
     private var selectedNode: CodeHealthFinding? = null
     private val collapsedPaths: MutableSet<String> = ConcurrentHashMap.newKeySet()
+    private val service = "Health Tree Builder - ${project.name}"
 
     companion object {
         fun getInstance(project: Project): CodeHealthTreeBuilder = project.service<CodeHealthTreeBuilder>()
@@ -125,14 +126,14 @@ class CodeHealthTreeBuilder(private val project: Project) {
         val finding = targetNode?.userObject as? CodeHealthFinding ?: return
 
         if (targetNode.isLeaf) {
-            Log.warn("Selected node in project ${project.name} with finding $finding")
+            Log.warn("[$service] Selected node in project ${project.name} with finding $finding")
 
             if (!suppressFocusOnLine) navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
 
             project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(finding)
             selectedNode = targetNode.userObject as CodeHealthFinding
         } else {
-            Log.warn("Selected node in project ${project.name} with finding $finding is not a leaf")
+            Log.warn("[$service] Selected node in project ${project.name} with finding $finding is not a leaf")
 
             (event.source as? JTree)?.clearSelection()
 
