@@ -22,11 +22,11 @@ object Log {
     private val logger: Logger by lazy { Logger.getInstance(Log::class.java) }
     private const val PREFIX = "$CODESCENE -"
 
-    fun info(message: String) = logger.info("$PREFIX $message")
+    fun info(message: String, service: String? = "") = logger.info("$PREFIX $service $message")
 
-    fun warn(message: String) = logger.warn("$PREFIX $message")
+    fun warn(message: String, service: String? = "") = logger.warn("$PREFIX $service $message")
 
-    fun debug(message: String) = logger.debug("$PREFIX $message")
+    fun debug(message: String, service: String? = "") = logger.debug("$PREFIX $service $message")
 
-    fun error(message: String) = logger.error("$PREFIX $message")
+    fun error(message: String, service: String? = "") = logger.error("$PREFIX $service $message")
 }

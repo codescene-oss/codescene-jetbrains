@@ -126,15 +126,13 @@ class CodeHealthTreeBuilder(private val project: Project) {
         val finding = targetNode?.userObject as? CodeHealthFinding ?: return
 
         if (targetNode.isLeaf) {
-            Log.warn("[$service] Selected node in project ${project.name} with finding $finding")
+            Log.debug("Selected node with finding $finding", service)
 
             if (!suppressFocusOnLine) navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
 
             project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(finding)
             selectedNode = targetNode.userObject as CodeHealthFinding
         } else {
-            Log.warn("[$service] Selected node in project ${project.name} with finding $finding is not a leaf")
-
             (event.source as? JTree)?.clearSelection()
 
             project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)

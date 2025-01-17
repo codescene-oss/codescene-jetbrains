@@ -21,16 +21,12 @@ import javax.swing.*
 class CodeHealthPanelBuilder(private val project: Project) {
     private val service = "Code Health Panel Builder - ${project.name}"
 
-    init {
-        Log.info("[$service] Initializing...")
-    }
-
     companion object {
         fun getInstance(project: Project): CodeHealthPanelBuilder = project.service<CodeHealthPanelBuilder>()
     }
 
     fun getPanel(details: CodeHealthDetails) = JPanel().apply {
-        Log.info("[$service] Rendering panel for $details...")
+        Log.debug("Rendering panel for $details...", service)
 
         val isCodeHealth = details.type == CodeHealthDetailsType.HEALTH
 

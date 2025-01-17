@@ -28,6 +28,7 @@ abstract class CodeSceneService : Disposable {
         timeout: Long = 10_000,
         performAction: suspend () -> Unit
     ) {
+        val service = "$serviceImplementation - ${editor.project!!.name}"
         val filePath = editor.virtualFile.path
         val fileName = editor.virtualFile.name
 
@@ -38,19 +39,19 @@ abstract class CodeSceneService : Disposable {
                 withTimeoutOrNull(timeout) {
                     delay(debounceDelay)
 
-                    Log.info("[$serviceImplementation - ${editor.project!!.name}] Initiating review for file $fileName at path $filePath.")
+                    Log.info("Initiating review for file $fileName at path $filePath.", service)
                     performAction()
 
                     CodeSceneCodeVisionProvider.markApiCallComplete(
                         filePath,
                         getActiveApiCalls()
                     )
-                } ?: Log.warn("[$serviceImplementation - ${editor.project!!.name}] Review task timed out for file: $filePath")
+                } ?: Log.warn("Review task timed out for file: $filePath", service)
             }
         } catch (e: CancellationException) {
-            Log.info("[$serviceImplementation - ${editor.project!!.name}] Review canceled for file $fileName.")
+            Log.info("Review canceled for file $fileName.", service)
         } catch (e: Exception) {
-            Log.error("[$serviceImplementation - ${editor.project!!.name}] Error during review for file $fileName - ${e.message}")
+            Log.error("Error during review for file $fileName - ${e.message}", service)
         } finally {
             activeReviewCalls.remove(filePath)
         }
@@ -71,24 +72,24 @@ abstract class CodeSceneService : Disposable {
         Thread.currentThread().contextClassLoader = classLoader
 
         return try {
-            Log.debug("[$serviceImplementation] Switching to plugin's ClassLoader: ${classLoader.javaClass.name}")
+            Log.debug("Switching to plugin's ClassLoader: ${classLoader.javaClass.name}", serviceImplementation)
 
             val startTime = System.currentTimeMillis()
 
             val result = action()
 
             val elapsedTime = System.currentTimeMillis() - startTime
-            Log.info("[$serviceImplementation] Received response from CodeScene API in ${elapsedTime}ms")
+            Log.info("Received response from CodeScene API in ${elapsedTime}ms", serviceImplementation)
 
             result
         } catch (e: Exception) {
-            Log.error("[$serviceImplementation] Exception during ClassLoader change operation: ${e.message}")
+            Log.error("Exception during ClassLoader change operation: ${e.message}", serviceImplementation)
 
             throw (e)
         } finally {
             Thread.currentThread().contextClassLoader = originalClassLoader
 
-            Log.debug("[$serviceImplementation] Reverted to original ClassLoader: ${originalClassLoader.javaClass.name}")
+            Log.debug("Reverted to original ClassLoader: ${originalClassLoader.javaClass.name}", serviceImplementation)
         }
     }
 
@@ -96,12 +97,15 @@ abstract class CodeSceneService : Disposable {
         activeReviewCalls[filePath]?.let { job ->
             job.cancel()
 
-            Log.info("[$serviceImplementation] Cancelling active $CODESCENE review for file '$filePath' because it was closed.")
+            Log.info(
+                "Cancelling active $CODESCENE review for file '$filePath' because it was closed.",
+                serviceImplementation
+            )
 
             activeReviewCalls.remove(filePath)
 
             CodeSceneCodeVisionProvider.markApiCallComplete(filePath, calls)
-        } ?: Log.debug("[$serviceImplementation] No active $CODESCENE review found for file: $filePath")
+        } ?: Log.debug("No active $CODESCENE review found for file: $filePath", serviceImplementation)
     }
 
     override fun dispose() {
