@@ -65,7 +65,5 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
             .firstOrNull()?.let {
                 selectNode(it, editor.virtualFile.path)
             }
-
-        TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_CODE_HEALTH_DOCS}")
     }
 }

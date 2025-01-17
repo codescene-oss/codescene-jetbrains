@@ -16,7 +16,7 @@ class TelemetryService(): BaseService() {
         fun getInstance(): TelemetryService = service<TelemetryService>()
     }
 
-    fun logUsage(eventName: String, eventData: Map<String, Any>? = mutableMapOf<String, Any>()) {
+    fun logUsage(eventName: String, eventData: Map<String, Any> = mutableMapOf<String, Any>()) {
         // TODO: Get user ID of logged in user when authentication is implemented
         val userId: String? = null
 
@@ -26,7 +26,7 @@ class TelemetryService(): BaseService() {
 
             ExtensionAPI.sendTelemetry(telemetryEvent, eventData)
             // TODO: Change following call's log level to debug
-            Log.warn("Telemetry event logged: ${telemetryEvent.eventName}")
+            Log.warn("Telemetry event logged: $telemetryEvent")
         }
     }
 

@@ -5,6 +5,7 @@ import com.codescene.jetbrains.components.codehealth.monitor.tree.listeners.Tree
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.CodeNavigationService
+import com.codescene.jetbrains.services.TelemetryService
 import com.codescene.jetbrains.util.*
 import com.intellij.openapi.project.Project
 import com.intellij.ui.treeStructure.Tree
@@ -125,7 +126,12 @@ class CodeHealthTreeBuilder {
         val finding = targetNode?.userObject as? CodeHealthFinding ?: return
 
         if (targetNode.isLeaf) {
-//            finding. 99
+            if (isHealthNode(finding.nodeType)) {
+                TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_CODE_HEALTH_DOCS}")
+            } else {
+                // TODO: provide additional data isRefactoringSupported when refactoring logic available
+                TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_DETAILS_FUNCTION_SELECTED}")
+            }
             if (!suppressFocusOnLine) navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
 
             notifier.refresh(finding)

@@ -85,5 +85,5 @@ fun getSelectedNode(parent: DefaultMutableTreeNode?, selectedNode: CodeHealthFin
     return null
 }
 
-private fun isHealthNode(type: NodeType) =
+fun isHealthNode(type: NodeType) =
     type == NodeType.CODE_HEALTH_NEUTRAL || type == NodeType.CODE_HEALTH_DECREASE || type == NodeType.CODE_HEALTH_INCREASE
