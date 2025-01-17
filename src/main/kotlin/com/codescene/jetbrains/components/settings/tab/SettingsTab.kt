@@ -5,7 +5,10 @@ import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.util.Constants.EXAMPLE_SERVER_URL
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
-import com.intellij.ui.dsl.builder.*
+import com.intellij.ui.dsl.builder.Align
+import com.intellij.ui.dsl.builder.bindSelected
+import com.intellij.ui.dsl.builder.bindText
+import com.intellij.ui.dsl.builder.panel
 
 @Suppress("DialogTitleCapitalization")
 class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
@@ -18,17 +21,23 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                 .comment(UiLabelsBundle.message("enableCodeLensesComment"))
         }
 
-        row {
-            checkBox(UiLabelsBundle.message("enableAutoRefactor"))
-                .bindSelected(settings::enableAutoRefactor)
-                .comment(UiLabelsBundle.message("enableAutoRefactorComment"))
-        }
+        /*
+        TODO: Uncomment this code when ACE is integrated in plugin:
+            row {
+                checkBox(UiLabelsBundle.message("enableAutoRefactor"))
+                    .bindSelected(settings::enableAutoRefactor)
+                    .comment(UiLabelsBundle.message("enableAutoRefactorComment"))
+            }
+         */
 
-        row {
-            checkBox(UiLabelsBundle.message("previewCodeHealthGate"))
-                .bindSelected(settings::previewCodeHealthGate)
-                .comment(UiLabelsBundle.message("previewCodeHealthGateComment"))
-        }
+        /*
+        TODO: Uncomment this code when Code Health gate is integrated in plugin:
+            row {
+                checkBox(UiLabelsBundle.message("previewCodeHealthGate"))
+                    .bindSelected(settings::previewCodeHealthGate)
+                    .comment(UiLabelsBundle.message("previewCodeHealthGateComment"))
+            }
+        */
 
         row {
             checkBox(UiLabelsBundle.message("gitignore"))
@@ -41,43 +50,10 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                 row(UiLabelsBundle.message("serverUrl")) {
                     textField()
                         .align(Align.FILL)
+                        .enabled(false) //TODO: Enable when functionality is implemented
                         .resizableColumn()
                         .comment(EXAMPLE_SERVER_URL)
                         .bindText(settings::serverUrl)
-                }
-            }
-
-            groupRowsRange(UiLabelsBundle.message("editor")) {
-                row(UiLabelsBundle.message("foldingRangeProvider")) {
-                    comboBox(listOf("All", "TODO"))
-                        .align(Align.FILL)
-                        .resizableColumn()
-                        .comment(
-                            UiLabelsBundle.message("foldingRangeProviderComment"),
-                            maxLineLength = MAX_LINE_LENGTH_WORD_WRAP
-                        )
-                }
-
-                row(UiLabelsBundle.message("defaultFormatter")) {
-                    comboBox(listOf("None", "TODO"))
-                        .align(Align.FILL)
-                        .resizableColumn()
-                        .comment(
-                            UiLabelsBundle.message("defaultFormatterComment"),
-                            maxLineLength = MAX_LINE_LENGTH_WORD_WRAP
-                        )
-                }
-            }
-
-            groupRowsRange(UiLabelsBundle.message("notebook")) {
-                row(UiLabelsBundle.message("notebookFormatter")) {
-                    comboBox(listOf("None", "TODO"))
-                        .align(Align.FILL)
-                        .resizableColumn()
-                        .comment(
-                            UiLabelsBundle.message("notebookFormatterComment"),
-                            maxLineLength = MAX_LINE_LENGTH_WORD_WRAP
-                        )
                 }
             }
         }
