@@ -6,8 +6,6 @@ import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPa
 import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.data.HighlightRange
-import com.codescene.jetbrains.services.TelemetryService
-import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.HealthDetails
 import com.codescene.jetbrains.util.getCachedDelta
 import com.codescene.jetbrains.util.getCodeHealth

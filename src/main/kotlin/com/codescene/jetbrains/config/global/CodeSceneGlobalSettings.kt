@@ -12,6 +12,5 @@ data class CodeSceneGlobalSettings(
     var enableCodeLenses: Boolean = true,
     var enableAutoRefactor: Boolean = false,
     var excludeGitignoreFiles: Boolean = true,
-    var previewCodeHealthGate: Boolean = false,
-    var pluginActivated: Boolean = false
+    var previewCodeHealthGate: Boolean = false
 )

@@ -7,8 +7,7 @@ import com.intellij.openapi.components.Storage
 
 @State(
     name = "CodeSceneGlobalSettings",
-    storages = [Storage("codescene-settings.xml")],
-    externalStorageOnly = true
+    storages = [Storage("codescene-settings.xml")]
 )
 class CodeSceneGlobalSettingsStore : PersistentStateComponent<CodeSceneGlobalSettings> {
     private var extensionSettingsState: CodeSceneGlobalSettings = CodeSceneGlobalSettings()
