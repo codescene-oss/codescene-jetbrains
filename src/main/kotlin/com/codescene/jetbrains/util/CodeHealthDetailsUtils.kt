@@ -7,6 +7,7 @@ import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL_FOUND
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.components.codehealth.monitor.tree.NodeType
+import com.codescene.jetbrains.data.ChangeDetails
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.data.HighlightRange
@@ -170,8 +171,8 @@ private fun getHealthFinding(
     )
 }
 
-private fun getFunctionFindingBody(delta: CodeDelta, finding: CodeHealthFinding) =
-    delta.functionLevelFindings.firstOrNull { it.function.name == finding.displayName }?.changeDetails?.map { it ->
+private fun getFunctionFindingBody(changeDetails: List<ChangeDetails>?, finding: CodeHealthFinding) =
+    changeDetails?.map { it ->
         val changeType =
             it.changeType.name.lowercase(Locale.getDefault()).replaceFirstChar { it.uppercaseChar() }
         val body =
@@ -191,13 +192,17 @@ private fun getFunctionFindingBody(delta: CodeDelta, finding: CodeHealthFinding)
         )
     } ?: listOf()
 
+fun isMatchingFinding(displayName: String, startLine: Int?, finding: CodeHealthFinding) =
+    displayName == finding.displayName && startLine == finding.focusLine
+
 private fun getFunctionFinding(
     file: Pair<String, String>?,
     finding: CodeHealthFinding,
     delta: CodeDelta
 ): CodeHealthDetails {
-    val smells = delta.functionLevelFindings.find { it.function.name == finding.displayName }?.changeDetails
-    val subHeaderLabel = if (smells != null && smells.size > 1)
+    val changeDetails = delta.functionLevelFindings
+        .find { isMatchingFinding(it.function.name, it.function.range.startLine, finding) }?.changeDetails
+    val subHeaderLabel = if (changeDetails != null && changeDetails.size > 1)
         UiLabelsBundle.message("multipleCodeSmells")
     else
         UiLabelsBundle.message("functionSmell")
@@ -211,7 +216,7 @@ private fun getFunctionFinding(
             AllIcons.General.Warning,
             CodeHealthDetailsType.FUNCTION
         ),
-        body = getFunctionFindingBody(delta, finding),
+        body = getFunctionFindingBody(changeDetails, finding),
         type = CodeHealthDetailsType.FUNCTION
     )
 }
