@@ -20,15 +20,14 @@ import com.intellij.openapi.diagnostic.Logger
 
 object Log {
     private val logger: Logger by lazy { Logger.getInstance(Log::class.java) }
-    private const val PREFIX = "$CODESCENE "
 
-    fun info(message: String, service: String? = "") = logger.info("$PREFIX${getService(service)} - $message")
+    fun info(message: String, service: String? = "") = logger.info("$CODESCENE${getService(service)} - $message")
 
-    fun warn(message: String, service: String? = "") = logger.warn("$PREFIX${getService(service)} - $message")
+    fun warn(message: String, service: String? = "") = logger.warn("$CODESCENE${getService(service)} - $message")
 
-    fun debug(message: String, service: String? = "") = logger.debug("$PREFIX${getService(service)} - $message")
+    fun debug(message: String, service: String? = "") = logger.debug("$CODESCENE${getService(service)} - $message")
 
-    fun error(message: String, service: String? = "") = logger.error("$PREFIX${getService(service)} - $message")
+    fun error(message: String, service: String? = "") = logger.error("$CODESCENE${getService(service)} - $message")
 
     private fun getService(service: String?) = if (!service.isNullOrEmpty()) " [$service]" else ""
 }
