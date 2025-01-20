@@ -58,7 +58,7 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
     }
 
     override fun handleLensClick(editor: Editor, category: CodeSmell) {
-        CodeHealthMonitorPanel.contentPanel.components
+        CodeHealthMonitorPanel.getInstance(editor.project!!).contentPanel.components
             .filterIsInstance<JTree>()
             .firstOrNull()?.let {
                 selectNode(it, editor.virtualFile.path)
