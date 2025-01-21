@@ -123,21 +123,24 @@ class CodeHealthMonitorPanel(private val project: Project) {
             val nIssues = cachedDelta.fileLevelFindings.size + cachedDelta.functionLevelFindings.size
             // TODO: provide additional data nRefactorableFunctions to add and update telemetry events,
             //  when refactoring logic available
-            healthMonitoringResults[path]?.let {
+            if (healthMonitoringResults[path] != null) {
                 // update
                 TelemetryService.getInstance().logUsage(
-                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_UPDATED}",
+                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_UPDATED} $path",
+                    mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", nIssues)))
+            } else {
+                // add
+                healthMonitoringResults[path] = cachedDelta
+                TelemetryService.getInstance().logUsage(
+                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_ADDED} $path",
                     mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", nIssues)))
             }
-            // add
-            healthMonitoringResults[path] = cachedDelta
-            TelemetryService.getInstance().logUsage(
-                "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_ADDED}",
-                mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", nIssues)))
         } else {
-            healthMonitoringResults.remove(path)
-            TelemetryService.getInstance().logUsage(
-                "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_REMOVED}")
+            val removedValue = healthMonitoringResults.remove(path)
+            if (removedValue != null) {
+                TelemetryService.getInstance().logUsage(
+                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_REMOVED} $path")
+            }
         }
     }
 
@@ -176,8 +179,6 @@ class CodeHealthMonitorPanel(private val project: Project) {
 
     fun invalidateAndRefreshContent(fileToInvalidate: String, file: VirtualFile? = null) {
         healthMonitoringResults.remove(fileToInvalidate)
-        TelemetryService.getInstance().logUsage(
-            "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_REMOVED}")
 
         refreshContent(file)
     }
