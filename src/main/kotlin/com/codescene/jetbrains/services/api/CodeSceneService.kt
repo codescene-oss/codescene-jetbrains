@@ -29,6 +29,7 @@ abstract class CodeSceneService : BaseService(), Disposable {
         timeout: Long = 10_000,
         performAction: suspend () -> Unit
     ) {
+        val service = "$serviceImplementation - ${editor.project!!.name}"
         val filePath = editor.virtualFile.path
         val fileName = editor.virtualFile.name
 
@@ -39,19 +40,19 @@ abstract class CodeSceneService : BaseService(), Disposable {
                 withTimeoutOrNull(timeout) {
                     delay(debounceDelay)
 
-                    Log.info("[$serviceImplementation] Initiating review for file $fileName at path $filePath.")
+                    Log.info("Initiating review for file $fileName at path $filePath.", service)
                     performAction()
 
                     CodeSceneCodeVisionProvider.markApiCallComplete(
                         filePath,
                         getActiveApiCalls()
                     )
-                } ?: Log.warn("[$serviceImplementation] Review task timed out for file: $filePath")
+                } ?: Log.warn("Review task timed out for file: $filePath", service)
             }
         } catch (e: CancellationException) {
-            Log.info("[$serviceImplementation] Review canceled for file $fileName.")
+            Log.info("Review canceled for file $fileName.", service)
         } catch (e: Exception) {
-            Log.error("[$serviceImplementation] Error during review for file $fileName - ${e.message}")
+            Log.error("Error during review for file $fileName - ${e.message}", service)
         } finally {
             activeReviewCalls.remove(filePath)
         }
@@ -65,12 +66,15 @@ abstract class CodeSceneService : BaseService(), Disposable {
         activeReviewCalls[filePath]?.let { job ->
             job.cancel()
 
-            Log.info("[$serviceImplementation] Cancelling active $CODESCENE review for file '$filePath' because it was closed.")
+            Log.info(
+                "Cancelling active $CODESCENE review for file '$filePath' because it was closed.",
+                serviceImplementation
+            )
 
             activeReviewCalls.remove(filePath)
 
             CodeSceneCodeVisionProvider.markApiCallComplete(filePath, calls)
-        } ?: Log.debug("[$serviceImplementation] No active $CODESCENE review found for file: $filePath")
+        } ?: Log.debug("No active $CODESCENE review found for file: $filePath", serviceImplementation)
     }
 
     override fun dispose() {

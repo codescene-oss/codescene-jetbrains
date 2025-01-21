@@ -4,7 +4,10 @@ import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPanel
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.util.CodeHealthDetails
+import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.getHealthFinding
+import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
@@ -20,11 +23,17 @@ import javax.swing.BoxLayout
 import javax.swing.JPanel
 import javax.swing.JTextArea
 
+@Service(Service.Level.PROJECT)
 class CodeHealthDetailsPanel(private val project: Project) {
     private var details: CodeHealthDetails? = null
     private var contentPanel = JBPanel<JBPanel<*>>().apply {
         layout = BorderLayout()
         addPlaceholder()
+    }
+    private val service = "Code Health Details - ${project.name}"
+
+    companion object {
+        fun getInstance(project: Project): CodeHealthDetailsPanel = project.service<CodeHealthDetailsPanel>()
     }
 
     fun getContent() = JBScrollPane(JPanel().apply {
@@ -37,13 +46,18 @@ class CodeHealthDetailsPanel(private val project: Project) {
     }
 
     private fun JPanel.renderContent() {
+        Log.debug("Rendering content...", service)
+
+        val panelBuilder = CodeHealthPanelBuilder.getInstance(project)
         layout = BorderLayout()
+
         if (details == null) addPlaceholder()
-        else add(CodeHealthPanelBuilder(details!!, project).getPanel(), BorderLayout.NORTH)
+        else add(panelBuilder.getPanel(details!!), BorderLayout.NORTH)
     }
 
     private fun JPanel.addPlaceholder() {
         val message = UiLabelsBundle.message("selectAFunction")
+        Log.debug("No finding found, rendering placeholder...", service)
 
         val panel = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
@@ -70,7 +84,12 @@ class CodeHealthDetailsPanel(private val project: Project) {
 
     fun refreshContent(finding: CodeHealthFinding?) {
         details = finding?.let {
-            CodeHealthMonitorPanel.healthMonitoringResults[it.filePath]?.let { data -> getHealthFinding(data, it) }
+            CodeHealthMonitorPanel.getInstance(project).healthMonitoringResults[it.filePath]?.let { data ->
+                getHealthFinding(
+                    data,
+                    it
+                )
+            }
         }
 
         contentPanel.removeAll()

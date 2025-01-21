@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Resolved an issue where the Code Health Monitor displayed inconsistent or mixed results when multiple IDE instances were open. Each instance now displays accurate, independent results for its project.
+
+## [0.0.4-beta] - 2024-01-16
+### Added
+- About tab contents in Tools > CodeScene > About
+- General tab contents in Tools > CodeScene > General
+
+### Changed
+- Removed unused/unimplemented settings from Tools > CodeScene > Settings
+
+## [0.0.3-beta] - 2024-01-10
 ### Added
 - Code health details view (health, file, function-level) in CodeScene tool window
 

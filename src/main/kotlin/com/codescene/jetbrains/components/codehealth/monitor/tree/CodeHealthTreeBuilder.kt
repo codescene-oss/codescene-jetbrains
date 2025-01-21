@@ -7,6 +7,8 @@ import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.CodeNavigationService
 import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.*
+import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.treeStructure.Tree
 import java.awt.Component
@@ -39,21 +41,20 @@ data class CodeHealthFinding(
     val additionalText: String = ""
 )
 
-class CodeHealthTreeBuilder {
-    private lateinit var project: Project
-    private lateinit var notifier: CodeHealthDetailsRefreshNotifier
-
+@Service(Service.Level.PROJECT)
+class CodeHealthTreeBuilder(private val project: Project) {
     private var suppressFocusOnLine: Boolean = false
     private var selectedNode: CodeHealthFinding? = null
     private val collapsedPaths: MutableSet<String> = ConcurrentHashMap.newKeySet()
+    private val service = "Health Tree Builder - ${project.name}"
+
+    companion object {
+        fun getInstance(project: Project): CodeHealthTreeBuilder = project.service<CodeHealthTreeBuilder>()
+    }
 
     fun createTree(
-        results: ConcurrentHashMap<String, CodeDelta>,
-        project: Project
+        results: ConcurrentHashMap<String, CodeDelta>
     ): Tree {
-        this.project = project
-        this.notifier = project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC)
-
         val root = DefaultMutableTreeNode()
         results.map { buildNode(it.key, it.value) }.forEach { root.add(it) }
 
@@ -115,7 +116,7 @@ class CodeHealthTreeBuilder {
                 suppressFocusOnLine = false
             } else {
                 selectedNode = null
-                notifier.refresh(null)
+                project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
             }
         }
 
@@ -126,6 +127,8 @@ class CodeHealthTreeBuilder {
         val finding = targetNode?.userObject as? CodeHealthFinding ?: return
 
         if (targetNode.isLeaf) {
+            Log.debug("Selected node with finding $finding", service)
+
             if (isHealthNode(finding.nodeType)) {
                 TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_CODE_HEALTH_DOCS}")
             } else {
@@ -133,14 +136,15 @@ class CodeHealthTreeBuilder {
                 // TODO: nIssues should be provided, need some logic for it
                 TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_DETAILS_FUNCTION_SELECTED}")
             }
+
             if (!suppressFocusOnLine) navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
 
-            notifier.refresh(finding)
+            project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(finding)
             selectedNode = targetNode.userObject as CodeHealthFinding
         } else {
             (event.source as? JTree)?.clearSelection()
 
-            notifier.refresh(null)
+            project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
             selectedNode = null
             TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_DETAILS_FUNCTION_DESELECTED}")
         }

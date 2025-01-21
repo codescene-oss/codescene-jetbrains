@@ -19,24 +19,24 @@ open class BaseService() {
         Thread.currentThread().contextClassLoader = classLoader
 
         return try {
-            Log.debug("[$serviceImplementation] Switching to plugin's ClassLoader: ${classLoader.javaClass.name}")
+            Log.debug("Switching to plugin's ClassLoader: ${classLoader.javaClass.name}", serviceImplementation)
 
             val startTime = System.currentTimeMillis()
 
             val result = action()
 
             val elapsedTime = System.currentTimeMillis() - startTime
-            Log.info("[$serviceImplementation] Received response from CodeScene API in ${elapsedTime}ms")
+            Log.info("Received response from CodeScene API in ${elapsedTime}ms", serviceImplementation)
 
             result
         } catch (e: Exception) {
-            Log.error("[$serviceImplementation] Exception during ClassLoader change operation: ${e.message}")
+            Log.error("Exception during ClassLoader change operation: ${e.message}", serviceImplementation)
 
             throw (e)
         } finally {
             Thread.currentThread().contextClassLoader = originalClassLoader
 
-            Log.debug("[$serviceImplementation] Reverted to original ClassLoader: ${originalClassLoader.javaClass.name}")
+            Log.debug("Reverted to original ClassLoader: ${originalClassLoader.javaClass.name}", serviceImplementation)
         }
     }
 }
