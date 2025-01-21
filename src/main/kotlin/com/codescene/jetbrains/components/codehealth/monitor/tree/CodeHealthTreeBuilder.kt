@@ -5,7 +5,7 @@ import com.codescene.jetbrains.components.codehealth.monitor.tree.listeners.Tree
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.CodeNavigationService
-import com.codescene.jetbrains.services.TelemetryService
+import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.*
 import com.intellij.openapi.project.Project
 import com.intellij.ui.treeStructure.Tree
@@ -130,6 +130,7 @@ class CodeHealthTreeBuilder {
                 TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_CODE_HEALTH_DOCS}")
             } else {
                 // TODO: provide additional data isRefactoringSupported when refactoring logic available
+                // TODO: nIssues should be provided, need some logic for it
                 TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_DETAILS_FUNCTION_SELECTED}")
             }
             if (!suppressFocusOnLine) navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
@@ -141,6 +142,7 @@ class CodeHealthTreeBuilder {
 
             notifier.refresh(null)
             selectedNode = null
+            TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_DETAILS_FUNCTION_DESELECTED}")
         }
     }
 

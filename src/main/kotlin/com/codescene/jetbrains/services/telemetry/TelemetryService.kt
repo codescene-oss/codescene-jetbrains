@@ -1,7 +1,8 @@
-package com.codescene.jetbrains.services
+package com.codescene.jetbrains.services.telemetry
 
 import com.codescene.ExtensionAPI
 import com.codescene.data.telemetry.TelemetryEvent
+import com.codescene.jetbrains.services.BaseService
 import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Log
 import com.intellij.ide.plugins.PluginManagerCore

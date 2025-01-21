@@ -57,6 +57,7 @@ object Constants {
     const val TELEMETRY_OPEN_SETTINGS = "control_center/open-settings"
     const val TELEMETRY_OPEN_LINK = "control_center/open-link"
     const val TELEMETRY_DETAILS_FUNCTION_SELECTED = "code_health_details/function_selected"
+    const val TELEMETRY_DETAILS_FUNCTION_DESELECTED = "code_health_details/function_deselected"
 
     // not implemented yet
     const val TELEMETRY_STATS = "stats"
