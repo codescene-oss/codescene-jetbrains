@@ -6,6 +6,7 @@ import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPa
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
+import com.codescene.jetbrains.util.Log
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.project.Project
@@ -20,14 +21,10 @@ import com.intellij.ui.OnePixelSplitter
 import com.intellij.ui.content.ContentFactory
 
 class CodeSceneToolWindowFactory : ToolWindowFactory {
-    private lateinit var monitorPanel: CodeHealthMonitorPanel
-    private lateinit var healthPanel: CodeHealthDetailsPanel
     private lateinit var splitPane: OnePixelSplitter
 
     override fun init(toolWindow: ToolWindow) {
         super.init(toolWindow)
-        monitorPanel = CodeHealthMonitorPanel(toolWindow.project)
-        healthPanel = CodeHealthDetailsPanel(toolWindow.project)
         subscribeToMonitorRefreshEvent(toolWindow.project)
         subscribeToHealthDetailsRefreshEvent(toolWindow.project)
     }
@@ -45,8 +42,8 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
 
     private fun createSplitter(toolWindow: ToolWindow) =
         OnePixelSplitter(isSplitterVertical(toolWindow.anchor), "CodeSceneToolWindow.Splitter", 0.5f).apply {
-            firstComponent = monitorPanel.getContent()
-            secondComponent = healthPanel.getContent()
+            firstComponent = CodeHealthMonitorPanel.getInstance(toolWindow.project).getContent()
+            secondComponent = CodeHealthDetailsPanel.getInstance(toolWindow.project).getContent()
         }
 
     private fun isSplitterVertical(anchor: ToolWindowAnchor?) =
@@ -75,11 +72,15 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
     private fun subscribeToMonitorRefreshEvent(project: Project) {
         project.messageBus.connect().subscribe(ToolWindowRefreshNotifier.TOPIC, object : ToolWindowRefreshNotifier {
             override fun refresh(file: VirtualFile) {
-                monitorPanel.refreshContent(file)
+                Log.info("Refreshing code health monitor...", "Tool Window Factory - ${project.name}")
+
+                CodeHealthMonitorPanel.getInstance(project).refreshContent(file)
             }
 
             override fun invalidateAndRefresh(fileToInvalidate: String, file: VirtualFile?) {
-                monitorPanel.invalidateAndRefreshContent(fileToInvalidate, file)
+                Log.debug("Refreshing & invalidating code health monitor...", "Tool Window Factory - ${project.name}")
+
+                CodeHealthMonitorPanel.getInstance(project).invalidateAndRefreshContent(fileToInvalidate, file)
             }
         })
     }
@@ -88,7 +89,9 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
         project.messageBus.connect()
             .subscribe(CodeHealthDetailsRefreshNotifier.TOPIC, object : CodeHealthDetailsRefreshNotifier {
                 override fun refresh(finding: CodeHealthFinding?) {
-                    healthPanel.refreshContent(finding)
+                    Log.debug("Refreshing code health details...", "Tool Window Factory - ${project.name}")
+
+                    CodeHealthDetailsPanel.getInstance(project).refreshContent(finding)
                 }
             })
     }
