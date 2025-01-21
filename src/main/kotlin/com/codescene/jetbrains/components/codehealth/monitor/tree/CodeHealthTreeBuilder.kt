@@ -5,6 +5,7 @@ import com.codescene.jetbrains.components.codehealth.monitor.tree.listeners.Tree
 import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.CodeNavigationService
+import com.codescene.jetbrains.services.CodeSceneDocumentationService.Companion.editor
 import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.*
 import com.intellij.openapi.components.Service
@@ -133,8 +134,10 @@ class CodeHealthTreeBuilder(private val project: Project) {
                 TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_CODE_HEALTH_DOCS}")
             } else {
                 // TODO: provide additional data isRefactoringSupported when refactoring logic available
-                // TODO: nIssues should be provided, need some logic for it
-                TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_DETAILS_FUNCTION_SELECTED}")
+                val nIssues = targetNode.parent.childCount - 1 // minus health score node
+                TelemetryService.getInstance().logUsage(
+                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_DETAILS_FUNCTION_SELECTED}",
+                    mutableMapOf<String, Any>(Pair("nIssues", nIssues)))
             }
 
             if (!suppressFocusOnLine) navigationService.focusOnLine(finding.filePath, finding.focusLine!!)

@@ -59,10 +59,9 @@ object Constants {
     const val TELEMETRY_DETAILS_FUNCTION_SELECTED = "code_health_details/function_selected"
     const val TELEMETRY_DETAILS_FUNCTION_DESELECTED = "code_health_details/function_deselected"
 
-    // not implemented yet
+    // not yet implemented
     const val TELEMETRY_STATS = "stats"
 
-    // check how easy it is to implement
     const val TELEMETRY_MONITOR_FILE_UPDATED = "code_health_monitor/file_updated"
     const val TELEMETRY_MONITOR_FILE_REMOVED = "code_health_monitor/file_removed"
     const val TELEMETRY_MONITOR_FILE_ADDED = "code_health_monitor/file_added"
