@@ -77,9 +77,9 @@ fun getSelectedNode(parent: DefaultMutableTreeNode?, selectedNode: CodeHealthFin
         val child = parent.getChildAt(it) as DefaultMutableTreeNode
         val finding = child.userObject as CodeHealthFinding
 
-        if (selectedNode.displayName == finding.displayName) {
-            return child
-        }
+        val isMatching = isMatchingFinding(selectedNode.displayName, selectedNode.focusLine, finding)
+
+        if (isMatching) return child
     }
 
     return null

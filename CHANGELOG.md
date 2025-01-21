@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Fixed
+- Resolved an issue in the Code Health Monitor where multiple issues within the same method but at different lines displayed the same details in the Code Health Details section.
+
+## [0.0.5-beta] - 2024-01-20
+### Fixed
 - Resolved an issue where the Code Health Monitor displayed inconsistent or mixed results when multiple IDE instances were open. Each instance now displays accurate, independent results for its project.
 
 ## [0.0.4-beta] - 2024-01-16
