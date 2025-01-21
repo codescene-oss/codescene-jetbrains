@@ -8,6 +8,8 @@ import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
+import com.codescene.jetbrains.services.telemetry.TelemetryService
+import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
 import com.intellij.execution.runners.ExecutionUtil
@@ -116,10 +118,27 @@ class CodeHealthMonitorPanel(private val project: Project) {
         val cachedDelta = DeltaCacheService.getInstance(project)
             .get(DeltaCacheQuery(path, headCommit, code))
 
-        if (cachedDelta != null)
+        if (cachedDelta != null) {
+            val scoreChange = cachedDelta.newScore - cachedDelta.oldScore
+            val nIssues = cachedDelta.fileLevelFindings.size + cachedDelta.functionLevelFindings.size
+            // TODO: provide additional data nRefactorableFunctions to add and update telemetry events,
+            //  when refactoring logic available
+            healthMonitoringResults[path]?.let {
+                // update
+                TelemetryService.getInstance().logUsage(
+                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_UPDATED}",
+                    mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", nIssues)))
+            }
+            // add
             healthMonitoringResults[path] = cachedDelta
-        else
+            TelemetryService.getInstance().logUsage(
+                "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_ADDED}",
+                mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", nIssues)))
+        } else {
             healthMonitoringResults.remove(path)
+            TelemetryService.getInstance().logUsage(
+                "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_REMOVED}")
+        }
     }
 
     fun refreshContent(file: VirtualFile?, scope: CoroutineScope = CoroutineScope(Dispatchers.Main)) {
@@ -157,6 +176,8 @@ class CodeHealthMonitorPanel(private val project: Project) {
 
     fun invalidateAndRefreshContent(fileToInvalidate: String, file: VirtualFile? = null) {
         healthMonitoringResults.remove(fileToInvalidate)
+        TelemetryService.getInstance().logUsage(
+            "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_REMOVED}")
 
         refreshContent(file)
     }

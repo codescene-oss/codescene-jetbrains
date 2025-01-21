@@ -134,10 +134,10 @@ class CodeHealthTreeBuilder(private val project: Project) {
                 TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_CODE_HEALTH_DOCS}")
             } else {
                 // TODO: provide additional data isRefactoringSupported when refactoring logic available
-                val nIssues = targetNode.parent.childCount - 1 // minus health score node
+//                TODO: nIssues, temporarily hardcoded to 1
                 TelemetryService.getInstance().logUsage(
                     "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_DETAILS_FUNCTION_SELECTED}",
-                    mutableMapOf<String, Any>(Pair("nIssues", nIssues)))
+                    mutableMapOf<String, Any>(Pair("nIssues", 1)))
             }
 
             if (!suppressFocusOnLine) navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
