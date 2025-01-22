@@ -31,6 +31,12 @@ import java.util.stream.Collectors
 @Service(Service.Level.PROJECT)
 class CodeSceneDocumentationService(project: Project) : LafManagerListener {
     private val fileEditorManager = FileEditorManager.getInstance(project)
+    private lateinit var lastDocsSourceType: DocsSourceType
+    private val threeBackticks = MarkdownCodeDelimiter.MULTI_LINE.value
+    private val oneBacktick = MarkdownCodeDelimiter.SINGLE_LINE.value
+
+    lateinit var functionLocation: FunctionLocation
+    lateinit var editor: Editor
 
     init {
         // Subscribe to theme updates when the service is initialized
@@ -41,11 +47,6 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
     companion object {
         fun getInstance(project: Project): CodeSceneDocumentationService =
             project.service<CodeSceneDocumentationService>()
-
-        var functionLocation: FunctionLocation? = null
-        var editor: Editor? = null
-        val threeBackticks = MarkdownCodeDelimiter.MULTI_LINE.value
-        val oneBacktick = MarkdownCodeDelimiter.SINGLE_LINE.value
     }
 
     /**
@@ -55,13 +56,14 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
      * Documentation file opened will be showing HTML content for that CodeSmell,
      * using custom [CodeSceneHtmlViewer]
      */
-    fun openDocumentationPanel(editor: Editor, codeSmell: CodeSmell) {
-        Companion.editor = editor
+    fun openDocumentationPanel(editor: Editor, codeSmell: CodeSmell, docsSourceType: DocsSourceType) {
+        this.editor = editor
         val project = editor.project!!
+        lastDocsSourceType = docsSourceType
 
         TelemetryService.Companion.getInstance().logUsage(
             "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_DOCS_PANEL}",
-            mutableMapOf<String, Any>(Pair("source", editor.virtualFile), Pair("category", codeSmell.category)))
+            mutableMapOf<String, Any>(Pair("source", docsSourceType.value), Pair("category", codeSmell.category)))
 
         functionLocation = FunctionLocation(editor.virtualFile.name, codeSmell)
         val codeSmellFileName = codeSmell.category + ".md"
@@ -252,9 +254,7 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
      * In case of theme change we refresh currently opened documentation file to fetch new look and feel.
      */
     override fun lookAndFeelChanged(p0: LafManager) {
-        if (functionLocation?.codeSmell != null && editor != null) {
-            this.openDocumentationPanel(editor!!, functionLocation!!.codeSmell)
-        }
+        this.openDocumentationPanel(editor, functionLocation.codeSmell, lastDocsSourceType)
     }
 }
 
@@ -267,3 +267,9 @@ data class HtmlPart(
     val title: String,
     val body: String
 )
+
+enum class DocsSourceType(val value: String) {
+    INTENTION_ACTION("diagnostic-item"),
+    CODE_HEALTH_DETAILS("code-health-details"),
+    CODE_VISION("codelens (review)")
+}

@@ -25,7 +25,7 @@ class TelemetryService(): BaseService() {
             val telemetryEvent: TelemetryEvent =
                 TelemetryEvent(eventName, userId, Constants.TELEMETRY_EDITOR_TYPE, getPluginVersion(), eventData)
 
-//            ExtensionAPI.sendTelemetry(telemetryEvent, eventData)
+            ExtensionAPI.sendTelemetry(telemetryEvent, eventData)
             // TODO: Change following call's log level to debug
             Log.warn("Telemetry event logged: $telemetryEvent")
         }

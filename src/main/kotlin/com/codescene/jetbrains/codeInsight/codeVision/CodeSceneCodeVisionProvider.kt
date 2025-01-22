@@ -5,6 +5,7 @@ import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
+import com.codescene.jetbrains.services.DocsSourceType
 import com.codescene.jetbrains.services.api.CodeDeltaService
 import com.codescene.jetbrains.services.api.CodeReviewService
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
@@ -160,7 +161,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         val project = editor.project ?: return
         val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
 
-        codeSceneDocumentationService.openDocumentationPanel(editor, category)
+        codeSceneDocumentationService.openDocumentationPanel(editor, category, DocsSourceType.CODE_VISION)
     }
 
     private fun markApiCallInProgress(filePath: String, apiCalls: MutableSet<String>) {

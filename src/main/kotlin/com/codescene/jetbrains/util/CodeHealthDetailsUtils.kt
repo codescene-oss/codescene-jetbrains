@@ -12,6 +12,7 @@ import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.data.HighlightRange
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
+import com.codescene.jetbrains.services.DocsSourceType
 import com.codescene.jetbrains.util.Constants.GREEN
 import com.codescene.jetbrains.util.Constants.ORANGE
 import com.codescene.jetbrains.util.Constants.RED
@@ -272,7 +273,8 @@ private fun handleMouseClick(project: Project, codeSmell: CodeSmell, filePath: S
         )
 
         editorManager.openTextEditor(fileDescriptor, true)
-        editorManager.selectedTextEditor?.let { documentationService.openDocumentationPanel(it, codeSmell) }
+        editorManager.selectedTextEditor?.let {
+            documentationService.openDocumentationPanel(it, codeSmell, DocsSourceType.CODE_HEALTH_DETAILS) }
     }
 }
 

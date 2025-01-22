@@ -118,6 +118,8 @@ class CodeHealthMonitorPanel(private val project: Project) {
         val cachedDelta = DeltaCacheService.getInstance(project)
             .get(DeltaCacheQuery(path, headCommit, code))
 
+        Log.debug("Cached delta: $cachedDelta", service)
+
         if (cachedDelta != null) {
             val scoreChange = cachedDelta.newScore - cachedDelta.oldScore
             val nIssues = cachedDelta.fileLevelFindings.size + cachedDelta.functionLevelFindings.size
@@ -125,21 +127,22 @@ class CodeHealthMonitorPanel(private val project: Project) {
             //  when refactoring logic available
             if (healthMonitoringResults[path] != null) {
                 // update
+                healthMonitoringResults[path] = cachedDelta
                 TelemetryService.getInstance().logUsage(
-                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_UPDATED} $path",
+                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_UPDATED}",
                     mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", nIssues)))
             } else {
                 // add
                 healthMonitoringResults[path] = cachedDelta
                 TelemetryService.getInstance().logUsage(
-                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_ADDED} $path",
+                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_ADDED}",
                     mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", nIssues)))
             }
         } else {
             val removedValue = healthMonitoringResults.remove(path)
             if (removedValue != null) {
                 TelemetryService.getInstance().logUsage(
-                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_REMOVED} $path")
+                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_REMOVED}")
             }
         }
     }
