@@ -24,6 +24,8 @@ object Constants {
     val ORANGE = JBColor(Color(250, 163, 125), Color(238, 147, 107))
 
     const val GENERAL_CODE_HEALTH = "General Code Health"
+    const val CODE_HEALTH_MONITOR = "Code Health Monitor"
+
     const val BRAIN_CLASS = "Brain Class"
     const val BRAIN_METHOD = "Brain Method"
     const val BUMPY_ROAD_AHEAD = "Bumpy Road Ahead"

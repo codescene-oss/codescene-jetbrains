@@ -7,6 +7,7 @@ import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.data.HighlightRange
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
+import com.codescene.jetbrains.services.DocumentationParams
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
 import com.codescene.jetbrains.util.HealthDetails
@@ -75,6 +76,6 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
             } ?: false
 
         if (!nodeSelected)
-            service.openDocumentationPanel(editor, category.copy(category = GENERAL_CODE_HEALTH))
+            service.openDocumentationPanel(DocumentationParams(editor, category.copy(category = GENERAL_CODE_HEALTH)))
     }
 }

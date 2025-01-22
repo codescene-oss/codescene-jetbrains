@@ -6,6 +6,7 @@ import com.codescene.jetbrains.codeInsight.codehealth.MarkdownCodeDelimiter
 import com.codescene.jetbrains.codeInsight.codehealth.PreviewThemeStyles
 import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.util.Constants
+import com.codescene.jetbrains.util.Constants.CODE_HEALTH_MONITOR
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.categoryToFileName
@@ -55,14 +56,16 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
      * Documentation file opened will be showing HTML content for that CodeSmell,
      * using custom [CodeSceneHtmlViewer]
      */
-    fun openDocumentationPanel(editor: Editor, codeSmell: CodeSmell) {
+    fun openDocumentationPanel(params: DocumentationParams) {
+        val (editor, codeSmell) = params
+
         Companion.editor = editor
         val project = editor.project!!
 
         functionLocation = FunctionLocation(editor.virtualFile.name, codeSmell)
         val codeSmellFileName = codeSmell.category + ".md"
 
-        val markdownContent = prepareMarkdownContent(editor, codeSmell)
+        val markdownContent = prepareMarkdownContent(params)
 
         Log.info("Opening documentation file $codeSmellFileName")
         val documentationFile = createTempFile(project, codeSmellFileName, markdownContent)
@@ -78,20 +81,25 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
      * Reading raw documentation md files and creating HTML content out of it,
      * which is then added to separately created header as base for all styling.
      */
-    private fun prepareMarkdownContent(editor: Editor, codeSmell: CodeSmell): String {
+    private fun prepareMarkdownContent(params: DocumentationParams): String {
+        val (editor, codeSmell) = params
+
         val codeSmellName = codeSmell.category
         val codeSmellFileName = categoryToFileName(codeSmellName) + ".md"
 
-        val standaloneDocumentation = codeSmellName.contains(GENERAL_CODE_HEALTH)
+        val standaloneDocumentation =
+            codeSmellName.contains(GENERAL_CODE_HEALTH) || codeSmellName.contains(CODE_HEALTH_MONITOR)
         val path = if (standaloneDocumentation) Constants.DOCUMENTATION_BASE_PATH else Constants.ISSUES_PATH
 
         Log.info("Preparing content for file $codeSmellName.md")
         val classLoader = this@CodeSceneDocumentationService.javaClass.classLoader
         val inputStream = classLoader.getResourceAsStream(path + codeSmellFileName)
+
+        val content = inputStream?.bufferedReader()?.readText() ?: ""
         val markdownContent =
-            inputStream?.bufferedReader()?.readText()
-                ?.let { transformMarkdownToHtml(it, codeSmellName, standaloneDocumentation) }
-        val header = prepareHeader(editor, codeSmell, standaloneDocumentation)
+            transformMarkdownToHtml(TransformMarkdownParams(content, codeSmellName, standaloneDocumentation))
+
+        val header = prepareHeader(HeadingParams(codeSmell, standaloneDocumentation, content, classLoader, editor))
 
         return "$header$markdownContent"
     }
@@ -100,10 +108,10 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
      * Transforming Markdown content into HTML content by reorganizing it and inserting HTML tags.
      */
     private fun transformMarkdownToHtml(
-        originalContent: String,
-        codeSmellName: String,
-        standaloneDocumentation: Boolean = false
+        params: TransformMarkdownParams
     ): String {
+        val (originalContent, codeSmellName, standaloneDocumentation) = params
+
         val content = if (!standaloneDocumentation)
             "$codeSmellName\n\n$originalContent"
         else originalContent.split("\n\n", limit = 2)[1]
@@ -208,21 +216,21 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
      * It is fetching three different styles, static, theme dependent and scrollbar and applying them.
      * Also, it generates header HTML content.
      */
-    private fun prepareHeader(editor: Editor, codeSmell: CodeSmell, standaloneDocumentation: Boolean = false): String {
-        val codeSmellName = codeSmell.category
-        val fileName = editor.virtualFile.name
+    private fun prepareHeader(params: HeadingParams): String {
+        val (codeSmell, standaloneDocumentation, content, classLoader, editor) = params
+
+        val fileName = editor!!.virtualFile.name
         val lineNumber = codeSmell.highlightRange.startLine
-        val classLoader = this@CodeSceneDocumentationService.javaClass.classLoader
 
         // styling
         val style = getStyling(classLoader)
 
         // components
-        val heading = getHeading(codeSmellName, standaloneDocumentation, classLoader)
+        val heading = getHeading(params)
         val documentationSubHeader = getDocumentationSubHeader(fileName, lineNumber, standaloneDocumentation)
 
         // language=HTML
-        val content = """
+        return """
             |<!DOCTYPE html>
             |<html lang="en">
             |<head>
@@ -238,22 +246,26 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
             |    $documentationSubHeader
             |    <hr>
             """.trimMargin()
-        return content
     }
 
     /**
      * Generates an HTML heading for the documentation, optionally including a logo for standalone documentation.
      */
-    private fun getHeading(codeSmellName: String, standaloneDocumentation: Boolean, classLoader: ClassLoader): String {
+    private fun getHeading(params: HeadingParams): String {
+        val (codeSmell, standaloneDocumentation, content, classLoader) = params
+
         val logoSvg = classLoader.getResourceAsStream(Constants.LOGO_PATH)?.bufferedReader()?.readText()
 
-        return if (!standaloneDocumentation) "<h2>$codeSmellName</h2>" else
+        return if (!standaloneDocumentation) "<h2>${codeSmell.category}</h2>" else {
+            val heading = content.split("\n\n", limit = 2)[0]
+
             """
         |    <h1 class="icon-header">
         |        $logoSvg
-        |        Code Health
+        |        $heading
         |    </h1>
         """.trimMargin()
+        }
     }
 
     /**
@@ -314,7 +326,7 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
      */
     override fun lookAndFeelChanged(p0: LafManager) {
         if (functionLocation?.codeSmell != null && editor != null) {
-            this.openDocumentationPanel(editor!!, functionLocation!!.codeSmell)
+            this.openDocumentationPanel(DocumentationParams(editor!!, functionLocation!!.codeSmell))
         }
     }
 }
@@ -327,4 +339,23 @@ data class FunctionLocation(
 data class HtmlPart(
     val title: String,
     val body: String
+)
+
+data class DocumentationParams(
+    val editor: Editor,
+    val codeSmell: CodeSmell
+)
+
+data class HeadingParams(
+    val codeSmell: CodeSmell,
+    val standaloneDocumentation: Boolean,
+    val content: String,
+    val classLoader: ClassLoader,
+    val editor: Editor? = null
+)
+
+data class TransformMarkdownParams(
+    val originalContent: String,
+    val codeSmellName: String,
+    val standaloneDocumentation: Boolean = false
 )

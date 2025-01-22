@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.components.window
 
+import com.codescene.jetbrains.actions.ShowDocumentationAction
 import com.codescene.jetbrains.actions.ShowSettingsAction
 import com.codescene.jetbrains.components.codehealth.detail.CodeHealthDetailsPanel
 import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPanel
@@ -99,9 +100,12 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
     override fun shouldBeAvailable(project: Project) = true
 
     private fun getTitleActions(): List<AnAction> {
-        val action = ShowSettingsAction::class.java.simpleName
-        val showSettingsAction = ActionManager.getInstance().getAction(action)
+        val showSettings = ShowSettingsAction::class.java.simpleName
+        val showDocs = ShowDocumentationAction::class.java.simpleName
 
-        return listOf(showSettingsAction)
+        val showSettingsAction = ActionManager.getInstance().getAction(showSettings)
+        val showDocsAction = ActionManager.getInstance().getAction(showDocs)
+
+        return listOf(showDocsAction, showSettingsAction)
     }
 }
