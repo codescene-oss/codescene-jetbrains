@@ -39,7 +39,8 @@ data class CodeHealthFinding(
     val focusLine: Int? = 1,
     val displayName: String,
     val nodeType: NodeType,
-    val additionalText: String = ""
+    val additionalText: String = "",
+    val functionFindingIssues: Int = 1
 )
 
 @Service(Service.Level.PROJECT)
@@ -134,10 +135,9 @@ class CodeHealthTreeBuilder(private val project: Project) {
                 TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_CODE_HEALTH_DOCS}")
             } else {
                 // TODO: provide additional data isRefactoringSupported when refactoring logic available
-//                TODO: nIssues, temporarily hardcoded to 1
                 TelemetryService.getInstance().logUsage(
                     "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_DETAILS_FUNCTION_SELECTED}",
-                    mutableMapOf<String, Any>(Pair("nIssues", 1)))
+                    mutableMapOf<String, Any>(Pair("nIssues", finding.functionFindingIssues)))
             }
 
             if (!suppressFocusOnLine) navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
