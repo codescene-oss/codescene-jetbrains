@@ -70,12 +70,10 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
         val nodeSelected = CodeHealthMonitorPanel.getInstance(project).contentPanel.components
             .filterIsInstance<JTree>()
             .firstOrNull()
-            ?.let {
-                toolWindowManager.getToolWindow(CODESCENE)?.show()
-                selectNode(it, editor.virtualFile.path)
-            } ?: false
+            ?.let { selectNode(it, editor.virtualFile.path) } ?: false
 
         if (!nodeSelected)
             service.openDocumentationPanel(DocumentationParams(editor, category.copy(category = GENERAL_CODE_HEALTH)))
+        else toolWindowManager.getToolWindow(CODESCENE)?.show()
     }
 }
