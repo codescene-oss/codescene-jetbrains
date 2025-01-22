@@ -1,11 +1,12 @@
 package com.codescene.jetbrains.services
 
+import com.codescene.jetbrains.codeInsight.codehealth.CodeHighlighter.generateHighlightedHtml
 import com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewer
 import com.codescene.jetbrains.codeInsight.codehealth.MarkdownCodeDelimiter
 import com.codescene.jetbrains.codeInsight.codehealth.PreviewThemeStyles
-import com.codescene.jetbrains.codeInsight.codehealth.CodeHighlighter.generateHighlightedHtml
 import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.util.Constants
+import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.categoryToFileName
 import com.codescene.jetbrains.util.surroundingCharactersNotBackticks
@@ -81,12 +82,16 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
         val codeSmellName = codeSmell.category
         val codeSmellFileName = categoryToFileName(codeSmellName) + ".md"
 
+        val standaloneDocumentation = codeSmellName.contains(GENERAL_CODE_HEALTH)
+        val path = if (standaloneDocumentation) Constants.DOCUMENTATION_BASE_PATH else Constants.ISSUES_PATH
+
         Log.info("Preparing content for file $codeSmellName.md")
         val classLoader = this@CodeSceneDocumentationService.javaClass.classLoader
-        val inputStream = classLoader.getResourceAsStream(Constants.DOCUMENTATION_BASE_PATH + codeSmellFileName)
+        val inputStream = classLoader.getResourceAsStream(path + codeSmellFileName)
         val markdownContent =
-            inputStream?.bufferedReader()?.readText()?.let { transformMarkdownToHtml(it, codeSmellName) }
-        val header = prepareHeader(editor, codeSmell)
+            inputStream?.bufferedReader()?.readText()
+                ?.let { transformMarkdownToHtml(it, codeSmellName, standaloneDocumentation) }
+        val header = prepareHeader(editor, codeSmell, standaloneDocumentation)
 
         return "$header$markdownContent"
     }
@@ -94,32 +99,52 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
     /**
      * Transforming Markdown content into HTML content by reorganizing it and inserting HTML tags.
      */
-    private fun transformMarkdownToHtml(originalContent: String, codeSmellName: String): String {
-        val content = "$codeSmellName\n\n$originalContent"
+    private fun transformMarkdownToHtml(
+        originalContent: String,
+        codeSmellName: String,
+        standaloneDocumentation: Boolean = false
+    ): String {
+        val content = if (!standaloneDocumentation)
+            "$codeSmellName\n\n$originalContent"
+        else originalContent.split("\n\n", limit = 2)[1]
+
         val parts = content.split("## ")
         val newContent = StringBuilder("")
-        val toHtmlConverter = MarkdownToHtmlConverter(MarkdownDefaultFlavour()) //)
+
         parts.forEach { part ->
             val title = part.substring(0, part.indexOf("\n"))
-            var body = part.substring(part.indexOf("\n") + 1)
+            var body = if (!standaloneDocumentation) part.substring(part.indexOf("\n") + 1) else part
 
             body = updateOneLineCodeParts(body)
 
-            if (body.contains(threeBackticks)) {
-                val codePart = body.substring(body.indexOf(threeBackticks), body.lastIndexOf(threeBackticks) + 4)
-                val languageString = codePart.substring(3, codePart.indexOf("\n"))
-                var highlightedBody: String = generateHighlightedHtml(
-                    codePart.substring(codePart.indexOf("\n") + 1, codePart.lastIndexOf(threeBackticks)),
-                    languageString,
-                    MarkdownCodeDelimiter.MULTI_LINE
-                )
-                val newBody = toHtmlConverter.convertMarkdownToHtml(body.replace(codePart, highlightedBody))
-                appendSubpart(newContent, HtmlPart(title, newBody))
-            } else {
-                appendSubpart(newContent, HtmlPart(title, toHtmlConverter.convertMarkdownToHtml(body)))
-            }
+            newContent.adaptBody(title, body, standaloneDocumentation)
         }
         return newContent.append("\n</body></html>").toString()
+    }
+
+    /**
+     * Adapts and appends the provided content to the current `StringBuilder` in an HTML format,
+     * handling markdown conversion, code highlighting, and specific cases for standalone documentation.
+     */
+    private fun StringBuilder.adaptBody(title: String, body: String, standaloneDocumentation: Boolean) {
+        val toHtmlConverter = MarkdownToHtmlConverter(MarkdownDefaultFlavour())
+
+        if (body.contains(threeBackticks)) {
+            val codePart = body.substring(body.indexOf(threeBackticks), body.lastIndexOf(threeBackticks) + 4)
+            val languageString = codePart.substring(3, codePart.indexOf("\n"))
+            val highlightedBody: String = generateHighlightedHtml(
+                codePart.substring(codePart.indexOf("\n") + 1, codePart.lastIndexOf(threeBackticks)),
+                languageString,
+                MarkdownCodeDelimiter.MULTI_LINE
+            )
+
+            val newBody = toHtmlConverter.convertMarkdownToHtml(body.replace(codePart, highlightedBody))
+            appendSubpart(this, HtmlPart(title, newBody))
+        } else if (standaloneDocumentation) {
+            this.append(toHtmlConverter.convertMarkdownToHtml(body))
+        } else {
+            appendSubpart(this, HtmlPart(title, toHtmlConverter.convertMarkdownToHtml(body)))
+        }
     }
 
     /**
@@ -136,7 +161,7 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
                     singleLineCodeResolved.indexOf(oneBacktick, firstIndex + 1) + 1
                 )
 
-                var highlightedBody: String = generateHighlightedHtml(
+                val highlightedBody: String = generateHighlightedHtml(
                     codePart.substring(codePart.indexOf(oneBacktick) + 1, codePart.lastIndexOf(oneBacktick)),
                     "",
                     MarkdownCodeDelimiter.SINGLE_LINE
@@ -183,22 +208,18 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
      * It is fetching three different styles, static, theme dependent and scrollbar and applying them.
      * Also, it generates header HTML content.
      */
-    private fun prepareHeader(editor: Editor, codeSmell: CodeSmell): String {
+    private fun prepareHeader(editor: Editor, codeSmell: CodeSmell, standaloneDocumentation: Boolean = false): String {
         val codeSmellName = codeSmell.category
         val fileName = editor.virtualFile.name
         val lineNumber = codeSmell.highlightRange.startLine
+        val classLoader = this@CodeSceneDocumentationService.javaClass.classLoader
 
         // styling
-        val classLoader = this@CodeSceneDocumentationService.javaClass.classLoader
-        val styleStream = classLoader.getResourceAsStream(Constants.STYLE_BASE_PATH + "code-smell.css")
-        val staticStyleBuilder = StringBuilder()
-        staticStyleBuilder.append(styleStream?.bufferedReader()?.lines()
-            ?.filter { line -> line.trim().isNotEmpty() }
-            ?.collect(Collectors.joining("\n")))
+        val style = getStyling(classLoader)
 
-        val staticStyle = staticStyleBuilder.toString()
-        val scrollbarStyle = JBCefScrollbarsHelper.buildScrollbarsStyle()
-        val themeStyle = PreviewThemeStyles.createStylesheet()
+        // components
+        val heading = getHeading(codeSmellName, standaloneDocumentation, classLoader)
+        val documentationSubHeader = getDocumentationSubHeader(fileName, lineNumber, standaloneDocumentation)
 
         // language=HTML
         val content = """
@@ -208,25 +229,70 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
             |    <meta charset="UTF-8">
             |    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
             |    <style>
-            |        $themeStyle
-            |        $staticStyle
-            |        $scrollbarStyle
+            |        $style
             |    </style>
             |</head>
             |<body>
             |    <br>
-            |    <h2>$codeSmellName</h2>
-            |    <div class="documentation-header">
-            |        <p>
-            |            <span id="function-location">$fileName&nbsp;&nbsp;
-            |                <span id="line-number">[Ln&nbsp;$lineNumber]</span>
-            |            </span>
-            |        </p>
-            |    </div>
+            |    $heading
+            |    $documentationSubHeader
             |    <hr>
             """.trimMargin()
         return content
     }
+
+    /**
+     * Generates an HTML heading for the documentation, optionally including a logo for standalone documentation.
+     */
+    private fun getHeading(codeSmellName: String, standaloneDocumentation: Boolean, classLoader: ClassLoader): String {
+        val logoSvg = classLoader.getResourceAsStream(Constants.LOGO_PATH)?.bufferedReader()?.readText()
+
+        return if (!standaloneDocumentation) "<h2>$codeSmellName</h2>" else
+            """
+        |    <h1 class="icon-header">
+        |        $logoSvg
+        |        Code Health
+        |    </h1>
+        """.trimMargin()
+    }
+
+    /**
+     * Generates a complete CSS stylesheet by combining a base style, scrollbar styling, and theme-specific styles.
+     */
+    private fun getStyling(classLoader: ClassLoader): String {
+        val styleStream = classLoader.getResourceAsStream(Constants.STYLE_BASE_PATH + "code-smell.css")
+        val staticStyleBuilder = StringBuilder()
+
+        val scrollbarStyle = JBCefScrollbarsHelper.buildScrollbarsStyle()
+        val themeStyle = PreviewThemeStyles.createStylesheet()
+
+        staticStyleBuilder.append(styleStream?.bufferedReader()?.lines()
+            ?.filter { line -> line.trim().isNotEmpty() }
+            ?.collect(Collectors.joining("\n")))
+        staticStyleBuilder.append(scrollbarStyle)
+        staticStyleBuilder.append(themeStyle)
+
+        return staticStyleBuilder.toString()
+    }
+
+    /**
+     * Generates an HTML sub-header for code smell files, displaying the file name and line number.
+     * If `standaloneDocumentation` is true (e.g., general code health or code health monitor info),
+     * no sub-header is returned.
+     *
+     */
+    private fun getDocumentationSubHeader(fileName: String, lineNumber: Int, standaloneDocumentation: Boolean) =
+        if (!standaloneDocumentation) {
+            """
+        |    <div class="documentation-header">
+        |        <p>
+        |            <span id="function-location">$fileName&nbsp;&nbsp;
+        |                <span id="line-number">[Ln&nbsp;$lineNumber]</span>
+        |            </span>
+        |        </p>
+        |    </div>
+        """.trimMargin()
+        } else ""
 
     /**
      * Method to create virtual file for our generated documentation content.

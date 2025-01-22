@@ -6,6 +6,9 @@ import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPa
 import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.data.HighlightRange
+import com.codescene.jetbrains.services.CodeSceneDocumentationService
+import com.codescene.jetbrains.util.Constants.CODESCENE
+import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
 import com.codescene.jetbrains.util.HealthDetails
 import com.codescene.jetbrains.util.getCachedDelta
 import com.codescene.jetbrains.util.getCodeHealth
@@ -14,6 +17,7 @@ import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.wm.ToolWindowManager
 import javax.swing.JTree
 
 const val HEALTH_SCORE = "Health Score"
@@ -58,10 +62,19 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
     }
 
     override fun handleLensClick(editor: Editor, category: CodeSmell) {
-        CodeHealthMonitorPanel.getInstance(editor.project!!).contentPanel.components
+        val project = editor.project!!
+        val toolWindowManager = ToolWindowManager.getInstance(project)
+        val service = CodeSceneDocumentationService.getInstance(project)
+
+        val nodeSelected = CodeHealthMonitorPanel.getInstance(project).contentPanel.components
             .filterIsInstance<JTree>()
-            .firstOrNull()?.let {
+            .firstOrNull()
+            ?.let {
+                toolWindowManager.getToolWindow(CODESCENE)?.show()
                 selectNode(it, editor.virtualFile.path)
-            }
+            } ?: false
+
+        if (!nodeSelected)
+            service.openDocumentationPanel(editor, category.copy(category = GENERAL_CODE_HEALTH))
     }
 }

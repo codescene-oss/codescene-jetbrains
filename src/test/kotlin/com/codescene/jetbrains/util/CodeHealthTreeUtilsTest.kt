@@ -178,7 +178,7 @@ class CodeHealthTreeUtilsTest {
     fun `should return parent node when present`() {
         val selectedNode = child22.userObject as CodeHealthFinding
 
-        val result = getParentNode(root, selectedNode)
+        val result = getParentNode(root, selectedNode.filePath)
 
         assertNotNull(result)
         assertEquals(node2, result)
@@ -186,7 +186,7 @@ class CodeHealthTreeUtilsTest {
 
     @Test
     fun `should return null when parent node is not present`() {
-        val result = getParentNode(root, nonExistentFinding)
+        val result = getParentNode(root, nonExistentFinding.filePath)
 
         assertNull(result)
     }

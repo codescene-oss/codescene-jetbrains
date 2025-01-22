@@ -110,6 +110,7 @@ fun categoryToFileName(category: String): String {
 
 // this list needs to match documentation files for code smells (docs/codeSmells)
 val codeSmellNames = listOf(
+    Constants.GENERAL_CODE_HEALTH,
     Constants.BRAIN_CLASS,
     Constants.BRAIN_METHOD,
     Constants.BUMPY_ROAD_AHEAD,
