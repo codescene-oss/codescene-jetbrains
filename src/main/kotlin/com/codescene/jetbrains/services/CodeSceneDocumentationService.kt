@@ -30,7 +30,7 @@ import org.intellij.plugins.markdown.lang.parser.MarkdownDefaultFlavour
 import java.util.stream.Collectors
 
 @Service(Service.Level.PROJECT)
-class CodeSceneDocumentationService(project: Project) : LafManagerListener {
+class CodeSceneDocumentationService(private val project: Project) : LafManagerListener {
     private val fileEditorManager = FileEditorManager.getInstance(project)
 
     init {
@@ -60,21 +60,24 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
         val (editor, codeSmell) = params
 
         Companion.editor = editor
-        val project = editor.project!!
 
-        functionLocation = FunctionLocation(editor.virtualFile.name, codeSmell)
+        functionLocation = if (editor != null) FunctionLocation(editor.virtualFile.name, codeSmell) else null
         val codeSmellFileName = codeSmell.category + ".md"
 
         val markdownContent = prepareMarkdownContent(params)
 
         Log.info("Opening documentation file $codeSmellFileName")
-        val documentationFile = createTempFile(project, codeSmellFileName, markdownContent)
-        if (!fileEditorManager.selectedFiles.contains(documentationFile)) {
+        val documentationFile = createTempFile(codeSmellFileName, markdownContent)
+        if (editor != null && !fileEditorManager.selectedFiles.contains(documentationFile)) {
             // return focus to original file
             fileEditorManager.openFile(editor.virtualFile, true, true)
 
             openInRightSplit(project, documentationFile, null, false)?.closeAllExcept(documentationFile)
         }
+
+        val docNotOpen = fileEditorManager.openFiles.none { it.name == documentationFile.name }
+        val shouldOpenFile = (editor == null || fileEditorManager.openFiles.isEmpty()) && docNotOpen
+        if (shouldOpenFile) fileEditorManager.openFile(documentationFile, false)
     }
 
     /**
@@ -149,7 +152,7 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
             val newBody = toHtmlConverter.convertMarkdownToHtml(body.replace(codePart, highlightedBody))
             appendSubpart(this, HtmlPart(title, newBody))
         } else if (standaloneDocumentation) {
-            this.append(toHtmlConverter.convertMarkdownToHtml(body))
+            append(toHtmlConverter.convertMarkdownToHtml(body))
         } else {
             appendSubpart(this, HtmlPart(title, toHtmlConverter.convertMarkdownToHtml(body)))
         }
@@ -217,9 +220,9 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
      * Also, it generates header HTML content.
      */
     private fun prepareHeader(params: HeadingParams): String {
-        val (codeSmell, standaloneDocumentation, content, classLoader, editor) = params
+        val (codeSmell, standaloneDocumentation, _, classLoader, editor) = params
 
-        val fileName = editor!!.virtualFile.name
+        val fileName = editor?.virtualFile?.name ?: ""
         val lineNumber = codeSmell.highlightRange.startLine
 
         // styling
@@ -309,7 +312,7 @@ class CodeSceneDocumentationService(project: Project) : LafManagerListener {
     /**
      * Method to create virtual file for our generated documentation content.
      */
-    private fun createTempFile(project: Project, name: String, content: String): VirtualFile {
+    private fun createTempFile(name: String, content: String): VirtualFile {
         val file = LightVirtualFile(name, content)
         val psiFile = PsiManager.getInstance(project).findFile(file) ?: return file
         file.isWritable = false
@@ -342,7 +345,7 @@ data class HtmlPart(
 )
 
 data class DocumentationParams(
-    val editor: Editor,
+    val editor: Editor?,
     val codeSmell: CodeSmell
 )
 

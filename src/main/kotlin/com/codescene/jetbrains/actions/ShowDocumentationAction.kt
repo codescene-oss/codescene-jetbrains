@@ -13,19 +13,19 @@ class ShowDocumentationAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         if (e.project != null) {
             val service = CodeSceneDocumentationService.getInstance(e.project!!)
-            val editor = FileEditorManager.getInstance(e.project!!).selectedTextEditor
+            val editorManager = FileEditorManager.getInstance(e.project!!)
+            val editor = editorManager.selectedTextEditor
 
-            if (editor != null) {
-                val params = DocumentationParams(
-                    editor,
-                    CodeSmell(
-                        category = CODE_HEALTH_MONITOR,
-                        highlightRange = HighlightRange(1, 1, 1, 1),
-                        details = ""
-                    )
+            val params = DocumentationParams(
+                editor,
+                CodeSmell(
+                    category = CODE_HEALTH_MONITOR,
+                    highlightRange = HighlightRange(1, 1, 1, 1),
+                    details = ""
                 )
-                service.openDocumentationPanel(params)
-            }
+            )
+
+            service.openDocumentationPanel(params)
         }
     }
 }
