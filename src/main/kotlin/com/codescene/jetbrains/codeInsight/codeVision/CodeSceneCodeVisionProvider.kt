@@ -157,11 +157,11 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
             CODE_SMELL
         )
 
-    open fun handleLensClick(editor: Editor, category: CodeSmell) {
+    open fun handleLensClick(editor: Editor, codeSmell: CodeSmell) {
         val project = editor.project ?: return
         val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
 
-        codeSceneDocumentationService.openDocumentationPanel(DocumentationParams(editor, category))
+        codeSceneDocumentationService.openDocumentationPanel(DocumentationParams(editor, codeSmell))
     }
 
     private fun markApiCallInProgress(filePath: String, apiCalls: MutableSet<String>) {

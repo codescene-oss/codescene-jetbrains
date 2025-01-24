@@ -71,7 +71,7 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
         return arrayListOf(TextRange(0, 0) to entry)
     }
 
-    override fun handleLensClick(editor: Editor, category: CodeSmell) {
+    override fun handleLensClick(editor: Editor, codeSmell: CodeSmell) {
         val project = editor.project!!
         val toolWindowManager = ToolWindowManager.getInstance(project)
         val service = CodeSceneDocumentationService.getInstance(project)
@@ -82,7 +82,11 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
             ?.let { selectNode(it, editor.virtualFile.path) } ?: false
 
         if (!nodeSelected)
-            service.openDocumentationPanel(DocumentationParams(editor, category.copy(category = GENERAL_CODE_HEALTH)))
+            service.openDocumentationPanel(DocumentationParams(editor, CodeSmell().apply {
+                details = codeSmell.details
+                highlightRange = codeSmell.highlightRange
+                category = GENERAL_CODE_HEALTH
+            }))
         else toolWindowManager.getToolWindow(CODESCENE)?.show()
     }
 }
