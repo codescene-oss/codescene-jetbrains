@@ -1,5 +1,7 @@
 package com.codescene.jetbrains.util
 
+import com.codescene.data.review.CodeSmell
+import com.codescene.data.review.Range
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_DECREASE
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_INCREASE
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_NEUTRAL
@@ -9,8 +11,6 @@ import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFind
 import com.codescene.jetbrains.components.codehealth.monitor.tree.NodeType
 import com.codescene.jetbrains.data.ChangeDetails
 import com.codescene.jetbrains.data.CodeDelta
-import com.codescene.jetbrains.data.CodeSmell
-import com.codescene.jetbrains.data.HighlightRange
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.util.Constants.GREEN
 import com.codescene.jetbrains.util.Constants.ORANGE
@@ -177,18 +177,23 @@ private fun getFunctionFindingBody(changeDetails: List<ChangeDetails>?, finding:
             it.changeType.name.lowercase(Locale.getDefault()).replaceFirstChar { it.uppercaseChar() }
         val body =
             "${it.description.replace(finding.displayName, "<code>${finding.displayName}</code>")}"
-        val highlightRange = HighlightRange(
-            startLine = it.position.line,
-            endLine = it.position.line,
-            startColumn = it.position.column,
-            endColumn = it.position.column
-        )
+
+        val codeSmell = CodeSmell().apply {
+            category = it.category
+            details = it.description
+            highlightRange = Range().apply {
+                startLine = it.position.line
+                endLine = it.position.line
+                startColumn = it.position.column
+                endColumn = it.position.column
+            }
+        }
 
         Paragraph(
             body = body,
             heading = "$changeType: ${it.category}",
             icon = CODE_SMELL_FOUND,
-            codeSmell = CodeSmell(category = it.category, highlightRange, details = it.description)
+            codeSmell = codeSmell
         )
     } ?: listOf()
 

@@ -1,9 +1,10 @@
 package com.codescene.jetbrains.services.api
 
 import codescene.devtools.ide.DevToolsAPI
+import com.codescene.ExtensionAPI
+import com.codescene.data.review.Review
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.data.CodeDelta
-import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.UIRefreshService
@@ -60,7 +61,7 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
         handleDeltaResponse(editor, delta, oldCode)
     }
 
-    private fun getDeltaResponse(editor: Editor, oldCode: String, cachedReview: CodeReview?) =
+    private fun getDeltaResponse(editor: Editor, oldCode: String, cachedReview: Review?) =
         runWithClassLoaderChange {
             var rawScore: String? = null
             val path = editor.virtualFile.path
@@ -68,12 +69,12 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
             if (oldCode != "") {
                 Log.debug("Initiating delta review using HEAD commit for $path.")
 
-                val oldCodeReview = Json.decodeFromString<CodeReview>(DevToolsAPI.review(path, oldCode))
+                val oldCodeReview = ExtensionAPI.review(path, oldCode)
                 rawScore = oldCodeReview.rawScore
             }
 
             val newCodeReview =
-                cachedReview ?: Json.decodeFromString<CodeReview>(DevToolsAPI.review(path, editor.document.text))
+                cachedReview ?: ExtensionAPI.review(path, editor.document.text)
 
             val delta = DevToolsAPI.delta(rawScore, newCodeReview.rawScore)
 

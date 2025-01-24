@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.service
 
-import com.codescene.jetbrains.data.CodeReview
+import com.codescene.data.review.Review
 import com.codescene.jetbrains.services.cache.ReviewCacheEntry
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
 import com.codescene.jetbrains.services.cache.ReviewCacheService
@@ -12,7 +12,7 @@ import org.junit.Test
 
 class ReviewCacheServiceTest {
     private lateinit var reviewCacheService: ReviewCacheService
-    private lateinit var response: CodeReview
+    private lateinit var response: Review
 
     private val filePath = "/path/to/file.txt"
     private val fileContents = "code"

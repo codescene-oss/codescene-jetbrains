@@ -1,8 +1,8 @@
 package com.codescene.jetbrains.components.codehealth.detail
 
+import com.codescene.data.review.CodeSmell
 import com.codescene.jetbrains.components.codehealth.detail.slider.CustomSlider
 import com.codescene.jetbrains.components.layout.ResponsiveLayout
-import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_URL
 import com.intellij.openapi.components.Service

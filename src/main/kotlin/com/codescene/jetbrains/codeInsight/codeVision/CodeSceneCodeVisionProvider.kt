@@ -1,9 +1,9 @@
 package com.codescene.jetbrains.codeInsight.codeVision
 
+import com.codescene.data.review.CodeSmell
+import com.codescene.data.review.Review
 import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
-import com.codescene.jetbrains.data.CodeReview
-import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.services.api.CodeDeltaService
 import com.codescene.jetbrains.services.api.CodeReviewService
@@ -115,7 +115,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
     open fun getLenses(
         editor: Editor,
-        result: CodeReview?
+        result: Review?
     ): ArrayList<Pair<TextRange, CodeVisionEntry>> {
         val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
 
@@ -134,7 +134,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         return this.filter { it.category == categoryToFilter }
     }
 
-    private fun getCodeSmellsByCategory(codeAnalysisResult: CodeReview?): List<CodeSmell> {
+    private fun getCodeSmellsByCategory(codeAnalysisResult: Review?): List<CodeSmell> {
         val fileLevelSmells =
             codeAnalysisResult?.fileLevelCodeSmells?.filterByCategory(categoryToFilter) ?: emptyList()
 
