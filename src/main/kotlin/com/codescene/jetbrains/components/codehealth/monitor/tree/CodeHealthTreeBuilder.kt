@@ -1,8 +1,8 @@
 package com.codescene.jetbrains.components.codehealth.monitor.tree
 
+import com.codescene.data.delta.Delta
 import com.codescene.jetbrains.components.codehealth.monitor.tree.listeners.CustomTreeExpansionListener
 import com.codescene.jetbrains.components.codehealth.monitor.tree.listeners.TreeMouseMotionAdapter
-import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.CodeNavigationService
 import com.codescene.jetbrains.util.*
@@ -52,7 +52,7 @@ class CodeHealthTreeBuilder(private val project: Project) {
     }
 
     fun createTree(
-        results: ConcurrentHashMap<String, CodeDelta>
+        results: ConcurrentHashMap<String, Delta>
     ): Tree {
         val root = DefaultMutableTreeNode()
         results.map { buildNode(it.key, it.value) }.forEach { root.add(it) }
@@ -140,7 +140,7 @@ class CodeHealthTreeBuilder(private val project: Project) {
         }
     }
 
-    private fun buildNode(filePath: String, delta: CodeDelta): MutableTreeNode {
+    private fun buildNode(filePath: String, delta: Delta): MutableTreeNode {
         val root = CodeHealthFinding(
             filePath = filePath,
             tooltip = filePath,
@@ -155,22 +155,22 @@ class CodeHealthTreeBuilder(private val project: Project) {
         }
     }
 
-    private fun DefaultMutableTreeNode.addCodeHealthLeaf(filePath: String, delta: CodeDelta) {
+    private fun DefaultMutableTreeNode.addCodeHealthLeaf(filePath: String, delta: Delta) {
         val health = getHealthFinding(filePath, delta)
 
         add(DefaultMutableTreeNode(health))
     }
 
-    private fun DefaultMutableTreeNode.addFileLeaves(filePath: String, delta: CodeDelta) =
+    private fun DefaultMutableTreeNode.addFileLeaves(filePath: String, delta: Delta) =
         delta.fileLevelFindings.forEach {
             val finding = getFileFinding(filePath, it)
 
             add(DefaultMutableTreeNode(finding))
         }
 
-    private fun DefaultMutableTreeNode.addFunctionLeaves(filePath: String, delta: CodeDelta) =
-        delta.functionLevelFindings.forEach { (function, details) ->
-            val finding = getFunctionFinding(filePath, function, details)
+    private fun DefaultMutableTreeNode.addFunctionLeaves(filePath: String, delta: Delta) =
+        delta.functionLevelFindings.forEach {
+            val finding = getFunctionFinding(filePath, it.function, it.changeDetails)
 
             add(DefaultMutableTreeNode(finding))
         }

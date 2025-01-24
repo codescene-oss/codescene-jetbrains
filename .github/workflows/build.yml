@@ -33,7 +33,7 @@ jobs:
   # Prepare environment and build the plugin
   build:
     name: Build
-    runs-on: ubuntu-20.04-8core
+    runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.properties.outputs.version }}
       changelog: ${{ steps.properties.outputs.changelog }}
@@ -101,7 +101,7 @@ jobs:
   test:
     name: Test
     needs: [ build ]
-    runs-on: ubuntu-20.04-8core
+    runs-on: ubuntu-latest
     steps:
 
       # Check out the current repository
@@ -135,7 +135,7 @@ jobs:
   verify:
     name: Verify plugin
     needs: [ build ]
-    runs-on: ubuntu-20.04-8core
+    runs-on: ubuntu-latest
     steps:
 
       # Free GitHub Actions Environment Disk Space
@@ -183,7 +183,7 @@ jobs:
   dependency-check:
     name: Dependency check
     needs: [ build ]
-    runs-on: ubuntu-20.04-8core
+    runs-on: ubuntu-latest
     steps:
 
       # Check out the current repository
@@ -212,7 +212,7 @@ jobs:
   delta-analysis:
     name: CodeScene delta analysis
     needs: [ build ]
-    runs-on: ubuntu-20.04-8core
+    runs-on: ubuntu-latest
     steps:
       - name: Fetch Sources
         uses: actions/checkout@v4
@@ -240,7 +240,7 @@ jobs:
     name: Release draft
     if: github.event_name != 'pull_request'
     needs: [ build, test, verify, dependency-check, delta-analysis ]
-    runs-on: ubuntu-20.04-8core
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:

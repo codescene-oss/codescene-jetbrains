@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.service
 
-import com.codescene.jetbrains.data.CodeDelta
+import com.codescene.data.delta.Delta
 import com.codescene.jetbrains.services.cache.DeltaCacheEntry
 import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
@@ -12,7 +12,7 @@ import org.junit.Test
 
 class DeltaCacheServiceTest {
     private lateinit var deltaCacheService: DeltaCacheService
-    private lateinit var deltaApiResponse: CodeDelta
+    private lateinit var deltaApiResponse: Delta
 
     private val filePath = "/path/to/file.txt"
     private val headCommitContent = "original code"

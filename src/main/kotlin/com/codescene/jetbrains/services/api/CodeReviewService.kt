@@ -15,7 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 
 @Service(Service.Level.PROJECT)
-class CodeReviewService(project: Project) : CodeSceneService() {
+class CodeReviewService(private val project: Project) : CodeSceneService() {
     private val cacheService: ReviewCacheService = ReviewCacheService.getInstance(project)
     private val uiRefreshService: UIRefreshService = UIRefreshService.getInstance(project)
 
@@ -47,6 +47,9 @@ class CodeReviewService(project: Project) : CodeSceneService() {
         val entry = ReviewCacheEntry(fileContents = code, filePath = path, response = result)
         cacheService.put(entry)
 
-        Log.debug("Review response cached for file $fileName with path $path")
+        Log.debug(
+            "Review response cached for file $fileName with path $path",
+            "$serviceImplementation - ${project.name}"
+        )
     }
 }

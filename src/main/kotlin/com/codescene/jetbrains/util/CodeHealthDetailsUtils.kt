@@ -1,5 +1,7 @@
 package com.codescene.jetbrains.util
 
+import com.codescene.data.delta.ChangeDetail
+import com.codescene.data.delta.Delta
 import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Range
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_DECREASE
@@ -9,8 +11,6 @@ import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL_FOUND
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.components.codehealth.monitor.tree.NodeType
-import com.codescene.jetbrains.data.ChangeDetails
-import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.util.Constants.GREEN
 import com.codescene.jetbrains.util.Constants.ORANGE
@@ -110,7 +110,7 @@ private fun <T> extractUsingRegex(input: String, regex: Regex, extractor: (Match
     else null
 }
 
-private fun resolveStatus(delta: CodeDelta, type: NodeType, percentage: String) =
+private fun resolveStatus(delta: Delta, type: NodeType, percentage: String) =
     when (type) {
         NodeType.CODE_HEALTH_NEUTRAL -> ""
         NodeType.CODE_HEALTH_INCREASE ->
@@ -147,7 +147,7 @@ private fun resolveCodeHealthHeader(type: NodeType, newScore: Double, oldScore: 
 private fun getHealthFinding(
     file: Pair<String, String>?,
     finding: CodeHealthFinding,
-    delta: CodeDelta
+    delta: Delta
 ): CodeHealthDetails {
     val healthHeader = resolveCodeHealthHeader(finding.nodeType, delta.newScore, delta.oldScore)
 
@@ -171,10 +171,10 @@ private fun getHealthFinding(
     )
 }
 
-private fun getFunctionFindingBody(changeDetails: List<ChangeDetails>?, finding: CodeHealthFinding) =
+private fun getFunctionFindingBody(changeDetails: List<ChangeDetail>?, finding: CodeHealthFinding) =
     changeDetails?.map { it ->
-        val changeType =
-            it.changeType.name.lowercase(Locale.getDefault()).replaceFirstChar { it.uppercaseChar() }
+        val changeType = it.changeType.lowercase(Locale.getDefault())
+            .replaceFirstChar { it.uppercaseChar() } //todo: verify
         val body =
             "${it.description.replace(finding.displayName, "<code>${finding.displayName}</code>")}"
 
@@ -203,7 +203,7 @@ fun isMatchingFinding(displayName: String, startLine: Int?, finding: CodeHealthF
 private fun getFunctionFinding(
     file: Pair<String, String>?,
     finding: CodeHealthFinding,
-    delta: CodeDelta
+    delta: Delta
 ): CodeHealthDetails {
     val changeDetails = delta.functionLevelFindings
         .find { isMatchingFinding(it.function.name, it.function.range.startLine, finding) }?.changeDetails
@@ -246,7 +246,7 @@ private fun getFileFinding(
     )
 }
 
-fun getHealthFinding(delta: CodeDelta, finding: CodeHealthFinding): CodeHealthDetails? {
+fun getHealthFinding(delta: Delta, finding: CodeHealthFinding): CodeHealthDetails? {
     val file = extractUsingRegex(finding.filePath, Regex(".*/([^/]+)\\.([^.]+)$")) { (fileName, extension) ->
         fileName to extension
     }
