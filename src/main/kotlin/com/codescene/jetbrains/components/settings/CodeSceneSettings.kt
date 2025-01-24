@@ -3,13 +3,22 @@ package com.codescene.jetbrains.components.settings
 import com.codescene.jetbrains.components.settings.tab.AboutTab
 import com.codescene.jetbrains.components.settings.tab.GeneralTab
 import com.codescene.jetbrains.components.settings.tab.SettingsTab
+import com.codescene.jetbrains.services.telemetry.TelemetryService
+import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Constants.CODESCENE
+import com.codescene.jetbrains.util.Log
+import com.intellij.designer.designSurface.ComponentSelectionListener
+import com.intellij.openapi.editor.ex.FocusChangeListener
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.Configurable.Composite
 import com.intellij.ui.components.JBTabbedPane
+import java.awt.event.FocusEvent
+import java.awt.event.FocusListener
+import java.awt.event.WindowEvent
+import java.awt.event.WindowFocusListener
 import javax.swing.JComponent
 
-class CodeSceneSettings : Composite, Configurable {
+class CodeSceneSettings : Composite, Configurable, FocusListener {
     private val settingsTab = SettingsTab()
     private val aboutTab = AboutTab()
     private val generalTab = GeneralTab()
@@ -29,6 +38,8 @@ class CodeSceneSettings : Composite, Configurable {
                     addTab(configurable.displayName, component)
                 }
             }
+
+        TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_SETTINGS}")
     }
 
     override fun isModified(): Boolean = settingsTab.isModified
@@ -37,11 +48,30 @@ class CodeSceneSettings : Composite, Configurable {
         if (settingsTab.isModified) {
             settingsTab.apply()
         }
+        Log.warn("Telemetry event logged: apply() method")
     }
 
-    override fun reset() = settingsTab.reset()
+    override fun reset() {
+        settingsTab.reset()
+//        TelemetryService.getInstance().logUsage(
+//            "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_SETTINGS_VISIBILITY}",
+//            mutableMapOf<String, Any>(Pair("visible", true)))
+    }
 
-    override fun disposeUIResources() = childConfigurables.forEach { it.disposeUIResources() }
+    override fun disposeUIResources() {
+        childConfigurables.forEach { it.disposeUIResources() }
+//        TelemetryService.getInstance().logUsage(
+//            "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_SETTINGS_VISIBILITY}",
+//            mutableMapOf<String, Any>(Pair("visible", false)))
+    }
 
     override fun getDisplayName(): String = CODESCENE
+
+    override fun focusGained(e: FocusEvent?) {
+        Log.warn("Telemetry event logged: {visible: ${e?.component?.isVisible}}")
+    }
+
+    override fun focusLost(e: FocusEvent?) {
+        Log.warn("Telemetry event logged: {visible: ${e?.component?.isVisible}}")
+    }
 }

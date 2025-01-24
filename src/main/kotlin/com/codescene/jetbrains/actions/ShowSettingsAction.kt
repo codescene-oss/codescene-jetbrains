@@ -9,7 +9,6 @@ import com.intellij.openapi.options.ShowSettingsUtil
 
 class ShowSettingsAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
-        TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_SETTINGS}")
         ShowSettingsUtil.getInstance().showSettingsDialog(
             e.project, CODESCENE
         )

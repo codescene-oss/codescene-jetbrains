@@ -62,7 +62,11 @@ object Constants {
     const val TELEMETRY_DETAILS_FUNCTION_SELECTED = "code_health_details/function_selected"
     const val TELEMETRY_DETAILS_FUNCTION_DESELECTED = "code_health_details/function_deselected"
 
+    // visibility events ?
+    const val TELEMETRY_SETTINGS_VISIBILITY = "control_center/visibility"
+    const val TELEMETRY_MONITOR_VISIBILITY = "code_health_monitor/visibility"
+    const val TELEMETRY_DETAILS_VISIBILITY = "code_health_details/visibility"
+
     // not yet implemented
     const val TELEMETRY_STATS = "stats"
-    // visibility events ?
 }
