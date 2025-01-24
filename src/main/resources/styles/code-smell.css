@@ -56,10 +56,22 @@ code {
   border-radius: 3px;
 }
 
+svg {
+  margin-right: 10px;
+  width: 70px;
+  height: 70px
+}
+
 #function-location {
   font-size: smaller;
   cursor: pointer;
   padding: 4px;
   margin: 4px 0;
   border-radius: 4px;
+}
+
+.icon-header {
+  display: flex;
+  align-items: center;
+  margin: 0px;
 }
