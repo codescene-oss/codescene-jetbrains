@@ -8,8 +8,11 @@ object Constants {
     const val CODESCENE_SERVER_URL = "https://codescene.io"
     const val DOCUMENTATION_URL = "$CODESCENE_SERVER_URL/docs/"
     const val EXAMPLE_SERVER_URL = "https://domain.com"
-    const val DOCUMENTATION_BASE_PATH = "docs/issues/"
+    const val DOCUMENTATION_BASE_PATH = "docs/"
+    const val ISSUES_PATH = "${DOCUMENTATION_BASE_PATH}issues/"
     const val STYLE_BASE_PATH = "styles/"
+    const val IMAGES_BASE_PATH = "images/"
+    const val LOGO_PATH = "${IMAGES_BASE_PATH}logo.svg"
     const val CODESCENE_URL = "https://codescene.com"
     const val CODE_HEALTH_URL = "$CODESCENE_URL/product/code-health#:~:text=Code%20Health%20is%20an%20aggregated,negative%20outcomes%20for%20your%20project"
     const val TERMS_AND_CONDITIONS_URL = "$CODESCENE_URL/policies"
@@ -19,6 +22,9 @@ object Constants {
     val RED = JBColor(Color(224, 82, 92), Color(224, 82, 92))
     val GREEN = JBColor(Color(79, 159, 120), Color(79, 159, 120))
     val ORANGE = JBColor(Color(250, 163, 125), Color(238, 147, 107))
+
+    const val GENERAL_CODE_HEALTH = "General Code Health"
+    const val CODE_HEALTH_MONITOR = "Code Health Monitor"
 
     const val BRAIN_CLASS = "Brain Class"
     const val BRAIN_METHOD = "Brain Method"

@@ -106,7 +106,7 @@ class CodeHealthTreeBuilder(private val project: Project) {
     private fun selectNode(tree: JTree) =
         SwingUtilities.invokeLater {
             val root = tree.model.root as DefaultMutableTreeNode
-            val parent = getParentNode(root, selectedNode!!)
+            val parent = getParentNode(root, selectedNode!!.filePath)
             val selectedChild = getSelectedNode(parent, selectedNode!!)
 
             if (selectedChild != null) {

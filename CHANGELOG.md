@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.0.7-beta] - 2024-01-23
+### Added
+- Help action for the Code Health Monitor added to the tool window, enabling users to access its documentation
+
+### Changed
+- Clicking on a Code Health code vision shows the tool window if it was not in focus when a monitor entry exists; otherwise, it opens the documentation file about Code Health. 
+- Adjusted documentation parsing and opening logic to support standalone documentation (Code Health & Code Health Monitor).
+
+## [0.0.6-beta] - 2024-01-21
 ### Fixed
 - Resolved an issue in the Code Health Monitor where multiple issues within the same method but at different lines displayed the same details in the Code Health Details section.
 

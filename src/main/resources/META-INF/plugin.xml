@@ -20,6 +20,12 @@
                 icon="AllIcons.General.Gear"
                 description="Open the settings dialog"
                 class="com.codescene.jetbrains.actions.ShowSettingsAction"/>
+
+        <action
+                id="ShowDocumentationAction"
+                text="Code Health Monitoring Help"
+                icon="com.intellij.icons.ExpUiIcons.General.Help"
+                class="com.codescene.jetbrains.actions.ShowDocumentationAction"/>
     </actions>
 
     <extensions defaultExtensionNs="com.intellij">

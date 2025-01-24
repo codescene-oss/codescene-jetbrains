@@ -45,13 +45,16 @@ fun getFunctionFinding(filePath: String, function: Function, details: List<Chang
     nodeType = NodeType.FUNCTION_FINDING
 )
 
-fun selectNode(tree: JTree, filePath: String) {
+fun selectNode(tree: JTree, filePath: String): Boolean {
     val root = tree.model.root as DefaultMutableTreeNode
     val targetNode = findHealthNodeForPath(root, filePath)
 
     targetNode?.let {
         tree.selectionModel.selectionPath = TreePath(it.path)
+        return true
     }
+
+    return false
 }
 
 fun findHealthNodeForPath(root: DefaultMutableTreeNode, filePath: String): DefaultMutableTreeNode? =
@@ -60,10 +63,10 @@ fun findHealthNodeForPath(root: DefaultMutableTreeNode, filePath: String): Defau
         .firstOrNull { (it.userObject as? CodeHealthFinding)?.filePath == filePath }
         ?.getChildAt(0) as? DefaultMutableTreeNode
 
-fun getParentNode(root: DefaultMutableTreeNode, selectedNode: CodeHealthFinding) =
+fun getParentNode(root: DefaultMutableTreeNode, path: String) =
     (0 until root.childCount)
         .map { root.getChildAt(it) as DefaultMutableTreeNode }
-        .find { (it.userObject as CodeHealthFinding).filePath == selectedNode.filePath }
+        .find { (it.userObject as CodeHealthFinding).filePath == path }
 
 fun getSelectedNode(parent: DefaultMutableTreeNode?, selectedNode: CodeHealthFinding): DefaultMutableTreeNode? {
     if (parent == null) return null

@@ -12,6 +12,7 @@ import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.components.codehealth.monitor.tree.NodeType
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
+import com.codescene.jetbrains.services.DocumentationParams
 import com.codescene.jetbrains.util.Constants.GREEN
 import com.codescene.jetbrains.util.Constants.ORANGE
 import com.codescene.jetbrains.util.Constants.RED
@@ -277,7 +278,7 @@ private fun handleMouseClick(project: Project, codeSmell: CodeSmell, filePath: S
         )
 
         editorManager.openTextEditor(fileDescriptor, true)
-        editorManager.selectedTextEditor?.let { documentationService.openDocumentationPanel(it, codeSmell) }
+        editorManager.selectedTextEditor?.let { documentationService.openDocumentationPanel(DocumentationParams(it, codeSmell)) }
     }
 }
 
