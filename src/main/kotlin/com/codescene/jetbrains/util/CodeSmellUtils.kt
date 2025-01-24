@@ -108,8 +108,10 @@ fun categoryToFileName(category: String): String {
     return category.trim().replace(" ", "-").replace(",", "").toLowerCasePreservingASCIIRules()
 }
 
-// this list needs to match documentation files for code smells (docs/codeSmells)
+// this list needs to match documentation files for code smells, code health and code health monitor (/docs)
 val codeSmellNames = listOf(
+    Constants.GENERAL_CODE_HEALTH,
+    Constants.CODE_HEALTH_MONITOR,
     Constants.BRAIN_CLASS,
     Constants.BRAIN_METHOD,
     Constants.BUMPY_ROAD_AHEAD,
