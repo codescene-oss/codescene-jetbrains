@@ -80,9 +80,11 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
             fileEditorManager.openFile(editor.virtualFile, true, true)
 
             openInRightSplit(project, documentationFile, null, false)?.closeAllExcept(documentationFile)
+            if (docsSourceType != DocsSourceType.NONE) {
             TelemetryService.Companion.getInstance().logUsage(
                 "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_DOCS_PANEL}",
                 mutableMapOf<String, Any>(Pair("source", docsSourceType.value), Pair("category", codeSmell.category)))
+                }
         }
 
         val docNotOpen = fileEditorManager.openFiles.none { it.name == documentationFile.name }
