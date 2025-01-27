@@ -35,4 +35,7 @@ object CodeSceneIcons {
 
     @JvmField
     val STATUS = getIcon("/images/status.svg", javaClass)
+
+    @JvmField
+    val HELP = getIcon("/images/help.svg", javaClass)
 }
