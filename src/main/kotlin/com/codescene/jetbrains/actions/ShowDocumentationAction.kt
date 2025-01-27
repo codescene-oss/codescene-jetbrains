@@ -1,7 +1,7 @@
 package com.codescene.jetbrains.actions
 
-import com.codescene.jetbrains.data.CodeSmell
-import com.codescene.jetbrains.data.HighlightRange
+import com.codescene.data.review.CodeSmell
+import com.codescene.data.review.Range
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.services.DocsSourceType
 import com.codescene.jetbrains.services.DocumentationParams
@@ -17,15 +17,17 @@ class ShowDocumentationAction : AnAction() {
             val editorManager = FileEditorManager.getInstance(e.project!!)
             val editor = editorManager.selectedTextEditor
 
-            val params = DocumentationParams(
-                editor,
-                CodeSmell(
-                    category = CODE_HEALTH_MONITOR,
-                    highlightRange = HighlightRange(1, 1, 1, 1),
-                    details = ""
-                ),
-                DocsSourceType.NONE
-            )
+            val codeSmell = CodeSmell().apply {
+                category = CODE_HEALTH_MONITOR
+                highlightRange = Range().apply {
+                    startLine = 1
+                    startColumn = 1
+                    endLine = 1
+                    endColumn = 1
+                }
+                details = ""
+            }
+            val params = DocumentationParams(editor, codeSmell, DocsSourceType.NONE)
 
             service.openDocumentationPanel(params)
         }

@@ -14,7 +14,7 @@ abstract class CodeSceneService : BaseService(), Disposable {
     abstract val activeReviewCalls: MutableMap<String, Job>
 
     private val debounceDelay: Long = TimeUnit.SECONDS.toMillis(3)
-    private val serviceImplementation = this::class.java.simpleName
+    protected val serviceImplementation: String = this::class.java.simpleName
 
     abstract fun review(editor: Editor)
 

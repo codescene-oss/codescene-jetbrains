@@ -1,9 +1,9 @@
 package com.codescene.jetbrains.components.codehealth.monitor
 
+import com.codescene.data.delta.Delta
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthTreeBuilder
-import com.codescene.jetbrains.data.CodeDelta
 import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.cache.DeltaCacheQuery
@@ -44,7 +44,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
         border = null
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
     }
-    val healthMonitoringResults: ConcurrentHashMap<String, CodeDelta> = ConcurrentHashMap()
+    val healthMonitoringResults: ConcurrentHashMap<String, Delta> = ConcurrentHashMap()
 
     companion object {
         fun getInstance(project: Project): CodeHealthMonitorPanel = project.service<CodeHealthMonitorPanel>()

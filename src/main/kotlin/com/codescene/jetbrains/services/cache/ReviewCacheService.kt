@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.services.cache
 
-import com.codescene.jetbrains.data.CodeReview
+import com.codescene.data.review.Review
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -8,7 +8,7 @@ import org.apache.commons.codec.digest.DigestUtils
 
 data class ReviewCacheItem(
     val fileContents: String,
-    val response: CodeReview
+    val response: Review
 )
 
 data class ReviewCacheQuery(
@@ -19,16 +19,16 @@ data class ReviewCacheQuery(
 data class ReviewCacheEntry(
     val fileContents: String,
     val filePath: String,
-    val response: CodeReview
+    val response: Review
 )
 
 @Service(Service.Level.PROJECT)
-class ReviewCacheService : CacheService<ReviewCacheQuery, ReviewCacheEntry, ReviewCacheItem, CodeReview>() {
+class ReviewCacheService : CacheService<ReviewCacheQuery, ReviewCacheEntry, ReviewCacheItem, Review>() {
     companion object {
         fun getInstance(project: Project): ReviewCacheService = project.service<ReviewCacheService>()
     }
 
-    override fun get(query: ReviewCacheQuery): CodeReview? {
+    override fun get(query: ReviewCacheQuery): Review? {
         val (fileContents, filePath) = query
 
         val hash = DigestUtils.sha256Hex(fileContents)

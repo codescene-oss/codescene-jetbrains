@@ -1,8 +1,8 @@
 package com.codescene.jetbrains.codeInsight.annotator
 
+import com.codescene.data.review.CodeSmell
+import com.codescene.data.review.Review
 import com.codescene.jetbrains.codeInsight.intentions.ShowProblemIntentionAction
-import com.codescene.jetbrains.data.CodeReview
-import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
 import com.codescene.jetbrains.services.cache.ReviewCacheService
 import com.codescene.jetbrains.util.Log
@@ -34,7 +34,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
         annotateFile(psiFile, holder, annotationContext.cache)
     }
 
-    private fun annotateFile(psiFile: PsiFile, holder: AnnotationHolder, reviewCache: CodeReview?) {
+    private fun annotateFile(psiFile: PsiFile, holder: AnnotationHolder, reviewCache: Review?) {
         val document = FileDocumentManager.getInstance().getDocument(psiFile.virtualFile) ?: return
 
         if (reviewCache != null) {
@@ -63,7 +63,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
         }
     }
 
-    private fun fetchCache(psiFile: PsiFile, content: String): CodeReview? {
+    private fun fetchCache(psiFile: PsiFile, content: String): Review? {
         val path = psiFile.virtualFile.path
         val query = ReviewCacheQuery(content, path)
 
@@ -89,5 +89,5 @@ class CodeSmellAnnotator : ExternalAnnotator<
     override fun doAnnotate(collectedInfo: AnnotationContext): AnnotationContext? =
         collectedInfo.takeIf { it.cache != null }
 
-    class AnnotationContext(val cache: CodeReview?)
+    class AnnotationContext(val cache: Review?)
 }

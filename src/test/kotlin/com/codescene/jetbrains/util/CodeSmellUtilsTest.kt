@@ -1,7 +1,7 @@
 package com.codescene.jetbrains.util
 
-import com.codescene.jetbrains.data.CodeSmell
-import com.codescene.jetbrains.data.HighlightRange
+import com.codescene.data.review.CodeSmell
+import com.codescene.data.review.Range
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.util.TextRange
 import io.mockk.every
@@ -11,11 +11,17 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.awt.Color
 
-val codeSmell = CodeSmell(
-    category = "",
-    details = "",
-    highlightRange = HighlightRange(394, 10, 394, 26)
-)
+val codeSmell = CodeSmell().apply {
+    category = ""
+    details = ""
+    highlightRange = Range().apply {
+        startLine = 394
+        startColumn = 10
+        endLine = 394
+        endColumn = 26
+    }
+}
+
 val color = Color(170, 99, 243, 100)
 const val startOffset = 10
 const val endOffset = 50

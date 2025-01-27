@@ -1,11 +1,11 @@
 package com.codescene.jetbrains.codeInsight.codeVision.providers
 
+import com.codescene.data.review.CodeSmell
+import com.codescene.data.review.Range
+import com.codescene.data.review.Review
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPanel
-import com.codescene.jetbrains.data.CodeReview
-import com.codescene.jetbrains.data.CodeSmell
-import com.codescene.jetbrains.data.HighlightRange
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.services.DocsSourceType
 import com.codescene.jetbrains.services.DocumentationParams
@@ -28,7 +28,16 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override val categoryToFilter = HEALTH_SCORE
 
     private fun getCodeVisionEntry(description: String): ClickableTextCodeVisionEntry {
-        val codeHealth = CodeSmell("Code Health", HighlightRange(1, 1, 1, 1), "")
+        val codeHealth = CodeSmell().apply {
+            category = "Code Health"
+            highlightRange = Range().apply {
+                startLine = 1
+                startColumn = 1
+                endLine = 1
+                endColumn = 1
+            }
+            details = ""
+        }
 
         return ClickableTextCodeVisionEntry(
             "Code Health: $description",
@@ -38,7 +47,7 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
         )
     }
 
-    private fun getDescription(editor: Editor, result: CodeReview?): String? {
+    private fun getDescription(editor: Editor, result: Review?): String? {
         val cachedDelta = getCachedDelta(editor)
         val hasChanged = cachedDelta?.oldScore != cachedDelta?.newScore
 
@@ -55,7 +64,7 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
         }
     }
 
-    override fun getLenses(editor: Editor, result: CodeReview?): ArrayList<Pair<TextRange, CodeVisionEntry>> {
+    override fun getLenses(editor: Editor, result: Review?): ArrayList<Pair<TextRange, CodeVisionEntry>> {
         val description = getDescription(editor, result) ?: return arrayListOf()
 
         val entry = getCodeVisionEntry(description)
@@ -63,7 +72,7 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
         return arrayListOf(TextRange(0, 0) to entry)
     }
 
-    override fun handleLensClick(editor: Editor, category: CodeSmell) {
+    override fun handleLensClick(editor: Editor, codeSmell: CodeSmell) {
         val project = editor.project!!
         val toolWindowManager = ToolWindowManager.getInstance(project)
         val service = CodeSceneDocumentationService.getInstance(project)
@@ -74,8 +83,14 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
             ?.let { selectNode(it, editor.virtualFile.path) } ?: false
 
         if (!nodeSelected)
-            service.openDocumentationPanel(
-                DocumentationParams(editor, category.copy(category = GENERAL_CODE_HEALTH), DocsSourceType.NONE))
+            service.openDocumentationPanel(DocumentationParams(
+                editor,
+                CodeSmell().apply {
+                    details = codeSmell.details
+                    highlightRange = codeSmell.highlightRange
+                    category = GENERAL_CODE_HEALTH
+                },
+                DocsSourceType.NONE))
         else toolWindowManager.getToolWindow(CODESCENE)?.show()
     }
 }

@@ -1,5 +1,9 @@
 package com.codescene.jetbrains.util
 
+import com.codescene.data.delta.ChangeDetail
+import com.codescene.data.delta.Delta
+import com.codescene.data.review.CodeSmell
+import com.codescene.data.review.Range
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_DECREASE
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_INCREASE
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_NEUTRAL
@@ -7,10 +11,6 @@ import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL_FOUND
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.components.codehealth.monitor.tree.NodeType
-import com.codescene.jetbrains.data.ChangeDetails
-import com.codescene.jetbrains.data.CodeDelta
-import com.codescene.jetbrains.data.CodeSmell
-import com.codescene.jetbrains.data.HighlightRange
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.services.DocsSourceType
 import com.codescene.jetbrains.services.DocumentationParams
@@ -27,7 +27,6 @@ import com.intellij.ui.JBColor
 import java.awt.Cursor
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import java.util.*
 import javax.swing.Icon
 
 data class SubHeader(
@@ -112,7 +111,7 @@ private fun <T> extractUsingRegex(input: String, regex: Regex, extractor: (Match
     else null
 }
 
-private fun resolveStatus(delta: CodeDelta, type: NodeType, percentage: String) =
+private fun resolveStatus(delta: Delta, type: NodeType, percentage: String) =
     when (type) {
         NodeType.CODE_HEALTH_NEUTRAL -> ""
         NodeType.CODE_HEALTH_INCREASE ->
@@ -149,7 +148,7 @@ private fun resolveCodeHealthHeader(type: NodeType, newScore: Double, oldScore: 
 private fun getHealthFinding(
     file: Pair<String, String>?,
     finding: CodeHealthFinding,
-    delta: CodeDelta
+    delta: Delta
 ): CodeHealthDetails {
     val healthHeader = resolveCodeHealthHeader(finding.nodeType, delta.newScore, delta.oldScore)
 
@@ -173,24 +172,27 @@ private fun getHealthFinding(
     )
 }
 
-private fun getFunctionFindingBody(changeDetails: List<ChangeDetails>?, finding: CodeHealthFinding) =
+private fun getFunctionFindingBody(changeDetails: List<ChangeDetail>?, finding: CodeHealthFinding) =
     changeDetails?.map { it ->
-        val changeType =
-            it.changeType.name.lowercase(Locale.getDefault()).replaceFirstChar { it.uppercaseChar() }
-        val body =
-            "${it.description.replace(finding.displayName, "<code>${finding.displayName}</code>")}"
-        val highlightRange = HighlightRange(
-            startLine = it.position.line,
-            endLine = it.position.line,
-            startColumn = it.position.column,
-            endColumn = it.position.column
-        )
+        val changeType = it.changeType.replaceFirstChar { it.uppercaseChar() }
+        val body = it.description.replace(finding.displayName, "<code>${finding.displayName}</code>")
+
+        val codeSmell = CodeSmell().apply {
+            category = it.category
+            details = it.description
+            highlightRange = Range().apply {
+                startLine = it.position.line
+                endLine = it.position.line
+                startColumn = it.position.column
+                endColumn = it.position.column
+            }
+        }
 
         Paragraph(
             body = body,
             heading = "$changeType: ${it.category}",
             icon = CODE_SMELL_FOUND,
-            codeSmell = CodeSmell(category = it.category, highlightRange, details = it.description)
+            codeSmell = codeSmell
         )
     } ?: listOf()
 
@@ -200,7 +202,7 @@ fun isMatchingFinding(displayName: String, startLine: Int?, finding: CodeHealthF
 private fun getFunctionFinding(
     file: Pair<String, String>?,
     finding: CodeHealthFinding,
-    delta: CodeDelta
+    delta: Delta
 ): CodeHealthDetails {
     val changeDetails = delta.functionLevelFindings
         .find { isMatchingFinding(it.function.name, it.function.range.startLine, finding) }?.changeDetails
@@ -243,7 +245,7 @@ private fun getFileFinding(
     )
 }
 
-fun getHealthFinding(delta: CodeDelta, finding: CodeHealthFinding): CodeHealthDetails? {
+fun getHealthFinding(delta: Delta, finding: CodeHealthFinding): CodeHealthDetails? {
     val file = extractUsingRegex(finding.filePath, Regex(".*/([^/]+)\\.([^.]+)$")) { (fileName, extension) ->
         fileName to extension
     }
@@ -275,7 +277,14 @@ private fun handleMouseClick(project: Project, codeSmell: CodeSmell, filePath: S
 
         editorManager.openTextEditor(fileDescriptor, true)
         editorManager.selectedTextEditor?.let {
-            documentationService.openDocumentationPanel(DocumentationParams(it, codeSmell, DocsSourceType.CODE_HEALTH_DETAILS)) }
+            documentationService.openDocumentationPanel(
+                DocumentationParams(
+                    it,
+                    codeSmell,
+                    DocsSourceType.CODE_HEALTH_DETAILS
+                )
+            )
+        }
     }
 }
 

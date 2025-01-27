@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.codeInsight.intentions
 
-import com.codescene.jetbrains.data.CodeSmell
+import com.codescene.data.review.CodeSmell
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.services.DocsSourceType
 import com.codescene.jetbrains.services.DocumentationParams

@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.services.cache
 
-import com.codescene.jetbrains.data.CodeDelta
+import com.codescene.data.delta.Delta
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -9,14 +9,14 @@ import org.apache.commons.codec.digest.DigestUtils
 data class DeltaCacheItem(
     val headHash: String,
     val currentHash: String,
-    val deltaApiResponse: CodeDelta,
+    val deltaApiResponse: Delta,
 )
 
 data class DeltaCacheEntry(
     val filePath: String,
     val headContent: String,
     val currentFileContent: String,
-    val deltaApiResponse: CodeDelta,
+    val deltaApiResponse: Delta,
 )
 
 data class DeltaCacheQuery(
@@ -26,12 +26,12 @@ data class DeltaCacheQuery(
 )
 
 @Service(Service.Level.PROJECT)
-class DeltaCacheService : CacheService<DeltaCacheQuery, DeltaCacheEntry, DeltaCacheItem, CodeDelta>() {
+class DeltaCacheService : CacheService<DeltaCacheQuery, DeltaCacheEntry, DeltaCacheItem, Delta>() {
     companion object {
         fun getInstance(project: Project): DeltaCacheService = project.service<DeltaCacheService>()
     }
 
-    override fun get(query: DeltaCacheQuery): CodeDelta? {
+    override fun get(query: DeltaCacheQuery): Delta? {
         val (filePath, headCommitContent, currentFileContent) = query
 
         val oldHash = DigestUtils.sha256Hex(headCommitContent)
