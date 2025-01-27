@@ -20,6 +20,14 @@ class CodeSceneGlobalSettingsStore : PersistentStateComponent<CodeSceneGlobalSet
         extensionSettingsState = state
     }
 
+    fun updateTermsAndConditionsAcceptance(hasAccepted: Boolean) {
+        extensionSettingsState.termsAndConditionsAccepted = hasAccepted
+
+        ApplicationManager.getApplication().invokeLater {
+            ApplicationManager.getApplication().saveSettings()
+        }
+    }
+
     companion object {
         fun getInstance(): CodeSceneGlobalSettingsStore {
             return ApplicationManager.getApplication().getService(CodeSceneGlobalSettingsStore::class.java)

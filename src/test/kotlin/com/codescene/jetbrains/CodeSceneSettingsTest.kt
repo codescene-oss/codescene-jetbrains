@@ -34,6 +34,20 @@ class CodeSceneGlobalSettingsStoreTest : BasePlatformTestCase() {
         assertEquals(defaultServerUrl, currentState.serverUrl)
     }
 
+    fun `test updateTermsAndConditionsAcceptance updates the state correctly`() {
+        val newState = createCustomState()
+
+        settingsStore.loadState(newState)
+
+        settingsStore.updateTermsAndConditionsAcceptance(true)
+
+        assertTrue(settingsStore.state.termsAndConditionsAccepted)
+
+        settingsStore.updateTermsAndConditionsAcceptance(false)
+
+        assertFalse(settingsStore.state.termsAndConditionsAccepted)
+    }
+
     private fun assertDefaultState(state: CodeSceneGlobalSettings) {
         assertEquals(defaultServerUrl, state.serverUrl)
         assertTrue(state.enableCodeLenses)
@@ -43,9 +57,6 @@ class CodeSceneGlobalSettingsStoreTest : BasePlatformTestCase() {
     }
 
     private fun createCustomState(): CodeSceneGlobalSettings = CodeSceneGlobalSettings(
-        foldingRangeProvider = "new-provider",
-        defaultEditorFormatter = "new-formatter",
-        defaultNotebookFormatter = "new-notebook-formatter",
         serverUrl = "https://new-server.com",
         enableCodeLenses = false,
         enableAutoRefactor = true,
