@@ -1,16 +1,15 @@
 package com.codescene.jetbrains.util
 
+import com.codescene.data.delta.ChangeDetail
+import com.codescene.data.delta.Delta
+import com.codescene.data.delta.Function
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.components.codehealth.monitor.tree.NodeType
-import com.codescene.jetbrains.data.ChangeDetails
-import com.codescene.jetbrains.data.ChangeType
-import com.codescene.jetbrains.data.CodeDelta
-import com.codescene.jetbrains.data.Function
 import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
 
-fun getHealthFinding(filePath: String, delta: CodeDelta): CodeHealthFinding {
+fun getHealthFinding(filePath: String, delta: Delta): CodeHealthFinding {
     val healthDetails = HealthDetails(delta.oldScore, delta.newScore)
     val (change, percentage) = getCodeHealth(healthDetails)
 
@@ -27,8 +26,8 @@ private fun resolveHealthNodeType(oldScore: Double, newScore: Double): NodeType 
     else if (oldScore == newScore) NodeType.CODE_HEALTH_NEUTRAL
     else NodeType.CODE_HEALTH_INCREASE
 
-fun getFileFinding(filePath: String, result: ChangeDetails): CodeHealthFinding {
-    val positiveChange = result.changeType == ChangeType.FIXED || result.changeType == ChangeType.IMPROVED
+fun getFileFinding(filePath: String, result: ChangeDetail): CodeHealthFinding {
+    val positiveChange = result.changeType == "fixed" || result.changeType == "improved"
 
     return CodeHealthFinding(
         tooltip = result.description,
@@ -38,7 +37,7 @@ fun getFileFinding(filePath: String, result: ChangeDetails): CodeHealthFinding {
     )
 }
 
-fun getFunctionFinding(filePath: String, function: Function, details: List<ChangeDetails>) = CodeHealthFinding(
+fun getFunctionFinding(filePath: String, function: Function, details: List<ChangeDetail>) = CodeHealthFinding(
     tooltip = getFunctionDeltaTooltip(function, details),
     filePath,
     displayName = function.name,

@@ -1,8 +1,7 @@
 package com.codescene.jetbrains.services.api
 
-import codescene.devtools.ide.DevToolsAPI
+import com.codescene.ExtensionAPI
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
-import com.codescene.jetbrains.data.CodeReview
 import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.cache.ReviewCacheEntry
 import com.codescene.jetbrains.services.cache.ReviewCacheService
@@ -14,10 +13,9 @@ import com.intellij.openapi.project.Project
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.serialization.json.Json
 
 @Service(Service.Level.PROJECT)
-class CodeReviewService(project: Project) : CodeSceneService() {
+class CodeReviewService(private val project: Project) : CodeSceneService() {
     private val cacheService: ReviewCacheService = ReviewCacheService.getInstance(project)
     private val uiRefreshService: UIRefreshService = UIRefreshService.getInstance(project)
 
@@ -44,15 +42,14 @@ class CodeReviewService(project: Project) : CodeSceneService() {
         val fileName = file.name
         val code = editor.document.text
 
-        val result = runWithClassLoaderChange {
-            DevToolsAPI.review(path, code)
-        }
+        val result = runWithClassLoaderChange { ExtensionAPI.review(path, code) }
 
-        val parsedData = Json.decodeFromString<CodeReview>(result)
-
-        val entry = ReviewCacheEntry(fileContents = code, filePath = path, response = parsedData)
+        val entry = ReviewCacheEntry(fileContents = code, filePath = path, response = result)
         cacheService.put(entry)
 
-        Log.debug("Review response cached for file $fileName with path $path")
+        Log.debug(
+            "Review response cached for file $fileName with path $path",
+            "$serviceImplementation - ${project.name}"
+        )
     }
 }

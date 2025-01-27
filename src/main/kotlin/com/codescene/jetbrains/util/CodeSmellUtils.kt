@@ -1,7 +1,7 @@
 package com.codescene.jetbrains.util
 
+import com.codescene.data.review.CodeSmell
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
-import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.editor.Document
@@ -115,8 +115,8 @@ val codeSmellNames = listOf(
     Constants.BRAIN_CLASS,
     Constants.BRAIN_METHOD,
     Constants.BUMPY_ROAD_AHEAD,
-    Constants.COMPLEX_CONDITIONAL ,
-    Constants.COMPLEX_METHOD ,
+    Constants.COMPLEX_CONDITIONAL,
+    Constants.COMPLEX_METHOD,
     Constants.CONSTRUCTOR_OVER_INJECTION,
     Constants.DUPLICATED_ASSERTION_BLOCKS,
     Constants.CODE_DUPLICATION,

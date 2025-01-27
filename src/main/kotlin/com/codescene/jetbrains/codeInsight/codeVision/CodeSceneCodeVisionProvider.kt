@@ -1,9 +1,9 @@
 package com.codescene.jetbrains.codeInsight.codeVision
 
+import com.codescene.data.review.CodeSmell
+import com.codescene.data.review.Review
 import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
-import com.codescene.jetbrains.data.CodeReview
-import com.codescene.jetbrains.data.CodeSmell
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.services.DocumentationParams
 import com.codescene.jetbrains.services.api.CodeDeltaService
@@ -116,7 +116,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
     open fun getLenses(
         editor: Editor,
-        result: CodeReview?
+        result: Review?
     ): ArrayList<Pair<TextRange, CodeVisionEntry>> {
         val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
 
@@ -135,7 +135,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         return this.filter { it.category == categoryToFilter }
     }
 
-    private fun getCodeSmellsByCategory(codeAnalysisResult: CodeReview?): List<CodeSmell> {
+    private fun getCodeSmellsByCategory(codeAnalysisResult: Review?): List<CodeSmell> {
         val fileLevelSmells =
             codeAnalysisResult?.fileLevelCodeSmells?.filterByCategory(categoryToFilter) ?: emptyList()
 
@@ -157,11 +157,11 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
             CODE_SMELL
         )
 
-    open fun handleLensClick(editor: Editor, category: CodeSmell) {
+    open fun handleLensClick(editor: Editor, codeSmell: CodeSmell) {
         val project = editor.project ?: return
         val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
 
-        codeSceneDocumentationService.openDocumentationPanel(DocumentationParams(editor, category))
+        codeSceneDocumentationService.openDocumentationPanel(DocumentationParams(editor, codeSmell))
     }
 
     private fun markApiCallInProgress(filePath: String, apiCalls: MutableSet<String>) {

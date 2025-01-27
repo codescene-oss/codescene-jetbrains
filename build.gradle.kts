@@ -10,15 +10,13 @@ plugins {
     alias(libs.plugins.kotlin) // Kotlin support
     alias(libs.plugins.intelliJPlatform) // IntelliJ Platform Gradle Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
-    kotlin("plugin.serialization") version "2.0.21"
 }
 
 group = providers.gradleProperty("pluginGroup").get()
 version = providers.gradleProperty("pluginVersion").get()
 
-val codeSceneDevToolsVersion = providers.gradleProperty("codeSceneDevToolsVersion").get()
+val codeSceneExtensionAPIVersion = providers.gradleProperty("codeSceneExtensionAPIVersion").get()
 val codeSceneRepository = providers.gradleProperty("codeSceneRepository").get()
-val kotlinxSerializationVersion = providers.gradleProperty("kotlinxSerializationVersion").get()
 val reflectionsVersion = providers.gradleProperty("reflectionsVersion").get()
 val mockkVersion = providers.gradleProperty("mockkVersion").get()
 
@@ -49,8 +47,7 @@ repositories {
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
     implementation("org.reflections:reflections:$reflectionsVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
-    implementation("codescene.devtools.ide:api:$codeSceneDevToolsVersion")
+    implementation("codescene.extension:api:$codeSceneExtensionAPIVersion")
 
     testImplementation(libs.junit)
     testImplementation("io.mockk:mockk:${mockkVersion}")

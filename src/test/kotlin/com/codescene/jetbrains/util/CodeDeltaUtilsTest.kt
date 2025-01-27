@@ -1,24 +1,54 @@
 package com.codescene.jetbrains.util
 
-import com.codescene.jetbrains.data.*
-import com.codescene.jetbrains.data.Function
+import com.codescene.data.delta.ChangeDetail
+import com.codescene.data.delta.Function
+import com.codescene.data.delta.Range
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class CodeDeltaUtilsTest {
-    private val function = Function(
-        name = "exampleFunction",
-        range = HighlightRange(1, 10, 1, 15)
+    private val function = Function().apply {
+        name = "exampleFunction"
+        range = Range().apply {
+            startLine = 1
+            startColumn = 10
+            endLine = 1
+            endColumn = 15
+        }
+    }
+
+    private val details = listOf(
+        ChangeDetail().apply {
+            category = "Code Smell"
+            description = "Duplicate Code"
+            changeType = "degraded"
+            position = com.codescene.data.delta.Position().apply {
+                line = 5
+                column = 40
+            }
+        },
+        ChangeDetail().apply {
+            category = "Code Smell"
+            description = "Large Method"
+            changeType = "introduced"
+            position = com.codescene.data.delta.Position().apply {
+                line = 20
+                column = 40
+            }
+        },
+        ChangeDetail().apply {
+            category = "Code Smell"
+            description = "Bumpy Road Ahead"
+            changeType = "fixed"
+            position = com.codescene.data.delta.Position().apply {
+                line = 5
+                column = 40
+            }
+        },
     )
 
     @Test
     fun `getFunctionDeltaTooltip resolved correctly when degrading issues exist`() {
-        val details = listOf(
-            ChangeDetails("Code Smell", "Duplicate Code", ChangeType.DEGRADED, Position(5, 15)),
-            ChangeDetails("Code Smell", "Large Method", ChangeType.INTRODUCED, Position(20, 40)),
-            ChangeDetails("Code Smell", "Bumpy Road Ahead", ChangeType.FIXED, Position(20, 40))
-        )
-
         val result = getFunctionDeltaTooltip(function, details)
 
         assertEquals(
@@ -29,7 +59,7 @@ class CodeDeltaUtilsTest {
 
     @Test
     fun `getFunctionDeltaTooltip resolved correctly when degrading issues do not exist`() {
-        val details = emptyList<ChangeDetails>()
+        val details = emptyList<ChangeDetail>()
 
         val result = getFunctionDeltaTooltip(function, details)
 
