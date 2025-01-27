@@ -226,8 +226,7 @@ jobs:
         run: cs delta --git-hook ${{ github.event.before }} ${{ github.event.after }}
         env:
           CS_ONPREM_API_URL: ${{ secrets.CS_ONPREM_API_URL }}
-          CS_USERNAME: ${{ secrets.CS_USERNAME }}
-          CS_PASSWORD: ${{ secrets.CS_PASSWORD }}
+          CS_ACCESS_TOKEN: ${{ secrets.CS_ACCESS_TOKEN }}
   #      - name: Notify on slack if failure on master
   #        uses: ./.github/actions/notify-slack
   #        if: failure() && github.ref == 'refs/heads/master'
