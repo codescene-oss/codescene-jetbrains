@@ -143,7 +143,7 @@ jobs:
         uses: jlumbroso/free-disk-space@main
         with:
           tool-cache: true
-          large-packages: false
+          large-packages: true
 
       # Check out the current repository
       - name: Fetch Sources
