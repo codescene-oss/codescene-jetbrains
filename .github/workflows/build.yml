@@ -131,19 +131,19 @@ jobs:
           name: tests-result
           path: ${{ github.workspace }}/build/reports/tests
 
-      # Free GitHub Actions Environment Disk Space
-      - name: Maximize Build Space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          large-packages: false
-
   # Run plugin structure verification along with IntelliJ Plugin Verifier
   verify:
     name: Verify plugin
     needs: [ build ]
     runs-on: ubuntu-latest
     steps:
+
+      # Free GitHub Actions Environment Disk Space
+      - name: Maximize Build Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          large-packages: false
 
       # Check out the current repository
       - name: Fetch Sources
@@ -269,3 +269,4 @@ jobs:
           ${{ needs.build.outputs.changelog }}
           EOM
           )"
+
