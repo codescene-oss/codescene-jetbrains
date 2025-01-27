@@ -24,7 +24,7 @@
         <action
                 id="ShowDocumentationAction"
                 text="Code Health Monitoring Help"
-                icon="com.intellij.icons.ExpUiIcons.General.Help"
+                icon="com.codescene.jetbrains.CodeSceneIcons.HELP"
                 class="com.codescene.jetbrains.actions.ShowDocumentationAction"/>
     </actions>
 
