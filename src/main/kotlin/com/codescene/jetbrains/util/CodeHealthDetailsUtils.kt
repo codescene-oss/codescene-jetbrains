@@ -26,7 +26,6 @@ import com.intellij.ui.JBColor
 import java.awt.Cursor
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import java.util.*
 import javax.swing.Icon
 
 data class SubHeader(
@@ -174,10 +173,8 @@ private fun getHealthFinding(
 
 private fun getFunctionFindingBody(changeDetails: List<ChangeDetail>?, finding: CodeHealthFinding) =
     changeDetails?.map { it ->
-        val changeType = it.changeType.lowercase(Locale.getDefault())
-            .replaceFirstChar { it.uppercaseChar() } //todo: verify
-        val body =
-            "${it.description.replace(finding.displayName, "<code>${finding.displayName}</code>")}"
+        val changeType = it.changeType.replaceFirstChar { it.uppercaseChar() }
+        val body = it.description.replace(finding.displayName, "<code>${finding.displayName}</code>")
 
         val codeSmell = CodeSmell().apply {
             category = it.category
@@ -278,7 +275,14 @@ private fun handleMouseClick(project: Project, codeSmell: CodeSmell, filePath: S
         )
 
         editorManager.openTextEditor(fileDescriptor, true)
-        editorManager.selectedTextEditor?.let { documentationService.openDocumentationPanel(DocumentationParams(it, codeSmell)) }
+        editorManager.selectedTextEditor?.let {
+            documentationService.openDocumentationPanel(
+                DocumentationParams(
+                    it,
+                    codeSmell
+                )
+            )
+        }
     }
 }
 
