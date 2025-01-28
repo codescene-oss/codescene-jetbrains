@@ -111,7 +111,7 @@ class CodeSceneHtmlViewer(val project: Project, private val file: VirtualFile) :
     private fun handleAction(data: String) {
         when (data) {
             "goto-function-location" -> {
-                val functionLocation = CodeSceneDocumentationService.functionLocation
+                val functionLocation = CodeSceneDocumentationService.getInstance(project).functionLocation
                 scope.launch {
                     functionLocation?.let {
                         CodeNavigationService

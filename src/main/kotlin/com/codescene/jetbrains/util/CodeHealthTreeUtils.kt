@@ -42,7 +42,8 @@ fun getFunctionFinding(filePath: String, function: Function, details: List<Chang
     filePath,
     displayName = function.name,
     focusLine = function.range.startLine,
-    nodeType = NodeType.FUNCTION_FINDING
+    nodeType = NodeType.FUNCTION_FINDING,
+    functionFindingIssues = details.size
 )
 
 fun selectNode(tree: JTree, filePath: String): Boolean {
@@ -87,5 +88,5 @@ fun getSelectedNode(parent: DefaultMutableTreeNode?, selectedNode: CodeHealthFin
     return null
 }
 
-private fun isHealthNode(type: NodeType) =
+fun isHealthNode(type: NodeType) =
     type == NodeType.CODE_HEALTH_NEUTRAL || type == NodeType.CODE_HEALTH_DECREASE || type == NodeType.CODE_HEALTH_INCREASE

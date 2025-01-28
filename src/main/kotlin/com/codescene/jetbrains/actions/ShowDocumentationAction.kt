@@ -3,6 +3,7 @@ package com.codescene.jetbrains.actions
 import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Range
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
+import com.codescene.jetbrains.services.DocsSourceType
 import com.codescene.jetbrains.services.DocumentationParams
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_MONITOR
 import com.intellij.openapi.actionSystem.AnAction
@@ -26,7 +27,7 @@ class ShowDocumentationAction : AnAction() {
                 }
                 details = ""
             }
-            val params = DocumentationParams(editor, codeSmell)
+            val params = DocumentationParams(editor, codeSmell, DocsSourceType.NONE)
 
             service.openDocumentationPanel(params)
         }

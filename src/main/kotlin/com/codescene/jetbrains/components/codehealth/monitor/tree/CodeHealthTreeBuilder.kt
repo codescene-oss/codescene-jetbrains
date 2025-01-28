@@ -5,6 +5,7 @@ import com.codescene.jetbrains.components.codehealth.monitor.tree.listeners.Cust
 import com.codescene.jetbrains.components.codehealth.monitor.tree.listeners.TreeMouseMotionAdapter
 import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.CodeNavigationService
+import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.*
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -37,7 +38,8 @@ data class CodeHealthFinding(
     val focusLine: Int? = 1,
     val displayName: String,
     val nodeType: NodeType,
-    val additionalText: String = ""
+    val additionalText: String = "",
+    val functionFindingIssues: Int = 1
 )
 
 @Service(Service.Level.PROJECT)
@@ -128,6 +130,15 @@ class CodeHealthTreeBuilder(private val project: Project) {
         if (targetNode.isLeaf) {
             Log.debug("Selected node with finding $finding", service)
 
+            if (isHealthNode(finding.nodeType)) {
+                TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_CODE_HEALTH_DOCS}")
+            } else {
+                // TODO: provide additional data isRefactoringSupported when refactoring logic available
+                TelemetryService.getInstance().logUsage(
+                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_DETAILS_FUNCTION_SELECTED}",
+                    mutableMapOf<String, Any>(Pair("nIssues", finding.functionFindingIssues)))
+            }
+
             if (!suppressFocusOnLine) navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
 
             project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(finding)
@@ -137,6 +148,7 @@ class CodeHealthTreeBuilder(private val project: Project) {
 
             project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
             selectedNode = null
+            TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_DETAILS_FUNCTION_DESELECTED}")
         }
     }
 

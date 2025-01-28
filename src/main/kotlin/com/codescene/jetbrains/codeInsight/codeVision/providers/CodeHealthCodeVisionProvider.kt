@@ -7,6 +7,7 @@ import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPanel
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
+import com.codescene.jetbrains.services.DocsSourceType
 import com.codescene.jetbrains.services.DocumentationParams
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
@@ -82,11 +83,14 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
             ?.let { selectNode(it, editor.virtualFile.path) } ?: false
 
         if (!nodeSelected)
-            service.openDocumentationPanel(DocumentationParams(editor, CodeSmell().apply {
-                details = codeSmell.details
-                highlightRange = codeSmell.highlightRange
-                category = GENERAL_CODE_HEALTH
-            }))
+            service.openDocumentationPanel(DocumentationParams(
+                editor,
+                CodeSmell().apply {
+                    details = codeSmell.details
+                    highlightRange = codeSmell.highlightRange
+                    category = GENERAL_CODE_HEALTH
+                },
+                DocsSourceType.NONE))
         else toolWindowManager.getToolWindow(CODESCENE)?.show()
     }
 }

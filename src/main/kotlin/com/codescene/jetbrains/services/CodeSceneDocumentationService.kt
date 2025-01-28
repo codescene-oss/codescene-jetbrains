@@ -5,6 +5,7 @@ import com.codescene.jetbrains.codeInsight.codehealth.CodeHighlighter.generateHi
 import com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewer
 import com.codescene.jetbrains.codeInsight.codehealth.MarkdownCodeDelimiter
 import com.codescene.jetbrains.codeInsight.codehealth.PreviewThemeStyles
+import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_MONITOR
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
@@ -32,6 +33,12 @@ import java.util.stream.Collectors
 @Service(Service.Level.PROJECT)
 class CodeSceneDocumentationService(private val project: Project) : LafManagerListener {
     private val fileEditorManager = FileEditorManager.getInstance(project)
+    private lateinit var lastDocsSourceType: DocsSourceType
+    private val threeBackticks = MarkdownCodeDelimiter.MULTI_LINE.value
+    private val oneBacktick = MarkdownCodeDelimiter.SINGLE_LINE.value
+
+    var functionLocation: FunctionLocation? = null
+    lateinit var sourceEditor: Editor
 
     init {
         // Subscribe to theme updates when the service is initialized
@@ -42,11 +49,6 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
     companion object {
         fun getInstance(project: Project): CodeSceneDocumentationService =
             project.service<CodeSceneDocumentationService>()
-
-        var functionLocation: FunctionLocation? = null
-        var editor: Editor? = null
-        val threeBackticks = MarkdownCodeDelimiter.MULTI_LINE.value
-        val oneBacktick = MarkdownCodeDelimiter.SINGLE_LINE.value
     }
 
     /**
@@ -57,9 +59,14 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
      * using custom [CodeSceneHtmlViewer]
      */
     fun openDocumentationPanel(params: DocumentationParams) {
-        val (editor, codeSmell) = params
+        val (editor, codeSmell, docsSourceType) = params
 
-        Companion.editor = editor
+        if (editor != null) {
+            sourceEditor = editor
+        }
+
+        val project = editor?.project!!
+        lastDocsSourceType = docsSourceType
 
         functionLocation = if (editor != null) FunctionLocation(editor.virtualFile.name, codeSmell) else null
         val codeSmellFileName = codeSmell.category + ".md"
@@ -73,6 +80,11 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
             fileEditorManager.openFile(editor.virtualFile, true, true)
 
             openInRightSplit(project, documentationFile, null, false)?.closeAllExcept(documentationFile)
+            if (docsSourceType != DocsSourceType.NONE) {
+            TelemetryService.Companion.getInstance().logUsage(
+                "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_DOCS_PANEL}",
+                mutableMapOf<String, Any>(Pair("source", docsSourceType.value), Pair("category", codeSmell.category)))
+                }
         }
 
         val docNotOpen = fileEditorManager.openFiles.none { it.name == documentationFile.name }
@@ -328,8 +340,8 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
      * In case of theme change we refresh currently opened documentation file to fetch new look and feel.
      */
     override fun lookAndFeelChanged(p0: LafManager) {
-        if (functionLocation?.codeSmell != null && editor != null) {
-            this.openDocumentationPanel(DocumentationParams(editor!!, functionLocation!!.codeSmell))
+        if (functionLocation?.codeSmell != null) {
+            this.openDocumentationPanel(DocumentationParams(sourceEditor, functionLocation!!.codeSmell, lastDocsSourceType))
         }
     }
 }
@@ -346,7 +358,8 @@ data class HtmlPart(
 
 data class DocumentationParams(
     val editor: Editor?,
-    val codeSmell: CodeSmell
+    val codeSmell: CodeSmell,
+    val docsSourceType: DocsSourceType
 )
 
 data class HeadingParams(
@@ -362,3 +375,10 @@ data class TransformMarkdownParams(
     val codeSmellName: String,
     val standaloneDocumentation: Boolean = false
 )
+
+enum class DocsSourceType(val value: String) {
+    INTENTION_ACTION("diagnostic-item"),
+    CODE_HEALTH_DETAILS("code-health-details"),
+    CODE_VISION("codelens (review)"),
+    NONE("none")
+}
