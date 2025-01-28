@@ -15,13 +15,13 @@ import java.net.URI
 /**
  * The `showNotification` method handles the notification actions for the Terms and Conditions acceptance flow.
  * The notification provides three actions:
-1. Accepting the Terms and Conditions: Updates user settings and expires the notification.
-2. Ignoring the Terms and Conditions: Expires the notification without making any changes.
-3. Viewing the Terms and Conditions: Opens the provided URL in the default browser.
+ * 1. Accepting the Terms and Conditions: Updates global state and expires the notification.
+ * 2. Ignoring the Terms and Conditions: Expires the notification without making any changes.
+ * 3. Viewing the Terms and Conditions: Opens the provided URL in the default browser.
 
  * The notification also listens for expiration events. If the notification is dismissed without accepting
-the Terms and Conditions (e.g., closing the IDE/project, clicking "Ignore", or manually closing the pop-up),
-a telemetry event for non-acceptance should be triggered if the user hasn't accepted the Terms and Conditions.
+ * the Terms and Conditions (e.g., closing the IDE/project, clicking "Ignore", or manually closing the pop-up),
+ * a telemetry event for non-acceptance should be triggered if the user hasn't accepted the Terms and Conditions.
  */
 fun showNotification(project: Project?, title: String, content: String, type: NotificationType) {
     val notification = NotificationGroupManager.getInstance()
