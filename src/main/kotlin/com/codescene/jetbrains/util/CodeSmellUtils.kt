@@ -78,6 +78,9 @@ private fun inSupportedLanguages(extension: String) = supportedLanguages.contain
 
 fun isFileSupported(project: Project, virtualFile: VirtualFile): Boolean {
     val excludeGitignoreFiles = CodeSceneGlobalSettingsStore.getInstance().state.excludeGitignoreFiles
+    val termsAccepted = CodeSceneGlobalSettingsStore.getInstance().state.termsAndConditionsAccepted
+
+    if (!termsAccepted) return false
 
     val isInProject = runReadAction {
         val fileIndex = ProjectFileIndex.getInstance(project)
