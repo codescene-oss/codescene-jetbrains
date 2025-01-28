@@ -28,6 +28,7 @@ class IsFileSupportedTest {
             every { getService(CodeSceneGlobalSettingsStore::class.java) } returns mockk()
             every { getService(CodeSceneGlobalSettingsStore::class.java).state } returns mockk()
             every { getService(CodeSceneGlobalSettingsStore::class.java).state.excludeGitignoreFiles } returns true
+            every { getService(CodeSceneGlobalSettingsStore::class.java).state.termsAndConditionsAccepted } returns true
             every { isUnitTestMode } returns true
             every { getServiceIfCreated(FileBasedIndex::class.java) } returns mockk(relaxed = true)
             every { getServiceIfCreated(VirtualFilePointerManager::class.java) } returns mockk(relaxed = true)
