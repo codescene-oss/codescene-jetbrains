@@ -33,7 +33,7 @@
 
         <postStartupActivity implementation="com.codescene.jetbrains.listeners.ProjectStartupActivity"/>
 
-        <notificationGroup id="CodeScene" displayType="STICKY_BALLOON" />
+        <notificationGroup id="CodeScene" displayType="STICKY_BALLOON"/>
 
         <applicationService serviceImplementation="com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore"/>
 
@@ -112,11 +112,17 @@
         <codeInsight.codeVisionProvider
                 implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.CodeHealthCodeVisionProvider"/>
 
-        <fileEditorProvider implementation="com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewerProvider" />
+        <fileEditorProvider
+                implementation="com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewerProvider"/>
     </extensions>
 
     <projectListeners>
         <listener class="com.codescene.jetbrains.listeners.FileEditorLifecycleListener"
                   topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
     </projectListeners>
+
+    <applicationListeners>
+        <listener class="com.codescene.jetbrains.listeners.CodeSceneDynamicPluginListener"
+                  topic="com.intellij.ide.plugins.DynamicPluginListener"/>
+    </applicationListeners>
 </idea-plugin>

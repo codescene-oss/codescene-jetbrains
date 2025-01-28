@@ -4,6 +4,7 @@ import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.popup.NotificationUtil
 import com.codescene.jetbrains.util.Constants.CODESCENE
+import com.codescene.jetbrains.util.Log
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
@@ -15,6 +16,9 @@ class ProjectStartupActivity : ProjectActivity {
         val disposable = project as Disposable
 
         val termsAccepted = CodeSceneGlobalSettingsStore.getInstance().state.termsAndConditionsAccepted
+
+        val status = if (termsAccepted) "accepted" else "not accepted"
+        Log.debug("Terms and conditions $status", "${this::class.simpleName} - ${project.name}")
 
         if (!termsAccepted) NotificationUtil().showNotification(
             project,
