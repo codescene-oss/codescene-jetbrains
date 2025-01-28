@@ -2,9 +2,9 @@ package com.codescene.jetbrains.listeners
 
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
-import com.codescene.jetbrains.popup.NotificationUtil
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.showNotification
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
@@ -17,10 +17,10 @@ class ProjectStartupActivity : ProjectActivity {
 
         val termsAccepted = CodeSceneGlobalSettingsStore.getInstance().state.termsAndConditionsAccepted
 
-        val status = if (termsAccepted) "accepted" else "not accepted"
-        Log.debug("Terms and conditions $status", "${this::class.simpleName} - ${project.name}")
+        val status = if (termsAccepted) "" else "not "
+        Log.debug("Terms and conditions ${status}accepted", "${this::class.simpleName} - ${project.name}")
 
-        if (!termsAccepted) NotificationUtil().showNotification(
+        if (!termsAccepted) showNotification(
             project,
             CODESCENE,
             UiLabelsBundle.message("termsAndConditionsNotification"),
