@@ -39,6 +39,8 @@ class CodeSceneSettings : Composite, Configurable, FocusListener {
                 }
             }
 
+//        addcom
+
         TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_SETTINGS}")
     }
 

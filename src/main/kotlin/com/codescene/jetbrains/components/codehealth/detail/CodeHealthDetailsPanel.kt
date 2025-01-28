@@ -18,6 +18,7 @@ import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
 import java.awt.Font
+import java.awt.event.HierarchyEvent
 import javax.swing.Box
 import javax.swing.BoxLayout
 import javax.swing.JPanel
@@ -29,6 +30,19 @@ class CodeHealthDetailsPanel(private val project: Project) {
     private var contentPanel = JBPanel<JBPanel<*>>().apply {
         layout = BorderLayout()
         addPlaceholder()
+
+        var previousVisibility = this.isShowing
+        addHierarchyListener { event ->
+            // Check if the SHOWING_CHANGED bit is affected
+            if (event.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
+                val currentVisibility = this.isShowing
+                // Only execute the action if the visibility of the button itself changes
+                if (previousVisibility != currentVisibility) {
+                    Log.warn("Telemetry event logged: Details panel visible: $currentVisibility")
+                    previousVisibility = currentVisibility
+                }
+            }
+        }
     }
     private val service = "Code Health Details - ${project.name}"
 
