@@ -54,25 +54,19 @@ import javax.swing.event.AncestorListener
 class CodeHealthMonitorPanel(private val project: Project): PropertyChangeListener {
     private var refreshJob: Job? = null
     private val service = "Code Health Monitor - ${project.name}"
-
     var contentPanel = JBPanel<JBPanel<*>>().apply {
         border = null
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
 
-        var previousVisibility = this.isShowing
         addHierarchyListener { event ->
             // Check if the SHOWING_CHANGED bit is affected
             if (event.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
-                val currentVisibility = this.isShowing
-                // Only execute the action if the visibility of the button itself changes
-                if (previousVisibility != currentVisibility) {
-                    Log.warn("Telemetry event logged: Monitor panel visible: $currentVisibility")
-                    previousVisibility = currentVisibility
-                }
+                TelemetryService.getInstance().logUsage(
+                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_VISIBILITY}",
+                    mutableMapOf<String, Any>(Pair("visible", this.isShowing)))
             }
         }
     }
-
     val healthMonitoringResults: ConcurrentHashMap<String, Delta> = ConcurrentHashMap()
 
     companion object {

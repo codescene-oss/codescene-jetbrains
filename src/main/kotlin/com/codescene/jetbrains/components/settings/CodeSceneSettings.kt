@@ -14,6 +14,7 @@ import com.intellij.openapi.options.Configurable.Composite
 import com.intellij.ui.components.JBTabbedPane
 import java.awt.event.FocusEvent
 import java.awt.event.FocusListener
+import java.awt.event.HierarchyEvent
 import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
 import javax.swing.JComponent
@@ -39,9 +40,16 @@ class CodeSceneSettings : Composite, Configurable, FocusListener {
                 }
             }
 
-//        addcom
-
         TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_SETTINGS}")
+
+        addHierarchyListener { event ->
+            // Check if the SHOWING_CHANGED bit is affected
+            if (event.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
+                TelemetryService.getInstance().logUsage(
+                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_SETTINGS_VISIBILITY}",
+                    mutableMapOf<String, Any>(Pair("visible", this.isShowing)))
+            }
+        }
     }
 
     override fun isModified(): Boolean = settingsTab.isModified

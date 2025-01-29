@@ -3,7 +3,9 @@ package com.codescene.jetbrains.components.codehealth.detail
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPanel
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
+import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.CodeHealthDetails
+import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.getHealthFinding
 import com.intellij.openapi.components.Service
@@ -31,16 +33,12 @@ class CodeHealthDetailsPanel(private val project: Project) {
         layout = BorderLayout()
         addPlaceholder()
 
-        var previousVisibility = this.isShowing
         addHierarchyListener { event ->
             // Check if the SHOWING_CHANGED bit is affected
             if (event.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
-                val currentVisibility = this.isShowing
-                // Only execute the action if the visibility of the button itself changes
-                if (previousVisibility != currentVisibility) {
-                    Log.warn("Telemetry event logged: Details panel visible: $currentVisibility")
-                    previousVisibility = currentVisibility
-                }
+                TelemetryService.getInstance().logUsage(
+                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_DETAILS_VISIBILITY}",
+                    mutableMapOf<String, Any>(Pair("visible", this.isShowing)))
             }
         }
     }
