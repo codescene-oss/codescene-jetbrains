@@ -61,7 +61,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
     }
 
     fun getContent(): JComponent {
-        contentPanel.renderContent()
+        updatePanel()
 
         return JBScrollPane(contentPanel).apply {
             border = JBUI.Borders.empty(10)
@@ -168,13 +168,17 @@ class CodeHealthMonitorPanel(private val project: Project) {
 
             Log.debug("Refreshing content for $healthMonitoringResults", service)
 
-            contentPanel.removeAll()
-            contentPanel.renderContent()
-            contentPanel.revalidate()
-            contentPanel.repaint()
+            updatePanel()
 
             updateToolWindowIcon()
         }
+    }
+
+    private fun updatePanel() {
+        contentPanel.removeAll()
+        contentPanel.renderContent()
+        contentPanel.revalidate()
+        contentPanel.repaint()
     }
 
     private fun updateToolWindowIcon() {
