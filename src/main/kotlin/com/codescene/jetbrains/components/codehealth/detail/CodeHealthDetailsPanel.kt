@@ -3,7 +3,9 @@ package com.codescene.jetbrains.components.codehealth.detail
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPanel
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
+import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.CodeHealthDetails
+import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.getHealthFinding
 import com.intellij.openapi.components.Service
@@ -18,6 +20,7 @@ import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
 import java.awt.Font
+import java.awt.event.HierarchyEvent
 import javax.swing.Box
 import javax.swing.BoxLayout
 import javax.swing.JPanel
@@ -29,6 +32,15 @@ class CodeHealthDetailsPanel(private val project: Project) {
     private var contentPanel = JBPanel<JBPanel<*>>().apply {
         layout = BorderLayout()
         addPlaceholder()
+
+        addHierarchyListener { event ->
+            // Check if the SHOWING_CHANGED bit is affected
+            if (event.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
+                TelemetryService.getInstance().logUsage(
+                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_DETAILS_VISIBILITY}",
+                    mutableMapOf<String, Any>(Pair("visible", this.isShowing)))
+            }
+        }
     }
     private val service = "Code Health Details - ${project.name}"
 

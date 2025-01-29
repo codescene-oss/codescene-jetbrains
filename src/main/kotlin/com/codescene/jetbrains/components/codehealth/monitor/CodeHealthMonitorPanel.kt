@@ -8,6 +8,8 @@ import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
+import com.codescene.jetbrains.services.telemetry.TelemetryService
+import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
 import com.intellij.execution.runners.ExecutionUtil
@@ -28,6 +30,7 @@ import kotlinx.coroutines.*
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Font
+import java.awt.event.HierarchyEvent
 import java.util.concurrent.ConcurrentHashMap
 import javax.swing.BoxLayout
 import javax.swing.JComponent
@@ -37,10 +40,19 @@ import javax.swing.JTextArea
 class CodeHealthMonitorPanel(private val project: Project) {
     private var refreshJob: Job? = null
     private val service = "Code Health Monitor - ${project.name}"
-
     var contentPanel = JBPanel<JBPanel<*>>().apply {
         border = null
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
+
+        addHierarchyListener { event ->
+            // Check if the SHOWING_CHANGED bit is affected
+            if (event.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
+                TelemetryService.getInstance().logUsage(
+                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_VISIBILITY}",
+                    mutableMapOf<String, Any>(Pair("visible", this.isShowing))
+                )
+            }
+        }
     }
     val healthMonitoringResults: ConcurrentHashMap<String, Delta> = ConcurrentHashMap()
 
@@ -49,7 +61,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
     }
 
     fun getContent(): JComponent {
-        contentPanel.renderContent()
+        updatePanel()
 
         return JBScrollPane(contentPanel).apply {
             border = JBUI.Borders.empty(10)
@@ -116,10 +128,36 @@ class CodeHealthMonitorPanel(private val project: Project) {
         val cachedDelta = DeltaCacheService.getInstance(project)
             .get(DeltaCacheQuery(path, headCommit, code))
 
-        if (cachedDelta != null)
-            healthMonitoringResults[path] = cachedDelta
-        else
-            healthMonitoringResults.remove(path)
+        Log.debug("Cached delta: $cachedDelta", service)
+
+        if (cachedDelta != null) {
+            val scoreChange = cachedDelta.newScore - cachedDelta.oldScore
+            val nIssues = cachedDelta.fileLevelFindings.size + cachedDelta.functionLevelFindings.size
+            // TODO: provide additional data nRefactorableFunctions to add and update telemetry events,
+            //  when refactoring logic available
+            if (healthMonitoringResults[path] != null) {
+                // update
+                healthMonitoringResults[path] = cachedDelta
+                TelemetryService.getInstance().logUsage(
+                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_UPDATED}",
+                    mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", nIssues))
+                )
+            } else {
+                // add
+                healthMonitoringResults[path] = cachedDelta
+                TelemetryService.getInstance().logUsage(
+                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_ADDED}",
+                    mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", nIssues))
+                )
+            }
+        } else {
+            val removedValue = healthMonitoringResults.remove(path)
+            if (removedValue != null) {
+                TelemetryService.getInstance().logUsage(
+                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_REMOVED}"
+                )
+            }
+        }
     }
 
     fun refreshContent(file: VirtualFile?, scope: CoroutineScope = CoroutineScope(Dispatchers.Main)) {
@@ -130,13 +168,17 @@ class CodeHealthMonitorPanel(private val project: Project) {
 
             Log.debug("Refreshing content for $healthMonitoringResults", service)
 
-            contentPanel.removeAll()
-            contentPanel.renderContent()
-            contentPanel.revalidate()
-            contentPanel.repaint()
+            updatePanel()
 
             updateToolWindowIcon()
         }
+    }
+
+    private fun updatePanel() {
+        contentPanel.removeAll()
+        contentPanel.renderContent()
+        contentPanel.revalidate()
+        contentPanel.repaint()
     }
 
     private fun updateToolWindowIcon() {

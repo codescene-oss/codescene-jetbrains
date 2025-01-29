@@ -2,6 +2,7 @@ package com.codescene.jetbrains.codeInsight.intentions
 
 import com.codescene.data.review.CodeSmell
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
+import com.codescene.jetbrains.services.DocsSourceType
 import com.codescene.jetbrains.services.DocumentationParams
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.intellij.codeInsight.intention.IntentionAction
@@ -22,7 +23,7 @@ class ShowProblemIntentionAction(private val codeSmell: CodeSmell) : IntentionAc
     override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {
         val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
         if (editor != null) {
-            codeSceneDocumentationService.openDocumentationPanel(DocumentationParams(editor, codeSmell))
+            codeSceneDocumentationService.openDocumentationPanel(DocumentationParams(editor, codeSmell, DocsSourceType.INTENTION_ACTION))
         }
     }
 
