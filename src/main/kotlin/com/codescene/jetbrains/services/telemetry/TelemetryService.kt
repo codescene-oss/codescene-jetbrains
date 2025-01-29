@@ -26,8 +26,7 @@ class TelemetryService(): BaseService() {
                 TelemetryEvent(eventName, userId, Constants.TELEMETRY_EDITOR_TYPE, getPluginVersion(), eventData)
 
             ExtensionAPI.sendTelemetry(telemetryEvent, eventData)
-            // TODO: Change following call's log level to debug
-            Log.warn("Telemetry event logged: $telemetryEvent")
+            Log.debug("Telemetry event logged: $telemetryEvent")
         }
     }
 

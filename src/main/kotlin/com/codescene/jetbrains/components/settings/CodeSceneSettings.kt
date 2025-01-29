@@ -7,19 +7,13 @@ import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
-import com.intellij.designer.designSurface.ComponentSelectionListener
-import com.intellij.openapi.editor.ex.FocusChangeListener
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.Configurable.Composite
 import com.intellij.ui.components.JBTabbedPane
-import java.awt.event.FocusEvent
-import java.awt.event.FocusListener
 import java.awt.event.HierarchyEvent
-import java.awt.event.WindowEvent
-import java.awt.event.WindowFocusListener
 import javax.swing.JComponent
 
-class CodeSceneSettings : Composite, Configurable, FocusListener {
+class CodeSceneSettings : Composite, Configurable {
     private val settingsTab = SettingsTab()
     private val aboutTab = AboutTab()
     private val generalTab = GeneralTab()
@@ -63,25 +57,12 @@ class CodeSceneSettings : Composite, Configurable, FocusListener {
 
     override fun reset() {
         settingsTab.reset()
-//        TelemetryService.getInstance().logUsage(
-//            "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_SETTINGS_VISIBILITY}",
-//            mutableMapOf<String, Any>(Pair("visible", true)))
     }
 
     override fun disposeUIResources() {
         childConfigurables.forEach { it.disposeUIResources() }
-//        TelemetryService.getInstance().logUsage(
-//            "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_SETTINGS_VISIBILITY}",
-//            mutableMapOf<String, Any>(Pair("visible", false)))
     }
 
     override fun getDisplayName(): String = CODESCENE
 
-    override fun focusGained(e: FocusEvent?) {
-        Log.warn("Telemetry event logged: {visible: ${e?.component?.isVisible}}")
-    }
-
-    override fun focusLost(e: FocusEvent?) {
-        Log.warn("Telemetry event logged: {visible: ${e?.component?.isVisible}}")
-    }
 }
