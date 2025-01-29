@@ -60,35 +60,42 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
      */
     fun openDocumentationPanel(params: DocumentationParams) {
         val (editor, codeSmell, docsSourceType) = params
-
         if (editor != null) {
             sourceEditor = editor
+            functionLocation = FunctionLocation(editor.virtualFile.name, codeSmell)
         }
 
         val project = editor?.project!!
         lastDocsSourceType = docsSourceType
 
-        functionLocation = if (editor != null) FunctionLocation(editor.virtualFile.name, codeSmell) else null
         val codeSmellFileName = codeSmell.category + ".md"
-
         val markdownContent = prepareMarkdownContent(params)
 
         Log.info("Opening documentation file $codeSmellFileName")
         val documentationFile = createTempFile(codeSmellFileName, markdownContent)
-        if (editor != null && !fileEditorManager.selectedFiles.contains(documentationFile)) {
-            // return focus to original file
-            fileEditorManager.openFile(editor.virtualFile, true, true)
-
-            openInRightSplit(project, documentationFile, null, false)?.closeAllExcept(documentationFile)
-            if (docsSourceType != DocsSourceType.NONE) {
-            TelemetryService.Companion.getInstance().logUsage(
-                "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_DOCS_PANEL}",
-                mutableMapOf<String, Any>(Pair("source", docsSourceType.value), Pair("category", codeSmell.category)))
+        if (editor != null) {
+            if (!fileEditorManager.selectedFiles.contains(documentationFile)) {
+                // return focus to original file
+                fileEditorManager.openFile(editor.virtualFile, true, true)
+                openInRightSplit(project, documentationFile, null, false)?.closeAllExcept(documentationFile)
+                if (docsSourceType != DocsSourceType.NONE) {
+                    TelemetryService.Companion.getInstance().logUsage(
+                        "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_DOCS_PANEL}",
+                        mutableMapOf<String, Any>(
+                            Pair("source", docsSourceType.value),
+                            Pair("category", codeSmell.category)
+                        )
+                    )
                 }
+            }
+        } else {
+            openDocumentationWithoutActiveEditor(documentationFile)
         }
+    }
 
+    private fun openDocumentationWithoutActiveEditor(documentationFile: VirtualFile) {
         val docNotOpen = fileEditorManager.openFiles.none { it.name == documentationFile.name }
-        val shouldOpenFile = (editor == null || fileEditorManager.openFiles.isEmpty()) && docNotOpen
+        val shouldOpenFile = fileEditorManager.openFiles.isEmpty() && docNotOpen
         if (shouldOpenFile) fileEditorManager.openFile(documentationFile, false)
     }
 
