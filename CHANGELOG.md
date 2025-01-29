@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.9-beta] - 2024-01-28
+### Added
+- Notification prompt on project startup for Terms and Conditions.
+
+### Changed
+- Review and Delta services don't trigger until Terms and Conditions are accepted.
+
 ## [0.0.8-beta] - 2024-01-27
 ### Changed
 - Migrated from *DevToolsAPI* library to *ExtensionAPI* library.
