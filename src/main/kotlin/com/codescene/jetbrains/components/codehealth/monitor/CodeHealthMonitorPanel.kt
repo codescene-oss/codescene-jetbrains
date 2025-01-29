@@ -131,25 +131,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
         Log.debug("Cached delta: $cachedDelta", service)
 
         if (cachedDelta != null) {
-            val scoreChange = cachedDelta.newScore - cachedDelta.oldScore
-            val nIssues = cachedDelta.fileLevelFindings.size + cachedDelta.functionLevelFindings.size
-            // TODO: provide additional data nRefactorableFunctions to add and update telemetry events,
-            //  when refactoring logic available
-            if (healthMonitoringResults[path] != null) {
-                // update
-                healthMonitoringResults[path] = cachedDelta
-                TelemetryService.getInstance().logUsage(
-                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_UPDATED}",
-                    mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", nIssues))
-                )
-            } else {
-                // add
-                healthMonitoringResults[path] = cachedDelta
-                TelemetryService.getInstance().logUsage(
-                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_ADDED}",
-                    mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", nIssues))
-                )
-            }
+            updateAndSendTelemetry(path, cachedDelta)
         } else {
             val removedValue = healthMonitoringResults.remove(path)
             if (removedValue != null) {
@@ -171,6 +153,28 @@ class CodeHealthMonitorPanel(private val project: Project) {
             updatePanel()
 
             updateToolWindowIcon()
+        }
+    }
+
+    private fun updateAndSendTelemetry(path: String, cachedDelta: Delta) {
+        val scoreChange = cachedDelta.newScore - cachedDelta.oldScore
+        val numberOfIssues = cachedDelta.fileLevelFindings.size + cachedDelta.functionLevelFindings.size
+        // TODO: provide additional data nRefactorableFunctions to add and update telemetry events,
+        //  when refactoring logic available
+        if (healthMonitoringResults[path] != null) {
+            // update
+            healthMonitoringResults[path] = cachedDelta
+            TelemetryService.getInstance().logUsage(
+                "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_UPDATED}",
+                mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", numberOfIssues))
+            )
+        } else {
+            // add
+            healthMonitoringResults[path] = cachedDelta
+            TelemetryService.getInstance().logUsage(
+                "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_ADDED}",
+                mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", numberOfIssues))
+            )
         }
     }
 
