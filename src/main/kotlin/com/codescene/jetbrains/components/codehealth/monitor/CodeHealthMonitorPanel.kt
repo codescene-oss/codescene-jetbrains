@@ -64,7 +64,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
         updatePanel()
 
         return JBScrollPane(contentPanel).apply {
-            border = JBUI.Borders.empty(10)
+            border = JBUI.Borders.empty(10, 10, 10, 0)
             verticalScrollBarPolicy = JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
             horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
         }

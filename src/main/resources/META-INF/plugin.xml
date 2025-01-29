@@ -7,8 +7,6 @@
     <depends>com.intellij.modules.platform</depends>
     <depends>org.intellij.plugins.markdown</depends>
 
-    <!--  TODO: Add plugin icon  -->
-
     <resource-bundle>messages.UiLabelsBundle</resource-bundle>
 
     <depends>Git4Idea</depends>
