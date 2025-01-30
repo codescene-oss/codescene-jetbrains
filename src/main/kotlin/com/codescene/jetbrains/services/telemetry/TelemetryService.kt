@@ -9,13 +9,15 @@ import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.extensions.PluginId
+import com.vladsch.flexmark.html.Disposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
 @Service
-class TelemetryService(): BaseService() {
+class TelemetryService(): BaseService(), Disposable {
     private val scope = CoroutineScope(Dispatchers.IO)
     private val timeout: Long = 5_000
 
@@ -25,33 +27,28 @@ class TelemetryService(): BaseService() {
 
     fun logUsage(eventName: String, eventData: Map<String, Any> = mutableMapOf<String, Any>()) {
         val extendedName = "${Constants.TELEMETRY_EDITOR_TYPE}/$eventName"
+        // TODO: Get user ID of logged in user when authentication is implemented
+        val userId: String? = null
+        val telemetryEvent = TelemetryEvent(extendedName, userId, Constants.TELEMETRY_EDITOR_TYPE, getPluginVersion(), eventData)
+
         try {
             scope.launch {
                 withTimeoutOrNull(timeout) {
-                    // TODO: Get user ID of logged in user when authentication is implemented
-                    val userId: String? = null
-
                     runWithClassLoaderChange {
-                        val telemetryEvent: TelemetryEvent =
-                            TelemetryEvent(
-                                extendedName,
-                                userId,
-                                Constants.TELEMETRY_EDITOR_TYPE,
-                                getPluginVersion(),
-                                eventData
-                            )
-
                         ExtensionAPI.sendTelemetry(telemetryEvent, eventData)
-                        // TODO: change this back to debug before push
-                        Log.warn("Telemetry event logged: $telemetryEvent")
                     }
+                    Log.debug("Telemetry event logged: $telemetryEvent")
                 } ?: Log.warn("Telemetry event $extendedName sending timed out")
             }
         } catch (e: Exception) {
-            Log.error("Error during telemetry event $extendedName sending")
+            Log.error("Error during telemetry event $extendedName sending: ${e.message}")
         }
     }
 
     private fun getPluginVersion(): String =
         PluginManagerCore.getPlugin(PluginId.getId(Constants.CODESCENE_PLUGIN_ID))?.version ?: "unknown"
+
+    override fun dispose() {
+        scope.cancel()
+    }
 }

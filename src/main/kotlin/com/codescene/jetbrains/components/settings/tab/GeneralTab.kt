@@ -120,7 +120,7 @@ class GeneralTab : Configurable {
                     val uri = URI(link)
                     if (Desktop.isDesktopSupported()) Desktop.getDesktop().browse(uri)
 
-                    TelemetryService.getInstance().logUsage(TelemetryEvents.TELEMETRY_OPEN_LINK,
+                    TelemetryService.getInstance().logUsage(TelemetryEvents.OPEN_LINK,
                         mutableMapOf<String, Any>(Pair("url", uri)))
                 } catch (e: Exception) {
                     Log.warn("Unable to open link: ${e.message}")

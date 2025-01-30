@@ -34,12 +34,12 @@ class CodeSceneSettings : Composite, Configurable {
                 }
             }
 
-        TelemetryService.getInstance().logUsage(TelemetryEvents.TELEMETRY_OPEN_SETTINGS)
+        TelemetryService.getInstance().logUsage(TelemetryEvents.OPEN_SETTINGS)
 
         addHierarchyListener { event ->
             // Check if the SHOWING_CHANGED bit is affected
             if (event.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
-                TelemetryService.getInstance().logUsage(TelemetryEvents.TELEMETRY_SETTINGS_VISIBILITY,
+                TelemetryService.getInstance().logUsage(TelemetryEvents.SETTINGS_VISIBILITY,
                     mutableMapOf<String, Any>(Pair("visible", this.isShowing)))
             }
         }

@@ -81,11 +81,8 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
                 openInRightSplit(project, documentationFile, null, false)?.closeAllExcept(documentationFile)
                 if (docsSourceType != DocsSourceType.NONE) {
                     TelemetryService.Companion.getInstance().logUsage(
-                        TelemetryEvents.TELEMETRY_OPEN_DOCS_PANEL,
-                        mutableMapOf<String, Any>(
-                            Pair("source", docsSourceType.value),
-                            Pair("category", codeSmell.category)
-                        )
+                        TelemetryEvents.OPEN_DOCS_PANEL,
+                        mutableMapOf<String, Any>(Pair("source", docsSourceType.value), Pair("category", codeSmell.category))
                     )
                 }
             }

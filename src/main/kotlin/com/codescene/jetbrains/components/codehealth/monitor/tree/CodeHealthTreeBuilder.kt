@@ -131,11 +131,11 @@ class CodeHealthTreeBuilder(private val project: Project) {
             Log.debug("Selected node with finding $finding", service)
 
             if (isHealthNode(finding.nodeType)) {
-                TelemetryService.getInstance().logUsage(TelemetryEvents.TELEMETRY_OPEN_CODE_HEALTH_DOCS)
+                TelemetryService.getInstance().logUsage(TelemetryEvents.OPEN_CODE_HEALTH_DOCS)
             } else {
                 // TODO: provide additional data isRefactoringSupported when refactoring logic available
                 TelemetryService.getInstance().logUsage(
-                    TelemetryEvents.TELEMETRY_DETAILS_FUNCTION_SELECTED,
+                    TelemetryEvents.DETAILS_FUNCTION_SELECTED,
                     mutableMapOf<String, Any>(Pair("nIssues", finding.functionFindingIssues)))
             }
 
@@ -148,7 +148,7 @@ class CodeHealthTreeBuilder(private val project: Project) {
 
             project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
             selectedNode = null
-            TelemetryService.getInstance().logUsage(TelemetryEvents.TELEMETRY_DETAILS_FUNCTION_DESELECTED)
+            TelemetryService.getInstance().logUsage(TelemetryEvents.DETAILS_FUNCTION_DESELECTED)
         }
     }
 

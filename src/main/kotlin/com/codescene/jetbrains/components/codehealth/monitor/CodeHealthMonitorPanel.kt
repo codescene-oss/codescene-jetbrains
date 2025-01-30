@@ -48,7 +48,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
             // Check if the SHOWING_CHANGED bit is affected
             if (event.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
                 TelemetryService.getInstance().logUsage(
-                    TelemetryEvents.TELEMETRY_MONITOR_VISIBILITY,
+                    TelemetryEvents.MONITOR_VISIBILITY,
                     mutableMapOf<String, Any>(Pair("visible", this.isShowing))
                 )
             }
@@ -135,7 +135,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
         } else {
             val removedValue = healthMonitoringResults.remove(path)
             if (removedValue != null) {
-                TelemetryService.getInstance().logUsage(TelemetryEvents.TELEMETRY_MONITOR_FILE_REMOVED
+                TelemetryService.getInstance().logUsage(TelemetryEvents.MONITOR_FILE_REMOVED
                 )
             }
         }
@@ -163,13 +163,14 @@ class CodeHealthMonitorPanel(private val project: Project) {
         if (healthMonitoringResults[path] != null) {
             // update
             healthMonitoringResults[path] = cachedDelta
-            TelemetryService.getInstance().logUsage(TelemetryEvents.TELEMETRY_MONITOR_FILE_UPDATED,
+            TelemetryService.getInstance().logUsage(TelemetryEvents.MONITOR_FILE_UPDATED,
                 mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", numberOfIssues))
             )
         } else {
             // add
             healthMonitoringResults[path] = cachedDelta
-            TelemetryService.getInstance().logUsage(TelemetryEvents.TELEMETRY_MONITOR_FILE_ADDED,
+            TelemetryService.getInstance().logUsage(
+                TelemetryEvents.MONITOR_FILE_ADDED,
                 mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", numberOfIssues))
             )
         }

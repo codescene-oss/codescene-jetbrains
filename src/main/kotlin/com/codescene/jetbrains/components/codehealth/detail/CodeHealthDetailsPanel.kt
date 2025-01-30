@@ -37,7 +37,7 @@ class CodeHealthDetailsPanel(private val project: Project) {
             // Check if the SHOWING_CHANGED bit is affected
             if (event.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
                 TelemetryService.getInstance().logUsage(
-                    TelemetryEvents.TELEMETRY_DETAILS_VISIBILITY,
+                    TelemetryEvents.DETAILS_VISIBILITY,
                     mutableMapOf<String, Any>(Pair("visible", this.isShowing)))
             }
         }

@@ -1,0 +1,6 @@
+{
+  "event-name" : "intellij/control_center/open-settings",
+  "editor-type" : "intellij",
+  "extension-version" : "0.0.10-beta",
+  "*" : { }
+}

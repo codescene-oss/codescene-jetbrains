@@ -1,0 +1,6 @@
+{
+  "event-name" : "intellij/open_code_health_docs",
+  "editor-type" : "intellij",
+  "extension-version" : "0.0.10-beta",
+  "*" : { }
+}
