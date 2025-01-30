@@ -26,6 +26,7 @@ object Constants {
 
     const val GENERAL_CODE_HEALTH = "General Code Health"
     const val CODE_HEALTH_MONITOR = "Code Health Monitor"
+    const val TELEMETRY_EDITOR_TYPE = "intellij"
 
     const val BRAIN_CLASS = "Brain Class"
     const val BRAIN_METHOD = "Brain Method"

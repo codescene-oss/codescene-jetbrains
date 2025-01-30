@@ -26,7 +26,7 @@ abstract class CodeSceneService : BaseService(), Disposable {
      */
     protected fun reviewFile(
         editor: Editor,
-        timeout: Long = 10_000,
+        timeout: Long = 15_000,
         performAction: suspend () -> Unit
     ) {
         val service = "$serviceImplementation - ${editor.project!!.name}"

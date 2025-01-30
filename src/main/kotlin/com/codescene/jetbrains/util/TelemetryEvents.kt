@@ -1,7 +1,6 @@
 package com.codescene.jetbrains.util
 
 object TelemetryEvents {
-    const val TELEMETRY_EDITOR_TYPE = "intellij"
     const val TELEMETRY_ON_ACTIVATE_EXTENSION = "on_activate_extension"
     const val TELEMETRY_OPEN_CODE_HEALTH_DOCS = "open_code_health_docs"
     const val TELEMETRY_OPEN_DOCS_PANEL = "open_interactive_docs_panel"
