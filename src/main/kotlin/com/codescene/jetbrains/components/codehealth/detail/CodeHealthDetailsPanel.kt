@@ -5,8 +5,8 @@ import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPa
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.CodeHealthDetails
-import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.TelemetryEvents
 import com.codescene.jetbrains.util.getHealthFinding
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -37,7 +37,7 @@ class CodeHealthDetailsPanel(private val project: Project) {
             // Check if the SHOWING_CHANGED bit is affected
             if (event.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
                 TelemetryService.getInstance().logUsage(
-                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_DETAILS_VISIBILITY}",
+                    TelemetryEvents.TELEMETRY_DETAILS_VISIBILITY,
                     mutableMapOf<String, Any>(Pair("visible", this.isShowing)))
             }
         }

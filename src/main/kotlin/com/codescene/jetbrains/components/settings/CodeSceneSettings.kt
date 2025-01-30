@@ -4,9 +4,9 @@ import com.codescene.jetbrains.components.settings.tab.AboutTab
 import com.codescene.jetbrains.components.settings.tab.GeneralTab
 import com.codescene.jetbrains.components.settings.tab.SettingsTab
 import com.codescene.jetbrains.services.telemetry.TelemetryService
-import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.TelemetryEvents
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.Configurable.Composite
 import com.intellij.ui.components.JBTabbedPane
@@ -34,13 +34,12 @@ class CodeSceneSettings : Composite, Configurable {
                 }
             }
 
-        TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_SETTINGS}")
+        TelemetryService.getInstance().logUsage(TelemetryEvents.TELEMETRY_OPEN_SETTINGS)
 
         addHierarchyListener { event ->
             // Check if the SHOWING_CHANGED bit is affected
             if (event.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
-                TelemetryService.getInstance().logUsage(
-                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_SETTINGS_VISIBILITY}",
+                TelemetryService.getInstance().logUsage(TelemetryEvents.TELEMETRY_SETTINGS_VISIBILITY,
                     mutableMapOf<String, Any>(Pair("visible", this.isShowing)))
             }
         }

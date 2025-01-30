@@ -2,12 +2,12 @@ package com.codescene.jetbrains.components.settings.tab
 
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.services.telemetry.TelemetryService
-import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Constants.CONTACT_URL
 import com.codescene.jetbrains.util.Constants.DOCUMENTATION_URL
 import com.codescene.jetbrains.util.Constants.SUPPORT_URL
 import com.codescene.jetbrains.util.Constants.TERMS_AND_CONDITIONS_URL
 import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.TelemetryEvents
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.options.Configurable
 import com.intellij.ui.JBColor
@@ -120,8 +120,7 @@ class GeneralTab : Configurable {
                     val uri = URI(link)
                     if (Desktop.isDesktopSupported()) Desktop.getDesktop().browse(uri)
 
-                    TelemetryService.getInstance().logUsage(
-                        "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_LINK}",
+                    TelemetryService.getInstance().logUsage(TelemetryEvents.TELEMETRY_OPEN_LINK,
                         mutableMapOf<String, Any>(Pair("url", uri)))
                 } catch (e: Exception) {
                     Log.warn("Unable to open link: ${e.message}")

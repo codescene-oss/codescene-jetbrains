@@ -9,9 +9,9 @@ import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
 import com.codescene.jetbrains.services.telemetry.TelemetryService
-import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.TelemetryEvents
 import com.intellij.execution.runners.ExecutionUtil
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.components.Service
@@ -48,7 +48,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
             // Check if the SHOWING_CHANGED bit is affected
             if (event.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
                 TelemetryService.getInstance().logUsage(
-                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_VISIBILITY}",
+                    TelemetryEvents.TELEMETRY_MONITOR_VISIBILITY,
                     mutableMapOf<String, Any>(Pair("visible", this.isShowing))
                 )
             }
@@ -135,8 +135,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
         } else {
             val removedValue = healthMonitoringResults.remove(path)
             if (removedValue != null) {
-                TelemetryService.getInstance().logUsage(
-                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_REMOVED}"
+                TelemetryService.getInstance().logUsage(TelemetryEvents.TELEMETRY_MONITOR_FILE_REMOVED
                 )
             }
         }
@@ -164,15 +163,13 @@ class CodeHealthMonitorPanel(private val project: Project) {
         if (healthMonitoringResults[path] != null) {
             // update
             healthMonitoringResults[path] = cachedDelta
-            TelemetryService.getInstance().logUsage(
-                "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_UPDATED}",
+            TelemetryService.getInstance().logUsage(TelemetryEvents.TELEMETRY_MONITOR_FILE_UPDATED,
                 mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", numberOfIssues))
             )
         } else {
             // add
             healthMonitoringResults[path] = cachedDelta
-            TelemetryService.getInstance().logUsage(
-                "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_MONITOR_FILE_ADDED}",
+            TelemetryService.getInstance().logUsage(TelemetryEvents.TELEMETRY_MONITOR_FILE_ADDED,
                 mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", numberOfIssues))
             )
         }
