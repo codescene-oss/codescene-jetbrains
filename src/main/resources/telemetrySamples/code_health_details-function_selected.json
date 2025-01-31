@@ -1,0 +1,9 @@
+{
+  "event-name" : "intellij/code_health_details/function_selected",
+  "editor-type" : "intellij",
+  "extension-version" : "0.0.10-beta",
+  "*" : {
+    "nIssues" : 2
+  },
+  "nIssues" : 2
+}

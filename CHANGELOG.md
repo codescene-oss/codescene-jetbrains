@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Telemetry events will only be logged once user consent is given.
 
+## [0.0.10-beta] - 2024-01-31
+### Changed
+- Telemetry refactored and improved
+
 ## [0.0.9-beta] - 2024-01-29
 ### Added
 - CodeScene telemetry to track user activity

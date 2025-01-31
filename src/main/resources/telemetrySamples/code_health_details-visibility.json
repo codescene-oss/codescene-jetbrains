@@ -1,0 +1,9 @@
+{
+  "event-name" : "intellij/code_health_details/visibility",
+  "editor-type" : "intellij",
+  "extension-version" : "0.0.10-beta",
+  "*" : {
+    "visible" : false
+  },
+  "visible" : false
+}

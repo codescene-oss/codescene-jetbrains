@@ -1,0 +1,11 @@
+{
+  "event-name" : "intellij/code_health_monitor/file_added",
+  "editor-type" : "intellij",
+  "extension-version" : "0.0.10-beta",
+  "*" : {
+    "scoreChange" : 0.0,
+    "nIssues" : 2
+  },
+  "scoreChange" : 0.0,
+  "nIssues" : 2
+}

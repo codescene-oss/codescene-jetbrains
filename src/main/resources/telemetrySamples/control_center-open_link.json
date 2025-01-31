@@ -1,0 +1,9 @@
+{
+  "event-name" : "intellij/control_center/open-link",
+  "editor-type" : "intellij",
+  "extension-version" : "0.0.10-beta",
+  "*" : {
+    "url" : "https://codescene.io/docs/"
+  },
+  "url" : "https://codescene.io/docs/"
+}

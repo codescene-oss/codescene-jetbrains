@@ -48,6 +48,7 @@ class CodeHealthTreeBuilder(private val project: Project) {
     private var selectedNode: CodeHealthFinding? = null
     private val collapsedPaths: MutableSet<String> = ConcurrentHashMap.newKeySet()
     private val service = "Health Tree Builder - ${project.name}"
+    private var codeHealthSelected = false
 
     companion object {
         fun getInstance(project: Project): CodeHealthTreeBuilder = project.service<CodeHealthTreeBuilder>()
@@ -123,21 +124,12 @@ class CodeHealthTreeBuilder(private val project: Project) {
 
     private fun handleTreeSelectionEvent(event: TreeSelectionEvent) {
         val navigationService = CodeNavigationService.getInstance(project)
-
         val targetNode = event.path.lastPathComponent as? DefaultMutableTreeNode
         val finding = targetNode?.userObject as? CodeHealthFinding ?: return
 
         if (targetNode.isLeaf) {
             Log.debug("Selected node with finding $finding", service)
-
-            if (isHealthNode(finding.nodeType)) {
-                TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_CODE_HEALTH_DOCS}")
-            } else {
-                // TODO: provide additional data isRefactoringSupported when refactoring logic available
-                TelemetryService.getInstance().logUsage(
-                    "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_DETAILS_FUNCTION_SELECTED}",
-                    mutableMapOf<String, Any>(Pair("nIssues", finding.functionFindingIssues)))
-            }
+            handleSelectionTelemetry(finding)
 
             if (!suppressFocusOnLine) navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
 
@@ -147,10 +139,35 @@ class CodeHealthTreeBuilder(private val project: Project) {
             (event.source as? JTree)?.clearSelection()
 
             project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
+            handleDeselectionTelemetry()
             selectedNode = null
-            TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_DETAILS_FUNCTION_DESELECTED}")
         }
     }
+
+    private fun handleDeselectionTelemetry() {
+        if (selectedNode != null && !codeHealthSelected) {
+            TelemetryService.getInstance().logUsage(TelemetryEvents.DETAILS_FUNCTION_DESELECTED)
+        }
+        codeHealthSelected = false
+    }
+
+    private fun handleSelectionTelemetry(finding: CodeHealthFinding) {
+        if (shouldSelectHealthNode(finding)) {
+            TelemetryService.getInstance().logUsage(TelemetryEvents.OPEN_CODE_HEALTH_DOCS)
+            codeHealthSelected = true
+        } else if (selectedNode == null || shouldSelectFunctionOfFileNode(finding)) {
+            // TODO: provide additional data isRefactoringSupported when refactoring logic available
+            TelemetryService.getInstance().logUsage(
+                TelemetryEvents.DETAILS_FUNCTION_SELECTED,
+                mutableMapOf<String, Any>(Pair("nIssues", finding.functionFindingIssues))
+            )
+            codeHealthSelected = false
+        }
+    }
+
+    private fun shouldSelectFunctionOfFileNode(finding: CodeHealthFinding): Boolean = !isHealthNode(finding.nodeType) && codeHealthSelected
+
+    private fun shouldSelectHealthNode(finding: CodeHealthFinding): Boolean = isHealthNode(finding.nodeType) && !codeHealthSelected
 
     private fun buildNode(filePath: String, delta: Delta): MutableTreeNode {
         val root = CodeHealthFinding(

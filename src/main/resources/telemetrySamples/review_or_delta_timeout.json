@@ -1,0 +1,6 @@
+{
+  "event-name" : "intellij/review_or_delta_timeout",
+  "editor-type" : "intellij",
+  "extension-version" : "0.0.10-beta",
+  "*" : { }
+}

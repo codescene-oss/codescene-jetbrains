@@ -1,0 +1,9 @@
+{
+  "event-name" : "intellij/control_center/visibility",
+  "editor-type" : "intellij",
+  "extension-version" : "0.0.10-beta",
+  "*" : {
+    "visible" : false
+  },
+  "visible" : false
+}
