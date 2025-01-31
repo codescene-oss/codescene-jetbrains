@@ -6,10 +6,10 @@ import com.codescene.jetbrains.services.BaseService
 import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Log
 import com.intellij.ide.plugins.PluginManagerCore
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.extensions.PluginId
-import com.vladsch.flexmark.html.Disposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
