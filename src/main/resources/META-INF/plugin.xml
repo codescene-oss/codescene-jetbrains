@@ -31,6 +31,8 @@
 
         <postStartupActivity implementation="com.codescene.jetbrains.listeners.ProjectStartupActivity"/>
 
+        <notificationGroup id="CodeScene" displayType="STICKY_BALLOON"/>
+
         <applicationService serviceImplementation="com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore"/>
 
         <applicationConfigurable

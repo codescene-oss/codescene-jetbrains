@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.11-beta] - 2024-01-31
+### Added
+- Telemetry consent prompt and state (false by default).
+
+### Changed
+- Telemetry events will only be logged once user consent is given.
+
 ## [0.0.10-beta] - 2024-01-31
 ### Changed
 - Telemetry refactored and improved

@@ -66,7 +66,6 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
             functionLocation = FunctionLocation(editor.virtualFile.name, codeSmell)
         }
 
-        val project = editor?.project!!
         lastDocsSourceType = docsSourceType
 
         val codeSmellFileName = codeSmell.category + ".md"

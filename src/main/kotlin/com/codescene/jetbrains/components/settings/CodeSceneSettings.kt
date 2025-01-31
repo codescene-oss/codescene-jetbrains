@@ -5,7 +5,6 @@ import com.codescene.jetbrains.components.settings.tab.GeneralTab
 import com.codescene.jetbrains.components.settings.tab.SettingsTab
 import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.Constants.CODESCENE
-import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.TelemetryEvents
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.Configurable.Composite
@@ -45,13 +44,11 @@ class CodeSceneSettings : Composite, Configurable {
         }
     }
 
-    override fun isModified(): Boolean = settingsTab.isModified
+    override fun isModified() = settingsTab.isModified || aboutTab.isModified
 
     override fun apply() {
-        if (settingsTab.isModified) {
-            settingsTab.apply()
-        }
-        Log.warn("Telemetry event logged: apply() method")
+        if (settingsTab.isModified) settingsTab.apply()
+        if (aboutTab.isModified) aboutTab.apply()
     }
 
     override fun reset() {
