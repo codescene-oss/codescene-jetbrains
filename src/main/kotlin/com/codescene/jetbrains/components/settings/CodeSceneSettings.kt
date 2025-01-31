@@ -34,24 +34,26 @@ class CodeSceneSettings : Composite, Configurable {
                 }
             }
 
-        TelemetryService.getInstance().logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_SETTINGS}")
+        TelemetryService.getInstance()
+            .logUsage("${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_SETTINGS}")
 
         addHierarchyListener { event ->
             // Check if the SHOWING_CHANGED bit is affected
             if (event.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
                 TelemetryService.getInstance().logUsage(
                     "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_SETTINGS_VISIBILITY}",
-                    mutableMapOf<String, Any>(Pair("visible", this.isShowing)))
+                    mutableMapOf<String, Any>(Pair("visible", this.isShowing))
+                )
             }
         }
     }
 
-    override fun isModified(): Boolean = settingsTab.isModified
+    override fun isModified() = settingsTab.isModified || aboutTab.isModified
 
     override fun apply() {
-        if (settingsTab.isModified) {
-            settingsTab.apply()
-        }
+        if (settingsTab.isModified) settingsTab.apply()
+        if (aboutTab.isModified) aboutTab.apply()
+
         Log.warn("Telemetry event logged: apply() method")
     }
 

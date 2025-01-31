@@ -6,11 +6,11 @@ import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Constants.CODESCENE_URL
 import com.codescene.jetbrains.util.Log
-import com.intellij.openapi.options.Configurable
+import com.intellij.openapi.options.BoundConfigurable
+import com.intellij.openapi.ui.DialogPanel
+import com.intellij.openapi.ui.VerticalFlowLayout
 import com.intellij.ui.IdeBorderFactory
-import com.intellij.ui.dsl.builder.bindSelected
-import com.intellij.ui.dsl.builder.panel
-import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.JBUI.Borders
 import com.intellij.util.ui.UIUtil
 import java.awt.*
 import java.awt.event.MouseAdapter
@@ -19,15 +19,20 @@ import java.net.URI
 import java.time.Year
 import javax.swing.*
 
-class AboutTab : Configurable {
-    override fun getDisplayName(): String = UiLabelsBundle.message("aboutTitle")
-
+class AboutTab : BoundConfigurable(UiLabelsBundle.message("aboutTitle")) {
+    private var telemetryCheckbox: JCheckBox
     private val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
-    override fun createComponent() = JPanel(BorderLayout(0, 20)).apply {
-        border = JBUI.Borders.empty(10)
+    override fun createPanel() = DialogPanel(BorderLayout(0, 20)).apply {
+        border = Borders.empty(10)
         add(aboutSection, BorderLayout.NORTH)
         add(telemetrySection, BorderLayout.CENTER)
+    }
+
+    override fun isModified() = (settings.telemetryConsentGiven != telemetryCheckbox.isSelected)
+
+    override fun apply() {
+        settings.telemetryConsentGiven = telemetryCheckbox.isSelected
     }
 
     private val aboutSection = JPanel().apply {
@@ -52,6 +57,11 @@ class AboutTab : Configurable {
             Insets(10, 0, 0, 10)
         )
 
+        telemetryCheckbox = JCheckBox(UiLabelsBundle.message("telemetryCheckbox")).apply {
+            isFocusable = false
+            isSelected = settings.telemetryConsentGiven
+        }
+
         add(JTextArea(UiLabelsBundle.message("telemetryDescription")).apply {
             font = UIUtil.getFont(UIUtil.FontSize.NORMAL, Font.getFont("Arial"))
             isOpaque = false
@@ -59,18 +69,11 @@ class AboutTab : Configurable {
             preferredSize = Dimension(100, 90)
             wrapStyleWord = true
         }, BorderLayout.NORTH)
-        add(add(panel {
-            row {
-                checkBox(UiLabelsBundle.message("telemetryCheckbox"))
-                    .bindSelected(settings::telemetryConsentGiven)
-            }
-        }), BorderLayout.CENTER)
-    }
-
-    override fun isModified(): Boolean = false
-
-    override fun apply() {
-        // No settings to change in this tab
+        add(JPanel().apply {
+            layout = VerticalFlowLayout()
+            border = Borders.empty()
+            add(telemetryCheckbox)
+        }, BorderLayout.CENTER)
     }
 
     private fun getAboutComponents(): List<JComponent> {
