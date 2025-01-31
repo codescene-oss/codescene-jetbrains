@@ -5,6 +5,7 @@ import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Constants.CODESCENE_URL
+import com.codescene.jetbrains.util.Constants.TELEMETRY_EVENTS_URL
 import com.codescene.jetbrains.util.Constants.TELEMETRY_SAMPLES_URL
 import com.codescene.jetbrains.util.Log
 import com.intellij.openapi.options.BoundConfigurable
@@ -76,9 +77,12 @@ class AboutTab : BoundConfigurable(UiLabelsBundle.message("aboutTitle")) {
 
         gbc.gridy = 1
         gbc.ipady = 10
-        add(getSamplesLabel(), gbc)
+        add(getSamplesLabel(TELEMETRY_SAMPLES_URL, UiLabelsBundle.message("dataSamples")), gbc)
 
         gbc.gridy = 2
+        add(getSamplesLabel(TELEMETRY_EVENTS_URL, UiLabelsBundle.message("eventsList")), gbc)
+
+        gbc.gridy = 3
         gbc.weighty = 1.0
         add(getTelemetryConsentCheckbox(), gbc)
     }
@@ -92,13 +96,13 @@ class AboutTab : BoundConfigurable(UiLabelsBundle.message("aboutTitle")) {
         wrapStyleWord = true
     }
 
-    private fun getSamplesLabel() = JLabel("<html><a href=\"$TELEMETRY_SAMPLES_URL\">Telemetry samples</a>").apply {
+    private fun getSamplesLabel(url: String, label: String) = JLabel("<html><a href=\"$url\">$label</a>").apply {
         alignmentX = Component.LEFT_ALIGNMENT
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent?) {
                 if (e?.source is JLabel) {
                     try {
-                        Desktop.getDesktop().browse(URI(TELEMETRY_SAMPLES_URL))
+                        Desktop.getDesktop().browse(URI(url))
                     } catch (ex: Exception) {
                         ex.printStackTrace()
                     }

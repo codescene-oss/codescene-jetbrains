@@ -21,8 +21,12 @@ object Constants {
     const val AI_PRINCIPLES_URL = "$CODESCENE_URL/ace/principles"
     const val CONTACT_URL = "$CODESCENE_URL/company/contact-us"
     const val SUPPORT_URL = "https://supporthub.codescene.com/kb-tickets/new"
+
+    const val REPOSITORY_URL = "https://github.com/codescene-oss/codescene-jetbrains"
     const val TELEMETRY_SAMPLES_URL =
-        "https://github.com/codescene-oss/codescene-jetbrains/tree/master/src/main/resources/telemetrySamples"
+        "$REPOSITORY_URL/tree/master/src/main/resources/telemetrySamples"
+    const val TELEMETRY_EVENTS_URL =
+        "$REPOSITORY_URL/tree/master/src/main/kotlin/com/codescene/jetbrains/util/TelemetryEvents.kt"
 
     val RED = JBColor(Color(224, 82, 92), Color(224, 82, 92))
     val GREEN = JBColor(Color(79, 159, 120), Color(79, 159, 120))
