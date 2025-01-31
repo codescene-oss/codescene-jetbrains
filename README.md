@@ -1,7 +1,7 @@
-# CodeScene JetBrains Plugin
+# CodeScene Plugin
 
 <!-- Plugin description -->
-**The Codescene JetBrains plugin** provides in-editor recommendations and suggested improvements, helping you write maintainable code and proactively address potential issues.
+**The CodeScene plugin** provides in-editor recommendations and suggested improvements, helping you write maintainable code and proactively address potential issues.
 <!-- Plugin description end -->
 
 ### Table of contents
@@ -98,7 +98,7 @@ Environment variables used by the current project are related to the [plugin sig
 
 ## Project structure
 
-The CodeScene JetBrains project has the following content structure:
+The CodeScene project has the following content structure:
 
 ```
 .
