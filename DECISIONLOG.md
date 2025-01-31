@@ -1,7 +1,7 @@
-# CodeScene JetBrains Plugin Decision Log
+# CodeScene Plugin Decision Log
 
-The purpose of this Decision Log is to document important decisions made during the development of the CodeScene
-JetBrains plugin. It helps provide clarity and rationale for each decision, making it easier to understand why certain
+The purpose of this Decision Log is to document important decisions made during the development of the CodeScene 
+plugin. It helps provide clarity and rationale for each decision, making it easier to understand why certain
 choices were made and to review them later if needed. This log serves as a reference for current and future team
 members, ensuring transparency and consistency throughout the project lifecycle.
 
@@ -29,7 +29,7 @@ members, ensuring transparency and consistency throughout the project lifecycle.
 **Status**: Accepted
 
 **Decision**:
-The project will use Kotlin for developing the JetBrains plugin.
+The project will use Kotlin for developing the plugin.
 
 **Context**:
 We needed a language that is fully supported by JetBrains IDEs and provides modern features for plugin development.
@@ -115,7 +115,7 @@ None
 **Status**: Accepted
 
 **Decision**:
-The project will use JDK 17 for developing the JetBrains plugin. The plugin will support IntelliJ IDEA versions from
+The project will use JDK 17 for developing the plugin. The plugin will support IntelliJ IDEA versions from
 2021.X to 2024.X.
 
 **Context**:
