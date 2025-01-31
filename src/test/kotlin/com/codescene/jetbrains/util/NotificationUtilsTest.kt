@@ -67,7 +67,7 @@ class NotificationUtilsTest {
         val actionList = mutableListOf<AnAction>()
         verify(exactly = 2) { mockNotification.addAction(capture(actionList)) }
 
-        val (acceptAction, ignoreAction) = actionList
+        val (acceptAction, denyAction) = actionList
 
         val acceptEvent = mockk<AnActionEvent>(relaxed = true)
         acceptAction.actionPerformed(acceptEvent)
@@ -75,7 +75,7 @@ class NotificationUtilsTest {
         verify { mockNotification.expire() }
 
         val ignoreEvent = mockk<AnActionEvent>(relaxed = true)
-        ignoreAction.actionPerformed(ignoreEvent)
+        denyAction.actionPerformed(ignoreEvent)
         verify { mockNotification.expire() }
     }
 }
