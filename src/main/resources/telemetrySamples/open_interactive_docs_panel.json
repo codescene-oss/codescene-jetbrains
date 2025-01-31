@@ -1,0 +1,11 @@
+{
+  "event-name" : "intellij/open_interactive_docs_panel",
+  "editor-type" : "intellij",
+  "extension-version" : "0.0.9-beta",
+  "*" : {
+    "source" : "codelens (review)",
+    "category" : "Excess Number of Function Arguments"
+  },
+  "source" : "codelens (review)",
+  "category" : "Excess Number of Function Arguments"
+}

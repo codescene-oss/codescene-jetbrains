@@ -2,8 +2,10 @@ package com.codescene.jetbrains.services.api
 
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.services.BaseService
+import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.TelemetryEvents
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.editor.Editor
 import kotlinx.coroutines.*
@@ -26,7 +28,7 @@ abstract class CodeSceneService : BaseService(), Disposable {
      */
     protected fun reviewFile(
         editor: Editor,
-        timeout: Long = 10_000,
+        timeout: Long = 15_000,
         performAction: suspend () -> Unit
     ) {
         val service = "$serviceImplementation - ${editor.project!!.name}"
@@ -47,7 +49,7 @@ abstract class CodeSceneService : BaseService(), Disposable {
                         filePath,
                         getActiveApiCalls()
                     )
-                } ?: Log.warn("Review task timed out for file: $filePath", service)
+                } ?: handleTimeout(filePath, service)
             }
         } catch (e: CancellationException) {
             Log.info("Review canceled for file $fileName.", service)
@@ -59,8 +61,6 @@ abstract class CodeSceneService : BaseService(), Disposable {
     }
 
     protected abstract fun getActiveApiCalls(): MutableSet<String>
-
-
 
     fun cancelFileReview(filePath: String, calls: MutableSet<String>) {
         activeReviewCalls[filePath]?.let { job ->
@@ -83,5 +83,10 @@ abstract class CodeSceneService : BaseService(), Disposable {
         activeReviewCalls.clear()
 
         scope.cancel()
+    }
+
+    private fun handleTimeout(filePath: String, service: String) {
+        Log.warn("Review task timed out for file: $filePath", service)
+        TelemetryService.getInstance().logUsage(TelemetryEvents.REVIEW_OR_DELTA_TIMEOUT)
     }
 }

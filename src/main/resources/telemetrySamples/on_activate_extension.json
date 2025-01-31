@@ -1,0 +1,6 @@
+{
+  "event-name" : "intellij/on_activate_extension",
+  "editor-type" : "intellij",
+  "extension-version" : "0.0.10-beta",
+  "*" : { }
+}

@@ -10,6 +10,7 @@ import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_MONITOR
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
 import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.TelemetryEvents
 import com.codescene.jetbrains.util.categoryToFileName
 import com.codescene.jetbrains.util.surroundingCharactersNotBackticks
 import com.intellij.ide.actions.OpenInRightSplitAction.Companion.openInRightSplit
@@ -80,11 +81,8 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
                 openInRightSplit(project, documentationFile, null, false)?.closeAllExcept(documentationFile)
                 if (docsSourceType != DocsSourceType.NONE) {
                     TelemetryService.Companion.getInstance().logUsage(
-                        "${Constants.TELEMETRY_EDITOR_TYPE}/${Constants.TELEMETRY_OPEN_DOCS_PANEL}",
-                        mutableMapOf<String, Any>(
-                            Pair("source", docsSourceType.value),
-                            Pair("category", codeSmell.category)
-                        )
+                        TelemetryEvents.OPEN_DOCS_PANEL,
+                        mutableMapOf<String, Any>(Pair("source", docsSourceType.value), Pair("category", codeSmell.category))
                     )
                 }
             }

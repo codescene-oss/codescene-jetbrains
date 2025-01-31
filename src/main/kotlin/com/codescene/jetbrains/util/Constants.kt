@@ -26,6 +26,7 @@ object Constants {
 
     const val GENERAL_CODE_HEALTH = "General Code Health"
     const val CODE_HEALTH_MONITOR = "Code Health Monitor"
+    const val TELEMETRY_EDITOR_TYPE = "intellij"
 
     const val BRAIN_CLASS = "Brain Class"
     const val BRAIN_METHOD = "Brain Method"
@@ -54,23 +55,4 @@ object Constants {
     const val POTENTIALLY_LOW_COHESION = "Potentially Low Cohesion"
     const val PRIMITIVE_OBSESSION = "Primitive Obsession"
     const val STRING_HEAVY_FUNCTION_ARGUMENTS = "String Heavy Function Arguments"
-
-    // telemetry constants
-    const val TELEMETRY_EDITOR_TYPE = "intellij"
-    const val TELEMETRY_ON_ACTIVATE_EXTENSION = "on_activate_extension"
-    const val TELEMETRY_OPEN_CODE_HEALTH_DOCS = "open_code_health_docs"
-    const val TELEMETRY_OPEN_DOCS_PANEL = "open_interactive_docs_panel"
-    const val TELEMETRY_SETTINGS_VISIBILITY = "control_center/visibility"
-    const val TELEMETRY_OPEN_SETTINGS = "control_center/open-settings"
-    const val TELEMETRY_OPEN_LINK = "control_center/open-link"
-    const val TELEMETRY_MONITOR_VISIBILITY = "code_health_monitor/visibility"
-    const val TELEMETRY_MONITOR_FILE_ADDED = "code_health_monitor/file_added"
-    const val TELEMETRY_MONITOR_FILE_UPDATED = "code_health_monitor/file_updated"
-    const val TELEMETRY_MONITOR_FILE_REMOVED = "code_health_monitor/file_removed"
-    const val TELEMETRY_DETAILS_VISIBILITY = "code_health_details/visibility"
-    const val TELEMETRY_DETAILS_FUNCTION_SELECTED = "code_health_details/function_selected"
-    const val TELEMETRY_DETAILS_FUNCTION_DESELECTED = "code_health_details/function_deselected"
-
-    // not yet implemented
-    const val TELEMETRY_STATS = "stats"
 }
