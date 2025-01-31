@@ -5,10 +5,10 @@ import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Constants.CODESCENE_URL
+import com.codescene.jetbrains.util.Constants.TELEMETRY_SAMPLES_URL
 import com.codescene.jetbrains.util.Log
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
-import com.intellij.openapi.ui.VerticalFlowLayout
 import com.intellij.ui.IdeBorderFactory
 import com.intellij.util.ui.JBUI.Borders
 import com.intellij.util.ui.UIUtil
@@ -20,7 +20,7 @@ import java.time.Year
 import javax.swing.*
 
 class AboutTab : BoundConfigurable(UiLabelsBundle.message("aboutTitle")) {
-    private var telemetryCheckbox: JCheckBox
+    private lateinit var telemetryCheckbox: JCheckBox
     private val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
     override fun createPanel() = DialogPanel(BorderLayout(0, 20)).apply {
@@ -50,30 +50,75 @@ class AboutTab : BoundConfigurable(UiLabelsBundle.message("aboutTitle")) {
     }
 
     private val telemetrySection = JPanel().apply {
-        layout = BorderLayout()
+        layout = GridBagLayout()
         border = IdeBorderFactory.createTitledBorder(
             UiLabelsBundle.message("statistics"),
             true,
-            Insets(10, 0, 0, 10)
+            Insets(0, 0, 0, 10)
         )
+
+        val gbc = GridBagConstraints().apply {
+            gridx = 0
+            fill = GridBagConstraints.HORIZONTAL
+
+            weightx = 1.0
+            weighty = 0.0
+
+            ipady = 0
+            ipadx = 0
+
+            insets = Insets(0, 0, 0, 0)
+            anchor = GridBagConstraints.NORTHWEST
+        }
+
+        gbc.gridy = 0
+        add(getTelemetryDescription(), gbc)
+
+        gbc.gridy = 1
+        gbc.ipady = 10
+        add(getSamplesLabel(), gbc)
+
+        gbc.gridy = 2
+        gbc.weighty = 1.0
+        add(getTelemetryConsentCheckbox(), gbc)
+    }
+
+    private fun getTelemetryDescription() = JTextArea(UiLabelsBundle.message("telemetryDescription")).apply {
+        font = UIUtil.getFont(UIUtil.FontSize.NORMAL, Font.getFont("Arial"))
+        isOpaque = false
+        isEditable = false
+        lineWrap = true
+        preferredSize = Dimension(100, 85)
+        wrapStyleWord = true
+    }
+
+    private fun getSamplesLabel() = JLabel("<html><a href=\"$TELEMETRY_SAMPLES_URL\">Telemetry samples</a>").apply {
+        alignmentX = Component.LEFT_ALIGNMENT
+        addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent?) {
+                if (e?.source is JLabel) {
+                    try {
+                        Desktop.getDesktop().browse(URI(TELEMETRY_SAMPLES_URL))
+                    } catch (ex: Exception) {
+                        ex.printStackTrace()
+                    }
+                }
+            }
+        })
+    }
+
+    private fun getTelemetryConsentCheckbox() = JPanel().apply {
+        layout = BoxLayout(this, BoxLayout.X_AXIS)
+        border = Borders.empty()
 
         telemetryCheckbox = JCheckBox(UiLabelsBundle.message("telemetryCheckbox")).apply {
             isFocusable = false
+            alignmentX = Component.LEFT_ALIGNMENT
             isSelected = settings.telemetryConsentGiven
+            margin = Insets(0, 0, 0, 0)
         }
 
-        add(JTextArea(UiLabelsBundle.message("telemetryDescription")).apply {
-            font = UIUtil.getFont(UIUtil.FontSize.NORMAL, Font.getFont("Arial"))
-            isOpaque = false
-            lineWrap = true
-            preferredSize = Dimension(100, 90)
-            wrapStyleWord = true
-        }, BorderLayout.NORTH)
-        add(JPanel().apply {
-            layout = VerticalFlowLayout()
-            border = Borders.empty()
-            add(telemetryCheckbox)
-        }, BorderLayout.CENTER)
+        add(telemetryCheckbox)
     }
 
     private fun getAboutComponents(): List<JComponent> {
