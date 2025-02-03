@@ -11,7 +11,6 @@ import com.codescene.jetbrains.util.Constants.CODE_HEALTH_MONITOR
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
 import com.intellij.ide.ui.LafManager
 import com.intellij.ide.ui.LafManagerListener
-import com.intellij.markdown.utils.MarkdownToHtmlConverter
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.Service
@@ -24,7 +23,9 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.jcef.JBCefScrollbarsHelper
-import org.intellij.plugins.markdown.lang.parser.MarkdownDefaultFlavour
+import com.vladsch.flexmark.html.HtmlRenderer
+import com.vladsch.flexmark.parser.Parser
+import com.vladsch.flexmark.util.ast.Node
 import java.util.stream.Collectors
 
 @Service(Service.Level.PROJECT)
@@ -181,8 +182,6 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
      * handling markdown conversion, code highlighting, and specific cases for standalone documentation.
      */
     private fun StringBuilder.adaptBody(title: String, body: String, standaloneDocumentation: Boolean) {
-        val toHtmlConverter = MarkdownToHtmlConverter(MarkdownDefaultFlavour())
-
         if (body.contains(threeBackticks)) {
             val codePart = body.substring(body.indexOf(threeBackticks), body.lastIndexOf(threeBackticks) + 4)
             val languageString = codePart.substring(3, codePart.indexOf("\n"))
@@ -192,12 +191,12 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
                 MarkdownCodeDelimiter.MULTI_LINE
             )
 
-            val newBody = toHtmlConverter.convertMarkdownToHtml(body.replace(codePart, highlightedBody))
+            val newBody = convertMarkdownToHtml(body.replace(codePart, highlightedBody))
             appendSubpart(this, HtmlPart(title, newBody))
         } else if (standaloneDocumentation) {
-            append(toHtmlConverter.convertMarkdownToHtml(body))
+            append(convertMarkdownToHtml(body))
         } else {
-            appendSubpart(this, HtmlPart(title, toHtmlConverter.convertMarkdownToHtml(body)))
+            appendSubpart(this, HtmlPart(title, convertMarkdownToHtml(body)))
         }
     }
 
@@ -240,6 +239,14 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
             }
         }
         return false
+    }
+
+    private fun convertMarkdownToHtml(markdown: String): String {
+        val parser = Parser.builder().build()
+        val renderer = HtmlRenderer.builder().build()
+        val document: Node = parser.parse(markdown)
+
+        return "<body>${renderer.render(document)}</body>"
     }
 
     /**
