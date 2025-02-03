@@ -6,14 +6,9 @@ import com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewer
 import com.codescene.jetbrains.codeInsight.codehealth.MarkdownCodeDelimiter
 import com.codescene.jetbrains.codeInsight.codehealth.PreviewThemeStyles
 import com.codescene.jetbrains.services.telemetry.TelemetryService
-import com.codescene.jetbrains.util.Constants
+import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_MONITOR
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
-import com.codescene.jetbrains.util.Log
-import com.codescene.jetbrains.util.TelemetryEvents
-import com.codescene.jetbrains.util.categoryToFileName
-import com.codescene.jetbrains.util.surroundingCharactersNotBackticks
-import com.intellij.ide.actions.OpenInRightSplitAction.Companion.openInRightSplit
 import com.intellij.ide.ui.LafManager
 import com.intellij.ide.ui.LafManagerListener
 import com.intellij.markdown.utils.MarkdownToHtmlConverter
@@ -23,6 +18,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiManager
@@ -73,23 +69,54 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
 
         Log.info("Opening documentation file $codeSmellFileName")
         val documentationFile = createTempFile(codeSmellFileName, markdownContent)
-        if (editor != null) {
-            if (!fileEditorManager.selectedFiles.contains(documentationFile)) {
-                // return focus to original file
-                fileEditorManager.openFile(editor.virtualFile, true, true)
-                openInRightSplit(project, documentationFile, null, false)?.closeAllExcept(documentationFile)
-                if (docsSourceType != DocsSourceType.NONE) {
-                    TelemetryService.Companion.getInstance().logUsage(
-                        TelemetryEvents.OPEN_DOCS_PANEL,
-                        mutableMapOf<String, Any>(Pair("source", docsSourceType.value), Pair("category", codeSmell.category))
-                    )
-                }
-            }
+
+        if (editor != null && !fileEditorManager.selectedFiles.contains(documentationFile)) {
+            splitWindow(documentationFile)
+            logTelemetryEvent(codeSmell)
         } else {
             openDocumentationWithoutActiveEditor(documentationFile)
         }
     }
 
+    private fun logTelemetryEvent(codeSmell: CodeSmell) {
+        if (lastDocsSourceType != DocsSourceType.NONE) {
+            TelemetryService.getInstance().logUsage(
+                TelemetryEvents.OPEN_DOCS_PANEL,
+                mutableMapOf<String, Any>(
+                    Pair("source", lastDocsSourceType.value),
+                    Pair("category", codeSmell.category)
+                )
+            )
+        }
+    }
+
+    /**
+     * Opens the given documentation file in a right-split editor.
+     * Closes any other currently opened document files that match names in `codeSmellNames` before opening the new file.
+     *
+     * @param file The [VirtualFile] to be opened in a right-split editor.
+     */
+    private fun splitWindow(file: VirtualFile) {
+        val editorManagerEx = FileEditorManagerEx.getInstanceEx(project)
+        val docWindow = editorManagerEx.windows
+            .firstOrNull { editorWindow ->
+                editorWindow.files.any { codeSmellNames.contains(it.nameWithoutExtension) }
+            }
+
+        fileEditorManager.openFiles
+            .filterIsInstance<LightVirtualFile>()
+            .filter { codeSmellNames.contains(it.nameWithoutExtension) }
+            .forEach { docWindow?.closeFile(it) }
+
+        editorManagerEx.splitters.openInRightSplit(file, false)
+    }
+
+    /**
+     * Opens a standalone documentation file (e.g., Code Health Monitor docs)
+     * if there are no other open files and the documentation file is not already open.
+     *
+     * @param documentationFile The [VirtualFile] representing the documentation to open.
+     */
     private fun openDocumentationWithoutActiveEditor(documentationFile: VirtualFile) {
         val docNotOpen = fileEditorManager.openFiles.none { it.name == documentationFile.name }
         val shouldOpenFile = fileEditorManager.openFiles.isEmpty() && docNotOpen
@@ -345,7 +372,13 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
      */
     override fun lookAndFeelChanged(p0: LafManager) {
         if (functionLocation?.codeSmell != null) {
-            this.openDocumentationPanel(DocumentationParams(sourceEditor, functionLocation!!.codeSmell, lastDocsSourceType))
+            this.openDocumentationPanel(
+                DocumentationParams(
+                    sourceEditor,
+                    functionLocation!!.codeSmell,
+                    lastDocsSourceType
+                )
+            )
         }
     }
 }
