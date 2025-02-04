@@ -6,29 +6,26 @@ import com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewer
 import com.codescene.jetbrains.codeInsight.codehealth.MarkdownCodeDelimiter
 import com.codescene.jetbrains.codeInsight.codehealth.PreviewThemeStyles
 import com.codescene.jetbrains.services.telemetry.TelemetryService
-import com.codescene.jetbrains.util.Constants
+import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_MONITOR
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
-import com.codescene.jetbrains.util.Log
-import com.codescene.jetbrains.util.TelemetryEvents
-import com.codescene.jetbrains.util.categoryToFileName
-import com.codescene.jetbrains.util.surroundingCharactersNotBackticks
-import com.intellij.ide.actions.OpenInRightSplitAction.Companion.openInRightSplit
 import com.intellij.ide.ui.LafManager
 import com.intellij.ide.ui.LafManagerListener
-import com.intellij.markdown.utils.MarkdownToHtmlConverter
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.jcef.JBCefScrollbarsHelper
-import org.intellij.plugins.markdown.lang.parser.MarkdownDefaultFlavour
+import com.vladsch.flexmark.html.HtmlRenderer
+import com.vladsch.flexmark.parser.Parser
+import com.vladsch.flexmark.util.ast.Node
 import java.util.stream.Collectors
 
 @Service(Service.Level.PROJECT)
@@ -73,27 +70,58 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
 
         Log.info("Opening documentation file $codeSmellFileName")
         val documentationFile = createTempFile(codeSmellFileName, markdownContent)
-        if (editor != null) {
-            if (!fileEditorManager.selectedFiles.contains(documentationFile)) {
-                // return focus to original file
-                fileEditorManager.openFile(editor.virtualFile, true, true)
-                openInRightSplit(project, documentationFile, null, false)?.closeAllExcept(documentationFile)
-                if (docsSourceType != DocsSourceType.NONE) {
-                    TelemetryService.Companion.getInstance().logUsage(
-                        TelemetryEvents.OPEN_DOCS_PANEL,
-                        mutableMapOf<String, Any>(Pair("source", docsSourceType.value), Pair("category", codeSmell.category))
-                    )
-                }
-            }
+
+        if (editor != null && !fileEditorManager.selectedFiles.contains(documentationFile)) {
+            splitWindow(documentationFile)
+            logTelemetryEvent(codeSmell)
         } else {
             openDocumentationWithoutActiveEditor(documentationFile)
         }
     }
 
-    private fun openDocumentationWithoutActiveEditor(documentationFile: VirtualFile) {
-        val docNotOpen = fileEditorManager.openFiles.none { it.name == documentationFile.name }
+    private fun logTelemetryEvent(codeSmell: CodeSmell) {
+        if (lastDocsSourceType != DocsSourceType.NONE) {
+            TelemetryService.getInstance().logUsage(
+                TelemetryEvents.OPEN_DOCS_PANEL,
+                mutableMapOf<String, Any>(
+                    Pair("source", lastDocsSourceType.value),
+                    Pair("category", codeSmell.category)
+                )
+            )
+        }
+    }
+
+    /**
+     * Opens the given documentation file in a right-split editor.
+     * Closes any other currently opened document files that match names in `codeSmellNames` before opening the new file.
+     *
+     * @param file The [VirtualFile] to be opened in a right-split editor.
+     */
+    private fun splitWindow(file: VirtualFile) {
+        val editorManagerEx = FileEditorManagerEx.getInstanceEx(project)
+        val docWindow = editorManagerEx.windows
+            .firstOrNull { editorWindow ->
+                editorWindow.fileList.any { codeSmellNames.contains(it.nameWithoutExtension) }
+            }
+
+        editorManagerEx.splitters.openInRightSplit(file, false)
+
+        fileEditorManager.openFiles
+            .filterIsInstance<LightVirtualFile>()
+            .filter { it != file && codeSmellNames.contains(it.nameWithoutExtension) }
+            .forEach { docWindow?.closeFile(it) }
+    }
+
+    /**
+     * Opens a standalone documentation file (e.g., Code Health Monitor docs)
+     * if there are no other open files and the documentation file is not already open.
+     *
+     * @param file The [VirtualFile] to be opened in a right-split editor.
+     */
+    private fun openDocumentationWithoutActiveEditor(file: VirtualFile) {
+        val docNotOpen = fileEditorManager.openFiles.none { it.name == file.name }
         val shouldOpenFile = fileEditorManager.openFiles.isEmpty() && docNotOpen
-        if (shouldOpenFile) fileEditorManager.openFile(documentationFile, false)
+        if (shouldOpenFile) fileEditorManager.openFile(file, false)
     }
 
     /**
@@ -154,8 +182,6 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
      * handling markdown conversion, code highlighting, and specific cases for standalone documentation.
      */
     private fun StringBuilder.adaptBody(title: String, body: String, standaloneDocumentation: Boolean) {
-        val toHtmlConverter = MarkdownToHtmlConverter(MarkdownDefaultFlavour())
-
         if (body.contains(threeBackticks)) {
             val codePart = body.substring(body.indexOf(threeBackticks), body.lastIndexOf(threeBackticks) + 4)
             val languageString = codePart.substring(3, codePart.indexOf("\n"))
@@ -165,12 +191,12 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
                 MarkdownCodeDelimiter.MULTI_LINE
             )
 
-            val newBody = toHtmlConverter.convertMarkdownToHtml(body.replace(codePart, highlightedBody))
+            val newBody = convertMarkdownToHtml(body.replace(codePart, highlightedBody))
             appendSubpart(this, HtmlPart(title, newBody))
         } else if (standaloneDocumentation) {
-            append(toHtmlConverter.convertMarkdownToHtml(body))
+            append(convertMarkdownToHtml(body))
         } else {
-            appendSubpart(this, HtmlPart(title, toHtmlConverter.convertMarkdownToHtml(body)))
+            appendSubpart(this, HtmlPart(title, convertMarkdownToHtml(body)))
         }
     }
 
@@ -213,6 +239,14 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
             }
         }
         return false
+    }
+
+    private fun convertMarkdownToHtml(markdown: String): String {
+        val parser = Parser.builder().build()
+        val renderer = HtmlRenderer.builder().build()
+        val document: Node = parser.parse(markdown)
+
+        return "<body>${renderer.render(document)}</body>"
     }
 
     /**
@@ -345,7 +379,13 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
      */
     override fun lookAndFeelChanged(p0: LafManager) {
         if (functionLocation?.codeSmell != null) {
-            this.openDocumentationPanel(DocumentationParams(sourceEditor, functionLocation!!.codeSmell, lastDocsSourceType))
+            this.openDocumentationPanel(
+                DocumentationParams(
+                    sourceEditor,
+                    functionLocation!!.codeSmell,
+                    lastDocsSourceType
+                )
+            )
         }
     }
 }

@@ -20,7 +20,6 @@
     </description>
 
     <depends>com.intellij.modules.platform</depends>
-    <depends>org.intellij.plugins.markdown</depends>
 
     <resource-bundle>messages.UiLabelsBundle</resource-bundle>
 

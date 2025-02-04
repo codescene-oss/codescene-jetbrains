@@ -217,7 +217,7 @@ private fun getFunctionFinding(
         subHeader = createSubHeader(
             file,
             subHeaderLabel,
-            AllIcons.General.Warning,
+            AllIcons.Nodes.WarningIntroduction,
             CodeHealthDetailsType.FUNCTION
         ),
         body = getFunctionFindingBody(changeDetails, finding),
@@ -228,22 +228,18 @@ private fun getFunctionFinding(
 private fun getFileFinding(
     file: Pair<String, String>?,
     finding: CodeHealthFinding
-): CodeHealthDetails {
-    val fileType = FileTypeManager.getInstance().getFileTypeByExtension(file!!.second)
-
-    return CodeHealthDetails(
-        filePath = finding.filePath,
-        header = finding.displayName,
-        subHeader = createSubHeader(
-            file,
-            UiLabelsBundle.message("fileIssue"),
-            fileType.icon,
-            CodeHealthDetailsType.FILE
-        ),
-        body = listOf(Paragraph(finding.tooltip, "Problem")),
-        type = CodeHealthDetailsType.FILE
-    )
-}
+) = CodeHealthDetails(
+    filePath = finding.filePath,
+    header = finding.displayName,
+    subHeader = createSubHeader(
+        file,
+        UiLabelsBundle.message("fileIssue"),
+        AllIcons.Nodes.WarningIntroduction,
+        CodeHealthDetailsType.FILE
+    ),
+    body = listOf(Paragraph(finding.tooltip, "Problem")),
+    type = CodeHealthDetailsType.FILE
+)
 
 fun getHealthFinding(delta: Delta, finding: CodeHealthFinding): CodeHealthDetails? {
     val file = extractUsingRegex(finding.filePath, Regex(".*/([^/]+)\\.([^.]+)$")) { (fileName, extension) ->
