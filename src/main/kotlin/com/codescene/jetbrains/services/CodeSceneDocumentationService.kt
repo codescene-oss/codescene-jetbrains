@@ -104,24 +104,24 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
                 editorWindow.fileList.any { codeSmellNames.contains(it.nameWithoutExtension) }
             }
 
+        editorManagerEx.splitters.openInRightSplit(file, false)
+
         fileEditorManager.openFiles
             .filterIsInstance<LightVirtualFile>()
-            .filter { codeSmellNames.contains(it.nameWithoutExtension) }
+            .filter { it != file && codeSmellNames.contains(it.nameWithoutExtension) }
             .forEach { docWindow?.closeFile(it) }
-
-        editorManagerEx.splitters.openInRightSplit(file, false)
     }
 
     /**
      * Opens a standalone documentation file (e.g., Code Health Monitor docs)
      * if there are no other open files and the documentation file is not already open.
      *
-     * @param documentationFile The [VirtualFile] representing the documentation to open.
+     * @param file The [VirtualFile] to be opened in a right-split editor.
      */
-    private fun openDocumentationWithoutActiveEditor(documentationFile: VirtualFile) {
-        val docNotOpen = fileEditorManager.openFiles.none { it.name == documentationFile.name }
+    private fun openDocumentationWithoutActiveEditor(file: VirtualFile) {
+        val docNotOpen = fileEditorManager.openFiles.none { it.name == file.name }
         val shouldOpenFile = fileEditorManager.openFiles.isEmpty() && docNotOpen
-        if (shouldOpenFile) fileEditorManager.openFile(documentationFile, false)
+        if (shouldOpenFile) fileEditorManager.openFile(file, false)
     }
 
     /**
