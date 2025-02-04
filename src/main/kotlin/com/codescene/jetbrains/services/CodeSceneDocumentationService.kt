@@ -101,7 +101,7 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
         val editorManagerEx = FileEditorManagerEx.getInstanceEx(project)
         val docWindow = editorManagerEx.windows
             .firstOrNull { editorWindow ->
-                editorWindow.files.any { codeSmellNames.contains(it.nameWithoutExtension) }
+                editorWindow.fileList.any { codeSmellNames.contains(it.nameWithoutExtension) }
             }
 
         fileEditorManager.openFiles
