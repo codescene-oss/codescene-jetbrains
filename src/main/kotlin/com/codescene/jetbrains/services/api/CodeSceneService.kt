@@ -8,6 +8,7 @@ import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.TelemetryEvents
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.editor.Editor
+import com.intellij.platform.ide.progress.withBackgroundProgress
 import kotlinx.coroutines.*
 import java.util.concurrent.TimeUnit
 
@@ -16,6 +17,7 @@ abstract class CodeSceneService : BaseService(), Disposable {
     abstract val activeReviewCalls: MutableMap<String, Job>
 
     private val debounceDelay: Long = TimeUnit.SECONDS.toMillis(3)
+    private val failureIndicatorDelay = TimeUnit.SECONDS.toMillis(2)
     protected val serviceImplementation: String = this::class.java.simpleName
 
     abstract fun review(editor: Editor)
@@ -23,7 +25,7 @@ abstract class CodeSceneService : BaseService(), Disposable {
     /**
      * Shared logic for reviewing a file.
      * @param editor The editor instance.
-     * @param timeout The action timeout, defaulted to 10s.
+     * @param timeout The action timeout, defaulted to 15s.
      * @param performAction A lambda containing subclass-specific actions.
      */
     protected fun reviewFile(
@@ -31,32 +33,37 @@ abstract class CodeSceneService : BaseService(), Disposable {
         timeout: Long = 15_000,
         performAction: suspend () -> Unit
     ) {
-        val service = "$serviceImplementation - ${editor.project!!.name}"
+        val service = getServiceForLogging(editor)
         val filePath = editor.virtualFile.path
         val fileName = editor.virtualFile.name
 
         activeReviewCalls[filePath]?.cancel()
 
-        try {
-            activeReviewCalls[filePath] = scope.launch {
-                withTimeoutOrNull(timeout) {
-                    delay(debounceDelay)
+        val progressMessage = getProgressMessage(fileName)
+        activeReviewCalls[filePath] = scope.launch {
+            withTimeout(timeout) {
+                withBackgroundProgress(editor.project!!, progressMessage, cancellable = false) {
+                    try {
+                        delay(debounceDelay)
 
-                    Log.info("Initiating review for file $fileName at path $filePath.", service)
-                    performAction()
+                        Log.info("Initiating review for file $fileName at path $filePath.", service)
+                        performAction()
 
-                    CodeSceneCodeVisionProvider.markApiCallComplete(
-                        filePath,
-                        getActiveApiCalls()
-                    )
-                } ?: handleTimeout(filePath, service)
+                        CodeSceneCodeVisionProvider.markApiCallComplete(
+                            filePath,
+                            getActiveApiCalls()
+                        )
+                    } catch (e: TimeoutCancellationException) {
+                        handleError(editor, FailureType.TIMED_OUT, e.message)
+                    } catch (e: CancellationException) {
+                        handleError(editor, FailureType.CANCELLED, e.message)
+                    } catch (e: Exception) {
+                        handleError(editor, FailureType.FAILED, e.message)
+                    } finally {
+                        activeReviewCalls.remove(filePath)
+                    }
+                }
             }
-        } catch (e: CancellationException) {
-            Log.info("Review canceled for file $fileName.", service)
-        } catch (e: Exception) {
-            Log.error("Error during review for file $fileName - ${e.message}", service)
-        } finally {
-            activeReviewCalls.remove(filePath)
         }
     }
 
@@ -85,8 +92,40 @@ abstract class CodeSceneService : BaseService(), Disposable {
         scope.cancel()
     }
 
-    private fun handleTimeout(filePath: String, service: String) {
-        Log.warn("Review task timed out for file: $filePath", service)
+    private fun getServiceForLogging(editor: Editor): String {
+        return "$serviceImplementation - ${editor.project!!.name}"
+    }
+
+    private fun handleError(editor: Editor, type: FailureType, exceptionMessage: String?) {
+        val newProgressMessage = getProgressMessage(editor.virtualFile.name) + type.value
+        val service = getServiceForLogging(editor)
+        scope.launch {
+            withBackgroundProgress(editor.project!!, newProgressMessage, cancellable = false) {
+                delay(failureIndicatorDelay)
+            }
+        }
+        when (type) {
+            FailureType.CANCELLED -> Log.info("Review canceled for file ${editor.virtualFile.name}.", service)
+            FailureType.FAILED -> Log.error("Error during review for file ${editor.virtualFile.name} - $exceptionMessage", service)
+            FailureType.TIMED_OUT -> logTimeout(editor)
+        }
+    }
+
+    private fun logTimeout(editor: Editor) {
+        Log.warn("Review task timed out for file: ${editor.virtualFile.path}", getServiceForLogging(editor))
         TelemetryService.getInstance().logUsage(TelemetryEvents.REVIEW_OR_DELTA_TIMEOUT)
     }
+
+    private fun getProgressMessage(fileName: String): String {
+        return when (this) {
+            is CodeReviewService -> "CodeScene: Reviewing file $fileName..."
+            else -> "CodeScene: Updating monitor for file $fileName..."
+        }
+    }
+}
+
+enum class FailureType(val value: String) {
+    CANCELLED("Cancelled"),
+    FAILED("Failed"),
+    TIMED_OUT("Timed out")
 }

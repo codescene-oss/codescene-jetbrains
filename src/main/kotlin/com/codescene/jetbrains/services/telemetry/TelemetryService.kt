@@ -13,12 +13,13 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.extensions.PluginId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.withTimeout
 
 @Service
-class TelemetryService(): BaseService(), Disposable {
+class TelemetryService() : BaseService(), Disposable {
     private val scope = CoroutineScope(Dispatchers.IO)
     private val timeout: Long = 5_000
 
@@ -28,25 +29,26 @@ class TelemetryService(): BaseService(), Disposable {
 
     fun logUsage(eventName: String, eventData: Map<String, Any> = mutableMapOf()) {
         val isTelemetryEnabled = CodeSceneGlobalSettingsStore.getInstance().state.telemetryConsentGiven
-
         if (!isTelemetryEnabled) return
 
         val extendedName = "${Constants.TELEMETRY_EDITOR_TYPE}/$eventName"
         // TODO: Get user ID of logged in user when authentication is implemented
         val userId: String? = null
-        val telemetryEvent = TelemetryEvent(extendedName, userId, Constants.TELEMETRY_EDITOR_TYPE, getPluginVersion(), eventData)
-
-        try {
-            scope.launch {
-                withTimeoutOrNull(timeout) {
+        val telemetryEvent =
+            TelemetryEvent(extendedName, userId, Constants.TELEMETRY_EDITOR_TYPE, getPluginVersion(), eventData)
+        scope.launch {
+            withTimeout(timeout) {
+                try {
                     runWithClassLoaderChange {
                         ExtensionAPI.sendTelemetry(telemetryEvent, eventData)
                     }
                     Log.debug("Telemetry event logged: $telemetryEvent")
-                } ?: Log.warn("Telemetry event $extendedName sending timed out")
+                } catch (e: TimeoutCancellationException) {
+                    Log.warn("Telemetry event $extendedName sending timed out")
+                } catch (e: Exception) {
+                    Log.error("Error during telemetry event $extendedName sending: ${e.message}")
+                }
             }
-        } catch (e: Exception) {
-            Log.error("Error during telemetry event $extendedName sending: ${e.message}")
         }
     }
 
