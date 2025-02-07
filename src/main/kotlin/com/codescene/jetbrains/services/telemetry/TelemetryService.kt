@@ -42,7 +42,7 @@ class TelemetryService() : BaseService(), Disposable {
                     runWithClassLoaderChange {
                         ExtensionAPI.sendTelemetry(telemetryEvent, eventData)
                     }
-                    Log.warn("Telemetry event logged: $telemetryEvent")
+                    Log.debug("Telemetry event logged: $telemetryEvent")
                 } catch (e: TimeoutCancellationException) {
                     Log.warn("Telemetry event $extendedName sending timed out")
                 } catch (e: Exception) {
