@@ -1,7 +1,7 @@
 # CodeScene - Code Analysis
 
 <!-- Plugin description -->
-[CodeScene](http://www.codescene.com) - the only code analysis tool with a proven business impact.
+[CodeScene](https://www.codescene.com) - the only code analysis tool with a proven business impact.
 
 ## Code Health Monitor
 
