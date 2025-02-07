@@ -59,7 +59,7 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
                 )
             ).change
 
-            result != null -> result.score.toString()
+            result != null -> if (result.score != null) result.score.toString() else "N/A"
             else -> null
         }
     }
@@ -83,14 +83,17 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
             ?.let { selectNode(it, editor.virtualFile.path) } ?: false
 
         if (!nodeSelected)
-            service.openDocumentationPanel(DocumentationParams(
-                editor,
-                CodeSmell().apply {
-                    details = codeSmell.details
-                    highlightRange = codeSmell.highlightRange
-                    category = GENERAL_CODE_HEALTH
-                },
-                DocsSourceType.NONE))
+            service.openDocumentationPanel(
+                DocumentationParams(
+                    editor,
+                    CodeSmell().apply {
+                        details = codeSmell.details
+                        highlightRange = codeSmell.highlightRange
+                        category = GENERAL_CODE_HEALTH
+                    },
+                    DocsSourceType.NONE
+                )
+            )
         else toolWindowManager.getToolWindow(CODESCENE)?.show()
     }
 }

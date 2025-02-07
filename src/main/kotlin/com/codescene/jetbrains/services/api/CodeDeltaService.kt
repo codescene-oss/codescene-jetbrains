@@ -56,7 +56,7 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
 
             val delta = ExtensionAPI.codeDelta(path, oldCode, editor.document.text)
 
-            if (delta?.oldScore == 0.0) delta.oldScore = 10.0
+            if (delta?.oldScore == null) delta?.oldScore = 10.0
 
             delta
         }

@@ -226,7 +226,7 @@ class CodeHealthPanelBuilder(private val project: Project) {
         constraint.ipady = 15
 
         val linkLabel =
-            JLabel("<html><a href='$CODE_HEALTH_URL'>Learn more about Code Health Analysis</a></html>").apply {
+            JLabel("<html><a href='$CODE_HEALTH_URL'>Learn more about Code Health</a></html>").apply {
                 cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
             }
 
