@@ -23,12 +23,12 @@ import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
-import com.intellij.ui.util.maximumWidth
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
 import kotlinx.coroutines.*
 import java.awt.BorderLayout
 import java.awt.Component
+import java.awt.Dimension
 import java.awt.Font
 import java.awt.event.HierarchyEvent
 import java.util.concurrent.ConcurrentHashMap
@@ -93,21 +93,21 @@ class CodeHealthMonitorPanel(private val project: Project) {
 
     private fun JBPanel<JBPanel<*>>.addPlaceholderText() {
         Log.debug("Found no code health information, rendering placeholder text...", service)
-
         val message = UiLabelsBundle.message("nothingToShow")
+
+        layout = BoxLayout(this, BoxLayout.Y_AXIS)
+        border = JBUI.Borders.empty(10)
 
         val textArea = JTextArea(message).apply {
             isEditable = false
             isOpaque = false
             lineWrap = true
-            maximumWidth = 300
             wrapStyleWord = true
+            preferredSize = Dimension(300, 100)
             foreground = JBColor.GRAY
             alignmentX = Component.CENTER_ALIGNMENT
             font = UIUtil.getFont(UIUtil.FontSize.NORMAL, Font.getFont("Arial"))
         }
-
-        layout = BoxLayout(this, BoxLayout.Y_AXIS)
 
         add(textArea)
     }
@@ -135,7 +135,8 @@ class CodeHealthMonitorPanel(private val project: Project) {
         } else {
             val removedValue = healthMonitoringResults.remove(path)
             if (removedValue != null) {
-                TelemetryService.getInstance().logUsage(TelemetryEvents.MONITOR_FILE_REMOVED
+                TelemetryService.getInstance().logUsage(
+                    TelemetryEvents.MONITOR_FILE_REMOVED
                 )
             }
         }
@@ -163,7 +164,8 @@ class CodeHealthMonitorPanel(private val project: Project) {
         if (healthMonitoringResults[path] != null) {
             // update
             healthMonitoringResults[path] = cachedDelta
-            TelemetryService.getInstance().logUsage(TelemetryEvents.MONITOR_FILE_UPDATED,
+            TelemetryService.getInstance().logUsage(
+                TelemetryEvents.MONITOR_FILE_UPDATED,
                 mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", numberOfIssues))
             )
         } else {

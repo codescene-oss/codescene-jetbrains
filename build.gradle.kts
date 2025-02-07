@@ -17,6 +17,7 @@ version = providers.gradleProperty("pluginVersion").get()
 
 val codeSceneExtensionAPIVersion = providers.gradleProperty("codeSceneExtensionAPIVersion").get()
 val codeSceneRepository = providers.gradleProperty("codeSceneRepository").get()
+val flexmarkVersion = providers.gradleProperty("flexmarkVersion").get()
 val reflectionsVersion = providers.gradleProperty("reflectionsVersion").get()
 val mockkVersion = providers.gradleProperty("mockkVersion").get()
 
@@ -48,6 +49,7 @@ repositories {
 dependencies {
     implementation("org.reflections:reflections:$reflectionsVersion")
     implementation("codescene.extension:api:$codeSceneExtensionAPIVersion")
+    implementation("com.vladsch.flexmark:flexmark-all:$flexmarkVersion")
 
     testImplementation(libs.junit)
     testImplementation("io.mockk:mockk:${mockkVersion}")

@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Progress indicators for review and monitor.
 
+## [0.0.14-beta] - 2025-02-07
+### Changed
+- Code Health text in details panel
+- Code delta 0.0 score will show "N/A" instead
+
+## [0.0.13-beta] - 2025-02-04
+### Fixed
+- Removed Deprecated & Internal API usage
 
 ## [0.0.12-beta] - 2025-01-31
 ### Changed
