@@ -262,7 +262,7 @@ None
 
 **Decision Maker(s)**: Dzenan Granulo, Selma Copra
 
-**Status**: DRAFT
+**Status**: Accepted
 
 **Decision**:
 The code smell documentation is to be moved to a common place (IDE Protocol repository), to streamline updates between both VS Code and JetBrains extensions. 
