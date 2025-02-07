@@ -3,21 +3,6 @@
     <id>com.codescene.vanilla</id>
     <name>CodeScene</name>
     <vendor>CodeScene</vendor>
-    <description>
-        <![CDATA[
-        <html>
-            <p>
-            The <a href="https://codescene.com/">CodeScene</a> plugin provides in-editor recommendations and
-            suggested improvements, helping you write maintainable code and proactively address potential issues.
-            </p>
-            <p>
-            Supported languages include C, C++, C#, Java, Python, JavaScript, TypeScript, Go, Ruby, and Kotlin.
-            The full list of supported languages can be found
-            <a href="https://codescene.io/docs/usage/language-support.html#supported-programming-languages">here</a>
-            </p>
-        </html>
-        ]]>
-    </description>
 
     <depends>com.intellij.modules.platform</depends>
 

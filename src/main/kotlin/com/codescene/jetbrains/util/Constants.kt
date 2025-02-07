@@ -15,7 +15,7 @@ object Constants {
     const val IMAGES_BASE_PATH = "images/"
     const val LOGO_PATH = "${IMAGES_BASE_PATH}logo.svg"
     const val CODESCENE_URL = "https://codescene.com"
-    const val CODE_HEALTH_URL = "$DOCUMENTATION_URL/guides/technical/code-health.html"
+    const val CODE_HEALTH_URL = "${DOCUMENTATION_URL}guides/technical/code-health.html"
     const val TERMS_AND_CONDITIONS_URL = "$CODESCENE_URL/policies"
     const val AI_PRINCIPLES_URL = "$CODESCENE_URL/ace/principles"
     const val CONTACT_URL = "$CODESCENE_URL/company/contact-us"
