@@ -33,7 +33,7 @@ abstract class CodeSceneService : BaseService(), Disposable {
         timeout: Long = 15_000,
         performAction: suspend () -> Unit
     ) {
-        val service = "$serviceImplementation - ${editor.project!!.name}"
+        val service = getServiceForLogging(editor)
         val filePath = editor.virtualFile.path
         val fileName = editor.virtualFile.name
 
@@ -54,11 +54,11 @@ abstract class CodeSceneService : BaseService(), Disposable {
                             getActiveApiCalls()
                         )
                     } catch (e: TimeoutCancellationException) {
-                        handleTimeout(service, progressMessage, editor)
+                        handleError(editor, FailureType.TIMED_OUT, e.message)
                     } catch (e: CancellationException) {
-                        handleCancellation(service, progressMessage, editor)
+                        handleError(editor, FailureType.CANCELLED, e.message)
                     } catch (e: Exception) {
-                        handleFailure(e.message, service, progressMessage, editor)
+                        handleError(editor, FailureType.FAILED, e.message)
                     } finally {
                         activeReviewCalls.remove(filePath)
                     }
@@ -92,42 +92,40 @@ abstract class CodeSceneService : BaseService(), Disposable {
         scope.cancel()
     }
 
-    private fun handleTimeout(service: String, progressMessage: String, editor: Editor) {
-        val newProgressMessage = progressMessage + "Timed out"
+    private fun getServiceForLogging(editor: Editor): String {
+        return "$serviceImplementation - ${editor.project!!.name}"
+    }
+
+    private fun handleError(editor: Editor, type: FailureType, exceptionMessage: String?) {
+        val newProgressMessage = getProgressMessage(editor.virtualFile.name) + type.value
+        val service = getServiceForLogging(editor)
         scope.launch {
             withBackgroundProgress(editor.project!!, newProgressMessage, cancellable = false) {
                 delay(failureIndicatorDelay)
             }
         }
-        Log.warn("Review task timed out for file: ${editor.virtualFile.path}", service)
+        when (type) {
+            FailureType.CANCELLED -> Log.info("Review canceled for file ${editor.virtualFile.name}.", service)
+            FailureType.FAILED -> Log.error("Error during review for file ${editor.virtualFile.name} - $exceptionMessage", service)
+            FailureType.TIMED_OUT -> logTimeout(editor)
+        }
+    }
+
+    private fun logTimeout(editor: Editor) {
+        Log.warn("Review task timed out for file: ${editor.virtualFile.path}", getServiceForLogging(editor))
         TelemetryService.getInstance().logUsage(TelemetryEvents.REVIEW_OR_DELTA_TIMEOUT)
     }
 
-    private fun handleCancellation(service: String, progressMessage: String, editor: Editor) {
-        val newProgressMessage = progressMessage + "Cancelled"
-        scope.launch {
-            withBackgroundProgress(editor.project!!, newProgressMessage, cancellable = false) {
-                delay(failureIndicatorDelay)
-            }
-        }
-        Log.info("Review canceled for file ${editor.virtualFile.name}.", service)
-    }
-
-    private fun handleFailure(exceptionMessage: String?, service: String, progressMessage: String, editor: Editor) {
-        val newProgressMessage = progressMessage + "Failed"
-        scope.launch {
-            withBackgroundProgress(editor.project!!, newProgressMessage, cancellable = false) {
-                delay(failureIndicatorDelay)
-            }
-        }
-        Log.error("Error during review for file ${editor.virtualFile.name} - $exceptionMessage", service)
-    }
-
     private fun getProgressMessage(fileName: String): String {
-        return if (this is CodeReviewService) {
-            return "CodeScene: Reviewing file $fileName..."
-        } else {
-            return "CodeScene: Updating monitor for file $fileName..."
+        return when (this) {
+            is CodeReviewService -> "CodeScene: Reviewing file $fileName..."
+            else -> "CodeScene: Updating monitor for file $fileName..."
         }
     }
+}
+
+enum class FailureType(val value: String) {
+    CANCELLED("Cancelled"),
+    FAILED("Failed"),
+    TIMED_OUT("Timed out")
 }
