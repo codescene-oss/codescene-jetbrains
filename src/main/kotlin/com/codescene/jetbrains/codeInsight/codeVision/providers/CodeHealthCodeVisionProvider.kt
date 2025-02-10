@@ -28,16 +28,7 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override val categoryToFilter = HEALTH_SCORE
 
     private fun getCodeVisionEntry(description: String): ClickableTextCodeVisionEntry {
-        val codeHealth = CodeSmell().apply {
-            category = "Code Health"
-            highlightRange = Range().apply {
-                startLine = 1
-                startColumn = 1
-                endLine = 1
-                endColumn = 1
-            }
-            details = ""
-        }
+        val codeHealth = CodeSmell("Code Health", Range(1, 1, 1, 1), "")
 
         return ClickableTextCodeVisionEntry(
             "Code Health: $description",
@@ -86,11 +77,7 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
             service.openDocumentationPanel(
                 DocumentationParams(
                     editor,
-                    CodeSmell().apply {
-                        details = codeSmell.details
-                        highlightRange = codeSmell.highlightRange
-                        category = GENERAL_CODE_HEALTH
-                    },
+                    CodeSmell(GENERAL_CODE_HEALTH, codeSmell.highlightRange, codeSmell.details),
                     DocsSourceType.NONE
                 )
             )
