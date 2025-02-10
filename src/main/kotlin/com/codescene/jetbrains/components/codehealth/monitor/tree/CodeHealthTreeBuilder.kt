@@ -131,7 +131,8 @@ class CodeHealthTreeBuilder(private val project: Project) {
             Log.debug("Selected node with finding $finding", service)
             handleSelectionTelemetry(finding)
 
-            if (!suppressFocusOnLine) navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
+            if (!suppressFocusOnLine && finding.focusLine != null)
+                navigationService.focusOnLine(finding.filePath, finding.focusLine)
 
             project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(finding)
             selectedNode = targetNode.userObject as CodeHealthFinding

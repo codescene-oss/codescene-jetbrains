@@ -27,7 +27,7 @@ private fun resolveHealthNodeType(oldScore: Double, newScore: Double): NodeType 
     else NodeType.CODE_HEALTH_INCREASE
 
 fun getFileFinding(filePath: String, result: ChangeDetail): CodeHealthFinding {
-    val positiveChange = result.changeType == "fixed" || result.changeType == "improved"
+    val positiveChange = isPositiveChange(result.changeType)
 
     return CodeHealthFinding(
         tooltip = result.description,
@@ -41,7 +41,7 @@ fun getFunctionFinding(filePath: String, function: Function, details: List<Chang
     tooltip = getFunctionDeltaTooltip(function, details),
     filePath,
     displayName = function.name,
-    focusLine = function.range.startLine,
+    focusLine = function.range?.startLine,
     nodeType = NodeType.FUNCTION_FINDING,
     functionFindingIssues = details.size
 )
