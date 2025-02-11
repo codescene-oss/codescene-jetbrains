@@ -11,8 +11,7 @@ import com.intellij.openapi.editor.Editor
 private fun pluralize(word: String, amount: Int) = if (amount > 1) "${word}s" else word
 
 private fun MutableList<String>.addIssueInformation(details: List<ChangeDetail>) {
-    val codeSmells =
-        details.filter { it.changeType == "introduced" || it.changeType == "degraded" }.size
+    val codeSmells = details.filter { !isPositiveChange(it.changeType) }.size
 
     if (codeSmells > 0) this.add("Contains $codeSmells ${pluralize("issue", codeSmells)} degrading code health")
 }
