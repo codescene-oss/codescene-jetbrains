@@ -173,11 +173,15 @@ private fun getHealthFinding(
     )
 }
 
-fun isPositiveChange(changeType: String) = changeType.equals("Fixed", true) || changeType.equals("Improved", true)
+fun isPositiveChange(changeType: ChangeDetail.ChangeType) =
+    changeType == ChangeDetail.ChangeType.FIXED || changeType == ChangeDetail.ChangeType.IMPROVED
+
+fun canBeImproved(changeType: ChangeDetail.ChangeType) =
+    changeType == ChangeDetail.ChangeType.DEGRADED || changeType == ChangeDetail.ChangeType.INTRODUCED || changeType == ChangeDetail.ChangeType.IMPROVED
 
 private fun getFunctionFindingBody(changeDetails: List<ChangeDetail>?, finding: CodeHealthFinding) =
     changeDetails?.map { it ->
-        val changeType = it.changeType.replaceFirstChar { it.uppercaseChar() }
+        val change = it.changeType.value().replaceFirstChar { it.uppercaseChar() }
         val body = it.description.replace(finding.displayName, "<code>${finding.displayName}</code>")
 
         val range = if (it.position != null) Range(
@@ -190,8 +194,8 @@ private fun getFunctionFindingBody(changeDetails: List<ChangeDetail>?, finding: 
 
         Paragraph(
             body = body,
-            heading = "$changeType: ${it.category}",
-            icon = if (!isPositiveChange(changeType)) CODE_SMELL_FOUND else CODE_SMELL_FIXED,
+            heading = "$change: ${it.category}",
+            icon = if (!isPositiveChange(it.changeType)) CODE_SMELL_FOUND else CODE_SMELL_FIXED,
             codeSmell = codeSmell
         )
     } ?: listOf()

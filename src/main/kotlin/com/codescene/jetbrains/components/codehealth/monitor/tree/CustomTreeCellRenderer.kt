@@ -46,14 +46,15 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
                 toolTipText = getTooltip(userObject)
                 text = getText(userObject, collapsedParent || leaf)
                 icon = getIcon(userObject.nodeType)
+
+
+                if (collapsedParent && userObject.numberOfImprovableFunctions != null) {
+                    additionalLabel.text = userObject.numberOfImprovableFunctions.toString()
+                    additionalLabel.isVisible = true
+                } else
+                    additionalLabel.isVisible = false
             }
         }
-
-        if (collapsedParent) {
-            additionalLabel.text = "4" //TODO: make dynamic
-            additionalLabel.isVisible = true
-        } else
-            additionalLabel.isVisible = false
 
         component.add(additionalLabel)
 
@@ -102,14 +103,14 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
     }
 
     private fun getIcon(type: NodeType) = when (type) {
-            NodeType.CODE_HEALTH_DECREASE -> CODE_HEALTH_DECREASE
-            NodeType.CODE_HEALTH_INCREASE -> CODE_HEALTH_INCREASE
-            NodeType.CODE_HEALTH_NEUTRAL -> CODE_HEALTH_NEUTRAL
-            NodeType.FILE_FINDING -> AllIcons.Nodes.WarningIntroduction
-            NodeType.FILE_FINDING_FIXED -> CODE_HEALTH_HIGH
-            NodeType.FUNCTION_FINDING -> AllIcons.Nodes.Method
-            NodeType.ROOT -> FileTypeManager
-                .getInstance()
-                .getFileTypeByFileName(extractFileName(text)?.trim() ?: text).icon
-        }
+        NodeType.CODE_HEALTH_DECREASE -> CODE_HEALTH_DECREASE
+        NodeType.CODE_HEALTH_INCREASE -> CODE_HEALTH_INCREASE
+        NodeType.CODE_HEALTH_NEUTRAL -> CODE_HEALTH_NEUTRAL
+        NodeType.FILE_FINDING -> AllIcons.Nodes.WarningIntroduction
+        NodeType.FILE_FINDING_FIXED -> CODE_HEALTH_HIGH
+        NodeType.FUNCTION_FINDING -> AllIcons.Nodes.Method
+        NodeType.ROOT -> FileTypeManager
+            .getInstance()
+            .getFileTypeByFileName(extractFileName(text)?.trim() ?: text).icon
+    }
 }

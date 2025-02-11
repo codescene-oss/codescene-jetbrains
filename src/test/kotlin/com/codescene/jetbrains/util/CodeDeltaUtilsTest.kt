@@ -10,9 +10,24 @@ class CodeDeltaUtilsTest {
     private val function = Function("exampleFunction", Range(1, 10, 1, 15))
 
     private val details = listOf(
-        ChangeDetail("degraded", "Code Smell", "Duplicate Code", com.codescene.data.delta.Position(5, 40)),
-        ChangeDetail("introduced", "Code Smell", "Large Method", com.codescene.data.delta.Position(20, 40)),
-        ChangeDetail("fixed", "Code Smell", "Bumpy Road Ahead", com.codescene.data.delta.Position(5, 40)),
+        ChangeDetail(
+            ChangeDetail.ChangeType.DEGRADED,
+            "Code Smell",
+            "Duplicate Code",
+            com.codescene.data.delta.Position(5, 40)
+        ),
+        ChangeDetail(
+            ChangeDetail.ChangeType.INTRODUCED,
+            "Code Smell",
+            "Large Method",
+            com.codescene.data.delta.Position(20, 40)
+        ),
+        ChangeDetail(
+            ChangeDetail.ChangeType.FIXED,
+            "Code Smell",
+            "Bumpy Road Ahead",
+            com.codescene.data.delta.Position(5, 40)
+        ),
     )
 
     @Test

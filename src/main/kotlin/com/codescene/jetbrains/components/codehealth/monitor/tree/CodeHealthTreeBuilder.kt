@@ -10,6 +10,7 @@ import com.codescene.jetbrains.util.*
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.text.StringUtil.pluralize
 import com.intellij.ui.treeStructure.Tree
 import java.awt.Component
 import java.awt.Dimension
@@ -39,7 +40,8 @@ data class CodeHealthFinding(
     val displayName: String,
     val nodeType: NodeType,
     val additionalText: String = "",
-    val functionFindingIssues: Int = 1
+    val functionFindingIssues: Int = 1,
+    val numberOfImprovableFunctions: Int? = null
 )
 
 @Service(Service.Level.PROJECT)
@@ -166,19 +168,29 @@ class CodeHealthTreeBuilder(private val project: Project) {
         }
     }
 
-    private fun shouldSelectFunctionOfFileNode(finding: CodeHealthFinding): Boolean = !isHealthNode(finding.nodeType) && codeHealthSelected
+    private fun shouldSelectFunctionOfFileNode(finding: CodeHealthFinding): Boolean =
+        !isHealthNode(finding.nodeType) && codeHealthSelected
 
-    private fun shouldSelectHealthNode(finding: CodeHealthFinding): Boolean = isHealthNode(finding.nodeType) && !codeHealthSelected
+    private fun shouldSelectHealthNode(finding: CodeHealthFinding): Boolean =
+        isHealthNode(finding.nodeType) && !codeHealthSelected
 
     private fun buildNode(filePath: String, delta: Delta): MutableTreeNode {
         val (_, percentage) = getCodeHealth(HealthDetails(delta.oldScore, delta.newScore))
 
+        val count = delta.functionLevelFindings.flatMap { it.changeDetails }.count { canBeImproved(it.changeType) } +
+                delta.fileLevelFindings.count { canBeImproved(it.changeType) }
+        val tooltip = arrayOf(
+            filePath,
+            "$count ${if (count > 1) pluralize("issue") else "issue"} can be improved"
+        ).joinToString(" • ")
+
         val root = CodeHealthFinding(
             filePath = filePath,
-            tooltip = filePath,
+            tooltip = if (count > 1) filePath else tooltip,
             displayName = filePath,
             nodeType = NodeType.ROOT,
-            additionalText = percentage
+            additionalText = percentage,
+            numberOfImprovableFunctions = count
         )
 
         return DefaultMutableTreeNode(root).apply {
