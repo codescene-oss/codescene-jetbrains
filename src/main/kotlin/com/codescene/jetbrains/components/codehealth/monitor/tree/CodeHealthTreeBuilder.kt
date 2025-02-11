@@ -171,11 +171,14 @@ class CodeHealthTreeBuilder(private val project: Project) {
     private fun shouldSelectHealthNode(finding: CodeHealthFinding): Boolean = isHealthNode(finding.nodeType) && !codeHealthSelected
 
     private fun buildNode(filePath: String, delta: Delta): MutableTreeNode {
+        val (_, percentage) = getCodeHealth(HealthDetails(delta.oldScore, delta.newScore))
+
         val root = CodeHealthFinding(
             filePath = filePath,
             tooltip = filePath,
             displayName = filePath,
-            nodeType = NodeType.ROOT
+            nodeType = NodeType.ROOT,
+            additionalText = percentage
         )
 
         return DefaultMutableTreeNode(root).apply {

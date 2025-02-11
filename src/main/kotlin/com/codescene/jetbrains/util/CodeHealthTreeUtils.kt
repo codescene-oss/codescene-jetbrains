@@ -16,7 +16,7 @@ fun getHealthFinding(filePath: String, delta: Delta): CodeHealthFinding {
     return CodeHealthFinding(
         filePath = filePath,
         displayName = "Code Health: $change",
-        additionalText = percentage,
+        additionalText = if (percentage.isNotEmpty()) "($percentage)" else "",
         nodeType = resolveHealthNodeType(delta.oldScore, delta.newScore)
     )
 }
