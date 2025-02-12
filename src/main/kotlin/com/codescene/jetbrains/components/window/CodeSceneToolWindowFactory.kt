@@ -100,12 +100,14 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
     override fun shouldBeAvailable(project: Project) = true
 
     private fun getTitleActions(): List<AnAction> {
+        val actionManager = ActionManager.getInstance()
         val showSettings = ShowSettingsAction::class.java.simpleName
         val showDocs = ShowDocumentationAction::class.java.simpleName
 
-        val showSettingsAction = ActionManager.getInstance().getAction(showSettings)
-        val showDocsAction = ActionManager.getInstance().getAction(showDocs)
+        val showSettingsAction = actionManager.getAction(showSettings)
+        val showDocsAction = actionManager.getAction(showDocs)
+        val sortByActionGroup = actionManager.getAction("CodeHealthMonitorSortGroup")
 
-        return listOf(showDocsAction, showSettingsAction)
+        return listOf(showDocsAction, showSettingsAction, sortByActionGroup)
     }
 }

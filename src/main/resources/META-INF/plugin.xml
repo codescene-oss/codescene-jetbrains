@@ -20,9 +20,18 @@
 
         <action
                 id="ShowDocumentationAction"
-                text="Code Health Monitoring Help"
+                text="CodeScene: Code Health Monitoring Help"
                 icon="com.codescene.jetbrains.CodeSceneIcons.HELP"
                 class="com.codescene.jetbrains.actions.ShowDocumentationAction"/>
+
+        <group id="CodeSceneToolWindowSortGroup">
+            <group id="CodeHealthMonitorSortGroup" icon="AllIcons.ObjectBrowser.SortByType" popup="true" text="Sort Files By...">
+                <separator text="Sort By"/>
+                <action class="com.codescene.jetbrains.actions.SortByScoreChangeAscending" id="SortByScoreChangeAscending"/>
+                <action class="com.codescene.jetbrains.actions.SortByScoreChangeDescending" id="SortByScoreChangeDescending"/>
+                <action class="com.codescene.jetbrains.actions.SortByFileName" id="SortByFileName"/>
+            </group>
+        </group>
     </actions>
 
     <extensions defaultExtensionNs="com.intellij">
