@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.actions
 
 import com.codescene.jetbrains.CodeSceneIcons
+import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.config.global.MonitorTreeSortOptions
 import com.intellij.icons.AllIcons
@@ -9,7 +10,8 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.ToggleAction
 
 class SortByScoreChangeAscending : ToggleAction(
-    "Score Change, Ascending", "Largest Code Health decline first",
+    UiLabelsBundle.message("scoreChangeAscending"),
+    UiLabelsBundle.message("scoreChangeAscendingInfo"),
     CodeSceneIcons.CODE_HEALTH_LOW
 ) {
     override fun isSelected(p0: AnActionEvent) =
@@ -23,8 +25,8 @@ class SortByScoreChangeAscending : ToggleAction(
 }
 
 class SortByScoreChangeDescending : ToggleAction(
-    "Score Change, Descending",
-    "Largest Code Health increase first",
+    UiLabelsBundle.message("scoreChangeDescending"),
+    UiLabelsBundle.message("scoreChangeDescendingInfo"),
     CodeSceneIcons.CODE_HEALTH_HIGH
 ) {
     override fun isSelected(p0: AnActionEvent) =
@@ -38,7 +40,8 @@ class SortByScoreChangeDescending : ToggleAction(
 }
 
 class SortByFileName : ToggleAction(
-    "File Name", "Using absolute path",
+    UiLabelsBundle.message("fileName"),
+    UiLabelsBundle.message("fileNameInfo"),
     AllIcons.ObjectBrowser.Sorted
 ) {
     override fun isSelected(p0: AnActionEvent) =
