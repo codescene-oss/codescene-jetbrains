@@ -25,11 +25,15 @@
                 class="com.codescene.jetbrains.actions.ShowDocumentationAction"/>
 
         <group id="CodeSceneToolWindowSortGroup">
-            <group id="CodeHealthMonitorSortGroup" icon="AllIcons.ObjectBrowser.SortByType" popup="true" text="Sort Files By...">
+            <group id="CodeHealthMonitorSortGroupActions" icon="AllIcons.ObjectBrowser.SortByType" popup="true"
+                   text="Sort Files By...">
                 <separator text="Sort By"/>
-                <action class="com.codescene.jetbrains.actions.SortByScoreChangeAscending" id="SortByScoreChangeAscending"/>
-                <action class="com.codescene.jetbrains.actions.SortByScoreChangeDescending" id="SortByScoreChangeDescending"/>
-                <action class="com.codescene.jetbrains.actions.SortByFileName" id="SortByFileName"/>
+                <action id="SortByScoreChangeAscending"
+                        class="com.codescene.jetbrains.actions.CodeHealthMonitorSortGroupActions$SortByScoreChangeAscending"/>
+                <action id="SortByScoreChangeDescending"
+                        class="com.codescene.jetbrains.actions.CodeHealthMonitorSortGroupActions$SortByScoreChangeDescending"/>
+                <action id="SortByFileName"
+                        class="com.codescene.jetbrains.actions.CodeHealthMonitorSortGroupActions$SortByFileName"/>
             </group>
         </group>
     </actions>
@@ -118,7 +122,8 @@
         <codeInsight.codeVisionProvider
                 implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.CodeHealthCodeVisionProvider"/>
 
-        <fileEditorProvider implementation="com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewerProvider" />
+        <fileEditorProvider
+                implementation="com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewerProvider"/>
     </extensions>
 
     <projectListeners>

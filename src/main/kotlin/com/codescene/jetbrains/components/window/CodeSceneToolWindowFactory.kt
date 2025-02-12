@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.components.window
 
+import com.codescene.jetbrains.actions.CodeHealthMonitorSortGroupActions
 import com.codescene.jetbrains.actions.ShowDocumentationAction
 import com.codescene.jetbrains.actions.ShowSettingsAction
 import com.codescene.jetbrains.components.codehealth.detail.CodeHealthDetailsPanel
@@ -103,11 +104,12 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
         val actionManager = ActionManager.getInstance()
         val showSettings = ShowSettingsAction::class.java.simpleName
         val showDocs = ShowDocumentationAction::class.java.simpleName
+        val showSortOptions = CodeHealthMonitorSortGroupActions::class.java.simpleName
 
         val showSettingsAction = actionManager.getAction(showSettings)
         val showDocsAction = actionManager.getAction(showDocs)
-        val sortByActionGroup = actionManager.getAction("CodeHealthMonitorSortGroup")
+        val sortByActionGroup = actionManager.getAction(showSortOptions)
 
-        return listOf(showDocsAction, showSettingsAction, sortByActionGroup)
+        return listOf(showDocsAction, sortByActionGroup, showSettingsAction)
     }
 }
