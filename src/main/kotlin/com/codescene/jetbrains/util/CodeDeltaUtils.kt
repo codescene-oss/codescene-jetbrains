@@ -7,19 +7,19 @@ import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.util.text.StringUtil.pluralize
 
-private fun pluralize(word: String, amount: Int) = if (amount > 1) "${word}s" else word
+private fun MutableList<String>.countFixesAndDegradations(details: List<ChangeDetail>) {
+    val fixesAndDegradations = details.groupingBy { isPositiveChange(it.changeType) }.eachCount()
 
-private fun MutableList<String>.addIssueInformation(details: List<ChangeDetail>) {
-    val codeSmells = details.filter { !isPositiveChange(it.changeType) }.size
-
-    if (codeSmells > 0) this.add("Contains $codeSmells ${pluralize("issue", codeSmells)} degrading code health")
+    fixesAndDegradations[true]?.let { add("$it ${pluralize("issue", it)} fixed") }
+    fixesAndDegradations[false]?.let { add("$it ${pluralize("issue", it)} degrading code health") }
 }
 
 fun getFunctionDeltaTooltip(function: Function, details: List<ChangeDetail>): String {
     val tooltip = mutableListOf("Function \"${function.name}\"")
 
-    tooltip.addIssueInformation(details)
+    tooltip.countFixesAndDegradations(details)
     //TODO: ACE information
 
     return tooltip.joinToString(separator = " • ")

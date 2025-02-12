@@ -41,4 +41,10 @@ object CodeSceneIcons {
 
     @JvmField
     val HELP = getIcon("/images/help.svg", javaClass)
+
+    @JvmField
+    val METHOD_IMPROVABLE = getIcon("/images/methodImprovable.svg", javaClass)
+
+    @JvmField
+    val METHOD_FIXED = getIcon("/images/methodFixed.svg", javaClass)
 }

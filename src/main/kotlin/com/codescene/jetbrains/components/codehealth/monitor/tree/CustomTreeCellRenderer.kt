@@ -4,12 +4,15 @@ import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_DECREASE
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_HIGH
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_INCREASE
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_NEUTRAL
+import com.codescene.jetbrains.CodeSceneIcons.METHOD_FIXED
+import com.codescene.jetbrains.CodeSceneIcons.METHOD_IMPROVABLE
 import com.codescene.jetbrains.UiLabelsBundle
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.ui.JBColor
 import java.awt.Graphics
 import java.io.File
+import javax.swing.Icon
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JTree
@@ -45,7 +48,7 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
 
                 toolTipText = getTooltip(userObject)
                 text = getText(userObject, collapsedParent || leaf)
-                icon = getIcon(userObject.nodeType)
+                icon = getIcon(userObject)
 
 
                 if (collapsedParent && userObject.numberOfImprovableFunctions != null) {
@@ -102,13 +105,20 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
         return matchResult?.groups?.get(1)?.value
     }
 
-    private fun getIcon(type: NodeType) = when (type) {
+    private fun resolveMethodIcon(tooltip: String): Icon = when {
+        tooltip.contains("degrading") && tooltip.contains("fixed") -> METHOD_IMPROVABLE
+        tooltip.contains("degrading") -> AllIcons.Nodes.Method
+        tooltip.contains("fixed") -> METHOD_FIXED
+        else -> AllIcons.Nodes.Method
+    }
+
+    private fun getIcon(node: CodeHealthFinding) = when (node.nodeType) {
         NodeType.CODE_HEALTH_DECREASE -> CODE_HEALTH_DECREASE
         NodeType.CODE_HEALTH_INCREASE -> CODE_HEALTH_INCREASE
         NodeType.CODE_HEALTH_NEUTRAL -> CODE_HEALTH_NEUTRAL
         NodeType.FILE_FINDING -> AllIcons.Nodes.WarningIntroduction
         NodeType.FILE_FINDING_FIXED -> CODE_HEALTH_HIGH
-        NodeType.FUNCTION_FINDING -> AllIcons.Nodes.Method
+        NodeType.FUNCTION_FINDING -> resolveMethodIcon(node.tooltip)
         NodeType.ROOT -> FileTypeManager
             .getInstance()
             .getFileTypeByFileName(extractFileName(text)?.trim() ?: text).icon

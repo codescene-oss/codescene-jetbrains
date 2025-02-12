@@ -10,7 +10,6 @@ import com.codescene.jetbrains.util.*
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.text.StringUtil.pluralize
 import com.intellij.ui.treeStructure.Tree
 import java.awt.Component
 import java.awt.Dimension
@@ -175,23 +174,7 @@ class CodeHealthTreeBuilder(private val project: Project) {
         isHealthNode(finding.nodeType) && !codeHealthSelected
 
     private fun buildNode(filePath: String, delta: Delta): MutableTreeNode {
-        val (_, percentage) = getCodeHealth(HealthDetails(delta.oldScore, delta.newScore))
-
-        val count = delta.functionLevelFindings.flatMap { it.changeDetails }.count { canBeImproved(it.changeType) } +
-                delta.fileLevelFindings.count { canBeImproved(it.changeType) }
-        val tooltip = arrayOf(
-            filePath,
-            "$count ${if (count > 1) pluralize("issue") else "issue"} can be improved"
-        ).joinToString(" • ")
-
-        val root = CodeHealthFinding(
-            filePath = filePath,
-            tooltip = if (count > 1) filePath else tooltip,
-            displayName = filePath,
-            nodeType = NodeType.ROOT,
-            additionalText = percentage,
-            numberOfImprovableFunctions = count
-        )
+        val root = getRootNode(filePath, delta)
 
         return DefaultMutableTreeNode(root).apply {
             addCodeHealthLeaf(filePath, delta)

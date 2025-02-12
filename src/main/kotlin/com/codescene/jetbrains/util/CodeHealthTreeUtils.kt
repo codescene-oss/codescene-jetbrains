@@ -5,6 +5,7 @@ import com.codescene.data.delta.Delta
 import com.codescene.data.delta.Function
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.components.codehealth.monitor.tree.NodeType
+import com.intellij.openapi.util.text.StringUtil.pluralize
 import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
@@ -45,6 +46,23 @@ fun getFunctionFinding(filePath: String, function: Function, details: List<Chang
     nodeType = NodeType.FUNCTION_FINDING,
     functionFindingIssues = details.size
 )
+
+fun getRootNode(filePath: String, delta: Delta): CodeHealthFinding {
+    val (_, percentage) = getCodeHealth(HealthDetails(delta.oldScore, delta.newScore))
+
+    val count = delta.functionLevelFindings.flatMap { it.changeDetails }.count { canBeImproved(it.changeType) } +
+            delta.fileLevelFindings.count { canBeImproved(it.changeType) }
+    val tooltip = arrayOf(filePath, "$count ${pluralize("issue", count)} can be improved").joinToString(" • ")
+
+    return CodeHealthFinding(
+        filePath = filePath,
+        tooltip = tooltip,
+        displayName = filePath,
+        nodeType = NodeType.ROOT,
+        additionalText = percentage,
+        numberOfImprovableFunctions = count
+    )
+}
 
 fun selectNode(tree: JTree, filePath: String): Boolean {
     val root = tree.model.root as DefaultMutableTreeNode
