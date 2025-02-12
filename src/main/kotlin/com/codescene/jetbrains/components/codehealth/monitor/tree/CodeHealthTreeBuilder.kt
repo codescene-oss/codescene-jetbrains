@@ -56,7 +56,7 @@ class CodeHealthTreeBuilder(private val project: Project) {
     }
 
     fun createTree(
-        results: ConcurrentHashMap<String, Delta>
+        results: List<Map. Entry<String, Delta>>
     ): Tree {
         val root = DefaultMutableTreeNode()
         results.map { buildNode(it.key, it.value) }.forEach { root.add(it) }

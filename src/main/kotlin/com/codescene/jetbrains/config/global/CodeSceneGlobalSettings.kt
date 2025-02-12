@@ -4,9 +4,9 @@ import com.codescene.jetbrains.util.Constants.CODESCENE_SERVER_URL
 import org.jetbrains.annotations.NonNls
 
 enum class MonitorTreeSortOptions {
-    FILE_NAME,
-    SCORE_ASCENDING,
-    SCORE_DESCENDING
+    FILE_NAME, // Sort by key in alphabetic order (ascending)
+    SCORE_ASCENDING, // Sort by largest decline
+    SCORE_DESCENDING  // Sort by smallest decline
 }
 
 data class CodeSceneGlobalSettings(

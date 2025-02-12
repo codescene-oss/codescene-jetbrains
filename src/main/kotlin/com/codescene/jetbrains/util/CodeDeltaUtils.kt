@@ -3,11 +3,14 @@ package com.codescene.jetbrains.util
 import com.codescene.data.delta.ChangeDetail
 import com.codescene.data.delta.Delta
 import com.codescene.data.delta.Function
+import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.config.global.MonitorTreeSortOptions
 import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.text.StringUtil.pluralize
+import java.util.concurrent.ConcurrentHashMap
 
 private fun MutableList<String>.countFixesAndDegradations(details: List<ChangeDetail>) {
     val fixesAndDegradations = details.groupingBy { isPositiveChange(it.changeType) }.eachCount()
@@ -33,4 +36,17 @@ fun getCachedDelta(editor: Editor): Delta? {
 
     return DeltaCacheService.getInstance(project)
         .get(cacheQuery)
+}
+
+fun sortDeltaFindings(
+    map: ConcurrentHashMap<String, Delta>
+): List<Map.Entry<String, Delta>> {
+    val entryList = map.entries.toList()
+    val sortingCriteria = CodeSceneGlobalSettingsStore.getInstance().state.monitorTreeSortOption
+
+    return when (sortingCriteria) {
+        MonitorTreeSortOptions.FILE_NAME -> entryList.sortedBy { it.key }
+        MonitorTreeSortOptions.SCORE_ASCENDING -> entryList.sortedByDescending { it.value.oldScore - it.value.newScore }
+        MonitorTreeSortOptions.SCORE_DESCENDING -> entryList.sortedBy { it.value.oldScore - it.value.newScore }
+    }
 }
