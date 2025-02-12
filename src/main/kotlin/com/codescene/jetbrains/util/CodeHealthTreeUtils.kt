@@ -50,8 +50,7 @@ fun getFunctionFinding(filePath: String, function: Function, details: List<Chang
 fun getRootNode(filePath: String, delta: Delta): CodeHealthFinding {
     val (_, percentage) = getCodeHealth(HealthDetails(delta.oldScore, delta.newScore))
 
-    val count = delta.functionLevelFindings.flatMap { it.changeDetails }.count { canBeImproved(it.changeType) } +
-            delta.fileLevelFindings.count { canBeImproved(it.changeType) }
+    val count = delta.functionLevelFindings.flatMap { it.changeDetails }.count { canBeImproved(it.changeType) }
     val tooltip = arrayOf(filePath, "$count ${pluralize("issue", count)} can be improved").joinToString(" • ")
 
     return CodeHealthFinding(
