@@ -71,11 +71,10 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
             Log.info("Received null response from $CODESCENE delta API.", "$serviceImplementation - ${project.name}")
 
             deltaCacheService.invalidate(path)
-        } else {
-            val cacheEntry = DeltaCacheEntry(path, oldCode, currentCode, delta)
-
-            deltaCacheService.put(cacheEntry)
+        } else
             uiRefreshService.refreshCodeVision(editor, listOf("CodeHealthCodeVisionProvider"))
-        }
+
+        val cacheEntry = DeltaCacheEntry(path, oldCode, currentCode, delta)
+        deltaCacheService.put(cacheEntry)
     }
 }

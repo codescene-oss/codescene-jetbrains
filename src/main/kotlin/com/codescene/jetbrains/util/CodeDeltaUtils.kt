@@ -28,7 +28,7 @@ fun getFunctionDeltaTooltip(function: Function, details: List<ChangeDetail>): St
     return tooltip.joinToString(separator = " • ")
 }
 
-fun getCachedDelta(editor: Editor): Delta? {
+fun getCachedDelta(editor: Editor): Pair<Boolean, Delta?> {
     val project = editor.project!!
 
     val oldCode = GitService.getInstance(project).getHeadCommit(editor.virtualFile)

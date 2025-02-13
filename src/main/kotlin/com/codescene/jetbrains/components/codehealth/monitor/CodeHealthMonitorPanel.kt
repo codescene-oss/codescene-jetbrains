@@ -132,8 +132,8 @@ class CodeHealthMonitorPanel(private val project: Project) {
 
         Log.debug("Cached delta: $cachedDelta", service)
 
-        if (cachedDelta != null)
-            updateAndSendTelemetry(path, cachedDelta)
+        if (cachedDelta.second != null)
+            updateAndSendTelemetry(path, cachedDelta.second!!)
         else
             healthMonitoringResults.remove(path)?.let {
                 TelemetryService.getInstance().logUsage(TelemetryEvents.MONITOR_FILE_REMOVED)

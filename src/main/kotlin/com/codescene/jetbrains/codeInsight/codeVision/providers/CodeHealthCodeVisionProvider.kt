@@ -40,14 +40,13 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
 
     private fun getDescription(editor: Editor, result: Review?): String? {
         val cachedDelta = getCachedDelta(editor)
-        val hasChanged = cachedDelta?.oldScore != cachedDelta?.newScore
+        val oldScore = cachedDelta.second?.oldScore
+        val newScore = cachedDelta.second?.newScore
+        val hasChanged = oldScore != newScore
 
         return when {
-            cachedDelta != null && hasChanged -> getCodeHealth(
-                HealthDetails(
-                    cachedDelta.oldScore,
-                    cachedDelta.newScore
-                )
+            cachedDelta.second != null && hasChanged -> getCodeHealth(
+                HealthDetails(oldScore!!, newScore!!)
             ).change
 
             result != null -> if (result.score != null) result.score.toString() else "N/A"
