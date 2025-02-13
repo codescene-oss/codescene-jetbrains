@@ -273,7 +273,7 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
         val (codeSmell, standaloneDocumentation, _, classLoader, editor) = params
 
         val fileName = editor?.virtualFile?.name ?: ""
-        val lineNumber = codeSmell.highlightRange.startLine
+        val lineNumber = codeSmell.highlightRange?.startLine ?: 1
 
         // styling
         val style = getStyling(classLoader)

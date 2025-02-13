@@ -7,6 +7,7 @@ import com.codescene.data.review.Range
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_DECREASE
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_INCREASE
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_NEUTRAL
+import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL_FIXED
 import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL_FOUND
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
@@ -172,32 +173,40 @@ private fun getHealthFinding(
     )
 }
 
+fun isPositiveChange(changeType: ChangeDetail.ChangeType) =
+    changeType == ChangeDetail.ChangeType.FIXED || changeType == ChangeDetail.ChangeType.IMPROVED
+
+fun canBeImproved(changeType: ChangeDetail.ChangeType) =
+    changeType == ChangeDetail.ChangeType.DEGRADED || changeType == ChangeDetail.ChangeType.INTRODUCED || changeType == ChangeDetail.ChangeType.IMPROVED
+
 private fun getFunctionFindingBody(changeDetails: List<ChangeDetail>?, finding: CodeHealthFinding) =
     changeDetails?.map { it ->
-        val changeType = it.changeType.replaceFirstChar { it.uppercaseChar() }
+        val change = it.changeType.value().replaceFirstChar { it.uppercaseChar() }
         val body = it.description.replace(finding.displayName, "<code>${finding.displayName}</code>")
 
-        val codeSmell = CodeSmell().apply {
-            category = it.category
-            details = it.description
-            highlightRange = Range().apply {
-                startLine = it.position.line
-                endLine = it.position.line
-                startColumn = it.position.column
-                endColumn = it.position.column
-            }
-        }
+        val range = if (it.position != null) Range(
+            it.position.line,
+            it.position.column,
+            it.position.line,
+            it.position.column
+        ) else null
+        val codeSmell = CodeSmell(it.category, range, it.description)
 
         Paragraph(
             body = body,
-            heading = "$changeType: ${it.category}",
-            icon = CODE_SMELL_FOUND,
+            heading = "$change: ${it.category}",
+            icon = if (!isPositiveChange(it.changeType)) CODE_SMELL_FOUND else CODE_SMELL_FIXED,
             codeSmell = codeSmell
         )
     } ?: listOf()
 
-fun isMatchingFinding(displayName: String, startLine: Int?, finding: CodeHealthFinding) =
-    displayName == finding.displayName && startLine == finding.focusLine
+fun isMatchingFinding(displayName: String, focusLine: Int?, finding: CodeHealthFinding): Boolean {
+    var matches = displayName == finding.displayName
+
+    if (focusLine != null && finding.focusLine != null) matches = matches && focusLine == finding.focusLine
+
+    return matches
+}
 
 private fun getFunctionFinding(
     file: Pair<String, String>?,
@@ -205,19 +214,19 @@ private fun getFunctionFinding(
     delta: Delta
 ): CodeHealthDetails {
     val changeDetails = delta.functionLevelFindings
-        .find { isMatchingFinding(it.function.name, it.function.range.startLine, finding) }?.changeDetails
-    val subHeaderLabel = if (changeDetails != null && changeDetails.size > 1)
-        UiLabelsBundle.message("multipleCodeSmells")
+        .find { isMatchingFinding(it.function.name, it.function.range?.startLine, finding) }?.changeDetails
+    val labelAndIcon = if (changeDetails?.count { !isPositiveChange(it.changeType) } ?: 0 >= 1)
+        "Improvement opportunity" to AllIcons.Nodes.WarningIntroduction
     else
-        UiLabelsBundle.message("functionSmell")
+        "Issue(s) fixed" to CODE_SMELL_FIXED
 
     return CodeHealthDetails(
         filePath = finding.filePath,
         header = finding.displayName,
         subHeader = createSubHeader(
             file,
-            subHeaderLabel,
-            AllIcons.Nodes.WarningIntroduction,
+            labelAndIcon.first,
+            labelAndIcon.second,
             CodeHealthDetailsType.FUNCTION
         ),
         body = getFunctionFindingBody(changeDetails, finding),
@@ -228,18 +237,28 @@ private fun getFunctionFinding(
 private fun getFileFinding(
     file: Pair<String, String>?,
     finding: CodeHealthFinding
-) = CodeHealthDetails(
-    filePath = finding.filePath,
-    header = finding.displayName,
-    subHeader = createSubHeader(
-        file,
-        UiLabelsBundle.message("fileIssue"),
-        AllIcons.Nodes.WarningIntroduction,
-        CodeHealthDetailsType.FILE
-    ),
-    body = listOf(Paragraph(finding.tooltip, "Problem")),
-    type = CodeHealthDetailsType.FILE
-)
+): CodeHealthDetails {
+    val hasBeenFixed = finding.nodeType == NodeType.FILE_FINDING_FIXED
+    val heading = if (hasBeenFixed) "Details" else "Problem"
+    val subHeaderText = if (hasBeenFixed)
+        UiLabelsBundle.message("issueFixed")
+    else
+        UiLabelsBundle.message("fileIssue")
+    val icon = if (hasBeenFixed) CODE_SMELL_FIXED else AllIcons.Nodes.WarningIntroduction
+
+    return CodeHealthDetails(
+        filePath = finding.filePath,
+        header = finding.displayName,
+        subHeader = createSubHeader(
+            file,
+            subHeaderText,
+            icon,
+            CodeHealthDetailsType.FILE
+        ),
+        body = listOf(Paragraph(finding.tooltip, heading)),
+        type = CodeHealthDetailsType.FILE
+    )
+}
 
 fun getHealthFinding(delta: Delta, finding: CodeHealthFinding): CodeHealthDetails? {
     val file = extractUsingRegex(finding.filePath, Regex(".*/([^/]+)\\.([^.]+)$")) { (fileName, extension) ->
@@ -264,12 +283,10 @@ private fun handleMouseClick(project: Project, codeSmell: CodeSmell, filePath: S
     file?.let {
         if (!editorManager.isFileOpen(file)) editorManager.openFile(file, true)
 
-        val fileDescriptor = OpenFileDescriptor(
-            project,
-            file,
-            codeSmell.highlightRange.startLine - 1,
-            codeSmell.highlightRange.startColumn - 1
-        )
+        val (line, column) = codeSmell.highlightRange
+            ?.let { it.startLine - 1 to it.startColumn - 1 }
+            ?: (1 to 1)
+        val fileDescriptor = OpenFileDescriptor(project, file, line, column)
 
         editorManager.openTextEditor(fileDescriptor, true)
         editorManager.selectedTextEditor?.let {

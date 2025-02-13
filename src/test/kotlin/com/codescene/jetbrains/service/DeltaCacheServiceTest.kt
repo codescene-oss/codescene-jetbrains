@@ -31,14 +31,15 @@ class DeltaCacheServiceTest {
         deltaCacheService.put(entry)
 
         val cachedResponse = deltaCacheService.get(DeltaCacheQuery(filePath, headCommitContent, currentFileContent))
-        assertEquals(deltaApiResponse, cachedResponse)
+        assertEquals(deltaApiResponse, cachedResponse.second)
     }
 
     @Test
     fun `get returns null when cache does not exist`() {
         val cachedResponse = deltaCacheService.get(DeltaCacheQuery(filePath, headCommitContent, currentFileContent))
 
-        assertNull(cachedResponse)
+        assertEquals(false, cachedResponse.first)
+        assertNull(cachedResponse.second)
     }
 
     @Test
@@ -49,6 +50,18 @@ class DeltaCacheServiceTest {
         val cachedResponse =
             deltaCacheService.get(DeltaCacheQuery(filePath, "different head content", currentFileContent))
 
-        assertNull(cachedResponse)
+        assertEquals(false, cachedResponse.first)
+    }
+
+    @Test
+    fun `get returns entry when content matches`() {
+        val entry = DeltaCacheEntry(filePath, headCommitContent, currentFileContent, deltaApiResponse)
+        deltaCacheService.put(entry)
+
+        val cachedResponse =
+            deltaCacheService.get(DeltaCacheQuery(filePath, headCommitContent, currentFileContent))
+
+        assertEquals(true, cachedResponse.first)
+        assertEquals(deltaApiResponse, cachedResponse.second)
     }
 }

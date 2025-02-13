@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.services.api
 
 import com.codescene.ExtensionAPI
+import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.cache.ReviewCacheEntry
@@ -42,7 +43,8 @@ class CodeReviewService(private val project: Project) : CodeSceneService() {
         val fileName = file.name
         val code = editor.document.text
 
-        val result = runWithClassLoaderChange { ExtensionAPI.review(path, code) }
+        val params = ReviewParams(path, code)
+        val result = runWithClassLoaderChange { ExtensionAPI.review(params) }
 
         val entry = ReviewCacheEntry(fileContents = code, filePath = path, response = result)
         cacheService.put(entry)

@@ -17,16 +17,7 @@ class ShowDocumentationAction : AnAction() {
             val editorManager = FileEditorManager.getInstance(e.project!!)
             val editor = editorManager.selectedTextEditor
 
-            val codeSmell = CodeSmell().apply {
-                category = CODE_HEALTH_MONITOR
-                highlightRange = Range().apply {
-                    startLine = 1
-                    startColumn = 1
-                    endLine = 1
-                    endColumn = 1
-                }
-                details = ""
-            }
+            val codeSmell = CodeSmell(CODE_HEALTH_MONITOR, Range(1, 1, 1, 1), "")
             val params = DocumentationParams(editor, codeSmell, DocsSourceType.NONE)
 
             service.openDocumentationPanel(params)

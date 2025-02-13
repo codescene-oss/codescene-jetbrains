@@ -34,6 +34,6 @@ fun getCodeHealth(healthDetails: HealthDetails): HealthInformation {
 
     return if (newScore != oldScore) HealthInformation(
         "$oldScore → $newScore",
-        "($sign${changePercentage}%)"
+        "$sign${changePercentage}%"
     ) else HealthInformation(newScore.toString())
 }

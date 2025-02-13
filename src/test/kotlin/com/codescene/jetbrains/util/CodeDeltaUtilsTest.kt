@@ -7,44 +7,27 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class CodeDeltaUtilsTest {
-    private val function = Function().apply {
-        name = "exampleFunction"
-        range = Range().apply {
-            startLine = 1
-            startColumn = 10
-            endLine = 1
-            endColumn = 15
-        }
-    }
+    private val function = Function("exampleFunction", Range(1, 10, 1, 15))
 
     private val details = listOf(
-        ChangeDetail().apply {
-            category = "Code Smell"
-            description = "Duplicate Code"
-            changeType = "degraded"
-            position = com.codescene.data.delta.Position().apply {
-                line = 5
-                column = 40
-            }
-        },
-        ChangeDetail().apply {
-            category = "Code Smell"
-            description = "Large Method"
-            changeType = "introduced"
-            position = com.codescene.data.delta.Position().apply {
-                line = 20
-                column = 40
-            }
-        },
-        ChangeDetail().apply {
-            category = "Code Smell"
-            description = "Bumpy Road Ahead"
-            changeType = "fixed"
-            position = com.codescene.data.delta.Position().apply {
-                line = 5
-                column = 40
-            }
-        },
+        ChangeDetail(
+            ChangeDetail.ChangeType.DEGRADED,
+            "Code Smell",
+            "Duplicate Code",
+            com.codescene.data.delta.Position(5, 40)
+        ),
+        ChangeDetail(
+            ChangeDetail.ChangeType.INTRODUCED,
+            "Code Smell",
+            "Large Method",
+            com.codescene.data.delta.Position(20, 40)
+        ),
+        ChangeDetail(
+            ChangeDetail.ChangeType.FIXED,
+            "Code Smell",
+            "Bumpy Road Ahead",
+            com.codescene.data.delta.Position(5, 40)
+        ),
     )
 
     @Test

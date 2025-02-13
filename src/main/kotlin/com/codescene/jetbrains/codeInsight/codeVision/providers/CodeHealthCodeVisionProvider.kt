@@ -28,16 +28,7 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override val categoryToFilter = HEALTH_SCORE
 
     private fun getCodeVisionEntry(description: String): ClickableTextCodeVisionEntry {
-        val codeHealth = CodeSmell().apply {
-            category = "Code Health"
-            highlightRange = Range().apply {
-                startLine = 1
-                startColumn = 1
-                endLine = 1
-                endColumn = 1
-            }
-            details = ""
-        }
+        val codeHealth = CodeSmell("Code Health", Range(1, 1, 1, 1), "")
 
         return ClickableTextCodeVisionEntry(
             "Code Health: $description",
@@ -49,14 +40,13 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
 
     private fun getDescription(editor: Editor, result: Review?): String? {
         val cachedDelta = getCachedDelta(editor)
-        val hasChanged = cachedDelta?.oldScore != cachedDelta?.newScore
+        val oldScore = cachedDelta.second?.oldScore
+        val newScore = cachedDelta.second?.newScore
+        val hasChanged = oldScore != newScore
 
         return when {
-            cachedDelta != null && hasChanged -> getCodeHealth(
-                HealthDetails(
-                    cachedDelta.oldScore,
-                    cachedDelta.newScore
-                )
+            cachedDelta.second != null && hasChanged -> getCodeHealth(
+                HealthDetails(oldScore!!, newScore!!)
             ).change
 
             result != null -> if (result.score != null) result.score.toString() else "N/A"
@@ -86,11 +76,7 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
             service.openDocumentationPanel(
                 DocumentationParams(
                     editor,
-                    CodeSmell().apply {
-                        details = codeSmell.details
-                        highlightRange = codeSmell.highlightRange
-                        category = GENERAL_CODE_HEALTH
-                    },
+                    CodeSmell(GENERAL_CODE_HEALTH, codeSmell.highlightRange, codeSmell.details),
                     DocsSourceType.NONE
                 )
             )

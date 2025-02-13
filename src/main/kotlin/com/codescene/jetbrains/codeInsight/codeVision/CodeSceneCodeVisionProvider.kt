@@ -96,7 +96,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
         val cachedDelta = getCachedDelta(editor)
 
-        if (cachedDelta == null) triggerApiCall(editor, activeDeltaApiCalls) {
+        if (!cachedDelta.first) triggerApiCall(editor, activeDeltaApiCalls) {
             CodeDeltaService.getInstance(project).review(editor)
         }
 

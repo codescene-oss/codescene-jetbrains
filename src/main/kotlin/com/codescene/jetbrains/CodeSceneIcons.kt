@@ -31,6 +31,9 @@ object CodeSceneIcons {
     val CODE_SMELL_FOUND = getIcon("/images/codeSmellFound.svg", javaClass)
 
     @JvmField
+    val CODE_SMELL_FIXED = getIcon("/images/codeSmellFixed.svg", javaClass)
+
+    @JvmField
     val LOGO = getIcon("/images/logo.svg", javaClass)
 
     @JvmField
@@ -38,4 +41,10 @@ object CodeSceneIcons {
 
     @JvmField
     val HELP = getIcon("/images/help.svg", javaClass)
+
+    @JvmField
+    val METHOD_IMPROVABLE = getIcon("/images/methodImprovable.svg", javaClass)
+
+    @JvmField
+    val METHOD_FIXED = getIcon("/images/methodFixed.svg", javaClass)
 }
