@@ -73,7 +73,7 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
 
     private fun subscribeToMonitorRefreshEvent(project: Project) {
         project.messageBus.connect().subscribe(ToolWindowRefreshNotifier.TOPIC, object : ToolWindowRefreshNotifier {
-            override fun refresh(file: VirtualFile) {
+            override fun refresh(file: VirtualFile?) {
                 Log.info("Refreshing code health monitor...", "Tool Window Factory - ${project.name}")
 
                 CodeHealthMonitorPanel.getInstance(project).refreshContent(file)

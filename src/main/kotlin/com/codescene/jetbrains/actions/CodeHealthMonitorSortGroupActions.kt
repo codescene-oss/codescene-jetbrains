@@ -4,56 +4,49 @@ import com.codescene.jetbrains.CodeSceneIcons
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.config.global.MonitorTreeSortOptions
+import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.ToggleAction
+import javax.swing.Icon
+
+abstract class SortByMonitorOption(
+    label: String,
+    description: String,
+    icon: Icon,
+    private val sortOption: MonitorTreeSortOptions
+) : ToggleAction(label, description, icon) {
+    override fun isSelected(event: AnActionEvent) =
+        CodeSceneGlobalSettingsStore.getInstance().state.monitorTreeSortOption == sortOption
+
+    override fun setSelected(event: AnActionEvent, state: Boolean) {
+        CodeSceneGlobalSettingsStore.getInstance().state.monitorTreeSortOption = sortOption
+        event.project?.messageBus?.syncPublisher(ToolWindowRefreshNotifier.TOPIC)?.refresh(null)
+    }
+
+    override fun getActionUpdateThread() = ActionUpdateThread.BGT
+}
 
 class CodeHealthMonitorSortGroupActions {
-    class SortByScoreChangeAscending : ToggleAction(
+    class SortByScoreChangeAscending : SortByMonitorOption(
         UiLabelsBundle.message("scoreChangeAscending"),
         UiLabelsBundle.message("scoreChangeAscendingInfo"),
-        CodeSceneIcons.CODE_HEALTH_LOW
-    ) {
-        override fun isSelected(p0: AnActionEvent) =
-            CodeSceneGlobalSettingsStore.getInstance().state.monitorTreeSortOption == MonitorTreeSortOptions.SCORE_ASCENDING
+        CodeSceneIcons.CODE_HEALTH_LOW,
+        MonitorTreeSortOptions.SCORE_ASCENDING
+    )
 
-        override fun setSelected(p0: AnActionEvent, p1: Boolean) {
-            CodeSceneGlobalSettingsStore.getInstance().state.monitorTreeSortOption =
-                MonitorTreeSortOptions.SCORE_ASCENDING
-        }
-
-        override fun getActionUpdateThread() = ActionUpdateThread.BGT
-    }
-
-    class SortByScoreChangeDescending : ToggleAction(
+    class SortByScoreChangeDescending : SortByMonitorOption(
         UiLabelsBundle.message("scoreChangeDescending"),
         UiLabelsBundle.message("scoreChangeDescendingInfo"),
-        CodeSceneIcons.CODE_HEALTH_HIGH
-    ) {
-        override fun isSelected(p0: AnActionEvent) =
-            CodeSceneGlobalSettingsStore.getInstance().state.monitorTreeSortOption == MonitorTreeSortOptions.SCORE_DESCENDING
+        CodeSceneIcons.CODE_HEALTH_HIGH,
+        MonitorTreeSortOptions.SCORE_DESCENDING
+    )
 
-        override fun setSelected(p0: AnActionEvent, p1: Boolean) {
-            CodeSceneGlobalSettingsStore.getInstance().state.monitorTreeSortOption =
-                MonitorTreeSortOptions.SCORE_DESCENDING
-        }
-
-        override fun getActionUpdateThread() = ActionUpdateThread.BGT
-    }
-
-    class SortByFileName : ToggleAction(
+    class SortByFileName : SortByMonitorOption(
         UiLabelsBundle.message("fileName"),
         UiLabelsBundle.message("fileNameInfo"),
-        AllIcons.ObjectBrowser.Sorted
-    ) {
-        override fun isSelected(p0: AnActionEvent) =
-            CodeSceneGlobalSettingsStore.getInstance().state.monitorTreeSortOption == MonitorTreeSortOptions.FILE_NAME
-
-        override fun setSelected(p0: AnActionEvent, p1: Boolean) {
-            CodeSceneGlobalSettingsStore.getInstance().state.monitorTreeSortOption = MonitorTreeSortOptions.FILE_NAME
-        }
-
-        override fun getActionUpdateThread() = ActionUpdateThread.BGT
-    }
+        AllIcons.ObjectBrowser.Sorted,
+        MonitorTreeSortOptions.FILE_NAME
+    )
 }

@@ -7,7 +7,7 @@ import com.intellij.util.messages.Topic
 const val DISPLAY_NAME = "Refresh $CODESCENE Tool Window"
 
 interface ToolWindowRefreshNotifier {
-    fun refresh(file: VirtualFile)
+    fun refresh(file: VirtualFile?)
 
     fun invalidateAndRefresh(fileToInvalidate: String, file: VirtualFile? = null)
 
