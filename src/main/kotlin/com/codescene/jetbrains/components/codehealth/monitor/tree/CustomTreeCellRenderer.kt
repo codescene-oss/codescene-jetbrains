@@ -51,7 +51,7 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
                 icon = getIcon(userObject)
 
 
-                if (collapsedParent && userObject.numberOfImprovableFunctions != null) {
+                if (collapsedParent && userObject.numberOfImprovableFunctions != 0) {
                     additionalLabel.text = userObject.numberOfImprovableFunctions.toString()
                     additionalLabel.isVisible = true
                 } else

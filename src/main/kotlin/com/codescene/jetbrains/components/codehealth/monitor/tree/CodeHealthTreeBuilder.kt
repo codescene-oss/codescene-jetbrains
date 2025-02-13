@@ -40,7 +40,7 @@ data class CodeHealthFinding(
     val nodeType: NodeType,
     val additionalText: String = "",
     val functionFindingIssues: Int = 1,
-    val numberOfImprovableFunctions: Int? = null
+    val numberOfImprovableFunctions: Int = 0
 )
 
 @Service(Service.Level.PROJECT)

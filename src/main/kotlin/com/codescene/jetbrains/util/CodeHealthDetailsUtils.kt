@@ -215,18 +215,18 @@ private fun getFunctionFinding(
 ): CodeHealthDetails {
     val changeDetails = delta.functionLevelFindings
         .find { isMatchingFinding(it.function.name, it.function.range?.startLine, finding) }?.changeDetails
-    val subHeaderLabel = if (changeDetails != null && changeDetails.size > 1)
-        UiLabelsBundle.message("multipleCodeSmells")
+    val labelAndIcon = if (changeDetails?.count { !isPositiveChange(it.changeType) } ?: 0 >= 1)
+        "Improvement opportunity" to AllIcons.Nodes.WarningIntroduction
     else
-        UiLabelsBundle.message("functionSmell")
+        "Issue(s) fixed" to CODE_SMELL_FIXED
 
     return CodeHealthDetails(
         filePath = finding.filePath,
         header = finding.displayName,
         subHeader = createSubHeader(
             file,
-            subHeaderLabel,
-            AllIcons.Nodes.WarningIntroduction,
+            labelAndIcon.first,
+            labelAndIcon.second,
             CodeHealthDetailsType.FUNCTION
         ),
         body = getFunctionFindingBody(changeDetails, finding),
@@ -237,18 +237,28 @@ private fun getFunctionFinding(
 private fun getFileFinding(
     file: Pair<String, String>?,
     finding: CodeHealthFinding
-) = CodeHealthDetails(
-    filePath = finding.filePath,
-    header = finding.displayName,
-    subHeader = createSubHeader(
-        file,
-        UiLabelsBundle.message("fileIssue"),
-        AllIcons.Nodes.WarningIntroduction,
-        CodeHealthDetailsType.FILE
-    ),
-    body = listOf(Paragraph(finding.tooltip, "Problem")),
-    type = CodeHealthDetailsType.FILE
-)
+): CodeHealthDetails {
+    val hasBeenFixed = finding.nodeType == NodeType.FILE_FINDING_FIXED
+    val heading = if (hasBeenFixed) "Details" else "Problem"
+    val subHeaderText = if (hasBeenFixed)
+        UiLabelsBundle.message("issueFixed")
+    else
+        UiLabelsBundle.message("fileIssue")
+    val icon = if (hasBeenFixed) CODE_SMELL_FIXED else AllIcons.Nodes.WarningIntroduction
+
+    return CodeHealthDetails(
+        filePath = finding.filePath,
+        header = finding.displayName,
+        subHeader = createSubHeader(
+            file,
+            subHeaderText,
+            icon,
+            CodeHealthDetailsType.FILE
+        ),
+        body = listOf(Paragraph(finding.tooltip, heading)),
+        type = CodeHealthDetailsType.FILE
+    )
+}
 
 fun getHealthFinding(delta: Delta, finding: CodeHealthFinding): CodeHealthDetails? {
     val file = extractUsingRegex(finding.filePath, Regex(".*/([^/]+)\\.([^.]+)$")) { (fileName, extension) ->
