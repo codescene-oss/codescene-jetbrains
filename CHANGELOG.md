@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1-codescene-eap] - 2025-02-17
+### Added
+- Code Health Monitor tracks improvements, informing the user of previously committed code smells that have now been fixed.
+- Three sorting options to Code Health Monitor tree:
+    - ascending (sort by largest decrease first),
+    - descending (sort by smallest decrease first),
+    - file name (sort by file name - ascending).
+- "Collapse all" option to Code Health Monitor.
+
+### Changed
+- Code Health Monitor
+  - collapsed nodes show number of improvable functions and change percentage (if present),
+  - tooltips and function findings' icons reflect improvement state.
+- Code Health details:
+  - improvement opportunities and fixed code smells outlined in the details tab of findings,
+
+### Fixed
+- Delta analysis will not be re-triggered if the API response for an unchanged file is `null`.
+
 ## [0.1.0-codescene-eap] - 2025-02-07
 ### Added
 - Progress indicators for review and monitor.
