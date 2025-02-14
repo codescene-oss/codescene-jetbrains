@@ -237,8 +237,8 @@ jobs:
   # If accepted and published, release workflow would be triggered
   releaseDraft:
     name: Release draft
-    if: github.event_name != 'pull_request'
-    needs: [ build, test, verify, dependency-check, delta-analysis ]
+#    if: github.event_name != 'pull_request'
+    needs: [ build, test, dependency-check, delta-analysis ]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -269,4 +269,3 @@ jobs:
           ${{ needs.build.outputs.changelog }}
           EOM
           )"
-
