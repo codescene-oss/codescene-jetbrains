@@ -31,11 +31,11 @@ class CodeDeltaUtilsTest {
     )
 
     @Test
-    fun `getFunctionDeltaTooltip resolved correctly when degrading issues exist`() {
+    fun `getFunctionDeltaTooltip resolved correctly when degrading issues and fixes exist`() {
         val result = getFunctionDeltaTooltip(function, details)
 
         assertEquals(
-            "Function \"exampleFunction\" • Contains 2 issues degrading code health",
+            "Function \"exampleFunction\" • 1 issue fixed • 2 issues degrading code health",
             result
         )
     }
