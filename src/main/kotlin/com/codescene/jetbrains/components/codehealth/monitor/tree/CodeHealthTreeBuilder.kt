@@ -11,6 +11,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.treeStructure.Tree
+import com.intellij.util.ui.tree.TreeUtil
 import java.awt.Component
 import java.awt.Dimension
 import java.util.concurrent.ConcurrentHashMap
@@ -56,15 +57,18 @@ class CodeHealthTreeBuilder(private val project: Project) {
     }
 
     fun createTree(
-        results: List<Map. Entry<String, Delta>>
+        results: List<Map.Entry<String, Delta>>,
+        shouldCollapseTree: Boolean
     ): Tree {
         val root = DefaultMutableTreeNode()
         results.map { buildNode(it.key, it.value) }.forEach { root.add(it) }
 
-        return getTree(root)
+        if (shouldCollapseTree) results.forEach { collapsedPaths.add(it.key) }
+
+        return getTree(root, shouldCollapseTree)
     }
 
-    private fun getTree(root: DefaultMutableTreeNode): Tree {
+    private fun getTree(root: DefaultMutableTreeNode, shouldCollapseTree: Boolean): Tree {
         val tree = Tree(DefaultTreeModel(root)).apply {
             isRootVisible = false
             isFocusable = false
@@ -77,7 +81,11 @@ class CodeHealthTreeBuilder(private val project: Project) {
             addTreeExpansionListener(CustomTreeExpansionListener(collapsedPaths))
         }
 
-        expandNodes(tree)
+        if (!shouldCollapseTree) expandNodes(tree) else {
+            deselectNodeAndCodeHealthFinding()
+            TreeUtil.collapseAll(tree, -1)
+        }
+
         if (selectedNode != null) selectNode(tree)
 
         return tree
@@ -117,11 +125,14 @@ class CodeHealthTreeBuilder(private val project: Project) {
                 suppressFocusOnLine = true
                 tree.selectionModel.selectionPath = TreePath(selectedChild.path)
                 suppressFocusOnLine = false
-            } else {
-                selectedNode = null
-                project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
-            }
+            } else
+                deselectNodeAndCodeHealthFinding()
         }
+
+    private fun deselectNodeAndCodeHealthFinding() {
+        selectedNode = null
+        project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
+    }
 
     private fun handleTreeSelectionEvent(event: TreeSelectionEvent) {
         val navigationService = CodeNavigationService.getInstance(project)

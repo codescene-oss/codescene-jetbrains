@@ -71,22 +71,23 @@ class CodeHealthMonitorPanel(private val project: Project) {
         }
     }
 
-    private fun JBPanel<JBPanel<*>>.renderContent() {
+    private fun JBPanel<JBPanel<*>>.renderContent(shouldCollapseTree: Boolean) {
         Log.debug("Rendering content with results: $healthMonitoringResults", service)
 
         if (healthMonitoringResults.isEmpty()) {
             addPlaceholderText()
             project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
         } else
-            renderFileTree()
+            renderFileTree(shouldCollapseTree)
     }
 
-    private fun JBPanel<JBPanel<*>>.renderFileTree() {
+    private fun JBPanel<JBPanel<*>>.renderFileTree(shouldCollapseTree: Boolean) {
         val files = healthMonitoringResults.map { it.key }
         Log.debug("Rendering code health information file tree for: $files.", service)
 
         // Sort the tree according to the selected sorting option before creating it
-        val fileTree = CodeHealthTreeBuilder.getInstance(project).createTree(sortDeltaFindings(healthMonitoringResults))
+        val fileTree = CodeHealthTreeBuilder.getInstance(project)
+            .createTree(sortDeltaFindings(healthMonitoringResults), shouldCollapseTree)
 
         layout = BorderLayout()
 
@@ -140,7 +141,11 @@ class CodeHealthMonitorPanel(private val project: Project) {
             }
     }
 
-    fun refreshContent(file: VirtualFile?, scope: CoroutineScope = CoroutineScope(Dispatchers.Main)) {
+    fun refreshContent(
+        file: VirtualFile?,
+        shouldCollapseTree: Boolean = false,
+        scope: CoroutineScope = CoroutineScope(Dispatchers.Main)
+    ) {
         refreshJob?.cancel()
 
         refreshJob = scope.launch {
@@ -148,7 +153,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
 
             Log.debug("Refreshing content for $healthMonitoringResults", service)
 
-            updatePanel()
+            updatePanel(shouldCollapseTree)
 
             updateToolWindowIcon()
         }
@@ -177,9 +182,9 @@ class CodeHealthMonitorPanel(private val project: Project) {
         healthMonitoringResults[path] = cachedDelta
     }
 
-    private fun updatePanel() {
+    private fun updatePanel(shouldCollapseTree: Boolean = false) {
         contentPanel.removeAll()
-        contentPanel.renderContent()
+        contentPanel.renderContent(shouldCollapseTree)
         contentPanel.revalidate()
         contentPanel.repaint()
     }
