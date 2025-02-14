@@ -7,6 +7,7 @@ import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_NEUTRAL
 import com.codescene.jetbrains.CodeSceneIcons.METHOD_FIXED
 import com.codescene.jetbrains.CodeSceneIcons.METHOD_IMPROVABLE
 import com.codescene.jetbrains.UiLabelsBundle
+import com.codescene.jetbrains.util.extractFileName
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.ui.JBColor
@@ -94,15 +95,7 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
         return if (!displayPercentage)
             displayName
         else
-            "<html>$displayName <span style='color:gray;'>${node.additionalText}</span></html>"
-    }
-
-    private fun extractFileName(input: String): String? {
-        val regex = """<html>([^<]+)<span""".toRegex()
-
-        val matchResult = regex.find(input)
-
-        return matchResult?.groups?.get(1)?.value
+            "<html>$displayName<span style='color:gray;'> ${node.additionalText}</span></html>"
     }
 
     private fun resolveMethodIcon(tooltip: String): Icon = when {
@@ -121,6 +114,6 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
         NodeType.FUNCTION_FINDING -> resolveMethodIcon(node.tooltip)
         NodeType.ROOT -> FileTypeManager
             .getInstance()
-            .getFileTypeByFileName(extractFileName(text)?.trim() ?: text).icon
+            .getFileTypeByFileName(extractFileName(text) ?: text).icon
     }
 }

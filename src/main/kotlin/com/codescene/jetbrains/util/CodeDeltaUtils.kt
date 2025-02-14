@@ -50,3 +50,11 @@ fun sortDeltaFindings(
         MonitorTreeSortOptions.SCORE_DESCENDING -> entryList.sortedBy { it.value.oldScore - it.value.newScore }
     }
 }
+
+fun extractFileName(input: String): String? {
+    val regex = """<html>([^<]+)<span""".toRegex()
+
+    val matchResult = regex.find(input)
+
+    return matchResult?.groups?.get(1)?.value
+}
