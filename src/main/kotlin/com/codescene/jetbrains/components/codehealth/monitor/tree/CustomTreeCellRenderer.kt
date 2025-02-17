@@ -1,19 +1,20 @@
 package com.codescene.jetbrains.components.codehealth.monitor.tree
 
-import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_DECREASE
-import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_HIGH
-import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_INCREASE
-import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_NEUTRAL
-import com.codescene.jetbrains.UiLabelsBundle
-import com.intellij.icons.AllIcons
-import com.intellij.openapi.fileTypes.FileTypeManager
-import java.io.File
+import com.codescene.jetbrains.util.getTooltip
+import com.intellij.ui.JBColor
+import java.awt.Graphics
 import javax.swing.JComponent
+import javax.swing.JLabel
 import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeCellRenderer
 
 class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
+    private val additionalLabel = JLabel().apply {
+        foreground = JBColor.GRAY
+        isVisible = false
+    }
+
     override fun getTreeCellRendererComponent(
         tree: JTree,
         value: Any?,
@@ -23,9 +24,11 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
         row: Int,
         hasFocus: Boolean
     ): JComponent {
-        super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus)
+        val component =
+            super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus) as JComponent
 
         val node = value as? DefaultMutableTreeNode
+        val collapsedParent = !leaf && !expanded
 
         node?.userObject?.let { userObject ->
             if (userObject is CodeHealthFinding) {
@@ -34,41 +37,33 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
                 backgroundNonSelectionColor = null
 
                 toolTipText = getTooltip(userObject)
-                text = getText(userObject)
-                icon = getIcon(userObject.nodeType)
+                text = com.codescene.jetbrains.util.getText(userObject, collapsedParent || leaf)
+                icon = com.codescene.jetbrains.util.getIcon(userObject)
+
+                if (collapsedParent && userObject.numberOfImprovableFunctions != 0) {
+                    additionalLabel.text = userObject.numberOfImprovableFunctions.toString()
+                    additionalLabel.isVisible = true
+                } else
+                    additionalLabel.isVisible = false
             }
         }
 
-        return this
+        component.add(additionalLabel)
+
+        return component
     }
 
-    private fun getTooltip(node: CodeHealthFinding) =
-        node.tooltip.ifEmpty {
-            when (node.nodeType) {
-                NodeType.CODE_HEALTH_NEUTRAL -> UiLabelsBundle.message("unchangedFileHealth")
-                NodeType.CODE_HEALTH_INCREASE -> UiLabelsBundle.message("increasingFileHealth")
-                NodeType.CODE_HEALTH_DECREASE -> UiLabelsBundle.message("decliningFileHealth")
-                else -> ""
-            }
+    override fun paintComponent(g: Graphics?) {
+        super.paintComponent(g)
+
+        if (additionalLabel.isVisible) {
+            val labelWidth = additionalLabel.preferredSize.width
+            val labelHeight = additionalLabel.preferredSize.height
+
+            val x = width - labelWidth - 15
+            val y = (height - labelHeight) / 2
+
+            additionalLabel.setBounds(x, y, labelWidth, labelHeight)
         }
-
-    private fun getText(node: CodeHealthFinding): String {
-        val displayName = File(node.displayName).name
-        val additionalText = node.additionalText
-
-        return if (additionalText.isEmpty())
-            displayName
-        else
-            "<html>$displayName <span style='color:gray;'>${node.additionalText}</span></html>"
-    }
-
-    private fun getIcon(type: NodeType) = when (type) {
-        NodeType.CODE_HEALTH_DECREASE -> CODE_HEALTH_DECREASE
-        NodeType.CODE_HEALTH_INCREASE -> CODE_HEALTH_INCREASE
-        NodeType.CODE_HEALTH_NEUTRAL -> CODE_HEALTH_NEUTRAL
-        NodeType.FILE_FINDING -> AllIcons.Nodes.WarningIntroduction
-        NodeType.FILE_FINDING_FIXED -> CODE_HEALTH_HIGH
-        NodeType.FUNCTION_FINDING -> AllIcons.Nodes.Method
-        NodeType.ROOT -> FileTypeManager.getInstance().getFileTypeByFileName(text).icon
     }
 }

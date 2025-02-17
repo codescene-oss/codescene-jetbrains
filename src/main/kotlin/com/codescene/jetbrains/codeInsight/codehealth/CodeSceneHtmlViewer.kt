@@ -10,7 +10,9 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.components.JBPanel
-import com.intellij.ui.jcef.*
+import com.intellij.ui.jcef.JBCefBrowser
+import com.intellij.ui.jcef.JBCefBrowserBase
+import com.intellij.ui.jcef.JBCefJSQuery
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -116,7 +118,7 @@ class CodeSceneHtmlViewer(val project: Project, private val file: VirtualFile) :
                     functionLocation?.let {
                         CodeNavigationService
                             .getInstance(project)
-                            .focusOnLine(it.fileName, it.codeSmell.highlightRange.startLine)
+                            .focusOnLine(it.fileName, it.codeSmell.highlightRange?.startLine ?: 1)
                     }
                 }
             }

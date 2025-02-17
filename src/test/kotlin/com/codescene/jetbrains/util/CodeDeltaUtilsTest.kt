@@ -3,56 +3,60 @@ package com.codescene.jetbrains.util
 import com.codescene.data.delta.ChangeDetail
 import com.codescene.data.delta.Function
 import com.codescene.data.delta.Range
-import org.junit.Assert.assertEquals
+import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
-class CodeDeltaUtilsTest {
-    private val function = Function().apply {
-        name = "exampleFunction"
-        range = Range().apply {
-            startLine = 1
-            startColumn = 10
-            endLine = 1
-            endColumn = 15
-        }
-    }
+@RunWith(Parameterized::class)
+class CodeDeltaUtilsTest(
+    private val expected: String,
+    private val excludedTypes: List<ChangeDetail.ChangeType>
+) : BasePlatformTestCase() {
+    private val function = Function("exampleFunction", Range(1, 10, 1, 15))
 
     private val details = listOf(
-        ChangeDetail().apply {
-            category = "Code Smell"
-            description = "Duplicate Code"
-            changeType = "degraded"
-            position = com.codescene.data.delta.Position().apply {
-                line = 5
-                column = 40
-            }
-        },
-        ChangeDetail().apply {
-            category = "Code Smell"
-            description = "Large Method"
-            changeType = "introduced"
-            position = com.codescene.data.delta.Position().apply {
-                line = 20
-                column = 40
-            }
-        },
-        ChangeDetail().apply {
-            category = "Code Smell"
-            description = "Bumpy Road Ahead"
-            changeType = "fixed"
-            position = com.codescene.data.delta.Position().apply {
-                line = 5
-                column = 40
-            }
-        },
+        ChangeDetail(
+            ChangeDetail.ChangeType.DEGRADED,
+            "Code Smell",
+            "Duplicate Code",
+            com.codescene.data.delta.Position(5, 40)
+        ),
+        ChangeDetail(
+            ChangeDetail.ChangeType.INTRODUCED,
+            "Code Smell",
+            "Large Method",
+            com.codescene.data.delta.Position(20, 40)
+        ),
+        ChangeDetail(
+            ChangeDetail.ChangeType.FIXED,
+            "Code Smell",
+            "Bumpy Road Ahead",
+            com.codescene.data.delta.Position(5, 40)
+        ),
     )
 
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun provideTestCases() = listOf(
+            arrayOf(
+                "Function \"exampleFunction\" • 1 issue fixed",
+                listOf(ChangeDetail.ChangeType.INTRODUCED, ChangeDetail.ChangeType.DEGRADED)
+            ),
+            arrayOf(
+                "Function \"exampleFunction\" • 2 issues degrading code health",
+                listOf(ChangeDetail.ChangeType.FIXED, ChangeDetail.ChangeType.IMPROVED)
+            )
+        )
+    }
+
     @Test
-    fun `getFunctionDeltaTooltip resolved correctly when degrading issues exist`() {
+    fun `getFunctionDeltaTooltip resolved correctly when degrading issues and fixes exist`() {
         val result = getFunctionDeltaTooltip(function, details)
 
         assertEquals(
-            "Function \"exampleFunction\" • Contains 2 issues degrading code health",
+            "Function \"exampleFunction\" • 1 issue fixed • 2 issues degrading code health",
             result
         )
     }
@@ -67,5 +71,30 @@ class CodeDeltaUtilsTest {
             "Function \"exampleFunction\"",
             result
         )
+    }
+
+    @Test
+    fun `extract file name from HTML formatted string`() {
+        val input = "<html>exampleFile.js<span style='color:gray;'>-6.32%</span></html>"
+
+        val result = extractFileName(input)
+
+        assertEquals("exampleFile.js", result)
+    }
+
+    @Test
+    fun `return null when input does not match`() {
+        val input = "exampleFile.txt"
+        val result = extractFileName(input)
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `return null when input is empty`() {
+        val input = ""
+        val result = extractFileName(input)
+
+        assertNull(result)
     }
 }

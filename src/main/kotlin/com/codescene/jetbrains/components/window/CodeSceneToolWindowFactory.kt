@@ -1,5 +1,7 @@
 package com.codescene.jetbrains.components.window
 
+import com.codescene.jetbrains.actions.CodeHealthMonitorSortGroupActions
+import com.codescene.jetbrains.actions.CollapseAllAction
 import com.codescene.jetbrains.actions.ShowDocumentationAction
 import com.codescene.jetbrains.actions.ShowSettingsAction
 import com.codescene.jetbrains.components.codehealth.detail.CodeHealthDetailsPanel
@@ -72,10 +74,10 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
 
     private fun subscribeToMonitorRefreshEvent(project: Project) {
         project.messageBus.connect().subscribe(ToolWindowRefreshNotifier.TOPIC, object : ToolWindowRefreshNotifier {
-            override fun refresh(file: VirtualFile) {
+            override fun refresh(file: VirtualFile?, shouldCollapseTree: Boolean) {
                 Log.info("Refreshing code health monitor...", "Tool Window Factory - ${project.name}")
 
-                CodeHealthMonitorPanel.getInstance(project).refreshContent(file)
+                CodeHealthMonitorPanel.getInstance(project).refreshContent(file, shouldCollapseTree)
             }
 
             override fun invalidateAndRefresh(fileToInvalidate: String, file: VirtualFile?) {
@@ -100,12 +102,17 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
     override fun shouldBeAvailable(project: Project) = true
 
     private fun getTitleActions(): List<AnAction> {
+        val actionManager = ActionManager.getInstance()
         val showSettings = ShowSettingsAction::class.java.simpleName
         val showDocs = ShowDocumentationAction::class.java.simpleName
+        val showSortOptions = CodeHealthMonitorSortGroupActions::class.java.simpleName
+        val collapseAll = CollapseAllAction::class.java.simpleName
 
-        val showSettingsAction = ActionManager.getInstance().getAction(showSettings)
-        val showDocsAction = ActionManager.getInstance().getAction(showDocs)
+        val showSettingsAction = actionManager.getAction(showSettings)
+        val showDocsAction = actionManager.getAction(showDocs)
+        val sortByActionGroup = actionManager.getAction(showSortOptions)
+        val collapseAllAction = actionManager.getAction(collapseAll)
 
-        return listOf(showDocsAction, showSettingsAction)
+        return listOf(sortByActionGroup, showDocsAction, collapseAllAction, showSettingsAction)
     }
 }

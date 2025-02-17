@@ -12,6 +12,7 @@ import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.TelemetryEvents
+import com.codescene.jetbrains.util.sortDeltaFindings
 import com.intellij.execution.runners.ExecutionUtil
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.components.Service
@@ -70,21 +71,23 @@ class CodeHealthMonitorPanel(private val project: Project) {
         }
     }
 
-    private fun JBPanel<JBPanel<*>>.renderContent() {
+    private fun JBPanel<JBPanel<*>>.renderContent(shouldCollapseTree: Boolean) {
         Log.debug("Rendering content with results: $healthMonitoringResults", service)
 
         if (healthMonitoringResults.isEmpty()) {
             addPlaceholderText()
             project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
         } else
-            renderFileTree()
+            renderFileTree(shouldCollapseTree)
     }
 
-    private fun JBPanel<JBPanel<*>>.renderFileTree() {
+    private fun JBPanel<JBPanel<*>>.renderFileTree(shouldCollapseTree: Boolean) {
         val files = healthMonitoringResults.map { it.key }
         Log.debug("Rendering code health information file tree for: $files.", service)
 
-        val fileTree = CodeHealthTreeBuilder.getInstance(project).createTree(healthMonitoringResults)
+        // Sort the tree according to the selected sorting option before creating it
+        val fileTree = CodeHealthTreeBuilder.getInstance(project)
+            .createTree(sortDeltaFindings(healthMonitoringResults), shouldCollapseTree)
 
         layout = BorderLayout()
 
@@ -130,19 +133,19 @@ class CodeHealthMonitorPanel(private val project: Project) {
 
         Log.debug("Cached delta: $cachedDelta", service)
 
-        if (cachedDelta != null) {
-            updateAndSendTelemetry(path, cachedDelta)
-        } else {
-            val removedValue = healthMonitoringResults.remove(path)
-            if (removedValue != null) {
-                TelemetryService.getInstance().logUsage(
-                    TelemetryEvents.MONITOR_FILE_REMOVED
-                )
+        if (cachedDelta.second != null)
+            updateAndSendTelemetry(path, cachedDelta.second!!)
+        else
+            healthMonitoringResults.remove(path)?.let {
+                TelemetryService.getInstance().logUsage(TelemetryEvents.MONITOR_FILE_REMOVED)
             }
-        }
     }
 
-    fun refreshContent(file: VirtualFile?, scope: CoroutineScope = CoroutineScope(Dispatchers.Main)) {
+    fun refreshContent(
+        file: VirtualFile?,
+        shouldCollapseTree: Boolean = false,
+        scope: CoroutineScope = CoroutineScope(Dispatchers.Main)
+    ) {
         refreshJob?.cancel()
 
         refreshJob = scope.launch {
@@ -150,37 +153,38 @@ class CodeHealthMonitorPanel(private val project: Project) {
 
             Log.debug("Refreshing content for $healthMonitoringResults", service)
 
-            updatePanel()
+            updatePanel(shouldCollapseTree)
 
             updateToolWindowIcon()
         }
     }
 
+    /*
+       TODO: provide additional data nRefactorableFunctions to add and update telemetry events,
+        when refactoring logic available
+    */
     private fun updateAndSendTelemetry(path: String, cachedDelta: Delta) {
         val scoreChange = cachedDelta.newScore - cachedDelta.oldScore
         val numberOfIssues = cachedDelta.fileLevelFindings.size + cachedDelta.functionLevelFindings.size
-        // TODO: provide additional data nRefactorableFunctions to add and update telemetry events,
-        //  when refactoring logic available
-        if (healthMonitoringResults[path] != null) {
-            // update
-            healthMonitoringResults[path] = cachedDelta
-            TelemetryService.getInstance().logUsage(
-                TelemetryEvents.MONITOR_FILE_UPDATED,
-                mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", numberOfIssues))
+
+        val telemetryEvent = if (healthMonitoringResults[path] != null)
+            TelemetryEvents.MONITOR_FILE_UPDATED
+        else
+            TelemetryEvents.MONITOR_FILE_ADDED
+
+        TelemetryService.getInstance().logUsage(
+            telemetryEvent, mutableMapOf<String, Any>(
+                Pair("scoreChange", scoreChange),
+                Pair("nIssues", numberOfIssues)
             )
-        } else {
-            // add
-            healthMonitoringResults[path] = cachedDelta
-            TelemetryService.getInstance().logUsage(
-                TelemetryEvents.MONITOR_FILE_ADDED,
-                mutableMapOf<String, Any>(Pair("scoreChange", scoreChange), Pair("nIssues", numberOfIssues))
-            )
-        }
+        )
+
+        healthMonitoringResults[path] = cachedDelta
     }
 
-    private fun updatePanel() {
+    private fun updatePanel(shouldCollapseTree: Boolean = false) {
         contentPanel.removeAll()
-        contentPanel.renderContent()
+        contentPanel.renderContent(shouldCollapseTree)
         contentPanel.revalidate()
         contentPanel.repaint()
     }
