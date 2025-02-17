@@ -10,8 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Documentation tab button focuses on the correct file when two files in a project have the same names.
 
-<!-- Placeholder for 0.1.1-codescene-eap -->
-
 ## [0.1.1-codescene-eap] - 2025-02-17
 ### Added
 - Code Health Monitor tracks improvements, informing the user of previously committed code smells that have now been fixed.
