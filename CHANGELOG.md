@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.1.2-codescene-eap] - 2025-02-17
+### Fixed
+- Documentation tab button focuses on the correct file when two files in a project have the same names.
+
+<!-- Placeholder for 0.1.1-codescene-eap -->
 
 ## [0.1.0-codescene-eap] - 2025-02-07
 ### Added
