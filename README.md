@@ -29,6 +29,19 @@ software.
 You can find detailed information for each code smell by either clicking the corresponding code vision in the editor, by
 examining the diagnostics (squigglies or in the Problems view), or by using the corresponding intention action (light
 bulb).
+
+## Android Studio Support
+
+To use the CodeScene plugin in Android Studio, you must enable JCEF (Java Chromium Embedded Framework). The plugin
+relies on JCEF, but it is not bundled with the default IDE runtime. Follow these steps to enable JCEF and view
+documentation: [Markdown Editor and Preview Not Working in Android Studio](https://stackoverflow.com/questions/69171807/markdown-editor-and-preview-not-working-in-android-studio).
+
+## Rider Support
+
+The plugin is expected to work with Rider, but the level of support has not been fully assessed. Some features may
+function as intended, while others could have limitations. If you encounter any issues, please open a support ticket
+[here](https://supporthub.codescene.com/kb-tickets/new).
+
 <!-- Plugin description end -->
 
 ## Table of contents

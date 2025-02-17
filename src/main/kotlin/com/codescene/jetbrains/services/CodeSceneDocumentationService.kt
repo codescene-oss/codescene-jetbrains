@@ -60,7 +60,7 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
         val (editor, codeSmell, docsSourceType) = params
         if (editor != null) {
             sourceEditor = editor
-            functionLocation = FunctionLocation(editor.virtualFile.name, codeSmell)
+            functionLocation = FunctionLocation(editor.virtualFile.path, codeSmell)
         }
 
         lastDocsSourceType = docsSourceType
