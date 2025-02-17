@@ -22,7 +22,7 @@ fun showTelemetryConsentNotification(project: Project?) {
         }
     })
 
-    notification.addAction(object : AnAction(UiLabelsBundle.message("denyButton")) {
+    notification.addAction(object : AnAction(UiLabelsBundle.message("closeButton")) {
         override fun actionPerformed(e: AnActionEvent) {
             notification.expire()
         }
