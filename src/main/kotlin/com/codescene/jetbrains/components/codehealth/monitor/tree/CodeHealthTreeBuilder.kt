@@ -11,6 +11,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.treeStructure.Tree
+import com.intellij.util.ui.tree.TreeUtil
 import java.awt.Component
 import java.awt.Dimension
 import java.util.concurrent.ConcurrentHashMap
@@ -39,7 +40,8 @@ data class CodeHealthFinding(
     val displayName: String,
     val nodeType: NodeType,
     val additionalText: String = "",
-    val functionFindingIssues: Int = 1
+    val functionFindingIssues: Int = 1,
+    val numberOfImprovableFunctions: Int = 0
 )
 
 @Service(Service.Level.PROJECT)
@@ -55,15 +57,18 @@ class CodeHealthTreeBuilder(private val project: Project) {
     }
 
     fun createTree(
-        results: ConcurrentHashMap<String, Delta>
+        results: List<Map.Entry<String, Delta>>,
+        shouldCollapseTree: Boolean
     ): Tree {
         val root = DefaultMutableTreeNode()
         results.map { buildNode(it.key, it.value) }.forEach { root.add(it) }
 
-        return getTree(root)
+        if (shouldCollapseTree) results.forEach { collapsedPaths.add(it.key) }
+
+        return getTree(root, shouldCollapseTree)
     }
 
-    private fun getTree(root: DefaultMutableTreeNode): Tree {
+    private fun getTree(root: DefaultMutableTreeNode, shouldCollapseTree: Boolean): Tree {
         val tree = Tree(DefaultTreeModel(root)).apply {
             isRootVisible = false
             isFocusable = false
@@ -76,7 +81,11 @@ class CodeHealthTreeBuilder(private val project: Project) {
             addTreeExpansionListener(CustomTreeExpansionListener(collapsedPaths))
         }
 
-        expandNodes(tree)
+        if (!shouldCollapseTree) expandNodes(tree) else {
+            deselectNodeAndCodeHealthFinding()
+            TreeUtil.collapseAll(tree, -1)
+        }
+
         if (selectedNode != null) selectNode(tree)
 
         return tree
@@ -116,11 +125,14 @@ class CodeHealthTreeBuilder(private val project: Project) {
                 suppressFocusOnLine = true
                 tree.selectionModel.selectionPath = TreePath(selectedChild.path)
                 suppressFocusOnLine = false
-            } else {
-                selectedNode = null
-                project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
-            }
+            } else
+                deselectNodeAndCodeHealthFinding()
         }
+
+    private fun deselectNodeAndCodeHealthFinding() {
+        selectedNode = null
+        project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
+    }
 
     private fun handleTreeSelectionEvent(event: TreeSelectionEvent) {
         val navigationService = CodeNavigationService.getInstance(project)
@@ -131,7 +143,8 @@ class CodeHealthTreeBuilder(private val project: Project) {
             Log.debug("Selected node with finding $finding", service)
             handleSelectionTelemetry(finding)
 
-            if (!suppressFocusOnLine) navigationService.focusOnLine(finding.filePath, finding.focusLine!!)
+            if (!suppressFocusOnLine && finding.focusLine != null)
+                navigationService.focusOnLine(finding.filePath, finding.focusLine)
 
             project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(finding)
             selectedNode = targetNode.userObject as CodeHealthFinding
@@ -165,17 +178,14 @@ class CodeHealthTreeBuilder(private val project: Project) {
         }
     }
 
-    private fun shouldSelectFunctionOfFileNode(finding: CodeHealthFinding): Boolean = !isHealthNode(finding.nodeType) && codeHealthSelected
+    private fun shouldSelectFunctionOfFileNode(finding: CodeHealthFinding): Boolean =
+        !isHealthNode(finding.nodeType) && codeHealthSelected
 
-    private fun shouldSelectHealthNode(finding: CodeHealthFinding): Boolean = isHealthNode(finding.nodeType) && !codeHealthSelected
+    private fun shouldSelectHealthNode(finding: CodeHealthFinding): Boolean =
+        isHealthNode(finding.nodeType) && !codeHealthSelected
 
     private fun buildNode(filePath: String, delta: Delta): MutableTreeNode {
-        val root = CodeHealthFinding(
-            filePath = filePath,
-            tooltip = filePath,
-            displayName = filePath,
-            nodeType = NodeType.ROOT
-        )
+        val root = getRootNode(filePath, delta)
 
         return DefaultMutableTreeNode(root).apply {
             addCodeHealthLeaf(filePath, delta)

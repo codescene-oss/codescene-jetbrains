@@ -5,6 +5,7 @@ import com.codescene.data.delta.Delta
 import com.codescene.data.delta.Function
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.components.codehealth.monitor.tree.NodeType
+import com.intellij.openapi.util.text.StringUtil.pluralize
 import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
@@ -16,7 +17,7 @@ fun getHealthFinding(filePath: String, delta: Delta): CodeHealthFinding {
     return CodeHealthFinding(
         filePath = filePath,
         displayName = "Code Health: $change",
-        additionalText = percentage,
+        additionalText = if (percentage.isNotEmpty()) "($percentage)" else "",
         nodeType = resolveHealthNodeType(delta.oldScore, delta.newScore)
     )
 }
@@ -27,7 +28,7 @@ private fun resolveHealthNodeType(oldScore: Double, newScore: Double): NodeType 
     else NodeType.CODE_HEALTH_INCREASE
 
 fun getFileFinding(filePath: String, result: ChangeDetail): CodeHealthFinding {
-    val positiveChange = result.changeType == "fixed" || result.changeType == "improved"
+    val positiveChange = isPositiveChange(result.changeType)
 
     return CodeHealthFinding(
         tooltip = result.description,
@@ -41,10 +42,29 @@ fun getFunctionFinding(filePath: String, function: Function, details: List<Chang
     tooltip = getFunctionDeltaTooltip(function, details),
     filePath,
     displayName = function.name,
-    focusLine = function.range.startLine,
+    focusLine = function.range?.startLine,
     nodeType = NodeType.FUNCTION_FINDING,
     functionFindingIssues = details.size
 )
+
+fun getRootNode(filePath: String, delta: Delta): CodeHealthFinding {
+    val (_, percentage) = getCodeHealth(HealthDetails(delta.oldScore, delta.newScore))
+
+    val count = delta.functionLevelFindings.flatMap { it.changeDetails }.count { canBeImproved(it.changeType) } +
+            delta.fileLevelFindings.count { canBeImproved(it.changeType) }
+
+    val tooltip = mutableListOf(filePath)
+    if (count != 0) tooltip.add("$count ${pluralize("issue", count)} can be improved")
+
+    return CodeHealthFinding(
+        filePath = filePath,
+        tooltip = tooltip.joinToString(" • "),
+        displayName = filePath,
+        nodeType = NodeType.ROOT,
+        additionalText = percentage,
+        numberOfImprovableFunctions = count
+    )
+}
 
 fun selectNode(tree: JTree, filePath: String): Boolean {
     val root = tree.model.root as DefaultMutableTreeNode

@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.services.api
 
 import com.codescene.ExtensionAPI
+import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.data.delta.Delta
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
@@ -50,16 +51,17 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
         handleDeltaResponse(editor, delta, oldCode)
     }
 
-    private fun getDeltaResponse(editor: Editor, oldCode: String) =
-        runWithClassLoaderChange {
-            val path = editor.virtualFile.path
+    private fun getDeltaResponse(editor: Editor, oldCode: String): Delta? {
+        val path = editor.virtualFile.path
 
-            val delta = ExtensionAPI.codeDelta(path, oldCode, editor.document.text)
+        val oldReview = ReviewParams(path, oldCode)
+        val newReview = ReviewParams(path, editor.document.text)
+        val delta = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview) }
 
-            if (delta?.oldScore == null) delta?.oldScore = 10.0
+        if (delta?.oldScore == null) delta?.oldScore = 10.0
 
-            delta
-        }
+        return delta
+    }
 
     private suspend fun handleDeltaResponse(editor: Editor, delta: Delta?, oldCode: String) {
         val path = editor.virtualFile.path
@@ -69,11 +71,10 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
             Log.info("Received null response from $CODESCENE delta API.", "$serviceImplementation - ${project.name}")
 
             deltaCacheService.invalidate(path)
-        } else {
-            val cacheEntry = DeltaCacheEntry(path, oldCode, currentCode, delta)
-
-            deltaCacheService.put(cacheEntry)
+        } else
             uiRefreshService.refreshCodeVision(editor, listOf("CodeHealthCodeVisionProvider"))
-        }
+
+        val cacheEntry = DeltaCacheEntry(path, oldCode, currentCode, delta)
+        deltaCacheService.put(cacheEntry)
     }
 }
