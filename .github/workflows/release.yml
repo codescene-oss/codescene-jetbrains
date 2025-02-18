@@ -7,6 +7,11 @@ on:
   release:
     types: [prereleased, released]
 
+env:
+  GH_USERNAME: ${{ secrets.GH_USERNAME }}
+  GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
+  CODESCENE_IDE_DOCS_TOKEN: ${{ secrets.CODESCENE_IDE_DOCS_TOKEN }}
+
 jobs:
 
   # Prepare and publish the plugin to JetBrains Marketplace repository
@@ -17,6 +22,13 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+
+      # Free GitHub Actions Environment Disk Space
+      - name: Maximize Build Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          large-packages: true
 
       # Check out the current repository
       - name: Fetch Sources
@@ -82,8 +94,8 @@ jobs:
           BRANCH="changelog-update-$VERSION"
           LABEL="release changelog"
 
-          git config user.email "action@github.com"
-          git config user.name "GitHub Action"
+          git config user.email "dzenan.granulo@codescene.com"
+          git config user.name "Dzenan Granulo"
 
           git checkout -b $BRANCH
           git commit -am "Changelog update - $VERSION"
