@@ -94,8 +94,8 @@ jobs:
           BRANCH="changelog-update-$VERSION"
           LABEL="release changelog"
 
-          git config user.email "action@github.com"
-          git config user.name "GitHub Action"
+          git config user.email "dzenan.granulo@codescene.com"
+          git config user.name "Dzenan Granulo"
 
           git checkout -b $BRANCH
           git commit -am "Changelog update - $VERSION"
