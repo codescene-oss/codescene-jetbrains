@@ -75,3 +75,31 @@ svg {
   align-items: center;
   margin: 0px;
 }
+
+#ace-button-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+#ace-button {
+    color: white;
+    background-color: #3f6dc7;
+    border: 2px solid #3f6dc7;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+#ace-div {
+border: 1px solid #3f6dc7;
+padding: 10px;
+}
+
+#ace-span {
+  font-style: italic;
+  color: gray;
+}

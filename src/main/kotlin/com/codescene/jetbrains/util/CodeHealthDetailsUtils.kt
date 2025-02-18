@@ -63,6 +63,7 @@ data class CodeHealthDetails(
     val body: List<Paragraph>,
     val type: CodeHealthDetailsType,
     val healthData: HealthData? = null,
+    val isRefactorable: Boolean? = false,
 )
 
 enum class HealthState(val label: String, val color: JBColor) {
@@ -230,7 +231,8 @@ private fun getFunctionFinding(
             CodeHealthDetailsType.FUNCTION
         ),
         body = getFunctionFindingBody(changeDetails, finding),
-        type = CodeHealthDetailsType.FUNCTION
+        type = CodeHealthDetailsType.FUNCTION,
+        isRefactorable = true //TODO: get from API
     )
 }
 

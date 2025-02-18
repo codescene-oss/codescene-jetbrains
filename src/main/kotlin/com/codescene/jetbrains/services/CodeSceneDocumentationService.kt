@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.services
 
 import com.codescene.data.review.CodeSmell
+import com.codescene.data.review.Range
 import com.codescene.jetbrains.codeInsight.codehealth.CodeHighlighter.generateHighlightedHtml
 import com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewer
 import com.codescene.jetbrains.codeInsight.codehealth.MarkdownCodeDelimiter
@@ -47,6 +48,24 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
     companion object {
         fun getInstance(project: Project): CodeSceneDocumentationService =
             project.service<CodeSceneDocumentationService>()
+    }
+
+    //TODO: refactor & adapt to ACE markdown preview
+    fun openAcePanel(editor: Editor?) {
+        val classLoader = this@CodeSceneDocumentationService.javaClass.classLoader
+        val inputStream = classLoader.getResourceAsStream("ace-intro.md")
+        val markdown = inputStream?.bufferedReader()?.readText() ?: ""
+        val markdownContent =
+            transformMarkdownToHtml(TransformMarkdownParams(markdown, "codeSmellName", true))
+        val header =
+            prepareHeader(HeadingParams(CodeSmell("", Range(1, 1, 1, 1), ""), true, markdown, classLoader, editor))
+
+        val documentationFile = createTempFile("CodeScene ACE Auto-Refactoring.md", "$header$markdownContent")
+
+        if (editor != null)
+            splitWindow(documentationFile)
+        else
+            openDocumentationWithoutActiveEditor(documentationFile)
     }
 
     /**
@@ -331,9 +350,10 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
         val scrollbarStyle = JBCefScrollbarsHelper.buildScrollbarsStyle()
         val themeStyle = PreviewThemeStyles.createStylesheet()
 
-        staticStyleBuilder.append(styleStream?.bufferedReader()?.lines()
-            ?.filter { line -> line.trim().isNotEmpty() }
-            ?.collect(Collectors.joining("\n")))
+        staticStyleBuilder.append(
+            styleStream?.bufferedReader()?.lines()
+                ?.filter { line -> line.trim().isNotEmpty() }
+                ?.collect(Collectors.joining("\n")))
         staticStyleBuilder.append(scrollbarStyle)
         staticStyleBuilder.append(themeStyle)
 
