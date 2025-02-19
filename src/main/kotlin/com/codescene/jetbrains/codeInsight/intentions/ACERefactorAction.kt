@@ -1,19 +1,18 @@
 package com.codescene.jetbrains.codeInsight.intentions
 
-import com.codescene.data.review.CodeSmell
+import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
-import com.codescene.jetbrains.services.DocsSourceType
-import com.codescene.jetbrains.services.DocumentationParams
 import com.codescene.jetbrains.util.Constants.CODESCENE
+import com.intellij.codeInsight.intention.HighPriorityAction
 import com.intellij.codeInsight.intention.IntentionAction
-import com.intellij.codeInsight.intention.LowPriorityAction
 import com.intellij.codeInsight.intention.PriorityAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Iconable
 import com.intellij.psi.PsiFile
 
-class ShowProblemIntentionAction(private val codeSmell: CodeSmell) : IntentionAction, LowPriorityAction {
-    private val name = "$CODESCENE: ${codeSmell.category}"
+class ACERefactorAction : IntentionAction, HighPriorityAction, Iconable {
+    private val name = "Refactor using $CODESCENE ACE"
 
     override fun getText(): String = name
 
@@ -23,12 +22,13 @@ class ShowProblemIntentionAction(private val codeSmell: CodeSmell) : IntentionAc
 
     override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {
         val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
-        if (editor != null) {
-            codeSceneDocumentationService.openDocumentationPanel(DocumentationParams(editor, codeSmell, DocsSourceType.INTENTION_ACTION))
-        }
+
+        if (editor != null) codeSceneDocumentationService.openAcePanel(editor)
     }
 
     override fun startInWriteAction(): Boolean = false
 
-    override fun getPriority(): PriorityAction.Priority = PriorityAction.Priority.LOW
+    override fun getPriority(): PriorityAction.Priority = PriorityAction.Priority.HIGH
+
+    override fun getIcon(p0: Int) = CODESCENE_ACE
 }
