@@ -71,10 +71,24 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
             Log.info("Received null response from $CODESCENE delta API.", "$serviceImplementation - ${project.name}")
 
             deltaCacheService.invalidate(path)
-        } else
+        } else {
             uiRefreshService.refreshCodeVision(editor, listOf("CodeHealthCodeVisionProvider"))
+            refreshAceAnnotationAndLens(delta, editor)
+        }
 
         val cacheEntry = DeltaCacheEntry(path, oldCode, currentCode, delta)
         deltaCacheService.put(cacheEntry)
+    }
+
+    private suspend fun refreshAceAnnotationAndLens(delta: Delta, editor: Editor) {
+        // Dummy implementation:
+        val hasRefactorable = delta.functionLevelFindings?.any {
+            it?.function?.name?.startsWith("a", true) == true || (it?.function?.name?.startsWith("t", true) == true)
+        } ?: false
+
+        if (hasRefactorable) {
+            Log.info("Found refactorable functions in ${editor.virtualFile.path}", serviceImplementation)
+            uiRefreshService.refreshCodeVision(editor, listOf("ACECodeVisionProvider"))
+        }
     }
 }

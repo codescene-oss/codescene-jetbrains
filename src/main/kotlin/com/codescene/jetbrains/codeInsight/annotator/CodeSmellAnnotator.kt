@@ -50,7 +50,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
     }
 
     private fun annotateCodeSmell(codeSmell: CodeSmell, document: Document, holder: AnnotationHolder) {
-        getTextRange(codeSmell, document).let { range ->
+        getTextRange(codeSmell.highlightRange.startLine to codeSmell.highlightRange.endLine, document).let { range ->
             val message = formatCodeSmellMessage(codeSmell.category, codeSmell.details)
 
             Log.debug("Creating annotation for code smell '${codeSmell.category}' at range: $range")
