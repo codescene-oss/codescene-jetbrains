@@ -31,7 +31,7 @@ class CodeReviewService(private val project: Project) : CodeSceneService() {
     override fun review(editor: Editor) {
         reviewFile(editor) {
             performCodeReview(editor)
-            uiRefreshService.refreshUI(editor)
+            uiRefreshService.refreshUI(editor, CodeSceneCodeVisionProvider.getProviders())
         }
     }
 

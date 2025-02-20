@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.util
 
-import com.codescene.data.review.CodeSmell
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.intellij.openapi.application.runReadAction
@@ -93,10 +92,10 @@ fun isFileSupported(project: Project, virtualFile: VirtualFile): Boolean {
 }
 
 fun getTextRange(
-    codeSmell: CodeSmell, document: Document,
+    range: Pair<Int, Int>, document: Document,
 ): TextRange {
-    val start = document.getLineStartOffset(codeSmell.highlightRange.startLine - 1)
-    val end = document.getLineEndOffset(codeSmell.highlightRange.endLine - 1)
+    val start = document.getLineStartOffset(range.first - 1)
+    val end = document.getLineEndOffset(range.second - 1)
 
     return TextRange(start, end)
 }
@@ -110,6 +109,7 @@ fun categoryToFileName(category: String): String {
 
 // this list needs to match documentation files for code smells, code health and code health monitor (/docs)
 val codeSmellNames = listOf(
+    Constants.ACE,
     Constants.GENERAL_CODE_HEALTH,
     Constants.CODE_HEALTH_MONITOR,
     Constants.BRAIN_CLASS,

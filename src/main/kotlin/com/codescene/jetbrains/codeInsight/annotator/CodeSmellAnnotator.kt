@@ -2,6 +2,7 @@ package com.codescene.jetbrains.codeInsight.annotator
 
 import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Review
+import com.codescene.jetbrains.codeInsight.intentions.ACERefactorAction
 import com.codescene.jetbrains.codeInsight.intentions.ShowProblemIntentionAction
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
 import com.codescene.jetbrains.services.cache.ReviewCacheService
@@ -50,7 +51,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
     }
 
     private fun annotateCodeSmell(codeSmell: CodeSmell, document: Document, holder: AnnotationHolder) {
-        getTextRange(codeSmell, document).let { range ->
+        getTextRange(codeSmell.highlightRange.startLine to codeSmell.highlightRange.endLine, document).let { range ->
             val message = formatCodeSmellMessage(codeSmell.category, codeSmell.details)
 
             Log.debug("Creating annotation for code smell '${codeSmell.category}' at range: $range")
@@ -58,6 +59,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
             holder.newAnnotation(HighlightSeverity.WARNING, message)
                 .range(range)
                 .highlightType(ProblemHighlightType.WARNING)
+                .withFix(ACERefactorAction()) //TODO: show only on refactorable functions
                 .withFix(ShowProblemIntentionAction(codeSmell))
                 .create()
         }

@@ -71,10 +71,25 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
             Log.info("Received null response from $CODESCENE delta API.", "$serviceImplementation - ${project.name}")
 
             deltaCacheService.invalidate(path)
-        } else
-            uiRefreshService.refreshCodeVision(editor, listOf("CodeHealthCodeVisionProvider"))
+        } else {
+            val lensProviders = mutableListOf("CodeHealthCodeVisionProvider")
+
+            // TODO: update according to ACE flow
+            if (isRefactorable(delta)) {
+                lensProviders.add("ACECodeVisionProvider")
+                uiRefreshService.refreshAnnotations(editor)
+            }
+
+            uiRefreshService.refreshCodeVision(editor, lensProviders)
+        }
 
         val cacheEntry = DeltaCacheEntry(path, oldCode, currentCode, delta)
         deltaCacheService.put(cacheEntry)
     }
+
+    // Dummy implementation to trigger ACE lens:
+    private fun isRefactorable(delta: Delta) =
+        delta.functionLevelFindings?.any {
+            it?.function?.name?.startsWith("a", true) == true || (it?.function?.name?.startsWith("t", true) == true)
+        } ?: false
 }

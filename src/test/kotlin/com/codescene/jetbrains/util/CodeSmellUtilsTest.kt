@@ -26,7 +26,7 @@ class CodeSmellUtilsTest {
         every { document.getLineStartOffset(startLine) } returns startOffset
         every { document.getLineEndOffset(endLine) } returns endOffset
 
-        val result = getTextRange(codeSmell, document)
+        val result = getTextRange(codeSmell.highlightRange.startLine to codeSmell.highlightRange.endLine, document)
 
         assertEquals(TextRange(startOffset, endOffset), result)
         verify(exactly = 1) { document.getLineStartOffset(startLine) }

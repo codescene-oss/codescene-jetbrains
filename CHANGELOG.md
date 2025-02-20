@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- ACE entry points from:
+  - Code Health details,
+  - code vision (lens),
+  - intention actions (in-editor + problems tab),
+  - code smell documentation.
+- ACE promotion and policy box as the first step upon using the entry points.
+
 ## [0.1.2-codescene-eap] - 2025-02-17
 ### Fixed
 - Documentation tab button focuses on the correct file when two files in a project have the same names.

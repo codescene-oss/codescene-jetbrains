@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.services
 
-import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
@@ -26,9 +25,13 @@ class UIRefreshService(private val project: Project) {
         fun getInstance(project: Project): UIRefreshService = project.service<UIRefreshService>()
     }
 
-    suspend fun refreshUI(@NotNull editor: Editor, dispatcher: CoroutineDispatcher = Dispatchers.Main) =
+    suspend fun refreshUI(
+        @NotNull editor: Editor,
+        providers: List<String>,
+        dispatcher: CoroutineDispatcher = Dispatchers.Main
+    ) =
         withContext(dispatcher) {
-            refreshCodeVision(editor)
+            refreshCodeVision(editor, providers)
 
             refreshAnnotations(editor)
 
@@ -37,7 +40,7 @@ class UIRefreshService(private val project: Project) {
 
     suspend fun refreshCodeVision(
         editor: Editor,
-        providers: List<String> = CodeSceneCodeVisionProvider.getProviders(),
+        providers: List<String>,
         dispatcher: CoroutineDispatcher = Dispatchers.Main
     ) = withContext(dispatcher) {
         val settings = CodeSceneGlobalSettingsStore.getInstance().state
