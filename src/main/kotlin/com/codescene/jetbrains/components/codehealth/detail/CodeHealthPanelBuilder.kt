@@ -72,11 +72,9 @@ class CodeHealthPanelBuilder(private val project: Project) {
                 if (details.isRefactorable == false) {
                     it.icon = ACE_DISABLED
                     it.isEnabled = false
-                    it.toolTipText = "It is not possible to refactor this function" //todo: better tooltip
+                    it.toolTipText = "Refactoring is not possible for this instance" //TODO: better tooltip
                 }
             }
-
-        //TODO: telemetry event when button clicked?
 
         add(button, constraint)
         constraint.ipady = 0

@@ -70,7 +70,7 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
 
         val documentationFile = createTempFile("$ACE_INFO_TITLE.md", "$header$markdownContent")
 
-        // add listener to "Show me CodeScene ACE" button -> ace_info/acknowledged
+        // TODO: add listener to "Show me CodeScene ACE" button -> ace_info/acknowledged & add header with file and line information
 
         if (editor != null)
             splitWindow(documentationFile)
@@ -219,14 +219,13 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
         val imageSvg = (inputStream?.bufferedReader()?.readText() ?: "")
 
         val button = """
-                <button id="ace-button">
-                    <span class="icon">$imageSvg</span>
-                    Auto-Refactor
-                </button>
-            """.trimIndent()
+            <button id="ace-button">
+                <span class="icon">$imageSvg</span>
+                Auto-Refactor
+            </button>
+        """.trimIndent()
 
         newContent.append(button)
-
     }
 
     /**
@@ -385,8 +384,8 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
 
         staticStyleBuilder.append(
             styleStream?.bufferedReader()?.lines()
-                ?.filter { line -> line.trim().isNotEmpty() }
-                ?.collect(Collectors.joining("\n")))
+            ?.filter { line -> line.trim().isNotEmpty() }
+            ?.collect(Collectors.joining("\n")))
         staticStyleBuilder.append(scrollbarStyle)
         staticStyleBuilder.append(themeStyle)
 

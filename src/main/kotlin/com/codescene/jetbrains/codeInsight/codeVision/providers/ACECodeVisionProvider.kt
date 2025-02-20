@@ -35,7 +35,7 @@ class ACECodeVisionProvider : CodeVisionProvider<Unit> {
 
         // TODO: Preflight to check if supported?
 
-        // Dummy implementation:
+        // Dummy implementation to trigger ACE lens:
         val refactorableFunctions = cachedDelta.second?.functionLevelFindings?.filter {
             (it?.function?.name?.startsWith("a", true) == true || (it?.function?.name?.startsWith(
                 "t",

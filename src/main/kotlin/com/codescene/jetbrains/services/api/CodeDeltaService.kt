@@ -74,6 +74,7 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
         } else {
             val lensProviders = mutableListOf("CodeHealthCodeVisionProvider")
 
+            // TODO: update according to ACE flow
             if (isRefactorable(delta)) {
                 lensProviders.add("ACECodeVisionProvider")
                 uiRefreshService.refreshAnnotations(editor)

@@ -76,6 +76,8 @@ svg {
   margin: 0px;
 }
 
+/* TODO: move ACE-related CSS to dedicated file */
+
 #ace-button-container {
     display: flex;
     flex-direction: column;
