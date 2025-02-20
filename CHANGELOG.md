@@ -7,10 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### [0.1.4-beta] - 2025-02-19
-- **Changed**
-  - Release pipeline updates
-
 ### [0.1.2-codescene-eap] - 2025-02-17
 - **Fixed**
   - Documentation tab button focuses on the correct file when two files in a project have the same names.
@@ -33,11 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Delta analysis will not be re-triggered if the API response for an unchanged file is `null`.
 
 ### [0.1.0-codescene-eap] - 2025-02-07
-- **Added
+- **Added**
   - Progress indicators for review and monitor.
 
 ### [0.0.14-beta] - 2025-02-07
-- **Changed
+- **Changed**
   - Code Health text in details panel
   - Code delta 0.0 score will show "N/A" instead
 
