@@ -12,7 +12,6 @@ import com.codescene.jetbrains.util.Constants.CODE_HEALTH_URL
 import com.intellij.ide.ui.laf.darcula.ui.OnboardingDialogButtons
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.ui.RoundedLineBorder
@@ -66,8 +65,9 @@ class CodeHealthPanelBuilder(private val project: Project) {
 
         val button = OnboardingDialogButtons
             .createButton(UiLabelsBundle.message("autoRefactor"), CODESCENE_ACE) {
-                val currentEditor = FileEditorManager.getInstance(project).selectedTextEditor
-                CodeSceneDocumentationService.getInstance(project).openAcePanel(currentEditor)
+                val selectedEditor =
+                    getSelectedTextEditor(project, details.filePath, "${this::class.simpleName} - ${project.name}")
+                CodeSceneDocumentationService.getInstance(project).openAcePanel(selectedEditor)
             }.also {
                 if (details.isRefactorable == false) {
                     it.icon = ACE_DISABLED

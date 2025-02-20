@@ -6,8 +6,10 @@ import com.codescene.jetbrains.codeInsight.codehealth.CodeHighlighter.generateHi
 import com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewer
 import com.codescene.jetbrains.codeInsight.codehealth.MarkdownCodeDelimiter
 import com.codescene.jetbrains.codeInsight.codehealth.PreviewThemeStyles
+import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.*
+import com.codescene.jetbrains.util.Constants.ACE_INFO_TITLE
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_MONITOR
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
 import com.intellij.ide.ui.LafManager
@@ -52,15 +54,23 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
 
     //TODO: refactor & adapt to ACE markdown preview
     fun openAcePanel(editor: Editor?) {
+        val settings = CodeSceneGlobalSettingsStore.getInstance().state
+
         val classLoader = this@CodeSceneDocumentationService.javaClass.classLoader
-        val inputStream = classLoader.getResourceAsStream("ace-intro.md")
+        val inputStream = classLoader.getResourceAsStream("ace-info.md")
+
+        if (settings.aceAcknowledged) { /*TODO: open refactoring window*/ }
+        else TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_INFO_PRESENTED)
+
         val markdown = inputStream?.bufferedReader()?.readText() ?: ""
         val markdownContent =
             transformMarkdownToHtml(TransformMarkdownParams(markdown, "codeSmellName", true))
         val header =
             prepareHeader(HeadingParams(CodeSmell("", Range(1, 1, 1, 1), ""), true, markdown, classLoader, editor))
 
-        val documentationFile = createTempFile("CodeScene ACE Auto-Refactoring.md", "$header$markdownContent")
+        val documentationFile = createTempFile("$ACE_INFO_TITLE.md", "$header$markdownContent")
+
+        // add listener to "Show me CodeScene ACE" button -> ace_info/acknowledged
 
         if (editor != null)
             splitWindow(documentationFile)
