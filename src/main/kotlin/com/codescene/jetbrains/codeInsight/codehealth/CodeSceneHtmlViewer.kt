@@ -4,6 +4,7 @@ import com.codescene.jetbrains.services.CodeNavigationService
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.getSelectedTextEditor
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorState
 import com.intellij.openapi.project.Project
@@ -39,6 +40,9 @@ class CodeSceneHtmlViewer(val project: Project, private val file: VirtualFile) :
         private const val JAVASCRIPT_ADD_EVENT_LISTENER = """
             document.getElementById('function-location').addEventListener('click', function() {
                  window.sendMessage('goto-function-location');
+            });
+            document.getElementById('ace-button').addEventListener('click', function() {
+                 window.sendMessage('ace-button-clicked');
             });
         """
     }
@@ -120,6 +124,13 @@ class CodeSceneHtmlViewer(val project: Project, private val file: VirtualFile) :
                             .getInstance(project)
                             .focusOnLine(it.fileName, it.codeSmell.highlightRange?.startLine ?: 1)
                     }
+                }
+            }
+            "ace-button-clicked" -> {
+                scope.launch(Dispatchers.Main) {
+                    val service = CodeSceneDocumentationService.getInstance(project)
+                    val editor = getSelectedTextEditor(project, "")
+                    service.openAcePanel(editor)
                 }
             }
             // TODO handle other type of messages here (e.g. refactoring)

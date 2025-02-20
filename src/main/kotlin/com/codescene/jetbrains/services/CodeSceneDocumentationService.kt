@@ -52,15 +52,15 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
             project.service<CodeSceneDocumentationService>()
     }
 
-    //TODO: refactor & adapt to ACE markdown preview
+    //TODO/WIP: refactor & adapt to ACE markdown preview (refactoring tab)
     fun openAcePanel(editor: Editor?) {
         val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
         val classLoader = this@CodeSceneDocumentationService.javaClass.classLoader
         val inputStream = classLoader.getResourceAsStream("ace-info.md")
 
-        if (settings.aceAcknowledged) { /*TODO: open refactoring window*/ }
-        else TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_INFO_PRESENTED)
+        if (settings.aceAcknowledged) { /*TODO: open refactoring window*/
+        } else TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_INFO_PRESENTED)
 
         val markdown = inputStream?.bufferedReader()?.readText() ?: ""
         val markdownContent =
@@ -148,9 +148,14 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
      * @param file The [VirtualFile] to be opened in a right-split editor.
      */
     private fun openDocumentationWithoutActiveEditor(file: VirtualFile) {
+        fileEditorManager.openFiles
+            .filterIsInstance<LightVirtualFile>()
+            .filter { it != file && codeSmellNames.contains(it.nameWithoutExtension) }
+            .forEach { fileEditorManager.closeFile(it) }
+
         val docNotOpen = fileEditorManager.openFiles.none { it.name == file.name }
-        val shouldOpenFile = fileEditorManager.openFiles.isEmpty() && docNotOpen
-        if (shouldOpenFile) fileEditorManager.openFile(file, false)
+        if (docNotOpen)
+            fileEditorManager.openFile(file, false, true)
     }
 
     /**
@@ -195,6 +200,8 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
         val parts = content.split("## ")
         val newContent = StringBuilder("")
 
+        if (!standaloneDocumentation) addAutoRefactorButton(newContent)
+
         parts.forEach { part ->
             val title = part.substring(0, part.indexOf("\n"))
             var body = if (!standaloneDocumentation) part.substring(part.indexOf("\n") + 1) else part
@@ -204,6 +211,22 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
             newContent.adaptBody(title, body, standaloneDocumentation)
         }
         return newContent.append("\n</body></html>").toString()
+    }
+
+    private fun addAutoRefactorButton(newContent: StringBuilder) {
+        val classLoader = this@CodeSceneDocumentationService.javaClass.classLoader
+        val inputStream = classLoader.getResourceAsStream("images/codeSceneAce_dark.svg")
+        val imageSvg = (inputStream?.bufferedReader()?.readText() ?: "")
+
+        val button = """
+                <button id="ace-button">
+                    <span class="icon">$imageSvg</span>
+                    Auto-Refactor
+                </button>
+            """.trimIndent()
+
+        newContent.append(button)
+
     }
 
     /**

@@ -92,6 +92,16 @@ svg {
     padding: 5px 10px;
     font-size: 13px;
     cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+#ace-button .icon svg {
+    width: 1.3em;
+    height: 1.3em;
 }
 
 #ace-div {

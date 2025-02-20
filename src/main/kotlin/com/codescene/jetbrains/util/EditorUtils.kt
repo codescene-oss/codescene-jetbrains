@@ -7,7 +7,7 @@ import com.intellij.openapi.project.Project
 fun getSelectedTextEditor(project: Project, filePath: String, source: String = ""): Editor? {
     val editorManager = FileEditorManager.getInstance(project)
     val openEditor = editorManager.allEditors.firstOrNull { it.file.path == filePath }
-        ?: editorManager.allEditors[0]
+        ?: editorManager.allEditors.firstOrNull()
 
     if (editorManager.selectedTextEditor == null && openEditor != null) {
         Log.debug("Selected editor was null, opening file: ${openEditor.file.path}", source)
