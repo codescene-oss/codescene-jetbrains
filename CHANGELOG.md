@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changed
 - Release pipeline updates
+- Hidden CodeScene server URL in settings
 
 ## [0.1.2-codescene-eap] - 2025-02-17
 ### Fixed
