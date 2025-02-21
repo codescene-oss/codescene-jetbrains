@@ -17,7 +17,7 @@ object Constants {
     const val CODESCENE_URL = "https://codescene.com"
     const val CODE_HEALTH_URL = "${DOCUMENTATION_URL}guides/technical/code-health.html"
     const val TERMS_AND_CONDITIONS_URL = "$CODESCENE_URL/policies"
-    const val AI_PRINCIPLES_URL = "$CODESCENE_URL/ace/principles"
+    const val AI_PRINCIPLES_URL = "$CODESCENE_URL/ace/principles" // TODO: check URL validity
     const val CONTACT_URL = "$CODESCENE_URL/company/contact-us"
     const val SUPPORT_URL = "https://supporthub.codescene.com/kb-tickets/new"
 
@@ -33,6 +33,7 @@ object Constants {
 
     const val GENERAL_CODE_HEALTH = "General Code Health"
     const val CODE_HEALTH_MONITOR = "Code Health Monitor"
+    const val ACE = "CodeScene ACE Auto-Refactoring"
     const val TELEMETRY_EDITOR_TYPE = "intellij"
 
     const val BRAIN_CLASS = "Brain Class"

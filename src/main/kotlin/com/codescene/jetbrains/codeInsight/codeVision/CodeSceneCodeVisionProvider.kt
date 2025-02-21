@@ -122,7 +122,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
 
         getCodeSmellsByCategory(result).forEach { smell ->
-            val range = getTextRange(smell, editor.document)
+            val range = getTextRange(smell.highlightRange.startLine to smell.highlightRange.endLine, editor.document)
 
             val entry = getCodeVisionEntry(smell)
 
@@ -162,7 +162,13 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         val project = editor.project ?: return
         val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
 
-        codeSceneDocumentationService.openDocumentationPanel(DocumentationParams(editor, codeSmell, DocsSourceType.CODE_VISION))
+        codeSceneDocumentationService.openDocumentationPanel(
+            DocumentationParams(
+                editor,
+                codeSmell,
+                DocsSourceType.CODE_VISION
+            )
+        )
     }
 
     private fun markApiCallInProgress(filePath: String, apiCalls: MutableSet<String>) {

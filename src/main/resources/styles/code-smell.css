@@ -75,3 +75,43 @@ svg {
   align-items: center;
   margin: 0px;
 }
+
+/* TODO: move ACE-related CSS to dedicated file */
+
+#ace-button-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+#ace-button {
+    color: white;
+    background-color: #3f6dc7;
+    border: 2px solid #3f6dc7;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+#ace-button .icon svg {
+    width: 1.3em;
+    height: 1.3em;
+}
+
+#ace-div {
+border: 1px solid #3f6dc7;
+padding: 10px;
+}
+
+#ace-span {
+  font-style: italic;
+  color: gray;
+}

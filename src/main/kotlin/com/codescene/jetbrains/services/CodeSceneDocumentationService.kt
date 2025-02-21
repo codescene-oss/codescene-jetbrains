@@ -1,12 +1,15 @@
 package com.codescene.jetbrains.services
 
 import com.codescene.data.review.CodeSmell
+import com.codescene.data.review.Range
 import com.codescene.jetbrains.codeInsight.codehealth.CodeHighlighter.generateHighlightedHtml
 import com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewer
 import com.codescene.jetbrains.codeInsight.codehealth.MarkdownCodeDelimiter
 import com.codescene.jetbrains.codeInsight.codehealth.PreviewThemeStyles
+import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.*
+import com.codescene.jetbrains.util.Constants.ACE
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_MONITOR
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
 import com.intellij.ide.ui.LafManager
@@ -47,6 +50,32 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
     companion object {
         fun getInstance(project: Project): CodeSceneDocumentationService =
             project.service<CodeSceneDocumentationService>()
+    }
+
+    //TODO/WIP: refactor & adapt to ACE markdown preview (refactoring tab)
+    fun openAcePanel(editor: Editor?) {
+        val settings = CodeSceneGlobalSettingsStore.getInstance().state
+
+        val classLoader = this@CodeSceneDocumentationService.javaClass.classLoader
+        val inputStream = classLoader.getResourceAsStream("ace-info.md")
+
+        if (settings.aceAcknowledged) { /*TODO: open refactoring window*/
+        } else TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_INFO_PRESENTED)
+
+        val markdown = inputStream?.bufferedReader()?.readText() ?: ""
+        val markdownContent =
+            transformMarkdownToHtml(TransformMarkdownParams(markdown, "codeSmellName", true))
+        val header =
+            prepareHeader(HeadingParams(CodeSmell("", Range(1, 1, 1, 1), ""), true, markdown, classLoader, editor))
+
+        val documentationFile = createTempFile("$ACE.md", "$header$markdownContent")
+
+        // TODO: add listener to "Show me CodeScene ACE" button -> ace_info/acknowledged & add header with file and line information
+
+        if (editor != null)
+            splitWindow(documentationFile)
+        else
+            openDocumentationWithoutActiveEditor(documentationFile)
     }
 
     /**
@@ -119,9 +148,14 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
      * @param file The [VirtualFile] to be opened in a right-split editor.
      */
     private fun openDocumentationWithoutActiveEditor(file: VirtualFile) {
+        fileEditorManager.openFiles
+            .filterIsInstance<LightVirtualFile>()
+            .filter { it != file && codeSmellNames.contains(it.nameWithoutExtension) }
+            .forEach { fileEditorManager.closeFile(it) }
+
         val docNotOpen = fileEditorManager.openFiles.none { it.name == file.name }
-        val shouldOpenFile = fileEditorManager.openFiles.isEmpty() && docNotOpen
-        if (shouldOpenFile) fileEditorManager.openFile(file, false)
+        if (docNotOpen)
+            fileEditorManager.openFile(file, false, true)
     }
 
     /**
@@ -166,6 +200,8 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
         val parts = content.split("## ")
         val newContent = StringBuilder("")
 
+        if (!standaloneDocumentation) addAutoRefactorButton(newContent)
+
         parts.forEach { part ->
             val title = part.substring(0, part.indexOf("\n"))
             var body = if (!standaloneDocumentation) part.substring(part.indexOf("\n") + 1) else part
@@ -175,6 +211,21 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
             newContent.adaptBody(title, body, standaloneDocumentation)
         }
         return newContent.append("\n</body></html>").toString()
+    }
+
+    private fun addAutoRefactorButton(newContent: StringBuilder) {
+        val classLoader = this@CodeSceneDocumentationService.javaClass.classLoader
+        val inputStream = classLoader.getResourceAsStream("images/codeSceneAce_dark.svg")
+        val imageSvg = (inputStream?.bufferedReader()?.readText() ?: "")
+
+        val button = """
+            <button id="ace-button">
+                <span class="icon">$imageSvg</span>
+                Auto-Refactor
+            </button>
+        """.trimIndent()
+
+        newContent.append(button)
     }
 
     /**
@@ -331,7 +382,8 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
         val scrollbarStyle = JBCefScrollbarsHelper.buildScrollbarsStyle()
         val themeStyle = PreviewThemeStyles.createStylesheet()
 
-        staticStyleBuilder.append(styleStream?.bufferedReader()?.lines()
+        staticStyleBuilder.append(
+            styleStream?.bufferedReader()?.lines()
             ?.filter { line -> line.trim().isNotEmpty() }
             ?.collect(Collectors.joining("\n")))
         staticStyleBuilder.append(scrollbarStyle)
