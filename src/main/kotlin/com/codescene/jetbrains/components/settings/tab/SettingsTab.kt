@@ -2,12 +2,9 @@ package com.codescene.jetbrains.components.settings.tab
 
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
-import com.codescene.jetbrains.util.Constants.EXAMPLE_SERVER_URL
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
-import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.bindSelected
-import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
 
 @Suppress("DialogTitleCapitalization")
@@ -45,17 +42,17 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                 .comment(UiLabelsBundle.message("gitignoreComment"))
         }
 
-        panel {
-            groupRowsRange(UiLabelsBundle.message("server")) {
-                row(UiLabelsBundle.message("serverUrl")) {
-                    textField()
-                        .align(Align.FILL)
-                        .enabled(false) //TODO: Enable when functionality is implemented
-                        .resizableColumn()
-                        .comment(EXAMPLE_SERVER_URL)
-                        .bindText(settings::serverUrl)
-                }
-            }
-        }
+//        panel {
+//            groupRowsRange(UiLabelsBundle.message("server")) {
+//                row(UiLabelsBundle.message("serverUrl")) {
+//                    textField()
+//                        .align(Align.FILL)
+//                        .enabled(false) //TODO: Enable when functionality is implemented
+//                        .resizableColumn()
+//                        .comment(EXAMPLE_SERVER_URL)
+//                        .bindText(settings::serverUrl)
+//                }
+//            }
+//        }
     }
 }
