@@ -63,6 +63,4 @@ object Constants {
     const val POTENTIALLY_LOW_COHESION = "Potentially Low Cohesion"
     const val PRIMITIVE_OBSESSION = "Primitive Obsession"
     const val STRING_HEAVY_FUNCTION_ARGUMENTS = "String Heavy Function Arguments"
-
-    const val ACE_INFO_TITLE = "CodeScene ACE Auto-Refactoring"
 }

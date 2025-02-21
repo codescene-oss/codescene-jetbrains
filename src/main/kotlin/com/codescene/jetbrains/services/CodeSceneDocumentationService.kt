@@ -9,7 +9,7 @@ import com.codescene.jetbrains.codeInsight.codehealth.PreviewThemeStyles
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.*
-import com.codescene.jetbrains.util.Constants.ACE_INFO_TITLE
+import com.codescene.jetbrains.util.Constants.ACE
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_MONITOR
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
 import com.intellij.ide.ui.LafManager
@@ -68,7 +68,7 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
         val header =
             prepareHeader(HeadingParams(CodeSmell("", Range(1, 1, 1, 1), ""), true, markdown, classLoader, editor))
 
-        val documentationFile = createTempFile("$ACE_INFO_TITLE.md", "$header$markdownContent")
+        val documentationFile = createTempFile("$ACE.md", "$header$markdownContent")
 
         // TODO: add listener to "Show me CodeScene ACE" button -> ace_info/acknowledged & add header with file and line information
 
