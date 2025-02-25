@@ -25,6 +25,15 @@ abstract class SortByMonitorOption(
         event.project?.messageBus?.syncPublisher(ToolWindowRefreshNotifier.TOPIC)?.refresh(null)
     }
 
+    /**
+     * Disables all sort actions for freemium version of the plugin, since it does not have the Code Health Monitor feature.
+     */
+    override fun update(event: AnActionEvent) {
+        super.update(event)
+        val presentation = event.presentation
+        presentation.isEnabledAndVisible = false
+    }
+
     override fun getActionUpdateThread() = ActionUpdateThread.BGT
 }
 
