@@ -17,5 +17,6 @@ data class CodeSceneGlobalSettings(
     var excludeGitignoreFiles: Boolean = true,
     var previewCodeHealthGate: Boolean = false,
     var telemetryConsentGiven: Boolean = false,
+    val codeHealthMonitorEnabled: Boolean = false, //Freemium version
     var monitorTreeSortOption: MonitorTreeSortOptions = MonitorTreeSortOptions.SCORE_ASCENDING
 )

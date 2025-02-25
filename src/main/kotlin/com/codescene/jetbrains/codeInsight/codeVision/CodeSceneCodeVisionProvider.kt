@@ -86,6 +86,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
     private fun recomputeCodeVision(editor: Editor): CodeVisionState {
         val codeVisionEnabled = CodeSceneGlobalSettingsStore.getInstance().state.enableCodeLenses
+        val monitorEnabled = CodeSceneGlobalSettingsStore.getInstance().state.codeHealthMonitorEnabled
 
         val project = editor.project!!
         val document = editor.document
@@ -96,7 +97,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
         val cachedDelta = getCachedDelta(editor)
 
-        if (!cachedDelta.first) triggerApiCall(editor, activeDeltaApiCalls) {
+        if (!cachedDelta.first && monitorEnabled) triggerApiCall(editor, activeDeltaApiCalls) {
             CodeDeltaService.getInstance(project).review(editor)
         }
 
