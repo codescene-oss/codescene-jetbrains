@@ -3,7 +3,9 @@ package com.codescene.jetbrains.components.codehealth.monitor
 import com.codescene.data.delta.Delta
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW
 import com.codescene.jetbrains.UiLabelsBundle
+import com.codescene.jetbrains.components.FreemiumPlaceholder
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthTreeBuilder
+import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.cache.DeltaCacheQuery
@@ -72,13 +74,28 @@ class CodeHealthMonitorPanel(private val project: Project) {
     }
 
     private fun JBPanel<JBPanel<*>>.renderContent(shouldCollapseTree: Boolean) {
-        Log.debug("Rendering content with results: $healthMonitoringResults", service)
+        val monitorEnabled = CodeSceneGlobalSettingsStore.getInstance().state.codeHealthMonitorEnabled
 
-        if (healthMonitoringResults.isEmpty()) {
+        val message = if (monitorEnabled)
+            "Rendering content with results: $healthMonitoringResults"
+        else "Code Health monitoring is not available in the freemium version. Rendering CTA placeholder..."
+        Log.debug(message, service)
+
+        if (!monitorEnabled) renderFreemiumPlaceholder()
+        else if (healthMonitoringResults.isEmpty()) {
             addPlaceholderText()
             project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
         } else
             renderFileTree(shouldCollapseTree)
+    }
+
+    private fun JBPanel<JBPanel<*>>.renderFreemiumPlaceholder() {
+        layout = BorderLayout()
+        border = JBUI.Borders.empty(0, 10, 10, 12)
+
+        val freemiumPanel = FreemiumPlaceholder().getComponent()
+
+        add(freemiumPanel, BorderLayout.NORTH)
     }
 
     private fun JBPanel<JBPanel<*>>.renderFileTree(shouldCollapseTree: Boolean) {

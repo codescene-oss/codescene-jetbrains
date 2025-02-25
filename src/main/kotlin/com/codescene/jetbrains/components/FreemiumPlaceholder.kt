@@ -47,7 +47,7 @@ class FreemiumPlaceholder {
         addContactUsLabel(constraint)
 
         constraint.gridy++
-        add(Box.createVerticalStrut(4), constraint)
+        add(Box.createVerticalStrut(8), constraint)
     }
 
     private fun getConstraints() = GridBagConstraints().apply {
