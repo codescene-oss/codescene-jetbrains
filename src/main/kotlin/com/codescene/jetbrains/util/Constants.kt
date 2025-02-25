@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.util
 
+import com.intellij.ui.ColorUtil
 import com.intellij.ui.JBColor
 import java.awt.Color
 
@@ -31,6 +32,7 @@ object Constants {
     val RED = JBColor(Color(224, 82, 92), Color(224, 82, 92))
     val GREEN = JBColor(Color(79, 159, 120), Color(79, 159, 120))
     val ORANGE = JBColor(Color(250, 163, 125), Color(238, 147, 107))
+    val BLUE = ColorUtil.fromHex("#3f6dc7")
 
     const val GENERAL_CODE_HEALTH = "General Code Health"
     const val CODE_HEALTH_MONITOR = "Code Health Monitor"

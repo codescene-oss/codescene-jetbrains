@@ -92,6 +92,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
     private fun JBPanel<JBPanel<*>>.renderFreemiumPlaceholder() {
         layout = BorderLayout()
         border = JBUI.Borders.empty(0, 10, 10, 12)
+        preferredSize = Dimension(350, 350)
 
         val freemiumPanel = FreemiumPlaceholder().getComponent()
 

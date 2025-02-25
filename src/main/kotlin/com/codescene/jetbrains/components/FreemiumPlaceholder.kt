@@ -31,6 +31,9 @@ class FreemiumPlaceholder {
 
         val constraint = getConstraints()
 
+        constraint.gridy++
+        add(Box.createVerticalStrut(5), constraint)
+
         addHeader(constraint)
         addSubHeader(constraint)
         addUpgradeText(constraint)
@@ -40,14 +43,7 @@ class FreemiumPlaceholder {
         add(Box.createVerticalStrut(9), constraint)
 
         addButton(constraint)
-
-        constraint.gridy++
-        add(Box.createVerticalStrut(9), constraint)
-
         addContactUsLabel(constraint)
-
-        constraint.gridy++
-        add(Box.createVerticalStrut(8), constraint)
     }
 
     private fun getConstraints() = GridBagConstraints().apply {
@@ -58,7 +54,7 @@ class FreemiumPlaceholder {
         weighty = 0.0
         anchor = GridBagConstraints.NORTH
         fill = GridBagConstraints.HORIZONTAL
-        insets = JBUI.insets(3, 18)
+        insets = JBUI.insets(0, 18)
     }
 
     private fun JPanel.addHeader(constraint: GridBagConstraints) {
@@ -89,7 +85,6 @@ class FreemiumPlaceholder {
         )
 
         constraint.gridy++
-        constraint.ipady = 10
         add(text, constraint)
     }
 
@@ -116,6 +111,9 @@ class FreemiumPlaceholder {
 
         constraint.gridy++
         add(button, constraint)
+
+        constraint.gridy++
+        add(Box.createVerticalStrut(5), constraint)
     }
 
     private fun JPanel.addBenefitsList(constraint: GridBagConstraints) {
@@ -145,9 +143,9 @@ class FreemiumPlaceholder {
         val editorPane = JEditorPane("text/html", contactLink.first).apply {
             isEditable = false
             isOpaque = false
-            alignmentX = Component.LEFT_ALIGNMENT
+            alignmentX = Component.CENTER_ALIGNMENT
             font = Font("Arial", Font.PLAIN, 13)
-            preferredSize = Dimension(250, 18)
+            preferredSize = Dimension(250, 45)
             addHyperlinkListener { e ->
                 if (e.eventType == HyperlinkEvent.EventType.ACTIVATED) {
                     val href = e.description
@@ -159,6 +157,7 @@ class FreemiumPlaceholder {
 
         constraint.gridy++
         constraint.fill = GridBagConstraints.CENTER
+        constraint.ipady = 15
 
         add(editorPane, constraint)
     }
