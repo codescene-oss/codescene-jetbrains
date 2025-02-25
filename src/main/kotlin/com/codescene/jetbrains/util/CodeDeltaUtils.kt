@@ -46,8 +46,8 @@ fun sortDeltaFindings(
 
     return when (sortingCriteria) {
         MonitorTreeSortOptions.FILE_NAME -> entryList.sortedBy { it.key }
-        MonitorTreeSortOptions.SCORE_ASCENDING -> entryList.sortedByDescending { it.value.oldScore - it.value.newScore }
-        MonitorTreeSortOptions.SCORE_DESCENDING -> entryList.sortedBy { it.value.oldScore - it.value.newScore }
+        MonitorTreeSortOptions.SCORE_ASCENDING -> entryList.sortedByDescending { it.value.oldScore.get() - it.value.newScore.get() }
+        MonitorTreeSortOptions.SCORE_DESCENDING -> entryList.sortedBy { it.value.oldScore.get() - it.value.newScore.get() }
     }
 }
 
