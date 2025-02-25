@@ -96,7 +96,7 @@ jobs:
 
       # Store already-built plugin as an artifact for downloading
       - name: Upload artifact
-        if: "contains(env.PLUGIN_VERSION, 'eap')"
+        if: "! contains(env.PLUGIN_VERSION, 'eap')"
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.artifact.outputs.filename }}
