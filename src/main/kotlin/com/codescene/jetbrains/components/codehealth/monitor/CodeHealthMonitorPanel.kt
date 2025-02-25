@@ -164,7 +164,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
         when refactoring logic available
     */
     private fun updateAndSendTelemetry(path: String, cachedDelta: Delta) {
-        val scoreChange = cachedDelta.newScore - cachedDelta.oldScore
+        val scoreChange = cachedDelta.newScore.get() - cachedDelta.oldScore.get()
         val numberOfIssues = cachedDelta.fileLevelFindings.size + cachedDelta.functionLevelFindings.size
 
         val telemetryEvent = if (healthMonitoringResults[path] != null)

@@ -23,7 +23,7 @@ class CodeSceneHtmlViewerProvider : FileEditorProvider {
         return CodeSceneHtmlViewer(project, file)
     }
 
-    override fun getEditorTypeId(): String = CodeSceneHtmlViewer.javaClass.simpleName
+    override fun getEditorTypeId(): String = CodeSceneHtmlViewer::class.java.simpleName
 
     override fun getPolicy(): FileEditorPolicy = FileEditorPolicy.HIDE_OTHER_EDITORS
 
