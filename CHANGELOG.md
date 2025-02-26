@@ -7,111 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### [0.1.3-codescene-eap] - 2025-02-21
-- **Changed**
-  - Hidden CodeScene server URL in settings
-
-### [0.1.2-codescene-eap] - 2025-02-17
-- **Fixed**
-  - Documentation tab button focuses on the correct file when two files in a project have the same names.
-
-### [0.1.1-codescene-eap] - 2025-02-17
+### [0.1.0] - 2025-02-27
 - **Added**
-  - Code Health Monitor tracks improvements, informing the user of previously committed code smells that have now been fixed.
-  - Three sorting options to Code Health Monitor tree:
-    - ascending (sort by largest decrease first),
-    - descending (sort by smallest decrease first),
-    - file name (sort by file name - ascending).
-  - "Collapse all" option to Code Health Monitor.
-- **Changed**
-  - Code Health Monitor
-    - collapsed nodes show number of improvable functions and change percentage (if present),
-    - tooltips and function findings' icons reflect improvement state.
-  - Code Health details:
-    - improvement opportunities and fixed code smells outlined in the details tab of findings.
-- **Fixed**
-  - Delta analysis will not be re-triggered if the API response for an unchanged file is `null`.
-
-### [0.1.0-codescene-eap] - 2025-02-07
-- **Added**
-  - Progress indicators for review and monitor.
-
-### [0.0.14-beta] - 2025-02-07
-- **Changed**
-  - Code Health text in details panel
-  - Code delta 0.0 score will show "N/A" instead
-
-### [0.0.13-beta] - 2025-02-04
-- **Fixed**
-  - Removed Deprecated & Internal API usage
-
-### [0.0.12-beta] - 2025-01-31
-- **Changed**
-  - Plugin description in plugin.xml
-
-### [0.0.11-beta] - 2025-01-31
-- **Added**
-  - Telemetry consent prompt and state (false by default).
-- **Changed**
-  - Telemetry events will only be logged once user consent is given.
-
-### [0.0.10-beta] - 2025-01-31
-- **Changed**
-  - Telemetry refactored and improved
-
-### [0.0.9-beta] - 2025-01-29
-- **Added**
-  - CodeScene telemetry to track user activity
-
-### [0.0.8-beta] - 2025-01-27
-- **Changed**
-  - Migrated from *DevToolsAPI* library to *ExtensionAPI* library.
-- **Removed**
-  - Deserialization logic, as the new library returns POJOs directly.
-
-### [0.0.7-beta] - 2025-01-23
-- **Added**
-  - Help action for the Code Health Monitor added to the tool window, enabling users to access its documentation
-- **Changed**
-  - Clicking on a Code Health code vision shows the tool window if it was not in focus when a monitor entry exists; otherwise, it opens the documentation file about Code Health. 
-  - Adjusted documentation parsing and opening logic to support standalone documentation (Code Health & Code Health Monitor).
-
-### [0.0.6-beta] - 2025-01-21
-- **Fixed**
-  - Resolved an issue in the Code Health Monitor where multiple issues within the same method but at different lines displayed the same details in the Code Health Details section.
-
-### [0.0.5-beta] - 2025-01-20
-- **Fixed**
-  - Resolved an issue where the Code Health Monitor displayed inconsistent or mixed results when multiple IDE instances were open. Each instance now displays accurate, independent results for its project.
-
-### [0.0.4-beta] - 2025-01-16
-- **Added**
-  - About tab contents in Tools > CodeScene > About
-  - General tab contents in Tools > CodeScene > General
-- **Changed**
-  - Removed unused/unimplemented settings from Tools > CodeScene > Settings
-
-### [0.0.3-beta] - 2025-01-10
-- **Added**
-  - Code health details view (health, file, function-level) in CodeScene tool window
-- **Changed**
-  - Code health documentation access strategy from in-repo to pulling from a common repository
-  - Small UI/UX improvements
-
-### [0.0.2-beta] - 2024-12-25
-- **Added**
-  - Code health documentation
-  - Custom markdown previewer
-
-### [0.0.1-beta] - 2024-12-13
-- **Added**
-  - Initial scaffold created from [IntelliJ Platform Plugin Template](https://github.com/JetBrains/intellij-platform-plugin-template)
-  - Plugin settings UI form for user configuration, including logic for saving settings
-  - Tool window placeholder for future feature expansion
-  - Code health review
-  - Code vision providers to display review findings within the editor
-  - External annotator to highlight review findings directly in the code
-  - Placeholder for intention actions to address review findings
-  - Icons for code health
-  - Code health monitoring functionality (delta)
-  - Code health monitoring tool window
+  - Plugin settings UI form allowing users to configure options such as enabling code vision and choosing whether to analyze files ignored by .gitignore.
+  - Code vision providers that display review findings directly within the editor for better visibility of detected issues.
+  - External annotator that highlights review findings inline within the code, providing immediate feedback.
+  - Code health documentation access, allowing users to click on code vision markers to view detailed information about detected code smells or open standalone documentation.
+  - Help action for the Code Health Monitor (beta) in the tool window, giving users quick access to relevant documentation.
+  - CodeScene telemetry system to track user activity, activated only after explicit user consent.
+  - Telemetry consent prompt that asks users for permission before collecting any data, with consent disabled by default.
+  - Progress indicator for the review process

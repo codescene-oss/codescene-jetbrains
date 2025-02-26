@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.util
 
+import com.intellij.ui.ColorUtil
 import com.intellij.ui.JBColor
 import java.awt.Color
 
@@ -19,6 +20,7 @@ object Constants {
     const val TERMS_AND_CONDITIONS_URL = "$CODESCENE_URL/policies"
     const val AI_PRINCIPLES_URL = "$CODESCENE_URL/ace/principles"
     const val CONTACT_URL = "$CODESCENE_URL/company/contact-us"
+    const val FREE_TRIAL_URL = "$CODESCENE_URL/product/free-trial?trial-experiment-variant=free_trial_landing_page_with_form"
     const val SUPPORT_URL = "https://supporthub.codescene.com/kb-tickets/new"
 
     const val REPOSITORY_URL = "https://github.com/codescene-oss/codescene-jetbrains"
@@ -30,6 +32,7 @@ object Constants {
     val RED = JBColor(Color(224, 82, 92), Color(224, 82, 92))
     val GREEN = JBColor(Color(79, 159, 120), Color(79, 159, 120))
     val ORANGE = JBColor(Color(250, 163, 125), Color(238, 147, 107))
+    val BLUE = ColorUtil.fromHex("#3f6dc7")
 
     const val GENERAL_CODE_HEALTH = "General Code Health"
     const val CODE_HEALTH_MONITOR = "Code Health Monitor"
