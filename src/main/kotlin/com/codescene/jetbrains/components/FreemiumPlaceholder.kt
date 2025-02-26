@@ -156,7 +156,6 @@ class FreemiumPlaceholder {
         }
 
         constraint.gridy++
-        constraint.fill = GridBagConstraints.CENTER
         constraint.ipady = 15
 
         add(editorPane, constraint)
@@ -179,10 +178,13 @@ class FreemiumPlaceholder {
             <head>
                 <style>
                     body { font-family: Arial, sans-serif; font-size: 13pt; color: ${ColorUtil.toHex(JBColor.GRAY)}; }
+                    .centered { text-align: center; }
                 </style>
             </head>
             <body>
-                Existing customer? <a href="$actionId">Contact us</a> for access.
+                <div class="centered">
+                    Existing customer? <a href="$actionId">Contact us</a> for access.
+                </div>
             </body>
         </html>
         """.trimIndent() to href2linkAction
