@@ -1,10 +1,15 @@
 package com.codescene.jetbrains.components.codehealth.detail
 
 import com.codescene.data.review.CodeSmell
+import com.codescene.jetbrains.CodeSceneIcons.ACE_DISABLED
+import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
+import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.detail.slider.CustomSlider
 import com.codescene.jetbrains.components.layout.ResponsiveLayout
+import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_URL
+import com.intellij.ide.ui.laf.darcula.ui.OnboardingDialogButtons
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -34,7 +39,6 @@ class CodeHealthPanelBuilder(private val project: Project) {
         border = JBUI.Borders.empty(0, 10, 10, 10)
 
         val constraint = getGridBagConstraints()
-
         addHeader(details, constraint)
         addSubHeader(details, constraint)
 
@@ -44,15 +48,42 @@ class CodeHealthPanelBuilder(private val project: Project) {
             addCodeHealthHeader(details, constraint)
             if (details.healthData!!.status.isNotEmpty()) addHealthDecline(details, constraint)
             addSlider(details, constraint)
-        }
+        } else
+            addAutoRefactorButton(details, constraint)
 
         addBody(details, constraint)
 
         if (isCodeHealth) addLink(constraint)
     }
 
+    private fun JPanel.addAutoRefactorButton(details: CodeHealthDetails, constraint: GridBagConstraints) {
+        ++constraint.gridy
+        constraint.gridx = 0
+        constraint.gridwidth = 3
+        constraint.ipady = 8
+        constraint.insets = JBUI.insets(10, 0)
+
+        val button = OnboardingDialogButtons
+            .createButton(UiLabelsBundle.message("autoRefactor"), CODESCENE_ACE) {
+                val selectedEditor =
+                    getSelectedTextEditor(project, details.filePath, "${this::class.simpleName} - ${project.name}")
+                CodeSceneDocumentationService.getInstance(project).openAcePanel(selectedEditor)
+            }.also {
+                if (details.isRefactorable == false) {
+                    it.icon = ACE_DISABLED
+                    it.isEnabled = false
+                    it.toolTipText = "Refactoring is not possible for this instance" //TODO: better tooltip
+                }
+            }
+
+        add(button, constraint)
+        constraint.ipady = 0
+        constraint.insets = JBUI.emptyInsets()
+
+    }
+
     private fun JPanel.addHeader(details: CodeHealthDetails, constraint: GridBagConstraints) {
-        constraint.gridy = 0
+        ++constraint.gridy
         constraint.gridx = 0
         constraint.gridwidth = 3
 
@@ -60,7 +91,7 @@ class CodeHealthPanelBuilder(private val project: Project) {
     }
 
     private fun JPanel.addSubHeader(details: CodeHealthDetails, constraint: GridBagConstraints) {
-        constraint.gridy = 1
+        ++constraint.gridy
         constraint.gridx = 0
         constraint.gridwidth = 3
         constraint.fill = GridBagConstraints.HORIZONTAL
@@ -80,7 +111,7 @@ class CodeHealthPanelBuilder(private val project: Project) {
 
 
     private fun JPanel.addSeparator(constraint: GridBagConstraints) {
-        constraint.gridy = 2
+        ++constraint.gridy
         constraint.gridx = 0
         constraint.gridwidth = 3
         constraint.ipady = 5
@@ -91,7 +122,7 @@ class CodeHealthPanelBuilder(private val project: Project) {
 
     private fun JPanel.addCodeHealthHeader(details: CodeHealthDetails, constraint: GridBagConstraints) {
         val score = details.healthData!!.score
-        constraint.gridy = 3
+        ++constraint.gridy
         constraint.gridx = 0
 
         val badgeDetails = resolveHealthBadge(score)
@@ -120,7 +151,7 @@ class CodeHealthPanelBuilder(private val project: Project) {
     }
 
     private fun JPanel.addSlider(details: CodeHealthDetails, constraint: GridBagConstraints) {
-        constraint.gridy = 5
+        ++constraint.gridy
         constraint.gridx = 0
         constraint.ipady = 30
         constraint.weightx = 1.0
@@ -138,11 +169,10 @@ class CodeHealthPanelBuilder(private val project: Project) {
     }
 
     private fun JPanel.addBody(details: CodeHealthDetails, constraint: GridBagConstraints) {
-        var currentRow = 6
+        ++constraint.gridy
 
         details.body.forEach { item ->
             constraint.ipady = 20
-            constraint.gridy = currentRow++
             constraint.gridx = 0
             constraint.gridwidth = 3
 
@@ -155,18 +185,18 @@ class CodeHealthPanelBuilder(private val project: Project) {
             else addTitle(item, constraint)
 
             constraint.ipady = 0
-            constraint.gridy = currentRow++
+            ++constraint.gridy
             constraint.weightx = 1.0
 
             add(JLabel("<html>${item.body}</html>"), constraint)
 
-            constraint.gridy = currentRow++
+            ++constraint.gridy
             add(Box.createVerticalStrut(15), constraint)
         }
     }
 
     private fun JPanel.addHealthDecline(details: CodeHealthDetails, constraint: GridBagConstraints) {
-        constraint.gridy = 4
+        ++constraint.gridy
         constraint.gridx = 0
 
         constraint.insets = JBUI.insetsTop(8)
@@ -220,7 +250,7 @@ class CodeHealthPanelBuilder(private val project: Project) {
     }
 
     private fun JPanel.addLink(constraint: GridBagConstraints) {
-        constraint.gridy = 8
+        ++constraint.gridy
         constraint.gridx = 0
         constraint.gridwidth = 3
         constraint.ipady = 15

@@ -18,7 +18,7 @@ class ProjectStartupActivity : ProjectActivity {
         val consentGiven = CodeSceneGlobalSettingsStore.getInstance().state.telemetryConsentGiven
 
         val status = if (consentGiven) "" else "not "
-        Log.debug("Telemetry consent ${status}given", "${this::class.simpleName} - ${project.name}")
+        Log.info("Telemetry consent ${status}given", "${this::class.simpleName} - ${project.name}")
 
         if (!consentGiven) showTelemetryConsentNotification(project)
 
