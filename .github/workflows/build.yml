@@ -90,13 +90,8 @@ jobs:
 
           echo "filename=${FILENAME:0:-4}" >> $GITHUB_OUTPUT
 
-      - name: Read pluginVersion from gradle.properties
-        id: read_version
-        run: echo "PLUGIN_VERSION=$(grep '^pluginVersion=' gradle.properties | cut -d'=' -f2)" >> $GITHUB_ENV
-
       # Store already-built plugin as an artifact for downloading
       - name: Upload artifact
-        if: "! contains(env.PLUGIN_VERSION, 'eap')"
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.artifact.outputs.filename }}
