@@ -64,6 +64,11 @@
                 icon="com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW"
                 factoryClass="com.codescene.jetbrains.components.window.CodeSceneToolWindowFactory"/>
 
+        <toolWindow
+                id="CodeSceneSpikeTest"
+                icon="AllIcons.Actions.Colors"
+                factoryClass="com.codescene.jetbrains.components.window.SpikeTestToolWindowFactory"/>
+
         <!-- An empty language attribute applies to all languages -->
         <externalAnnotator
                 language=""
