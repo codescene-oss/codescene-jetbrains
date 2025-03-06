@@ -46,7 +46,7 @@ class TelemetryService() : BaseService(), Disposable {
                 } catch (e: TimeoutCancellationException) {
                     Log.warn("Telemetry event $extendedName sending timed out")
                 } catch (e: Exception) {
-                    Log.error("Error during telemetry event $extendedName sending: ${e.message}")
+                    Log.warn("Error during telemetry event $extendedName sending")
                 }
             }
         }
