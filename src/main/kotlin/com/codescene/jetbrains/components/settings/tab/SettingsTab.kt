@@ -18,14 +18,11 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                 .comment(UiLabelsBundle.message("enableCodeLensesComment"))
         }
 
-        /*
-        TODO: Uncomment this code when ACE is integrated in plugin:
-            row {
-                checkBox(UiLabelsBundle.message("enableAutoRefactor"))
-                    .bindSelected(settings::enableAutoRefactor)
-                    .comment(UiLabelsBundle.message("enableAutoRefactorComment"))
-            }
-         */
+        row {
+            checkBox(UiLabelsBundle.message("enableAutoRefactor"))
+                .bindSelected(settings::enableAutoRefactor)
+                .comment(UiLabelsBundle.message("enableAutoRefactorComment"))
+        }
 
         /*
         TODO: Uncomment this code when Code Health gate is integrated in plugin:

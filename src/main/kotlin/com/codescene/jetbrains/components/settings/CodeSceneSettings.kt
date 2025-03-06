@@ -3,6 +3,7 @@ package com.codescene.jetbrains.components.settings
 import com.codescene.jetbrains.components.settings.tab.AboutTab
 import com.codescene.jetbrains.components.settings.tab.GeneralTab
 import com.codescene.jetbrains.components.settings.tab.SettingsTab
+import com.codescene.jetbrains.services.AceService
 import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.TelemetryEvents
@@ -49,6 +50,7 @@ class CodeSceneSettings : Composite, Configurable {
     override fun apply() {
         if (settingsTab.isModified) settingsTab.apply()
         if (aboutTab.isModified) aboutTab.apply()
+        AceService.getInstance().getPreflightInfo()
     }
 
     override fun reset() {

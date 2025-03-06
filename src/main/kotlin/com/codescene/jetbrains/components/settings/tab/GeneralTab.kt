@@ -1,6 +1,8 @@
 package com.codescene.jetbrains.components.settings.tab
 
+import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
 import com.codescene.jetbrains.UiLabelsBundle
+import com.codescene.jetbrains.services.AceService
 import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.Constants.CONTACT_URL
 import com.codescene.jetbrains.util.Constants.DOCUMENTATION_URL
@@ -10,6 +12,7 @@ import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.TelemetryEvents
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.options.Configurable
+import com.intellij.ui.IdeBorderFactory
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import java.awt.*
@@ -30,14 +33,45 @@ class GeneralTab : Configurable {
         UiLabelsBundle.message("supportTicket") to SUPPORT_URL
     )
 
-    override fun createComponent() = JPanel().apply {
+    override fun createComponent(): JPanel {
+        return JPanel().apply {
+            layout = BorderLayout()
+
+            add(getAceSection(), BorderLayout.NORTH)
+            add(getMoreSection(), BorderLayout.CENTER)
+        }
+    }
+
+    private fun getAceSection() = JPanel().apply {
         layout = BorderLayout()
 
-        add(getMoreSection(), BorderLayout.NORTH)
+        border = IdeBorderFactory.createTitledBorder(
+            UiLabelsBundle.message("status"),
+            true,
+            JBUI.insetsRight(10)
+        )
+
+        add(JLabel(UiLabelsBundle.message("ace")).apply {
+            icon = CODESCENE_ACE
+        }, BorderLayout.WEST)
+
+        add(getStatusButton(), BorderLayout.EAST)
+        add(Box.createVerticalStrut(20), BorderLayout.SOUTH)
+    }
+
+    private fun getStatusButton(): JButton {
+        val status = AceService.getInstance().getStatus()
+        return JButton(status.name)
     }
 
     private fun getMoreSection() = JPanel().apply {
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
+
+        border = IdeBorderFactory.createTitledBorder(
+            UiLabelsBundle.message("more"),
+            true,
+            JBUI.insetsRight(10)
+        )
 
         /*
         TODO: uncomment when we have more than 1 section:
@@ -136,4 +170,10 @@ class GeneralTab : Configurable {
             }
         }
     }
+
+    override fun reset() {
+        createComponent()
+    }
+
+
 }
