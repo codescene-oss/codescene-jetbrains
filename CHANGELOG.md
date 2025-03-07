@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Changed**
+  - Plugin name from "CodeScene" to "CodeScene EAP"
+
 ### [0.1.3-codescene-eap] - 2025-02-21
 - **Changed**
   - Hidden CodeScene server URL in settings
