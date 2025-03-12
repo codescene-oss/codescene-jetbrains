@@ -2,6 +2,7 @@ package com.codescene.jetbrains.components.settings.tab
 
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
 import com.codescene.jetbrains.UiLabelsBundle
+import com.codescene.jetbrains.notifier.AceStatusRefreshNotifier
 import com.codescene.jetbrains.services.AceService
 import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.Constants.CONTACT_URL
@@ -11,6 +12,7 @@ import com.codescene.jetbrains.util.Constants.TERMS_AND_CONDITIONS_URL
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.TelemetryEvents
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.options.Configurable
 import com.intellij.ui.IdeBorderFactory
 import com.intellij.ui.JBColor
@@ -23,6 +25,12 @@ import javax.swing.*
 import javax.swing.border.AbstractBorder
 
 class GeneralTab : Configurable {
+    private var statusButton = getStatusButton()
+
+    init {
+        subscribeToAceStatusRefreshEvent()
+    }
+
     override fun getDisplayName(): String = UiLabelsBundle.message("generalTitle")
 
     private val more = listOf(
@@ -55,13 +63,21 @@ class GeneralTab : Configurable {
             icon = CODESCENE_ACE
         }, BorderLayout.WEST)
 
-        add(getStatusButton(), BorderLayout.EAST)
+        add(statusButton, BorderLayout.EAST)
         add(Box.createVerticalStrut(20), BorderLayout.SOUTH)
     }
 
     private fun getStatusButton(): JButton {
         val status = AceService.getInstance().getStatus()
-        return JButton(status.name)
+        val button = JButton(status.name)
+
+        return button
+    }
+
+    private fun refreshStatusButton(invertLogic: Boolean) {
+        val newStatus = AceService.getInstance().getPreflightInfo(invertLogic) //AceStatus.entries.first { status -> status.name != statusButton.text }
+//        AceService.getInstance().setStatus(newStatus)
+        statusButton.text = newStatus.name
     }
 
     private fun getMoreSection() = JPanel().apply {
@@ -154,8 +170,10 @@ class GeneralTab : Configurable {
                     val uri = URI(link)
                     if (Desktop.isDesktopSupported()) Desktop.getDesktop().browse(uri)
 
-                    TelemetryService.getInstance().logUsage(TelemetryEvents.OPEN_LINK,
-                        mutableMapOf<String, Any>(Pair("url", uri)))
+                    TelemetryService.getInstance().logUsage(
+                        TelemetryEvents.OPEN_LINK,
+                        mutableMapOf<String, Any>(Pair("url", uri))
+                    )
                 } catch (e: Exception) {
                     Log.warn("Unable to open link: ${e.message}")
                 }
@@ -171,9 +189,15 @@ class GeneralTab : Configurable {
         }
     }
 
-    override fun reset() {
-        createComponent()
+    private fun subscribeToAceStatusRefreshEvent() {
+        ApplicationManager.getApplication().messageBus.connect().subscribe(
+            AceStatusRefreshNotifier.TOPIC,
+            object : AceStatusRefreshNotifier {
+                override fun refresh(invertLogic: Boolean) {
+                    Log.debug("Refreshing ACE status in Settings General tab...")
+
+                    refreshStatusButton(invertLogic)
+                }
+            })
     }
-
-
 }

@@ -2,10 +2,14 @@ package com.codescene.jetbrains.components.settings.tab
 
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.notifier.AceStatusRefreshNotifier
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.dsl.builder.bindSelected
 import com.intellij.ui.dsl.builder.panel
+import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
 
 @Suppress("DialogTitleCapitalization")
 class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
@@ -19,9 +23,16 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
         }
 
         row {
-            checkBox(UiLabelsBundle.message("enableAutoRefactor"))
+            val enableAceCheckBox = checkBox(UiLabelsBundle.message("enableAutoRefactor"))
                 .bindSelected(settings::enableAutoRefactor)
                 .comment(UiLabelsBundle.message("enableAutoRefactorComment"))
+
+            enableAceCheckBox.component.addActionListener(object : ActionListener {
+                override fun actionPerformed(e: ActionEvent?) {
+                    ApplicationManager.getApplication().messageBus.syncPublisher(AceStatusRefreshNotifier.TOPIC)
+                        .refresh(true)
+                }
+            })
         }
 
         /*

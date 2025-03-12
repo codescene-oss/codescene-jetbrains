@@ -18,16 +18,22 @@ import kotlinx.coroutines.withTimeout
 class AceService() : BaseService(), Disposable {
     private val scope = CoroutineScope(Dispatchers.IO)
     private val timeout: Long = 15_000
-    private lateinit var status: AceStatus
+    private var status: AceStatus = AceStatus.DEACTIVATED
     private val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
     companion object {
         fun getInstance(): AceService = service<AceService>()
     }
 
-    fun getPreflightInfo() {
+    fun getPreflightInfo(invertLogic: Boolean = false): AceStatus {
         var preflightInfo: PreflightResponse? = null
-        if (settings.enableAutoRefactor) {
+        val enableAutoRefactor = if (invertLogic) {
+            !settings.enableAutoRefactor
+        } else {
+            settings.enableAutoRefactor
+        }
+
+        if (enableAutoRefactor) {
             scope.launch {
                 withTimeout(timeout) {
                     try {
@@ -53,10 +59,15 @@ class AceService() : BaseService(), Disposable {
             status = AceStatus.DEACTIVATED
             Log.warn("ACE status is $status")
         }
+        return status
     }
 
     fun getStatus(): AceStatus {
         return status
+    }
+
+    fun setStatus(newStatus: AceStatus) {
+        status = newStatus
     }
 
     override fun dispose() {
