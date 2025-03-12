@@ -44,7 +44,9 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
     override fun getActiveApiCalls() = CodeSceneCodeVisionProvider.activeDeltaApiCalls
 
     private suspend fun performDeltaAnalysis(editor: Editor) {
-        val oldCode = GitService.getInstance(project).getHeadCommit(editor.virtualFile)
+        val oldCode = GitService
+            .getInstance(project)
+            .getBranchCreationCommitCode(editor.virtualFile)
 
         val delta = getDeltaResponse(editor, oldCode)
 
@@ -56,6 +58,10 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
 
         val oldReview = ReviewParams(path, oldCode)
         val newReview = ReviewParams(path, editor.document.text)
+
+        //TODO; delete after testing
+        println("Old code: $oldCode\nNew code: ${editor.document.text}")
+
         val delta = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview) }
 
         if (delta?.oldScore == null) delta?.oldScore = 10.0
