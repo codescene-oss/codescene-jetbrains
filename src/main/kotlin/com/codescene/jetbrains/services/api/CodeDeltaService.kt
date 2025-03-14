@@ -59,9 +59,6 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
         val oldReview = ReviewParams(path, oldCode)
         val newReview = ReviewParams(path, editor.document.text)
 
-        //TODO; delete after testing
-        println("Old code: $oldCode\nNew code: ${editor.document.text}")
-
         val delta = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview) }
 
         if (delta?.oldScore == null) delta?.oldScore = 10.0
