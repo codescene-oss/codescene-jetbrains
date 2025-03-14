@@ -13,6 +13,8 @@ import git4idea.repo.GitRepositoryManager
 
 @Service(Service.Level.PROJECT)
 class GitService(val project: Project) {
+    private val service = "${this::class.java.simpleName} - ${project.name}"
+
     companion object {
         fun getInstance(project: Project): GitService = project.service<GitService>()
     }
@@ -24,7 +26,7 @@ class GitService(val project: Project) {
     )
     fun getHeadCommitCode(file: VirtualFile): String {
         val gitRepository = GitRepositoryManager.getInstance(project).getRepositoryForFile(file) ?: run {
-            Log.warn("File ${file.path} is not part of a Git repository.")
+            Log.debug("File ${file.path} is not part of a Git repository.", service)
             return ""
         }
 
@@ -40,11 +42,14 @@ class GitService(val project: Project) {
      */
     fun getBranchCreationCommitCode(file: VirtualFile): String {
         val gitRepository = GitRepositoryManager.getInstance(project).getRepositoryForFile(file) ?: run {
-            Log.warn("File ${file.path} is not part of a Git repository.")
+            Log.debug("File ${file.path} is not part of a Git repository.", service)
             return ""
         }
 
-        val commit = getBranchCreationCommit(project, gitRepository) ?: return ""
+        val commit = getBranchCreationCommit(project, gitRepository) ?: run {
+            Log.debug("Could not retrieve branch creation commit for ${file.path}", service)
+            return ""
+        }
 
         return getCodeByCommit(project, gitRepository, file, commit)
     }
@@ -86,12 +91,11 @@ class GitService(val project: Project) {
         val handler = GitLineHandler(project, gitRepository.root, GitCommand.REF_LOG).apply {
             addParameters(gitRepository.currentBranchName!!)
         }
-        val result = Git.getInstance().runCommand(handler).let {
+
+        return Git.getInstance().runCommand(handler).let {
             if (it.success()) it.output
             else null
         }
-
-        return result
     }
 
     /**
