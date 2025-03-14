@@ -193,11 +193,13 @@ class GeneralTab : Configurable {
         ApplicationManager.getApplication().messageBus.connect().subscribe(
             AceStatusRefreshNotifier.TOPIC,
             object : AceStatusRefreshNotifier {
-                override fun refresh(invertLogic: Boolean) {
-                    Log.debug("Refreshing ACE status in Settings General tab...")
+                override fun refresh(aceStatus: Boolean) {
+                    Log.warn("Refreshing ACE status in Settings General tab...")
 
-                    refreshStatusButton(invertLogic)
+                    refreshStatusButton(aceStatus)
                 }
             })
     }
+
+
 }
