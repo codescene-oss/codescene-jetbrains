@@ -19,20 +19,6 @@ class GitService(val project: Project) {
         fun getInstance(project: Project): GitService = project.service<GitService>()
     }
 
-    @Deprecated(
-        "This method of retrieving the monitor baseline has been deprecated.",
-        ReplaceWith("getBranchCreationCommitCode(file)"),
-        DeprecationLevel.WARNING
-    )
-    fun getHeadCommitCode(file: VirtualFile): String {
-        val gitRepository = GitRepositoryManager.getInstance(project).getRepositoryForFile(file) ?: run {
-            Log.debug("File ${file.path} is not part of a Git repository.", service)
-            return ""
-        }
-
-        return getCodeByCommit(project, gitRepository, file)
-    }
-
     /**
      * Retrieves the baseline commit for the branch by identifying the branch creation commit.
      * This allows for a more accurate comparison over the branch's lifecycle.
@@ -104,14 +90,14 @@ class GitService(val project: Project) {
      * @param project The current project.
      * @param gitRepository The Git repository where the file exists.
      * @param file The file to retrieve content for.
-     * @param commit The commit hash or reference (defaults to "HEAD").
+     * @param commit The commit hash or reference.
      * @return The file content as a string, or an empty string if retrieval fails.
      */
     private fun getCodeByCommit(
         project: Project,
         gitRepository: GitRepository,
         file: VirtualFile,
-        commit: String = "HEAD"
+        commit: String
     ): String {
         val repositoryRoot = gitRepository.root.path
         val relativePath = file.path.substringAfter("$repositoryRoot/")
