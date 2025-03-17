@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.services
 
 import com.codescene.jetbrains.util.Log
+import com.intellij.dvcs.repo.Repository
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -32,12 +33,14 @@ class GitService(val project: Project) {
             return ""
         }
 
-        val commit = getBranchCreationCommit(project, gitRepository) ?: run {
+        if (gitRepository.state == Repository.State.DETACHED) return ""
+
+        val commit = getBranchCreationCommit(gitRepository) ?: run {
             Log.debug("Could not retrieve branch creation commit for ${file.path}", service)
             return ""
         }
 
-        return getCodeByCommit(project, gitRepository, file, commit)
+        return getCodeByCommit(gitRepository, file, commit)
     }
 
     /**
@@ -46,12 +49,10 @@ class GitService(val project: Project) {
      * Note: This approach relies on the local Git reflog, meaning it will not work
      * if the reflog has been deleted or if history was rewritten.
      *
-     * @param project The current project.
      * @param gitRepository The Git repository where the branch exists.
      * @return The commit hash of the branch creation point, or null if not found.
      */
     private fun getBranchCreationCommit(
-        project: Project,
         gitRepository: GitRepository,
     ): String? {
         val reflog = getRefLog(project, gitRepository)
@@ -87,14 +88,12 @@ class GitService(val project: Project) {
     /**
      * Retrieves the file content from a specific commit.
      *
-     * @param project The current project.
      * @param gitRepository The Git repository where the file exists.
      * @param file The file to retrieve content for.
      * @param commit The commit hash or reference.
      * @return The file content as a string, or an empty string if retrieval fails.
      */
     private fun getCodeByCommit(
-        project: Project,
         gitRepository: GitRepository,
         file: VirtualFile,
         commit: String

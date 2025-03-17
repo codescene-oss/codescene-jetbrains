@@ -43,6 +43,14 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
 
     override fun getActiveApiCalls() = CodeSceneCodeVisionProvider.activeDeltaApiCalls
 
+    /**
+     * Performs delta analysis by comparing the current editor content against a baseline.
+     *
+     * The baseline for delta analysis is determined as follows:
+     * - If available, it uses the code/content from the branch creation commit.
+     * - If the branch creation commit is not found or the analysis is run in a detached HEAD state,
+     *   it falls back to comparing against the best score of 10.0.
+     */
     private suspend fun performDeltaAnalysis(editor: Editor) {
         val oldCode = GitService
             .getInstance(project)
