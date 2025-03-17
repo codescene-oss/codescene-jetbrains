@@ -170,7 +170,13 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
 
         val standaloneDocumentation =
             codeSmellName.contains(GENERAL_CODE_HEALTH) || codeSmellName.contains(CODE_HEALTH_MONITOR)
-        val path = if (standaloneDocumentation) Constants.DOCUMENTATION_BASE_PATH else Constants.ISSUES_PATH
+
+        //TODO: revert old logic for getting standalone docs path once monitor doc is updated
+        val path = if (codeSmellName.contains(GENERAL_CODE_HEALTH))
+            Constants.DOCUMENTATION_BASE_PATH
+        else if (codeSmellName.contains(CODE_HEALTH_MONITOR))
+            ""
+        else Constants.ISSUES_PATH
 
         Log.info("Preparing content for file $codeSmellName.md")
         val classLoader = this@CodeSceneDocumentationService.javaClass.classLoader

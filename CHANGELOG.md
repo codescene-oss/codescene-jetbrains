@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - code smell documentation.
   - ACE promotion and policy box as the first step upon using the entry points.
 
+### [0.1.4-codescene-eap] - 2025-03-17
+- **Changed**
+  - Code Health Monitor:
+    - baseline from HEAD commit to branch creation commit,
+    - documentation.
+
 ### [0.1.3-codescene-eap] - 2025-02-21
 - **Changed**
   - Hidden CodeScene server URL in settings

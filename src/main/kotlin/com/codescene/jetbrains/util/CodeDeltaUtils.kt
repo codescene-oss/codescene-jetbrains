@@ -31,7 +31,7 @@ fun getFunctionDeltaTooltip(function: Function, details: List<ChangeDetail>): St
 fun getCachedDelta(editor: Editor): Pair<Boolean, Delta?> {
     val project = editor.project!!
 
-    val oldCode = GitService.getInstance(project).getHeadCommit(editor.virtualFile)
+    val oldCode = GitService.getInstance(project).getBranchCreationCommitCode(editor.virtualFile)
     val cacheQuery = DeltaCacheQuery(editor.virtualFile.path, oldCode, editor.document.text)
 
     return DeltaCacheService.getInstance(project)
