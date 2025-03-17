@@ -126,7 +126,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
                 return
             }
 
-        val headCommit = GitService.getInstance(project).getHeadCommit(file)
+        val headCommit = GitService.getInstance(project).getBranchCreationCommitCode(file)
 
         val cachedDelta = DeltaCacheService.getInstance(project)
             .get(DeltaCacheQuery(path, headCommit, code))
