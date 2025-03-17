@@ -119,9 +119,14 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
      * @param file The [VirtualFile] to be opened in a right-split editor.
      */
     private fun openDocumentationWithoutActiveEditor(file: VirtualFile) {
+        fileEditorManager.openFiles
+            .filterIsInstance<LightVirtualFile>()
+            .filter { it != file && codeSmellNames.contains(it.nameWithoutExtension) }
+            .forEach { fileEditorManager.closeFile(it) }
+
         val docNotOpen = fileEditorManager.openFiles.none { it.name == file.name }
-        val shouldOpenFile = fileEditorManager.openFiles.isEmpty() && docNotOpen
-        if (shouldOpenFile) fileEditorManager.openFile(file, false)
+        if (docNotOpen)
+            fileEditorManager.openFile(file, false, true)
     }
 
     /**
@@ -136,7 +141,13 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
 
         val standaloneDocumentation =
             codeSmellName.contains(GENERAL_CODE_HEALTH) || codeSmellName.contains(CODE_HEALTH_MONITOR)
-        val path = if (standaloneDocumentation) Constants.DOCUMENTATION_BASE_PATH else Constants.ISSUES_PATH
+
+        //TODO: revert old logic for getting standalone docs path once monitor doc is updated
+        val path = if (codeSmellName.contains(GENERAL_CODE_HEALTH))
+            Constants.DOCUMENTATION_BASE_PATH
+        else if (codeSmellName.contains(CODE_HEALTH_MONITOR))
+            ""
+        else Constants.ISSUES_PATH
 
         Log.info("Preparing content for file $codeSmellName.md")
         val classLoader = this@CodeSceneDocumentationService.javaClass.classLoader
@@ -331,7 +342,8 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
         val scrollbarStyle = JBCefScrollbarsHelper.buildScrollbarsStyle()
         val themeStyle = PreviewThemeStyles.createStylesheet()
 
-        staticStyleBuilder.append(styleStream?.bufferedReader()?.lines()
+        staticStyleBuilder.append(
+            styleStream?.bufferedReader()?.lines()
             ?.filter { line -> line.trim().isNotEmpty() }
             ?.collect(Collectors.joining("\n")))
         staticStyleBuilder.append(scrollbarStyle)

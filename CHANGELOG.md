@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.1.4-codescene-eap] - 2025-03-17
 - **Changed**
-  - Code Health Monitor baseline from HEAD commit to branch creation commit.
+  - Code Health Monitor:
+    - baseline from HEAD commit to branch creation commit,
+    - documentation.
 
 ### [0.1.3-codescene-eap] - 2025-02-21
 - **Changed**
