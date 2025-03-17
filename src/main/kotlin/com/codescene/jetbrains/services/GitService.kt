@@ -24,8 +24,12 @@ class GitService(val project: Project) {
      * Retrieves the baseline commit for the branch by identifying the branch creation commit.
      * This allows for a more accurate comparison over the branch's lifecycle.
      *
+     * Note: This approach relies on the local Git reflog, meaning it will not work
+     * if the reflog has been deleted or if history was rewritten.
+     *
      * @param file The file for which to retrieve the baseline commit code.
-     * @return The code content from the branch creation commit, or an empty string if not found.
+     * @return The code content from the branch creation commit, or an empty string if not found or repository is
+     *         in a detached HEAD state.
      */
     fun getBranchCreationCommitCode(file: VirtualFile): String {
         val gitRepository = GitRepositoryManager.getInstance(project).getRepositoryForFile(file) ?: run {
@@ -43,15 +47,6 @@ class GitService(val project: Project) {
         return getCodeByCommit(gitRepository, file, commit)
     }
 
-    /**
-     * Finds the commit hash where the branch was created by inspecting the reflog.
-     *
-     * Note: This approach relies on the local Git reflog, meaning it will not work
-     * if the reflog has been deleted or if history was rewritten.
-     *
-     * @param gitRepository The Git repository where the branch exists.
-     * @return The commit hash of the branch creation point, or null if not found.
-     */
     private fun getBranchCreationCommit(
         gitRepository: GitRepository,
     ): String? {
@@ -64,13 +59,6 @@ class GitService(val project: Project) {
             ?.get(0)
     }
 
-    /**
-     * Retrieves the Git reflog entries for the current branch.
-     *
-     * @param project The current project.
-     * @param gitRepository The Git repository where the branch exists.
-     * @return A list of reflog entries, or null if retrieval fails.
-     */
     private fun getRefLog(
         project: Project,
         gitRepository: GitRepository
@@ -85,14 +73,6 @@ class GitService(val project: Project) {
         }
     }
 
-    /**
-     * Retrieves the file content from a specific commit.
-     *
-     * @param gitRepository The Git repository where the file exists.
-     * @param file The file to retrieve content for.
-     * @param commit The commit hash or reference.
-     * @return The file content as a string, or an empty string if retrieval fails.
-     */
     private fun getCodeByCommit(
         gitRepository: GitRepository,
         file: VirtualFile,
