@@ -16,7 +16,20 @@ import javax.swing.Icon
 import javax.swing.JOptionPane
 
 class AceStatusBarWidget : StatusBarWidget.MultipleTextValuesPresentation, StatusBarWidget {
-    private var value: String? = null
+    private var value: String = AceService.getInstance().getStatus().name
+
+    init {
+        ApplicationManager.getApplication().messageBus.connect().subscribe(
+            AceStatusRefreshNotifier.TOPIC,
+            object : AceStatusRefreshNotifier {
+                override fun refresh() {
+                    Log.warn("Refreshing ACE status in Status Bar...")
+
+                    val newStatus = AceService.getInstance().getPreflightInfo()
+                    value = newStatus.name
+                }
+            })
+    }
 
     override fun ID(): String = "AceStatusBarWidget"
 
@@ -33,17 +46,6 @@ class AceStatusBarWidget : StatusBarWidget.MultipleTextValuesPresentation, Statu
     override fun getIcon(): Icon? = CODESCENE_ACE
 
     override fun install(statusBar: StatusBar) {
-
-        ApplicationManager.getApplication().messageBus.connect().subscribe(
-            AceStatusRefreshNotifier.TOPIC,
-            object : AceStatusRefreshNotifier {
-                override fun refresh() {
-                    Log.warn("Refreshing ACE status in Status Bar...")
-
-                    val newStatus = AceService.getInstance().getPreflightInfo()
-                    value = newStatus.name
-                }
-            })
     }
 
     override fun dispose() {
