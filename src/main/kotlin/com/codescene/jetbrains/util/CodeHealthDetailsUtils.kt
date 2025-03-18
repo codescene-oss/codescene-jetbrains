@@ -185,11 +185,11 @@ private fun getFunctionFindingBody(changeDetails: List<ChangeDetail>?, finding: 
         val change = it.changeType.value().replaceFirstChar { it.uppercaseChar() }
         val body = it.description.replace(finding.displayName, "<code>${finding.displayName}</code>")
 
-        val range = if (it.position != null) Range(
-            it.position.get().line,
-            it.position.get().column,
-            it.position.get().line,
-            it.position.get().column
+        val range = if (it.line != null) Range(
+            it.line.get(),
+            0,
+            it.line.get(),
+            0
         ) else null
         val codeSmell = CodeSmell(it.category, range, it.description)
 

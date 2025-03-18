@@ -61,8 +61,7 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
     override fun apply() {
         super.apply()
 
-
         ApplicationManager.getApplication().messageBus.syncPublisher(AceStatusRefreshNotifier.TOPIC)
-            .refresh(settings.enableAutoRefactor)
+            .refresh()
     }
 }

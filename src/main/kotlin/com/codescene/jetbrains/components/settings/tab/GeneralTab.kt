@@ -2,6 +2,7 @@ package com.codescene.jetbrains.components.settings.tab
 
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
 import com.codescene.jetbrains.UiLabelsBundle
+import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.notifier.AceStatusRefreshNotifier
 import com.codescene.jetbrains.services.AceService
 import com.codescene.jetbrains.services.telemetry.TelemetryService
@@ -26,6 +27,7 @@ import javax.swing.border.AbstractBorder
 
 class GeneralTab : Configurable {
     private var statusButton = getStatusButton()
+    private val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
     init {
         subscribeToAceStatusRefreshEvent()
@@ -74,9 +76,8 @@ class GeneralTab : Configurable {
         return button
     }
 
-    private fun refreshStatusButton(invertLogic: Boolean) {
-        val newStatus = AceService.getInstance().getPreflightInfo(invertLogic) //AceStatus.entries.first { status -> status.name != statusButton.text }
-//        AceService.getInstance().setStatus(newStatus)
+    private fun refreshStatusButton() {
+        val newStatus = AceService.getInstance().getPreflightInfo()
         statusButton.text = newStatus.name
     }
 
@@ -193,10 +194,10 @@ class GeneralTab : Configurable {
         ApplicationManager.getApplication().messageBus.connect().subscribe(
             AceStatusRefreshNotifier.TOPIC,
             object : AceStatusRefreshNotifier {
-                override fun refresh(aceStatus: Boolean) {
+                override fun refresh() {
                     Log.warn("Refreshing ACE status in Settings General tab...")
 
-                    refreshStatusButton(aceStatus)
+                    refreshStatusButton()
                 }
             })
     }

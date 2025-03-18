@@ -134,8 +134,8 @@
         <fileEditorProvider
                 implementation="com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewerProvider"/>
         <statusBarWidgetFactory
-                implementation="com.codescene.jetbrains.components.statusbar.CustomStatusBarWidgetFactory"
-                id="CustomStatusBarWidget"
+                implementation="com.codescene.jetbrains.components.statusbar.AceStatusBarWidgetFactory"
+                id="AceStatusBarWidgetFactory"
         />
     </extensions>
 

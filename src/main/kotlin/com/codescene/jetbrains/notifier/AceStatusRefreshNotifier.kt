@@ -6,7 +6,7 @@ import com.intellij.util.messages.Topic
 const val ACE_STATUS_NOTIFIER = "Refresh $CODESCENE ACE status"
 
 interface AceStatusRefreshNotifier {
-    fun refresh(aceStatus: Boolean)
+    fun refresh()
 
     companion object {
         val TOPIC: Topic<AceStatusRefreshNotifier> =

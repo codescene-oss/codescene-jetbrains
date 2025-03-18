@@ -24,10 +24,10 @@ class AceService() : BaseService(), Disposable {
         fun getInstance(): AceService = service<AceService>()
     }
 
-    fun getPreflightInfo(aceEnabled: Boolean = settings.enableAutoRefactor): AceStatus {
+    fun getPreflightInfo(): AceStatus {
         var preflightInfo: PreflightResponse? = null
 
-        if (aceEnabled) {
+        if (settings.enableAutoRefactor) {
 
             try {
                 runWithClassLoaderChange {

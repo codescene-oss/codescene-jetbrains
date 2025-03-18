@@ -33,14 +33,15 @@ class TelemetryService() : BaseService(), Disposable {
 
         val extendedName = "${Constants.TELEMETRY_EDITOR_TYPE}/$eventName"
         // TODO: Get user ID of logged in user when authentication is implemented
-        val userId: String? = null
+        val userId: String = ""
         val telemetryEvent =
-            TelemetryEvent(extendedName, userId, Constants.TELEMETRY_EDITOR_TYPE, getPluginVersion(), eventData)
+            TelemetryEvent(extendedName, userId, Constants.TELEMETRY_EDITOR_TYPE, getPluginVersion(), false)
+        eventData.forEach { telemetryEvent.setAdditionalProperty(it.key, it.value) }
         scope.launch {
             withTimeout(timeout) {
                 try {
                     runWithClassLoaderChange {
-                        ExtensionAPI.sendTelemetry(telemetryEvent, eventData)
+                        ExtensionAPI.sendTelemetry(telemetryEvent)
                     }
                     Log.debug("Telemetry event logged: $telemetryEvent")
                 } catch (e: TimeoutCancellationException) {
