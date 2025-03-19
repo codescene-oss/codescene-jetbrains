@@ -1,13 +1,16 @@
 package com.codescene.jetbrains.config.global
 
+import com.codescene.jetbrains.notifier.AceStatusRefreshNotifier
 import com.codescene.jetbrains.util.Constants.CODESCENE_SERVER_URL
+import com.intellij.openapi.application.ApplicationManager
 import org.jetbrains.annotations.NonNls
+import kotlin.properties.Delegates
 
-enum class AceStatus {
-    ACTIVATED,
-    DEACTIVATED,
-    ERROR,
-    OUT_OF_CREDITS
+enum class AceStatus(val value: String) {
+    ACTIVATED("Activated"),
+    DEACTIVATED("Deactivated"),
+    ERROR("Error"),
+    OUT_OF_CREDITS("Out of credits");
 }
 
 enum class MonitorTreeSortOptions {
@@ -25,6 +28,10 @@ data class CodeSceneGlobalSettings(
     var excludeGitignoreFiles: Boolean = true,
     var previewCodeHealthGate: Boolean = false,
     var telemetryConsentGiven: Boolean = false,
-    var monitorTreeSortOption: MonitorTreeSortOptions = MonitorTreeSortOptions.SCORE_ASCENDING,
-    var aceStatus: AceStatus = AceStatus.DEACTIVATED
-)
+    var monitorTreeSortOption: MonitorTreeSortOptions = MonitorTreeSortOptions.SCORE_ASCENDING
+) {
+    var aceStatus: AceStatus by Delegates.observable(AceStatus.DEACTIVATED) { _, oldValue, newValue ->
+        ApplicationManager.getApplication().messageBus.syncPublisher(AceStatusRefreshNotifier.TOPIC)
+        .refresh()
+    }
+}

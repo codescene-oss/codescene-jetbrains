@@ -2,8 +2,7 @@ package com.codescene.jetbrains.components.settings.tab
 
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
-import com.codescene.jetbrains.notifier.AceStatusRefreshNotifier
-import com.intellij.openapi.application.ApplicationManager
+import com.codescene.jetbrains.services.AceService
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.dsl.builder.bindSelected
@@ -12,7 +11,6 @@ import com.intellij.ui.dsl.builder.panel
 @Suppress("DialogTitleCapitalization")
 class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
     private val settings = CodeSceneGlobalSettingsStore.getInstance().state
-    private val panel: DialogPanel = createPanel()
 
     override fun createPanel(): DialogPanel {
         return panel {
@@ -60,8 +58,6 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
 
     override fun apply() {
         super.apply()
-
-        ApplicationManager.getApplication().messageBus.syncPublisher(AceStatusRefreshNotifier.TOPIC)
-            .refresh()
+        AceService.getInstance().getPreflightInfo()
     }
 }

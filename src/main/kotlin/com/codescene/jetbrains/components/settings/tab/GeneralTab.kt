@@ -2,7 +2,6 @@ package com.codescene.jetbrains.components.settings.tab
 
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
 import com.codescene.jetbrains.UiLabelsBundle
-import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.notifier.AceStatusRefreshNotifier
 import com.codescene.jetbrains.services.AceService
 import com.codescene.jetbrains.services.telemetry.TelemetryService
@@ -27,7 +26,6 @@ import javax.swing.border.AbstractBorder
 
 class GeneralTab : Configurable {
     private var statusButton = getStatusButton()
-    private val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
     init {
         subscribeToAceStatusRefreshEvent()
@@ -77,7 +75,7 @@ class GeneralTab : Configurable {
     }
 
     private fun refreshStatusButton() {
-        val newStatus = AceService.getInstance().getPreflightInfo()
+        val newStatus = AceService.getInstance().getStatus()
         statusButton.text = newStatus.name
     }
 

@@ -16,7 +16,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 
 @Service
 class TelemetryService() : BaseService(), Disposable {
@@ -38,19 +37,17 @@ class TelemetryService() : BaseService(), Disposable {
             TelemetryEvent(extendedName, userId, Constants.TELEMETRY_EDITOR_TYPE, getPluginVersion(), false)
         eventData.forEach { telemetryEvent.setAdditionalProperty(it.key, it.value) }
         scope.launch {
-            withTimeout(timeout) {
                 try {
                     runWithClassLoaderChange {
                         ExtensionAPI.sendTelemetry(telemetryEvent)
                     }
-                    Log.debug("Telemetry event logged: $telemetryEvent")
-                } catch (e: TimeoutCancellationException) {
+                    Log.warn("Telemetry event logged: ${telemetryEvent.eventName}")
+                } catch (_: TimeoutCancellationException) {
                     Log.warn("Telemetry event $extendedName sending timed out")
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     Log.warn("Error during telemetry event $extendedName sending")
                 }
             }
-        }
     }
 
     private fun getPluginVersion(): String =
