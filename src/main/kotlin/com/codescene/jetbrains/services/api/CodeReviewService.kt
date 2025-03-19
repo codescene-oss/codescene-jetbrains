@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.services.api
 
 import com.codescene.ExtensionAPI
+import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.services.UIRefreshService
@@ -48,6 +49,9 @@ class CodeReviewService(private val project: Project) : CodeSceneService() {
 
         val entry = ReviewCacheEntry(fileContents = code, filePath = path, response = result)
         cacheService.put(entry)
+
+        val aceParams = CodeParams(editor.document.text, editor.virtualFile.extension)
+        AceService.getInstance().getRefactorableFunctions(aceParams, result, editor)
 
         Log.debug(
             "Review response cached for file $fileName with path $path",

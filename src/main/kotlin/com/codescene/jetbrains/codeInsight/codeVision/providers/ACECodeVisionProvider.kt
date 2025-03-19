@@ -1,10 +1,11 @@
 package com.codescene.jetbrains.codeInsight.codeVision.providers
 
-import com.codescene.data.delta.FunctionFinding
+import com.codescene.data.ace.FnToRefactor
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
-import com.codescene.jetbrains.util.getCachedDelta
+import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheQuery
+import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
 import com.codescene.jetbrains.util.getTextRange
 import com.intellij.codeInsight.codeVision.*
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
@@ -31,31 +32,22 @@ class ACECodeVisionProvider : CodeVisionProvider<Unit> {
     override fun computeCodeVision(editor: Editor, uiData: Unit): CodeVisionState {
         editor.project ?: return CodeVisionState.READY_EMPTY
 
-        val cachedDelta = getCachedDelta(editor)
+        val query = AceRefactorableFunctionCacheQuery(editor.virtualFile.path, editor.document.text)
+        val cachedAceResults = AceRefactorableFunctionsCacheService.getInstance(editor.project!!).get(query)
 
-        // TODO: Preflight to check if supported?
-
-        // Dummy implementation to trigger ACE lens:
-        val refactorableFunctions = cachedDelta.second?.functionLevelFindings?.filter {
-            (it?.function?.name?.startsWith("a", true) == true || (it?.function?.name?.startsWith(
-                "t",
-                true
-            ) == true) && it.function.range != null)
-        }
-
-        val lenses = getLens(editor, refactorableFunctions)
+        val lenses = getLens(editor, cachedAceResults)
 
         return CodeVisionState.Ready(lenses)
     }
 
     private fun getLens(
         editor: Editor,
-        refactorableFunctions: List<FunctionFinding>?
+        refactorableFunctions: List<FnToRefactor>?
     ): List<Pair<TextRange, CodeVisionEntry>> {
         val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
 
         refactorableFunctions?.forEach {
-            val range = getTextRange(it.function.range.startLine to it.function.range.endLine, editor.document)
+            val range = getTextRange(it.range.startLine to it.range.endLine, editor.document)
             val entry = ClickableTextCodeVisionEntry(
                 text = name,
                 providerId = id,

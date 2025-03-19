@@ -19,16 +19,16 @@ class SortDeltaFindingsTest {
     private val mockDeltaResults = ConcurrentHashMap(
         mapOf(
             "aFile" to mockk<Delta>(relaxed = true) {
-                every { oldScore } returns 3.21
-                every { newScore } returns 5.32
+                every { oldScore.get() } returns 3.21
+                every { newScore.get() } returns 5.32
             },
             "bFile" to mockk<Delta>(relaxed = true) {
-                every { oldScore } returns 5.43
-                every { newScore } returns 9.32
+                every { oldScore.get() } returns 5.43
+                every { newScore.get() } returns 9.32
             },
             "cFile" to mockk<Delta>(relaxed = true) {
-                every { oldScore } returns 9.32
-                every { newScore } returns 1.93
+                every { oldScore.get() } returns 9.32
+                every { newScore.get() } returns 1.93
             })
     )
 

@@ -9,6 +9,13 @@ enum class MonitorTreeSortOptions {
     SCORE_DESCENDING  // Sort by smallest decline
 }
 
+enum class AceStatus {
+    ACTIVATED,
+    DEACTIVATED,
+    ERROR,
+    OUT_OF_CREDITS
+}
+
 data class CodeSceneGlobalSettings(
     @NonNls var serverUrl: String = CODESCENE_SERVER_URL,
 
@@ -18,5 +25,6 @@ data class CodeSceneGlobalSettings(
     var excludeGitignoreFiles: Boolean = true,
     var previewCodeHealthGate: Boolean = false,
     var telemetryConsentGiven: Boolean = false,
-    var monitorTreeSortOption: MonitorTreeSortOptions = MonitorTreeSortOptions.SCORE_ASCENDING
+    var monitorTreeSortOption: MonitorTreeSortOptions = MonitorTreeSortOptions.SCORE_ASCENDING,
+    var aceStatus: AceStatus = AceStatus.DEACTIVATED
 )

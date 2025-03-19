@@ -11,12 +11,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.extensions.PluginId
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.*
 
 @Service
 class TelemetryService() : BaseService(), Disposable {
@@ -33,20 +28,20 @@ class TelemetryService() : BaseService(), Disposable {
 
         val extendedName = "${Constants.TELEMETRY_EDITOR_TYPE}/$eventName"
         // TODO: Get user ID of logged in user when authentication is implemented
-        val userId: String? = null
+        val userId = ""
         val telemetryEvent =
-            TelemetryEvent(extendedName, userId, Constants.TELEMETRY_EDITOR_TYPE, getPluginVersion(), eventData)
+            TelemetryEvent(extendedName, userId, Constants.TELEMETRY_EDITOR_TYPE, getPluginVersion(), false)
         scope.launch {
             withTimeout(timeout) {
                 try {
                     runWithClassLoaderChange {
-                        ExtensionAPI.sendTelemetry(telemetryEvent, eventData)
+                        ExtensionAPI.sendTelemetry(telemetryEvent)
                     }
                     Log.debug("Telemetry event logged: $telemetryEvent")
                 } catch (e: TimeoutCancellationException) {
                     Log.warn("Telemetry event $extendedName sending timed out")
                 } catch (e: Exception) {
-                    Log.error("Error during telemetry event $extendedName sending: ${e.message}")
+                    Log.warn("Error during telemetry event $extendedName sending: ${e.message}")
                 }
             }
         }

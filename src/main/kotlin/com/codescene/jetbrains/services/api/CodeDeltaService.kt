@@ -69,7 +69,14 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
 
         val delta = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview) }
 
-        if (delta?.oldScore == null) delta?.oldScore = 10.0
+        if (delta?.oldScore?.isEmpty == true)
+            return Delta(
+                10.0,
+                delta.newScore.get(),
+                delta.scoreChange,
+                delta.fileLevelFindings,
+                delta.functionLevelFindings
+            )
 
         return delta
     }
@@ -83,24 +90,10 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
 
             deltaCacheService.invalidate(path)
         } else {
-            val lensProviders = mutableListOf("CodeHealthCodeVisionProvider")
-
-            // TODO: update according to ACE flow
-            if (isRefactorable(delta)) {
-                lensProviders.add("ACECodeVisionProvider")
-                uiRefreshService.refreshAnnotations(editor)
-            }
-
-            uiRefreshService.refreshCodeVision(editor, lensProviders)
+            uiRefreshService.refreshCodeVision(editor, listOf("CodeHealthCodeVisionProvider"))
         }
 
         val cacheEntry = DeltaCacheEntry(path, oldCode, currentCode, delta)
         deltaCacheService.put(cacheEntry)
     }
-
-    // Dummy implementation to trigger ACE lens:
-    private fun isRefactorable(delta: Delta) =
-        delta.functionLevelFindings?.any {
-            it?.function?.name?.startsWith("a", true) == true || (it?.function?.name?.startsWith("t", true) == true)
-        } ?: false
 }
