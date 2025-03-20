@@ -20,11 +20,12 @@ import com.intellij.openapi.editor.Editor
 import kotlinx.coroutines.*
 
 @Service
-class AceService() : BaseService(), Disposable {
+class AceService : BaseService(), Disposable {
     private val scope = CoroutineScope(Dispatchers.IO)
     private val timeout: Long = 15_000
     private val settings = CodeSceneGlobalSettingsStore.getInstance().state
     private var status: AceStatus = settings.aceStatus
+    private val serviceImplementation: String = this::class.java.simpleName
 
     companion object {
         fun getInstance(): AceService = service<AceService>()
@@ -67,30 +68,51 @@ class AceService() : BaseService(), Disposable {
         status = newStatus
     }
 
+    /**
+     * Retrieves refactorable functions based on the Delta result.
+     *
+     * The Delta review focuses only on newly introduced code smells, meaning it may return
+     * fewer refactorable functions compared to a full review.
+     */
     fun getRefactorableFunctions(params: CodeParams, delta: Delta, editor: Editor) {
-        println("Getting ace response...")
+        Log.debug("Getting refactorable functions for ${editor.virtualFile.path} based on Delta review...")
 
         refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, delta) }
     }
 
+    /**
+     * Retrieves refactorable functions based on the full Review result.
+     *
+     * The Review result provides all refactorable functions in a file. This is a more comprehensive analysis
+     * compared to the *Delta review*.
+     */
     fun getRefactorableFunctions(params: CodeParams, review: Review, editor: Editor) {
         val codeSmells = review.fileLevelCodeSmells + review.functionLevelCodeSmells.flatMap { it.codeSmells }
-        println("Getting ace response for review of code smells: $codeSmells...")
+        Log.debug("Getting refactorable functions for ${editor.virtualFile.path} based on review with ${codeSmells}...")
 
         refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, codeSmells) }
     }
 
     private fun refactorableFunctionsHandler(editor: Editor, getFunctions: () -> List<FnToRefactor>) {
+        val project = editor.project!!
+        val path = editor.virtualFile.path
+        val service = "${serviceImplementation} - ${project.name}"
+
         //TODO: check if language is supported in ACE before making call.
+        if (status != AceStatus.ACTIVATED) {
+            Log.warn("ACE is not ready to process the request. Current status: ${status.name}", service)
+            return
+        }
 
         scope.launch {
-            val project = editor.project!!
             val result = runWithClassLoaderChange { getFunctions() }
 
-            val entry = AceRefactorableFunctionCacheEntry(editor.virtualFile.path, editor.document.text, result)
+            val entry = AceRefactorableFunctionCacheEntry(path, editor.document.text, result)
             AceRefactorableFunctionsCacheService.getInstance(project).put(entry)
 
             if (result.isNotEmpty()) {
+                Log.info("Found ${result.size} refactorable function(s) in $path", service)
+
                 val uiService = UIRefreshService.getInstance(project)
                 uiService.refreshUI(editor, listOf("ACECodeVisionProvider"))
             }
