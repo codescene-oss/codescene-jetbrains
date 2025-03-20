@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.util
 
+import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.delta.ChangeDetail
 import com.codescene.data.delta.Delta
 import com.codescene.data.review.CodeSmell
@@ -19,6 +20,7 @@ import com.codescene.jetbrains.util.Constants.GREEN
 import com.codescene.jetbrains.util.Constants.ORANGE
 import com.codescene.jetbrains.util.Constants.RED
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.fileTypes.FileTypeManager
@@ -63,7 +65,7 @@ data class CodeHealthDetails(
     val body: List<Paragraph>,
     val type: CodeHealthDetailsType,
     val healthData: HealthData? = null,
-    val isRefactorable: Boolean? = false,
+    val refactorableFunction: FnToRefactor? = null,
 )
 
 enum class HealthState(val label: String, val color: JBColor) {
@@ -212,7 +214,8 @@ fun isMatchingFinding(displayName: String, focusLine: Int?, finding: CodeHealthF
 private fun getFunctionFinding(
     file: Pair<String, String>?,
     finding: CodeHealthFinding,
-    delta: Delta
+    delta: Delta,
+    project: Project
 ): CodeHealthDetails {
     val changeDetails = delta.functionLevelFindings
         .find { isMatchingFinding(it.function.name, it.function.range.get().startLine, finding) }?.changeDetails
@@ -232,8 +235,16 @@ private fun getFunctionFinding(
         ),
         body = getFunctionFindingBody(changeDetails, finding),
         type = CodeHealthDetailsType.FUNCTION,
-        isRefactorable = true //TODO: get from API
+        refactorableFunction = getRefactorableFunction(finding, project)
     )
+}
+
+private fun getRefactorableFunction(finding: CodeHealthFinding, project: Project): FnToRefactor? {
+    val file = LocalFileSystem.getInstance().findFileByPath(finding.filePath)
+    val document = file?.let { FileDocumentManager.getInstance().getDocument(file) }
+    val aceEntry = fetchAceCache(finding.filePath, document?.text ?: "", project)
+
+    return aceEntry.find { it.name == finding.displayName && it.range.startLine == finding.focusLine }
 }
 
 private fun getFileFinding(
@@ -262,7 +273,7 @@ private fun getFileFinding(
     )
 }
 
-fun getHealthFinding(delta: Delta, finding: CodeHealthFinding): CodeHealthDetails? {
+fun getHealthFinding(delta: Delta, finding: CodeHealthFinding, project: Project): CodeHealthDetails? {
     val file = extractUsingRegex(finding.filePath, Regex(".*/([^/]+)\\.([^.]+)$")) { (fileName, extension) ->
         fileName to extension
     }
@@ -272,7 +283,7 @@ fun getHealthFinding(delta: Delta, finding: CodeHealthFinding): CodeHealthDetail
             getHealthFinding(file, finding, delta)
 
         NodeType.FILE_FINDING, NodeType.FILE_FINDING_FIXED -> getFileFinding(file, finding)
-        NodeType.FUNCTION_FINDING -> getFunctionFinding(file, finding, delta)
+        NodeType.FUNCTION_FINDING -> getFunctionFinding(file, finding, delta, project)
         else -> null
     }
 }

@@ -96,11 +96,8 @@ class CodeHealthDetailsPanel(private val project: Project) {
 
     fun refreshContent(finding: CodeHealthFinding?) {
         details = finding?.let {
-            CodeHealthMonitorPanel.getInstance(project).healthMonitoringResults[it.filePath]?.let { data ->
-                getHealthFinding(
-                    data,
-                    it
-                )
+            CodeHealthMonitorPanel.getInstance(project).healthMonitoringResults[it.filePath]?.let { delta ->
+                getHealthFinding(delta, it, project)
             }
         }
 

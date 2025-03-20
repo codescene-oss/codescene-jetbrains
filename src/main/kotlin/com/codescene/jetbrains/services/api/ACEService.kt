@@ -99,10 +99,10 @@ class AceService : BaseService(), Disposable {
         val service = "${serviceImplementation} - ${project.name}"
 
         //TODO: check if language is supported in ACE before making call.
-        if (status != AceStatus.ACTIVATED) {
-            Log.warn("ACE is not ready to process the request. Current status: ${status.name}", service)
-            return
-        }
+//        if (status != AceStatus.ACTIVATED) {
+//            Log.warn("ACE is not ready to process the request. Current status: ${status.name}", service)
+//            return
+//        }
 
         scope.launch {
             val result = runWithClassLoaderChange { getFunctions() }

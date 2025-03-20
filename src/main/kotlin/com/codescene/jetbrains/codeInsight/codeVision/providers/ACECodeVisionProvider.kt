@@ -4,8 +4,7 @@ import com.codescene.data.ace.FnToRefactor
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
-import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheQuery
-import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
+import com.codescene.jetbrains.util.fetchAceCache
 import com.codescene.jetbrains.util.getTextRange
 import com.intellij.codeInsight.codeVision.*
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
@@ -32,10 +31,8 @@ class ACECodeVisionProvider : CodeVisionProvider<Unit> {
     override fun computeCodeVision(editor: Editor, uiData: Unit): CodeVisionState {
         editor.project ?: return CodeVisionState.READY_EMPTY
 
-        val query = AceRefactorableFunctionCacheQuery(editor.virtualFile.path, editor.document.text)
-        val cachedAceResults = AceRefactorableFunctionsCacheService.getInstance(editor.project!!).get(query)
-
-        val lenses = getLens(editor, cachedAceResults)
+        val aceResults = fetchAceCache(editor.virtualFile.path, editor.document.text, editor.project!!)
+        val lenses = getLens(editor, aceResults)
 
         return CodeVisionState.Ready(lenses)
     }

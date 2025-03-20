@@ -69,7 +69,7 @@ class CodeHealthPanelBuilder(private val project: Project) {
                     getSelectedTextEditor(project, details.filePath, "${this::class.simpleName} - ${project.name}")
                 CodeSceneDocumentationService.getInstance(project).openAcePanel(selectedEditor)
             }.also {
-                if (details.isRefactorable == false) {
+                if (details.refactorableFunction == null) {
                     it.icon = ACE_DISABLED
                     it.isEnabled = false
                     it.toolTipText = "Refactoring is not possible for this instance" //TODO: better tooltip
