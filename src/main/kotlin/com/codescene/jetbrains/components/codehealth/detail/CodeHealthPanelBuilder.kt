@@ -6,6 +6,7 @@ import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.detail.slider.CustomSlider
 import com.codescene.jetbrains.components.layout.ResponsiveLayout
+import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_URL
@@ -31,6 +32,7 @@ class CodeHealthPanelBuilder(private val project: Project) {
     }
 
     fun getPanel(details: CodeHealthDetails) = JPanel().apply {
+        val settings = CodeSceneGlobalSettingsStore.getInstance().state
         Log.debug("Rendering panel for $details...", service)
 
         val isCodeHealth = details.type == CodeHealthDetailsType.HEALTH
@@ -48,7 +50,7 @@ class CodeHealthPanelBuilder(private val project: Project) {
             addCodeHealthHeader(details, constraint)
             if (details.healthData!!.status.isNotEmpty()) addHealthDecline(details, constraint)
             addSlider(details, constraint)
-        } else
+        } else if (settings.enableAutoRefactor)
             addAutoRefactorButton(details, constraint)
 
         addBody(details, constraint)
@@ -67,12 +69,13 @@ class CodeHealthPanelBuilder(private val project: Project) {
             .createButton(UiLabelsBundle.message("autoRefactor"), CODESCENE_ACE) {
                 val selectedEditor =
                     getSelectedTextEditor(project, details.filePath, "${this::class.simpleName} - ${project.name}")
-                CodeSceneDocumentationService.getInstance(project).openAcePanel(selectedEditor)
+                CodeSceneDocumentationService.getInstance(project)
+                    .openAcePanel(selectedEditor, details.refactorableFunction)
             }.also {
                 if (details.refactorableFunction == null) {
                     it.icon = ACE_DISABLED
                     it.isEnabled = false
-                    it.toolTipText = "Refactoring is not possible for this instance" //TODO: better tooltip
+                    it.toolTipText = "Refactoring is not available for this instance"
                 }
             }
 

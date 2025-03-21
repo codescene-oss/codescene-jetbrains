@@ -29,7 +29,8 @@ class ACECodeVisionProvider : CodeVisionProvider<Unit> {
     }
 
     override fun computeCodeVision(editor: Editor, uiData: Unit): CodeVisionState {
-        editor.project ?: return CodeVisionState.READY_EMPTY
+        val settings = CodeSceneGlobalSettingsStore.getInstance().state
+        if (editor.project == null || !settings.enableAutoRefactor) return CodeVisionState.READY_EMPTY
 
         val aceResults = fetchAceCache(editor.virtualFile.path, editor.document.text, editor.project!!)
         val lenses = getLens(editor, aceResults)
@@ -48,7 +49,7 @@ class ACECodeVisionProvider : CodeVisionProvider<Unit> {
             val entry = ClickableTextCodeVisionEntry(
                 text = name,
                 providerId = id,
-                onClick = { _, sourceEditor -> handleLensClick(sourceEditor) },
+                onClick = { _, sourceEditor -> handleLensClick(sourceEditor, it) },
                 icon = CODESCENE_ACE
             )
 
@@ -58,10 +59,10 @@ class ACECodeVisionProvider : CodeVisionProvider<Unit> {
         return lenses
     }
 
-    private fun handleLensClick(editor: Editor) {
+    private fun handleLensClick(editor: Editor, function: FnToRefactor) {
         val project = editor.project ?: return
         val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
 
-        codeSceneDocumentationService.openAcePanel(editor)
+        codeSceneDocumentationService.openAcePanel(editor, function)
     }
 }

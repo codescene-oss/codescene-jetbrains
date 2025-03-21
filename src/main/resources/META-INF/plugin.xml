@@ -14,7 +14,7 @@
         <action
                 text="Settings"
                 id="ShowSettingsAction"
-                icon="AllIcons.General.Gear"
+                icon="AllIcons.General.GearPlain"
                 description="Open the settings dialog"
                 class="com.codescene.jetbrains.actions.ShowSettingsAction"/>
 

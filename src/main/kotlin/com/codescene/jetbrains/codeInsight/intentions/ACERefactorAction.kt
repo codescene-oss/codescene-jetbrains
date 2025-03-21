@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.codeInsight.intentions
 
+import com.codescene.data.ace.FnToRefactor
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.util.Constants.CODESCENE
@@ -11,7 +12,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Iconable
 import com.intellij.psi.PsiFile
 
-class ACERefactorAction : IntentionAction, HighPriorityAction, Iconable {
+class ACERefactorAction(private val function: FnToRefactor) : IntentionAction, HighPriorityAction, Iconable {
     private val name = "Refactor using $CODESCENE ACE"
 
     override fun getText(): String = name
@@ -23,7 +24,7 @@ class ACERefactorAction : IntentionAction, HighPriorityAction, Iconable {
     override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {
         val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
 
-        if (editor != null) codeSceneDocumentationService.openAcePanel(editor)
+        if (editor != null) codeSceneDocumentationService.openAcePanel(editor, function)
     }
 
     override fun startInWriteAction(): Boolean = false

@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.services
 
+import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Range
 import com.codescene.jetbrains.codeInsight.codehealth.CodeHighlighter.generateHighlightedHtml
@@ -39,6 +40,7 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
     private val oneBacktick = MarkdownCodeDelimiter.SINGLE_LINE.value
 
     var functionLocation: FunctionLocation? = null
+    var functionToRefactor: FnToRefactor? = null
     lateinit var sourceEditor: Editor
 
     init {
@@ -52,25 +54,31 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
             project.service<CodeSceneDocumentationService>()
     }
 
-    //TODO/WIP: refactor & adapt to ACE markdown preview (refactoring tab)
-    fun openAcePanel(editor: Editor?) {
+    fun openAcePanel(editor: Editor?, fnToRefactor: FnToRefactor?) {
+        functionToRefactor = fnToRefactor
+        val classLoader = this@CodeSceneDocumentationService.javaClass.classLoader
+
+        val documentationFile: VirtualFile
         val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
-        val classLoader = this@CodeSceneDocumentationService.javaClass.classLoader
-        val inputStream = classLoader.getResourceAsStream("ace-info.md")
+        if (settings.aceAcknowledged) {
+        /*TODO: open refactoring window*/
+            println("Opened when ace is acknowledged for ${functionToRefactor?.name}")
+            documentationFile = createTempFile("$ACE.md", "This is a placeholder for the result of ${functionToRefactor?.name}'s refactoring")
 
-        if (settings.aceAcknowledged) { /*TODO: open refactoring window*/
-        } else TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_INFO_PRESENTED)
+        }
+        else {
+            TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_INFO_PRESENTED)
 
-        val markdown = inputStream?.bufferedReader()?.readText() ?: ""
-        val markdownContent =
-            transformMarkdownToHtml(TransformMarkdownParams(markdown, "codeSmellName", true))
-        val header =
-            prepareHeader(HeadingParams(CodeSmell("", Range(1, 1, 1, 1), ""), true, markdown, classLoader, editor))
+            val inputStream = classLoader.getResourceAsStream("ace-info.md")
+            val markdown = inputStream?.bufferedReader()?.readText() ?: ""
+            val markdownContent =
+                transformMarkdownToHtml(TransformMarkdownParams(markdown, "codeSmellName", true), true)
+            val header =
+                prepareHeader(HeadingParams(CodeSmell("", Range(1, 1, 1, 1), ""), true, markdown, classLoader, editor))
 
-        val documentationFile = createTempFile("$ACE.md", "$header$markdownContent")
-
-        // TODO: add listener to "Show me CodeScene ACE" button -> ace_info/acknowledged & add header with file and line information
+             documentationFile = createTempFile("$ACE.md", "$header$markdownContent")
+        }
 
         if (editor != null)
             splitWindow(documentationFile)
@@ -178,7 +186,7 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
             ""
         else Constants.ISSUES_PATH
 
-        Log.info("Preparing content for file $codeSmellName.md")
+        Log.debug("Preparing content for file $codeSmellName.md")
         val classLoader = this@CodeSceneDocumentationService.javaClass.classLoader
         val inputStream = classLoader.getResourceAsStream(path + codeSmellFileName)
 
@@ -195,7 +203,8 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
      * Transforming Markdown content into HTML content by reorganizing it and inserting HTML tags.
      */
     private fun transformMarkdownToHtml(
-        params: TransformMarkdownParams
+        params: TransformMarkdownParams,
+        ace: Boolean = false
     ): String {
         val (originalContent, codeSmellName, standaloneDocumentation) = params
 
@@ -213,6 +222,14 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
             body = updateOneLineCodeParts(body)
 
             newContent.adaptBody(title, body, standaloneDocumentation)
+            if (ace) newContent.append(
+                """
+                <div id="ace-button-container">
+                  <button id="ace-button">Show me CodeScene ACE</button>
+                  <span id="ace-span">You can disable CodeScene ACE anytime in settings.</span>
+                </div>
+            """.trimIndent()
+            )
         }
         return newContent.append("\n</body></html>").toString()
     }
