@@ -206,8 +206,6 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
         val parts = content.split("## ")
         val newContent = StringBuilder("")
 
-        if (!standaloneDocumentation) addAutoRefactorButton(newContent)
-
         parts.forEach { part ->
             val title = part.substring(0, part.indexOf("\n"))
             var body = if (!standaloneDocumentation) part.substring(part.indexOf("\n") + 1) else part
@@ -217,21 +215,6 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
             newContent.adaptBody(title, body, standaloneDocumentation)
         }
         return newContent.append("\n</body></html>").toString()
-    }
-
-    private fun addAutoRefactorButton(newContent: StringBuilder) {
-        val classLoader = this@CodeSceneDocumentationService.javaClass.classLoader
-        val inputStream = classLoader.getResourceAsStream("images/codeSceneAce_dark.svg")
-        val imageSvg = (inputStream?.bufferedReader()?.readText() ?: "")
-
-        val button = """
-            <button id="ace-button">
-                <span class="icon">$imageSvg</span>
-                Auto-Refactor
-            </button>
-        """.trimIndent()
-
-        newContent.append(button)
     }
 
     /**
@@ -383,6 +366,7 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
      */
     private fun getStyling(classLoader: ClassLoader): String {
         val styleStream = classLoader.getResourceAsStream(Constants.STYLE_BASE_PATH + "code-smell.css")
+        val aceStyleStream = classLoader.getResourceAsStream(Constants.STYLE_BASE_PATH + "ace.css")
         val staticStyleBuilder = StringBuilder()
 
         val scrollbarStyle = JBCefScrollbarsHelper.buildScrollbarsStyle()
@@ -390,8 +374,12 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
 
         staticStyleBuilder.append(
             styleStream?.bufferedReader()?.lines()
-            ?.filter { line -> line.trim().isNotEmpty() }
-            ?.collect(Collectors.joining("\n")))
+                ?.filter { line -> line.trim().isNotEmpty() }
+                ?.collect(Collectors.joining("\n")))
+        staticStyleBuilder.append(
+            aceStyleStream?.bufferedReader()?.lines()
+                ?.filter { line -> line.trim().isNotEmpty() }
+                ?.collect(Collectors.joining("\n")))
         staticStyleBuilder.append(scrollbarStyle)
         staticStyleBuilder.append(themeStyle)
 
