@@ -2,6 +2,7 @@ package com.codescene.jetbrains.components.settings.tab
 
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
 import com.codescene.jetbrains.UiLabelsBundle
+import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.notifier.AceStatusRefreshNotifier
 import com.codescene.jetbrains.services.AceService
 import com.codescene.jetbrains.services.telemetry.TelemetryService
@@ -26,6 +27,7 @@ import javax.swing.border.AbstractBorder
 
 class GeneralTab : Configurable {
     private var statusButton = getStatusButton()
+    private lateinit var status: AceStatus
 
     init {
         subscribeToAceStatusRefreshEvent()
@@ -68,15 +70,37 @@ class GeneralTab : Configurable {
     }
 
     private fun getStatusButton(): JButton {
-        val status = AceService.getInstance().getStatus()
+        status = AceService.getInstance().getStatus()
         val button = JButton(status.name)
+        colorButton(button, status)
+
+        button.addActionListener {
+            if (status == AceStatus.ERROR) {
+                AceService.getInstance().getPreflightInfo()
+            }
+        }
 
         return button
     }
 
+    private fun colorButton(button: JButton, status: AceStatus) {
+        lateinit var buttonColor: JBColor
+
+        when (status) {
+            AceStatus.ERROR -> buttonColor = JBColor.RED
+            AceStatus.ACTIVATED -> buttonColor = JBColor.GREEN
+            AceStatus.DEACTIVATED -> buttonColor = JBColor.GRAY
+            AceStatus.OUT_OF_CREDITS -> buttonColor = JBColor.YELLOW
+        }
+
+//        button.border = BorderFactory.createLineBorder(buttonColor, 1)
+        button.foreground = buttonColor
+    }
+
     private fun refreshStatusButton() {
-        val newStatus = AceService.getInstance().getStatus()
-        statusButton.text = newStatus.name
+        status = AceService.getInstance().getStatus()
+        statusButton.text = status.name
+        colorButton(statusButton, status)
     }
 
     private fun getMoreSection() = JPanel().apply {
