@@ -6,6 +6,7 @@ import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.getSelectedTextEditor
+import com.codescene.jetbrains.util.handleAceEntryPoint
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorState
 import com.intellij.openapi.project.Project
@@ -143,11 +144,8 @@ class CodeSceneHtmlViewer(val project: Project, private val file: VirtualFile) :
                 val function = CodeSceneDocumentationService.getInstance(project).functionToRefactor
 
                 scope.launch(Dispatchers.Main) {
-                    val service = CodeSceneDocumentationService.getInstance(project)
                     val editor = getSelectedTextEditor(project, "")
-
-                    //TODO: Perform refactoring before opening panel. Finished refactoring triggers panel?
-                    function?.let { service.openAcePanel(editor, function) }
+                    handleAceEntryPoint(editor, function)
                 }
             }
         }

@@ -5,11 +5,28 @@ import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.services.api.AceService
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheQuery
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
+
+//WIP
+fun handleAceEntryPoint(editor: Editor?, function: FnToRefactor?) {
+    if (editor == null || function == null) return
+
+    val project = editor.project ?: return
+    val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
+
+    val settings = CodeSceneGlobalSettingsStore.getInstance().state
+    if (settings.aceAcknowledged) {
+        //Open window after refactoring result is ready? No loader solution?
+        AceService.getInstance().refactor(function)
+    } else {
+        codeSceneDocumentationService.openAcePanel(editor, function)
+    }
+}
 
 fun fetchAceCache(path: String, content: String, project: Project): List<FnToRefactor> {
     val query = AceRefactorableFunctionCacheQuery(path, content)

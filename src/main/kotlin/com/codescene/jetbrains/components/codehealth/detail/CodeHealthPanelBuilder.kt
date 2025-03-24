@@ -7,7 +7,6 @@ import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.detail.slider.CustomSlider
 import com.codescene.jetbrains.components.layout.ResponsiveLayout
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
-import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_URL
 import com.intellij.ide.ui.laf.darcula.ui.OnboardingDialogButtons
@@ -67,10 +66,12 @@ class CodeHealthPanelBuilder(private val project: Project) {
 
         val button = OnboardingDialogButtons
             .createButton(UiLabelsBundle.message("autoRefactor"), CODESCENE_ACE) {
-                val selectedEditor =
-                    getSelectedTextEditor(project, details.filePath, "${this::class.simpleName} - ${project.name}")
-                CodeSceneDocumentationService.getInstance(project)
-                    .openAcePanel(selectedEditor, details.refactorableFunction)
+                val selectedEditor = getSelectedTextEditor(
+                    project,
+                    details.filePath,
+                    "${this::class.simpleName} - ${project.name}"
+                )
+                handleAceEntryPoint(selectedEditor, details.refactorableFunction)
             }.also {
                 if (details.refactorableFunction == null) {
                     it.icon = ACE_DISABLED

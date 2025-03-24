@@ -33,6 +33,7 @@ class AceService : BaseService(), Disposable {
     }
 
     fun getPreflightInfo(forceRefresh: Boolean = false): PreflightResponse? {
+        val settings = CodeSceneGlobalSettingsStore.getInstance().state
         var preflightInfo: PreflightResponse? = null
 
         if (settings.enableAutoRefactor) {
@@ -43,31 +44,23 @@ class AceService : BaseService(), Disposable {
                 }
                 //todo: change to debug after implementation done
                 Log.warn("Preflight info fetched: $preflightInfo")
-                status = AceStatus.ACTIVATED
+                settings.aceStatus = AceStatus.ACTIVATED
                 Log.warn("ACE status is $status")
             } catch (e: TimeoutCancellationException) {
                 Log.warn("Preflight info fetching timed out")
-                status = AceStatus.ERROR
+                settings.aceStatus = AceStatus.ERROR
                 Log.warn("ACE status is $status")
             } catch (e: Exception) {
                 Log.error("Error during preflight info fetching: ${e.message}")
-                status = AceStatus.ERROR
+                settings.aceStatus = AceStatus.ERROR
                 Log.warn("ACE status is $status")
             }
         } else {
-            status = AceStatus.DEACTIVATED
+            settings.aceStatus = AceStatus.DEACTIVATED
             Log.warn("ACE status is $status")
         }
 
         return preflightInfo
-    }
-
-    fun getStatus(): AceStatus {
-        return status
-    }
-
-    fun setStatus(newStatus: AceStatus) {
-        status = newStatus
     }
 
     /**
@@ -106,6 +99,8 @@ class AceService : BaseService(), Disposable {
             }
 
             println("Refactoring result: $result")
+
+            //TODO: After refactoring, open the panel with the results
         }
     }
 

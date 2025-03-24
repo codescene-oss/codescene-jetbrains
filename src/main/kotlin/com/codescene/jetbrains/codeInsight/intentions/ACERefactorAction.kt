@@ -2,8 +2,8 @@ package com.codescene.jetbrains.codeInsight.intentions
 
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
-import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.util.Constants.CODESCENE
+import com.codescene.jetbrains.util.handleAceEntryPoint
 import com.intellij.codeInsight.intention.HighPriorityAction
 import com.intellij.codeInsight.intention.IntentionAction
 import com.intellij.codeInsight.intention.PriorityAction
@@ -21,11 +21,8 @@ class ACERefactorAction(private val function: FnToRefactor) : IntentionAction, H
 
     override fun isAvailable(project: Project, editor: Editor?, file: PsiFile): Boolean = true
 
-    //TODO: Common entry point logic
     override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {
-        val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
-
-        if (editor != null) codeSceneDocumentationService.openAcePanel(editor, function)
+        handleAceEntryPoint(editor, function)
     }
 
     override fun startInWriteAction(): Boolean = false
