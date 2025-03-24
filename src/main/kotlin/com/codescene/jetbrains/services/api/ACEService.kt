@@ -4,6 +4,7 @@ import com.codescene.ExtensionAPI
 import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.ace.PreflightResponse
+import com.codescene.data.ace.RefactoringOptions
 import com.codescene.data.delta.Delta
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.config.global.AceStatus
@@ -31,14 +32,14 @@ class AceService : BaseService(), Disposable {
         fun getInstance(): AceService = service<AceService>()
     }
 
-    fun getPreflightInfo(): AceStatus {
+    fun getPreflightInfo(forceRefresh: Boolean = false): PreflightResponse? {
         var preflightInfo: PreflightResponse? = null
 
         if (settings.enableAutoRefactor) {
 
             try {
                 runWithClassLoaderChange {
-                    preflightInfo = ExtensionAPI.preflight(true)
+                    preflightInfo = ExtensionAPI.preflight(forceRefresh)
                 }
                 //todo: change to debug after implementation done
                 Log.warn("Preflight info fetched: $preflightInfo")
@@ -57,7 +58,8 @@ class AceService : BaseService(), Disposable {
             status = AceStatus.DEACTIVATED
             Log.warn("ACE status is $status")
         }
-        return status
+
+        return preflightInfo
     }
 
     fun getStatus(): AceStatus {
@@ -93,16 +95,24 @@ class AceService : BaseService(), Disposable {
         refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, codeSmells) }
     }
 
+    //WIP
+    fun refactor(function: FnToRefactor, options: RefactoringOptions? = null) {
+        Log.debug("Initiating refactor for function ${function.name}...")
+
+        scope.launch {
+            val result = runWithClassLoaderChange {
+                if (options == null)
+                    ExtensionAPI.refactor(function) else ExtensionAPI.refactor(function, options)
+            }
+
+            println("Refactoring result: $result")
+        }
+    }
+
     private fun refactorableFunctionsHandler(editor: Editor, getFunctions: () -> List<FnToRefactor>) {
         val project = editor.project!!
         val path = editor.virtualFile.path
         val service = "${serviceImplementation} - ${project.name}"
-
-        //TODO: check if language is supported in ACE before making call.
-//        if (status != AceStatus.ACTIVATED) {
-//            Log.warn("ACE is not ready to process the request. Current status: ${status.name}", service)
-//            return
-//        }
 
         scope.launch {
             val result = runWithClassLoaderChange { getFunctions() }

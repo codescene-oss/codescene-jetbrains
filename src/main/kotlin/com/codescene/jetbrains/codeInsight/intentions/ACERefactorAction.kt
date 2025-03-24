@@ -21,6 +21,7 @@ class ACERefactorAction(private val function: FnToRefactor) : IntentionAction, H
 
     override fun isAvailable(project: Project, editor: Editor?, file: PsiFile): Boolean = true
 
+    //TODO: Common entry point logic
     override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {
         val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
 

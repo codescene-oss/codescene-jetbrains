@@ -2,7 +2,6 @@ package com.codescene.jetbrains.services
 
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.review.CodeSmell
-import com.codescene.data.review.Range
 import com.codescene.jetbrains.codeInsight.codehealth.CodeHighlighter.generateHighlightedHtml
 import com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewer
 import com.codescene.jetbrains.codeInsight.codehealth.MarkdownCodeDelimiter
@@ -11,6 +10,7 @@ import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.ACE
+import com.codescene.jetbrains.util.Constants.ACE_REFACTORING_SUGGESTION
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_MONITOR
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
 import com.intellij.ide.ui.LafManager
@@ -62,22 +62,10 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
         val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
         if (settings.aceAcknowledged) {
-        /*TODO: open refactoring window*/
-            println("Opened when ace is acknowledged for ${functionToRefactor?.name}")
-            documentationFile = createTempFile("$ACE.md", "This is a placeholder for the result of ${functionToRefactor?.name}'s refactoring")
-
-        }
-        else {
+            documentationFile = getRefactoringResult()
+        } else {
             TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_INFO_PRESENTED)
-
-            val inputStream = classLoader.getResourceAsStream("ace-info.md")
-            val markdown = inputStream?.bufferedReader()?.readText() ?: ""
-            val markdownContent =
-                transformMarkdownToHtml(TransformMarkdownParams(markdown, "codeSmellName", true), true)
-            val header =
-                prepareHeader(HeadingParams(CodeSmell("", Range(1, 1, 1, 1), ""), true, markdown, classLoader, editor))
-
-             documentationFile = createTempFile("$ACE.md", "$header$markdownContent")
+            documentationFile = getAceAcknowledgementFile(editor, classLoader)
         }
 
         if (editor != null)
@@ -114,6 +102,32 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
         } else {
             openDocumentationWithoutActiveEditor(documentationFile)
         }
+    }
+
+    private fun getRefactoringResult(): VirtualFile {
+        //TODO
+
+        return createTempFile(
+            "$ACE_REFACTORING_SUGGESTION.md",
+            "This is a placeholder for the result of ${functionToRefactor?.name}'s refactoring"
+        )
+    }
+
+    private fun getAceAcknowledgementFile(editor: Editor?, classLoader: ClassLoader): VirtualFile {
+        val markdown = classLoader.getResourceAsStream("ace-info.md")?.bufferedReader()?.readText() ?: ""
+
+        val transformParams = TransformMarkdownParams(markdown, "codeSmellName", true)
+        val markdownContent = transformMarkdownToHtml(transformParams, true)
+
+        val headingParams = HeadingParams(
+            editor = editor,
+            content = markdown,
+            classLoader = classLoader,
+            standaloneDocumentation = true
+        )
+        val header = prepareHeader(headingParams)
+
+        return createTempFile("$ACE.md", "$header$markdownContent")
     }
 
     private fun logTelemetryEvent(codeSmell: CodeSmell) {
@@ -329,15 +343,12 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
     private fun prepareHeader(params: HeadingParams): String {
         val (codeSmell, standaloneDocumentation, _, classLoader, editor) = params
 
-        val fileName = editor?.virtualFile?.name ?: ""
-        val lineNumber = codeSmell.highlightRange?.startLine ?: 1
-
         // styling
         val style = getStyling(classLoader)
 
         // components
         val heading = getHeading(params)
-        val documentationSubHeader = getDocumentationSubHeader(fileName, lineNumber, standaloneDocumentation)
+        val documentationSubHeader = if (!standaloneDocumentation) getDocumentationSubHeader(editor, codeSmell) else ""
 
         // language=HTML
         return """
@@ -366,7 +377,7 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
 
         val logoSvg = classLoader.getResourceAsStream(Constants.LOGO_PATH)?.bufferedReader()?.readText()
 
-        return if (!standaloneDocumentation) "<h2>${codeSmell.category}</h2>" else {
+        return if (!standaloneDocumentation) "<h2>${codeSmell?.category}</h2>" else {
             val heading = content.split("\n\n", limit = 2)[0]
 
             """
@@ -409,9 +420,11 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
      * no sub-header is returned.
      *
      */
-    private fun getDocumentationSubHeader(fileName: String, lineNumber: Int, standaloneDocumentation: Boolean) =
-        if (!standaloneDocumentation) {
-            """
+    private fun getDocumentationSubHeader(editor: Editor?, codeSmell: CodeSmell?): String {
+        val fileName = editor?.virtualFile?.name ?: ""
+        val lineNumber = codeSmell?.highlightRange?.startLine ?: 1
+
+        return """
         |    <div class="documentation-header">
         |        <p>
         |            <span id="function-location">$fileName&nbsp;&nbsp;
@@ -420,7 +433,8 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
         |        </p>
         |    </div>
         """.trimMargin()
-        } else ""
+    }
+
 
     /**
      * Method to create virtual file for our generated documentation content.
@@ -470,7 +484,7 @@ data class DocumentationParams(
 )
 
 data class HeadingParams(
-    val codeSmell: CodeSmell,
+    val codeSmell: CodeSmell? = null,
     val standaloneDocumentation: Boolean,
     val content: String,
     val classLoader: ClassLoader,

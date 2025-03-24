@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.codeInsight.codehealth
 
-import com.codescene.jetbrains.util.codeSmellNames
+import com.codescene.jetbrains.util.acceptedFileNames
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorPolicy
 import com.intellij.openapi.fileEditor.FileEditorProvider
@@ -16,7 +16,7 @@ class CodeSceneHtmlViewerProvider : FileEditorProvider {
      * This behaviour is controlled by codeSmellNames list which needs to be updated in case of newly added file.
      */
     override fun accept(project: Project, file: VirtualFile): Boolean {
-        return file.extension == "md" && codeSmellNames.contains(file.nameWithoutExtension)
+        return file.extension == "md" && acceptedFileNames.contains(file.nameWithoutExtension)
     }
 
     override fun createEditor(project: Project, file: VirtualFile): FileEditor {

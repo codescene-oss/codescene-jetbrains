@@ -126,8 +126,6 @@ class CodeSceneHtmlViewer(val project: Project, private val file: VirtualFile) :
     private fun handleAction(data: String) {
         when (data) {
             "goto-function-location" -> {
-                println("goto-function-location")
-
                 val functionLocation = CodeSceneDocumentationService.getInstance(project).functionLocation
                 scope.launch {
                     functionLocation?.let {
@@ -148,12 +146,11 @@ class CodeSceneHtmlViewer(val project: Project, private val file: VirtualFile) :
                     val service = CodeSceneDocumentationService.getInstance(project)
                     val editor = getSelectedTextEditor(project, "")
 
+                    //TODO: Perform refactoring before opening panel. Finished refactoring triggers panel?
                     function?.let { service.openAcePanel(editor, function) }
                 }
             }
-            // TODO handle other type of messages here (e.g. refactoring)
         }
-
     }
 
     override fun getComponent(): JComponent = panel

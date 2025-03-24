@@ -1,15 +1,13 @@
 package com.codescene.jetbrains.services.api
 
 import com.codescene.ExtensionAPI
-import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.ExtensionAPI.ReviewParams
-import com.codescene.data.review.Review
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
-import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.cache.ReviewCacheEntry
 import com.codescene.jetbrains.services.cache.ReviewCacheService
 import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.checkContainsRefactorableFunctions
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
@@ -58,14 +56,5 @@ class CodeReviewService(private val project: Project) : CodeSceneService() {
             "Review response cached for file $fileName with path $path",
             "$serviceImplementation - ${project.name}"
         )
-    }
-
-    private fun checkContainsRefactorableFunctions(editor: Editor, result: Review) {
-        val aceEnabled = CodeSceneGlobalSettingsStore.getInstance().state.enableAutoRefactor
-
-        if (aceEnabled) {
-            val aceParams = CodeParams(editor.document.text, editor.virtualFile.extension)
-            AceService.getInstance().getRefactorableFunctions(aceParams, result, editor)
-        }
     }
 }

@@ -4,6 +4,7 @@ import com.codescene.data.ace.FnToRefactor
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
+import com.codescene.jetbrains.services.api.AceService
 import com.codescene.jetbrains.util.fetchAceCache
 import com.codescene.jetbrains.util.getTextRange
 import com.intellij.codeInsight.codeVision.*
@@ -59,10 +60,13 @@ class ACECodeVisionProvider : CodeVisionProvider<Unit> {
         return lenses
     }
 
+    //TODO: Common entry point logic
     private fun handleLensClick(editor: Editor, function: FnToRefactor) {
         val project = editor.project ?: return
         val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
 
+        //Open window after refactoring result is ready? No loader solution?
+        AceService.getInstance().refactor(function)
         codeSceneDocumentationService.openAcePanel(editor, function)
     }
 }
