@@ -4,6 +4,7 @@ import com.codescene.ExtensionAPI
 import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.ace.PreflightResponse
+import com.codescene.data.ace.RefactorResponse
 import com.codescene.data.ace.RefactoringOptions
 import com.codescene.data.delta.Delta
 import com.codescene.data.review.Review
@@ -14,53 +15,64 @@ import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheEntry
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
 import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.showRefactoringFinishedNotification
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
+import com.intellij.platform.ide.progress.withBackgroundProgress
 import kotlinx.coroutines.*
+
+data class RefactoredFunction(
+    val name: String,
+    val refactoringResult: RefactorResponse
+)
 
 @Service
 class AceService : BaseService(), Disposable {
     private val scope = CoroutineScope(Dispatchers.IO)
-    private val timeout: Long = 15_000
-    private val settings = CodeSceneGlobalSettingsStore.getInstance().state
-    private var status: AceStatus = settings.aceStatus
+    private val refactoringScope = CoroutineScope(Dispatchers.IO)
+    private var refactoringJob: Job? = null
+    private val currentRefactorings: MutableList<FnToRefactor> = mutableListOf()
+    private val timeout: Long = 3_000
     private val serviceImplementation: String = this::class.java.simpleName
 
     companion object {
         fun getInstance(): AceService = service<AceService>()
     }
 
-    fun getPreflightInfo(forceRefresh: Boolean = false): PreflightResponse? {
+    fun getPreflightInfo(forceRefresh: Boolean = true): PreflightResponse? {
         val settings = CodeSceneGlobalSettingsStore.getInstance().state
         var preflightInfo: PreflightResponse? = null
 
         if (settings.enableAutoRefactor) {
+            scope.launch {
+                withTimeoutOrNull(timeout) {
+                    try {
+                        preflightInfo = runWithClassLoaderChange { ExtensionAPI.preflight(forceRefresh) }
 
-            try {
-                runWithClassLoaderChange {
-                    preflightInfo = ExtensionAPI.preflight(forceRefresh)
-                }
-                //todo: change to debug after implementation done
-                Log.warn("Preflight info fetched: $preflightInfo")
-                settings.aceStatus = AceStatus.ACTIVATED
-                Log.warn("ACE status is $status")
-            } catch (e: TimeoutCancellationException) {
-                Log.warn("Preflight info fetching timed out")
-                settings.aceStatus = AceStatus.ERROR
-                Log.warn("ACE status is $status")
-            } catch (e: Exception) {
-                Log.error("Error during preflight info fetching: ${e.message}")
-                settings.aceStatus = AceStatus.ERROR
-                Log.warn("ACE status is $status")
+                        Log.warn("Preflight info fetched: $preflightInfo")
+                        settings.aceStatus = AceStatus.ACTIVATED
+                        Log.warn("ACE status is ${CodeSceneGlobalSettingsStore.getInstance().state.aceStatus}")
+                    } catch (e: Exception) {
+                        Log.error("Error during preflight info fetching: ${e.message}")
+                        settings.aceStatus = AceStatus.ERROR
+                        Log.warn("ACE status is ${CodeSceneGlobalSettingsStore.getInstance().state.aceStatus}")
+                    }
+                } ?: handleTimeout()
             }
         } else {
             settings.aceStatus = AceStatus.DEACTIVATED
-            Log.warn("ACE status is $status")
+            Log.warn("ACE status is ${settings.aceStatus}")
         }
 
         return preflightInfo
+    }
+
+    private fun handleTimeout() {
+        Log.warn("Preflight info fetching timed out")
+        CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.ERROR
+        Log.warn("ACE status is ${CodeSceneGlobalSettingsStore.getInstance().state.aceStatus}")
     }
 
     /**
@@ -88,19 +100,28 @@ class AceService : BaseService(), Disposable {
         refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, codeSmells) }
     }
 
-    //WIP
-    fun refactor(function: FnToRefactor, options: RefactoringOptions? = null) {
+    fun refactor(editor: Editor, function: FnToRefactor, options: RefactoringOptions? = null) {
+        if (currentRefactorings.contains(function)) return
+
         Log.debug("Initiating refactor for function ${function.name}...")
 
-        scope.launch {
-            val result = runWithClassLoaderChange {
-                if (options == null)
-                    ExtensionAPI.refactor(function) else ExtensionAPI.refactor(function, options)
+        refactoringScope.launch {
+            withBackgroundProgress(editor.project!!, "Refactoring ${function.name}...", cancellable = false) {
+                try {
+                    val result = runWithClassLoaderChange(100_000) {
+                        if (options == null)
+                            ExtensionAPI.refactor(function) else ExtensionAPI.refactor(function, options)
+                    }
+
+                    //TODO: if function has already been refactored (in ACE cache) then just open result, instead of showing notification, since we expect this to be faster?
+                    result?.let { showRefactoringFinishedNotification(editor, RefactoredFunction(function.name, result)) }
+                } catch (e: Exception) {
+                    //TODO: error notification
+                    println(e.message)
+                } finally {
+                    currentRefactorings.remove(function)
+                }
             }
-
-            println("Refactoring result: $result")
-
-            //TODO: After refactoring, open the panel with the results
         }
     }
 
@@ -110,7 +131,7 @@ class AceService : BaseService(), Disposable {
         val service = "${serviceImplementation} - ${project.name}"
 
         scope.launch {
-            val result = runWithClassLoaderChange { getFunctions() }
+            val result = runWithClassLoaderChange(100_000) { getFunctions() } ?: return@launch
 
             val entry = AceRefactorableFunctionCacheEntry(path, editor.document.text, result)
             AceRefactorableFunctionsCacheService.getInstance(project).put(entry)
@@ -126,5 +147,6 @@ class AceService : BaseService(), Disposable {
 
     override fun dispose() {
         scope.cancel()
+        refactoringScope.cancel()
     }
 }

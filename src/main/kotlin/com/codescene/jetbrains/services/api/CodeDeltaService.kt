@@ -61,7 +61,7 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
         handleDeltaResponse(editor, delta, oldCode)
     }
 
-    private fun getDeltaResponse(editor: Editor, oldCode: String): Delta? {
+    private suspend fun getDeltaResponse(editor: Editor, oldCode: String): Delta? {
         val path = editor.virtualFile.path
 
         val oldReview = ReviewParams(path, oldCode)

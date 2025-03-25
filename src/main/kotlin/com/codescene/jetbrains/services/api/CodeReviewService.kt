@@ -38,14 +38,14 @@ class CodeReviewService(private val project: Project) : CodeSceneService() {
 
     override fun getActiveApiCalls() = CodeSceneCodeVisionProvider.activeReviewApiCalls
 
-    private fun performCodeReview(editor: Editor) {
+    private suspend fun performCodeReview(editor: Editor) {
         val file = editor.virtualFile
         val path = file.path
         val fileName = file.name
         val code = editor.document.text
 
         val params = ReviewParams(path, code)
-        val result = runWithClassLoaderChange { ExtensionAPI.review(params) }
+        val result = runWithClassLoaderChange { ExtensionAPI.review(params) } ?: return
 
         val entry = ReviewCacheEntry(fileContents = code, filePath = path, response = result)
         cacheService.put(entry)

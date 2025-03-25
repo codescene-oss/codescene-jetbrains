@@ -36,6 +36,7 @@ object Constants {
     const val ACE = "$CODESCENE ACE Auto-Refactoring"
     const val ACE_REFACTORING_SUGGESTION = "Refactoring suggestion"
     const val TELEMETRY_EDITOR_TYPE = "intellij"
+    const val ACE_NOTIFICATION_GROUP = "CodeScene ACE"
 
     const val BRAIN_CLASS = "Brain Class"
     const val BRAIN_METHOD = "Brain Method"

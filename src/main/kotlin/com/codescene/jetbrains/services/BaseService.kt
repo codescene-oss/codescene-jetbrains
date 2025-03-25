@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.services
 
 import com.codescene.jetbrains.util.Log
+import kotlinx.coroutines.withTimeoutOrNull
 
 open class BaseService() {
 
@@ -13,7 +14,7 @@ open class BaseService() {
      * - Clojure dependencies failing due to incompatible URLConnection handling
      *   (e.g., ZipResourceFile$MyURLConnection vs JarURLConnection).
      */
-    protected fun <T> runWithClassLoaderChange(action: () -> T): T {
+    protected suspend fun <T> runWithClassLoaderChange(timeout: Long = 60_000, action: () -> T): T? {
         val originalClassLoader = Thread.currentThread().contextClassLoader
         val classLoader = this@BaseService.javaClass.classLoader
         Thread.currentThread().contextClassLoader = classLoader
@@ -23,7 +24,7 @@ open class BaseService() {
 
             val startTime = System.currentTimeMillis()
 
-            val result = action()
+            val result = withTimeoutOrNull(timeout) { action() }
 
             val elapsedTime = System.currentTimeMillis() - startTime
             Log.info("Received response from CodeScene API in ${elapsedTime}ms", serviceImplementation)

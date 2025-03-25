@@ -6,7 +6,7 @@ import com.codescene.jetbrains.codeInsight.codehealth.CodeHighlighter.generateHi
 import com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewer
 import com.codescene.jetbrains.codeInsight.codehealth.MarkdownCodeDelimiter
 import com.codescene.jetbrains.codeInsight.codehealth.PreviewThemeStyles
-import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.services.api.RefactoredFunction
 import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.ACE
@@ -54,19 +54,22 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
             project.service<CodeSceneDocumentationService>()
     }
 
-    fun openAcePanel(editor: Editor?, fnToRefactor: FnToRefactor?) {
+    fun openAceAcknowledgementPanel(editor: Editor?, fnToRefactor: FnToRefactor?) {
         functionToRefactor = fnToRefactor
         val classLoader = this@CodeSceneDocumentationService.javaClass.classLoader
 
-        val documentationFile: VirtualFile
-        val settings = CodeSceneGlobalSettingsStore.getInstance().state
+        TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_INFO_PRESENTED)
+        val documentationFile = getAceAcknowledgementFile(editor, classLoader)
 
-        if (settings.aceAcknowledged) {
-            documentationFile = getRefactoringResult()
-        } else {
-            TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_INFO_PRESENTED)
-            documentationFile = getAceAcknowledgementFile(editor, classLoader)
-        }
+        if (editor != null)
+            splitWindow(documentationFile)
+        else
+            openDocumentationWithoutActiveEditor(documentationFile)
+    }
+
+    fun openRefactoringResult(editor: Editor?, function: RefactoredFunction) {
+        //dummy impl
+        val documentationFile = getRefactoringResult(function)
 
         if (editor != null)
             splitWindow(documentationFile)
@@ -104,12 +107,27 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
         }
     }
 
-    private fun getRefactoringResult(): VirtualFile {
-        //TODO
+    private fun getRefactoringResult(function: RefactoredFunction): VirtualFile {
+        val (name, refactoringResult) = function
+        val credits = refactoringResult.creditsInfo.get()
 
         return createTempFile(
             "$ACE_REFACTORING_SUGGESTION.md",
-            "This is a placeholder for the result of ${functionToRefactor?.name}'s refactoring"
+            """
+                <html>
+                  <p> 
+                    This is a placeholder for the result of $name's refactoring.
+                    <ul>
+                        <li>Available credits: ${credits.limit - credits.used}</li>
+                        <li>Confidence: ${refactoringResult.confidence.title}</li>
+                        <li>Reasons summary: ${refactoringResult.reasons.map { it.summary }.joinToString(", ")}</li>
+                        <li>Added code smells: ${refactoringResult.refactoringProperties.addedCodeSmells.joinToString(", ")}</li>
+                        <li>Removed code smells: ${refactoringResult.refactoringProperties.removedCodeSmells.joinToString(", ")}</li>
+                        <li>Code: ${refactoringResult.code} </li>
+                    </ul>
+                  </p>
+                </html>
+            """.trimIndent()
         )
     }
 

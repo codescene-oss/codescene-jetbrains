@@ -3,7 +3,6 @@ package com.codescene.jetbrains.util
 import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.review.Review
-import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.services.api.AceService
@@ -12,7 +11,6 @@ import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheServi
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 
-//WIP
 fun handleAceEntryPoint(editor: Editor?, function: FnToRefactor?) {
     if (editor == null || function == null) return
 
@@ -20,12 +18,11 @@ fun handleAceEntryPoint(editor: Editor?, function: FnToRefactor?) {
     val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
 
     val settings = CodeSceneGlobalSettingsStore.getInstance().state
-    if (settings.aceAcknowledged) {
-        //Open window after refactoring result is ready? No loader solution?
-        AceService.getInstance().refactor(function)
-    } else {
-        codeSceneDocumentationService.openAcePanel(editor, function)
-    }
+
+    if (settings.aceAcknowledged)
+        AceService.getInstance().refactor(editor, function)
+    else
+        codeSceneDocumentationService.openAceAcknowledgementPanel(editor, function)
 }
 
 fun fetchAceCache(path: String, content: String, project: Project): List<FnToRefactor> {
@@ -43,18 +40,14 @@ fun checkContainsRefactorableFunctions(editor: Editor, result: Review) {
     }
 }
 
+//wip
 private fun shouldCheckRefactorableFunctions(editor: Editor): Boolean {
-    val preflightResponse = AceService.getInstance().getPreflightInfo()
-
     val state = CodeSceneGlobalSettingsStore.getInstance().state
-    val aceEnabled = state.enableAutoRefactor
-    val aceStatus = state.aceStatus
+    if (!state.enableAutoRefactor) return false
 
-    val aceAvailable = aceStatus == AceStatus.ACTIVATED
-    val isLanguageSupported = preflightResponse?.fileTypes?.contains(editor.virtualFile.extension) ?: false
+    //val preflightResponse = runBlocking { AceService.getInstance().getPreflightInfo(false) }
+    //val isLanguageSupported = preflightResponse?.fileTypes?.contains(editor.virtualFile.extension) ?: false
+    //TODO: add language support check from preflight
 
-    val result = aceEnabled && isLanguageSupported && aceAvailable
-    if (!result) println("ACE analysis skipped for ${editor.virtualFile.name}. ACE status: ${aceEnabled} Currently supported languages are: ${preflightResponse?.fileTypes}")
-
-    return result
+    return true
 }
