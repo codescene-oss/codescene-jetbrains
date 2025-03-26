@@ -13,7 +13,7 @@ open class BaseService() {
      * - Clojure dependencies failing due to incompatible URLConnection handling
      *   (e.g., ZipResourceFile$MyURLConnection vs JarURLConnection).
      */
-    protected fun <T> runWithClassLoaderChange(action: () -> T): T {
+    protected suspend fun <T> runWithClassLoaderChange(timeout: Long = Long.MAX_VALUE, action: () -> T): T {
         val originalClassLoader = Thread.currentThread().contextClassLoader
         val classLoader = this@BaseService.javaClass.classLoader
         Thread.currentThread().contextClassLoader = classLoader
@@ -26,11 +26,11 @@ open class BaseService() {
             val result = action()
 
             val elapsedTime = System.currentTimeMillis() - startTime
-            Log.info("Received response from CodeScene API in ${elapsedTime}ms", serviceImplementation)
 
+            Log.info("Received response from CodeScene API in ${elapsedTime}ms", serviceImplementation)
             result
         } catch (e: Exception) {
-            Log.error("Exception during ClassLoader change operation: ${e.message}", serviceImplementation)
+            Log.debug("Exception during CodeScene API operation ", serviceImplementation)
 
             throw (e)
         } finally {

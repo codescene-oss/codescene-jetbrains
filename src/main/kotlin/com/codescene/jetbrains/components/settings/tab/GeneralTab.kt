@@ -8,6 +8,8 @@ import com.codescene.jetbrains.services.AceService
 import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.Constants.CONTACT_URL
 import com.codescene.jetbrains.util.Constants.DOCUMENTATION_URL
+import com.codescene.jetbrains.util.Constants.GREEN
+import com.codescene.jetbrains.util.Constants.RED
 import com.codescene.jetbrains.util.Constants.SUPPORT_URL
 import com.codescene.jetbrains.util.Constants.TERMS_AND_CONDITIONS_URL
 import com.codescene.jetbrains.util.Log
@@ -76,7 +78,7 @@ class GeneralTab : Configurable {
 
         button.addActionListener {
             if (status == AceStatus.ERROR) {
-                AceService.getInstance().getPreflightInfo()
+                AceService.getInstance().runPreflight(true)
             }
         }
 
@@ -87,13 +89,12 @@ class GeneralTab : Configurable {
         lateinit var buttonColor: JBColor
 
         when (status) {
-            AceStatus.ERROR -> buttonColor = JBColor.RED
-            AceStatus.ACTIVATED -> buttonColor = JBColor.GREEN
+            AceStatus.ERROR -> buttonColor = RED
+            AceStatus.ACTIVATED -> buttonColor = GREEN
             AceStatus.DEACTIVATED -> buttonColor = JBColor.GRAY
             AceStatus.OUT_OF_CREDITS -> buttonColor = JBColor.YELLOW
         }
 
-//        button.border = BorderFactory.createLineBorder(buttonColor, 1)
         button.foreground = buttonColor
     }
 

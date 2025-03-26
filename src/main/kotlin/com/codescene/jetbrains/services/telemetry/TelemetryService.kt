@@ -13,14 +13,12 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.extensions.PluginId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 @Service
 class TelemetryService() : BaseService(), Disposable {
     private val scope = CoroutineScope(Dispatchers.IO)
-    private val timeout: Long = 5_000
 
     companion object {
         fun getInstance(): TelemetryService = service<TelemetryService>()
@@ -36,18 +34,17 @@ class TelemetryService() : BaseService(), Disposable {
         val telemetryEvent =
             TelemetryEvent(extendedName, userId, Constants.TELEMETRY_EDITOR_TYPE, getPluginVersion(), false)
         eventData.forEach { telemetryEvent.setAdditionalProperty(it.key, it.value) }
+
         scope.launch {
-                try {
-                    runWithClassLoaderChange {
-                        ExtensionAPI.sendTelemetry(telemetryEvent)
-                    }
-                    Log.warn("Telemetry event logged: ${telemetryEvent.eventName}")
-                } catch (_: TimeoutCancellationException) {
-                    Log.warn("Telemetry event $extendedName sending timed out")
-                } catch (_: Exception) {
-                    Log.warn("Error during telemetry event $extendedName sending")
+            try {
+                runWithClassLoaderChange {
+                    ExtensionAPI.sendTelemetry(telemetryEvent)
                 }
+                Log.debug("Telemetry event logged: ${telemetryEvent.eventName}")
+            } catch (_: Exception) {
+                Log.debug("Error during telemetry event $extendedName sending")
             }
+        }
     }
 
     private fun getPluginVersion(): String =

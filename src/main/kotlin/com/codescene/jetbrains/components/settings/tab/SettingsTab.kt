@@ -58,6 +58,6 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
 
     override fun apply() {
         super.apply()
-        AceService.getInstance().getPreflightInfo()
+        AceService.getInstance().runPreflight(true)
     }
 }

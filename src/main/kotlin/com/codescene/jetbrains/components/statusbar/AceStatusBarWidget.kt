@@ -51,7 +51,7 @@ class AceStatusBarWidget : StatusBarWidget.IconPresentation, StatusBarWidget {
         return Consumer { _: MouseEvent ->
                 Log.warn("Button clicked")
             if (value == AceStatus.ERROR.value) {
-                AceService.getInstance().getPreflightInfo()
+                AceService.getInstance().runPreflight(true)
             }
         }
     }

@@ -26,7 +26,7 @@ class ProjectStartupActivity : ProjectActivity {
         addStateListener()
         VirtualFileManager.getInstance().addAsyncFileListener(FileChangeListener(project), disposable)
 
-        AceService.getInstance().getPreflightInfo()
+        AceService.getInstance().runPreflight(true)
     }
 
     private fun addStateListener() = PluginInstaller.addStateListener(object : PluginStateListener {
