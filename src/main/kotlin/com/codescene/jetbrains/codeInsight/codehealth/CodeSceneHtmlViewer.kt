@@ -3,8 +3,10 @@ package com.codescene.jetbrains.codeInsight.codehealth
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.CodeNavigationService
 import com.codescene.jetbrains.services.CodeSceneDocumentationService
+import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.TelemetryEvents
 import com.codescene.jetbrains.util.getSelectedTextEditor
 import com.codescene.jetbrains.util.handleAceEntryPoint
 import com.intellij.openapi.fileEditor.FileEditor
@@ -139,8 +141,9 @@ class CodeSceneHtmlViewer(val project: Project, private val file: VirtualFile) :
 
             "show-me-ace" -> {
                 Log.info("ACE acknowledged", "${this::javaClass::name} - ${project.name}")
-                CodeSceneGlobalSettingsStore.getInstance().state.aceAcknowledged = true
+                TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_INFO_ACKNOWLEDGED)
 
+                CodeSceneGlobalSettingsStore.getInstance().state.aceAcknowledged = true
                 val function = CodeSceneDocumentationService.getInstance(project).functionToRefactor
 
                 scope.launch(Dispatchers.Main) {

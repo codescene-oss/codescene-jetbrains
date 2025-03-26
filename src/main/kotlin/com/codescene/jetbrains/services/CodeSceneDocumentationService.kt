@@ -9,13 +9,14 @@ import com.codescene.jetbrains.codeInsight.codehealth.PreviewThemeStyles
 import com.codescene.jetbrains.services.api.RefactoredFunction
 import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.*
-import com.codescene.jetbrains.util.Constants.ACE
+import com.codescene.jetbrains.util.Constants.ACE_ACKNOWLEDGEMENT
 import com.codescene.jetbrains.util.Constants.ACE_REFACTORING_SUGGESTION
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_MONITOR
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
 import com.intellij.ide.ui.LafManager
 import com.intellij.ide.ui.LafManagerListener
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -131,7 +132,7 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
         )
     }
 
-    private fun getAceAcknowledgementFile(editor: Editor?, classLoader: ClassLoader): VirtualFile {
+    private fun getAceAcknowledgementFile(editor: Editor?, classLoader: ClassLoader): LightVirtualFile {
         val markdown = classLoader.getResourceAsStream("ace-info.md")?.bufferedReader()?.readText() ?: ""
 
         val transformParams = TransformMarkdownParams(markdown, "codeSmellName", true)
@@ -145,7 +146,7 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
         )
         val header = prepareHeader(headingParams)
 
-        return createTempFile("$ACE.md", "$header$markdownContent")
+        return createTempFile("$ACE_ACKNOWLEDGEMENT.md", "$header$markdownContent")
     }
 
     private fun logTelemetryEvent(codeSmell: CodeSmell) {
@@ -177,7 +178,7 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
 
         fileEditorManager.openFiles
             .filterIsInstance<LightVirtualFile>()
-            .filter { it != file && codeSmellNames.contains(it.nameWithoutExtension) }
+            .filter { it != file && acceptedFileNames.contains(it.nameWithoutExtension) }
             .forEach { docWindow?.closeFile(it) }
     }
 
@@ -457,9 +458,9 @@ class CodeSceneDocumentationService(private val project: Project) : LafManagerLi
     /**
      * Method to create virtual file for our generated documentation content.
      */
-    private fun createTempFile(name: String, content: String): VirtualFile {
+    private fun createTempFile(name: String, content: String): LightVirtualFile {
         val file = LightVirtualFile(name, content)
-        val psiFile = PsiManager.getInstance(project).findFile(file) ?: return file
+        val psiFile = runReadAction { PsiManager.getInstance(project).findFile(file) } ?: return file
         file.isWritable = false
 
         WriteCommandAction.runWriteCommandAction(project) {

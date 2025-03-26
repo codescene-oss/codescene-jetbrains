@@ -11,6 +11,7 @@ import com.codescene.data.review.Review
 import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.BaseService
+import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheEntry
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
@@ -32,8 +33,6 @@ data class RefactoredFunction(
 class AceService : BaseService(), Disposable {
     private val scope = CoroutineScope(Dispatchers.IO)
     private val refactoringScope = CoroutineScope(Dispatchers.IO)
-    private var refactoringJob: Job? = null
-    private val currentRefactorings: MutableList<FnToRefactor> = mutableListOf()
     private val timeout: Long = 3_000
     private val serviceImplementation: String = this::class.java.simpleName
 
@@ -101,28 +100,41 @@ class AceService : BaseService(), Disposable {
     }
 
     fun refactor(editor: Editor, function: FnToRefactor, options: RefactoringOptions? = null) {
-        if (currentRefactorings.contains(function)) return
-
         Log.debug("Initiating refactor for function ${function.name}...")
 
         refactoringScope.launch {
             withBackgroundProgress(editor.project!!, "Refactoring ${function.name}...", cancellable = false) {
                 try {
+                    val startTime = System.nanoTime()
+
                     val result = runWithClassLoaderChange(100_000) {
                         if (options == null)
                             ExtensionAPI.refactor(function) else ExtensionAPI.refactor(function, options)
                     }
 
-                    //TODO: if function has already been refactored (in ACE cache) then just open result, instead of showing notification, since we expect this to be faster?
-                    result?.let { showRefactoringFinishedNotification(editor, RefactoredFunction(function.name, result)) }
+                    val durationMillis = (System.nanoTime() - startTime) / 1_000_000
+                    Log.debug("Refactoring ${function.name} took ${durationMillis}ms.")
+
+                    result?.let {
+                        handleRefactoringResult(editor, RefactoredFunction(function.name, result), durationMillis)
+                    }
                 } catch (e: Exception) {
                     //TODO: error notification
                     println(e.message)
-                } finally {
-                    currentRefactorings.remove(function)
                 }
             }
         }
+    }
+
+    private fun handleRefactoringResult(editor: Editor, function: RefactoredFunction, requestDuration: Long) {
+        if (requestDuration < 1500)
+            CoroutineScope(Dispatchers.Main).launch {
+                CodeSceneDocumentationService
+                    .getInstance(editor.project!!)
+                    .openRefactoringResult(editor, RefactoredFunction(function.name, function.refactoringResult))
+            }
+        else
+            showRefactoringFinishedNotification(editor, RefactoredFunction(function.name, function.refactoringResult))
     }
 
     private fun refactorableFunctionsHandler(editor: Editor, getFunctions: () -> List<FnToRefactor>) {
