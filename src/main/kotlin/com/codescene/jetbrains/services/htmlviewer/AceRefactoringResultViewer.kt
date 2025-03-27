@@ -3,7 +3,6 @@ package com.codescene.jetbrains.services.htmlviewer
 import com.codescene.jetbrains.services.api.RefactoredFunction
 import com.codescene.jetbrains.util.Constants.ACE_REFACTORING_SUGGESTION
 import com.codescene.jetbrains.util.createTempFile
-import com.intellij.ide.ui.LafManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -42,9 +41,5 @@ class AceRefactoringResultViewer(private val project: Project) : HtmlViewer<Refa
             """.trimIndent(),
             project
         )
-    }
-
-    override fun lookAndFeelChanged(p0: LafManager) {
-        TODO("Not yet implemented")
     }
 }

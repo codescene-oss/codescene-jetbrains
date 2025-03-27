@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.services.htmlviewer
 
-import com.codescene.jetbrains.util.*
+import com.codescene.jetbrains.util.acceptedFileNames
+import com.intellij.ide.ui.LafManager
 import com.intellij.ide.ui.LafManagerListener
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
@@ -11,6 +12,9 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.LightVirtualFile
 
 abstract class HtmlViewer<T>(private val project: Project) : LafManagerListener {
+    private var data: T? = null
+    private var editor: Editor? = null
+
     init {
         // Subscribe to theme updates when the service is initialized
         val bus = ApplicationManager.getApplication().messageBus.connect()
@@ -19,6 +23,9 @@ abstract class HtmlViewer<T>(private val project: Project) : LafManagerListener 
 
     //add telemetry handling before docs opened
     fun open(editor: Editor?, params: T) {
+        data = params
+        this.editor = editor
+
         val document = prepareFile(params)
         val fileEditorManager = FileEditorManager.getInstance(project)
 
@@ -71,4 +78,8 @@ abstract class HtmlViewer<T>(private val project: Project) : LafManagerListener 
 
     private fun shouldCloseFile(existing: LightVirtualFile, new: LightVirtualFile) =
         existing != new && acceptedFileNames.contains(existing.nameWithoutExtension)
+
+    override fun lookAndFeelChanged(p0: LafManager) {
+        data?.let { open(editor, data!!) }
+    }
 }

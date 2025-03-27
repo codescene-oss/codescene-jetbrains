@@ -2,7 +2,6 @@ package com.codescene.jetbrains.services.htmlviewer
 
 import com.codescene.data.review.CodeSmell
 import com.codescene.jetbrains.util.prepareMarkdownContent
-import com.intellij.ide.ui.LafManager
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.Service
@@ -56,9 +55,5 @@ class CodeSceneDocumentationViewer(private val project: Project) : HtmlViewer<Do
         }
 
         return file
-    }
-
-    override fun lookAndFeelChanged(p0: LafManager) {
-//        open(null, )
     }
 }

@@ -4,7 +4,6 @@ import com.codescene.data.ace.FnToRefactor
 import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.ACE_ACKNOWLEDGEMENT
-import com.intellij.ide.ui.LafManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
@@ -45,9 +44,5 @@ class AceAcknowledgementViewer(private val project: Project) : HtmlViewer<AceAck
         val header = prepareHeader(headingParams)
 
         return createTempFile("$ACE_ACKNOWLEDGEMENT.md", "$header$markdownContent", project)
-    }
-
-    override fun lookAndFeelChanged(p0: LafManager) {
-        TODO("Not yet implemented")
     }
 }
