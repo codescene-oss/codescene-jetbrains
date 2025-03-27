@@ -71,7 +71,7 @@ class CodeHealthPanelBuilder(private val project: Project) {
                     details.filePath,
                     "${this::class.simpleName} - ${project.name}"
                 )
-                handleAceEntryPoint(selectedEditor, details.refactorableFunction)
+                handleAceEntryPoint(RefactoringParams(project, selectedEditor, details.refactorableFunction))
             }.also {
                 if (details.refactorableFunction == null) {
                     it.icon = ACE_DISABLED

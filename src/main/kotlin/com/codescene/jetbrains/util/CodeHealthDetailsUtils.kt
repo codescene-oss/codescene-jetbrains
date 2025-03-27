@@ -13,9 +13,9 @@ import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL_FOUND
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.components.codehealth.monitor.tree.NodeType
-import com.codescene.jetbrains.services.CodeSceneDocumentationService
-import com.codescene.jetbrains.services.DocsSourceType
-import com.codescene.jetbrains.services.DocumentationParams
+import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
+import com.codescene.jetbrains.services.htmlviewer.DocsSourceType
+import com.codescene.jetbrains.services.htmlviewer.DocumentationParams
 import com.codescene.jetbrains.util.Constants.GREEN
 import com.codescene.jetbrains.util.Constants.ORANGE
 import com.codescene.jetbrains.util.Constants.RED
@@ -291,7 +291,7 @@ fun getHealthFinding(delta: Delta, finding: CodeHealthFinding, project: Project)
 private fun handleMouseClick(project: Project, codeSmell: CodeSmell, filePath: String) {
     val editorManager = FileEditorManager.getInstance(project)
     val file = LocalFileSystem.getInstance().findFileByPath(filePath)
-    val documentationService = CodeSceneDocumentationService.getInstance(project)
+    val docViewer = CodeSceneDocumentationViewer.getInstance(project)
 
     file?.let {
         if (!editorManager.isFileOpen(file)) editorManager.openFile(file, true)
@@ -303,7 +303,8 @@ private fun handleMouseClick(project: Project, codeSmell: CodeSmell, filePath: S
 
         editorManager.openTextEditor(fileDescriptor, true)
         editorManager.selectedTextEditor?.let {
-            documentationService.openDocumentationPanel(
+            docViewer.open(
+                it,
                 DocumentationParams(
                     it,
                     codeSmell,

@@ -4,25 +4,31 @@ import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
-import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.services.api.AceService
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheQuery
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
+import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewer
+import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewerParams
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 
-fun handleAceEntryPoint(editor: Editor?, function: FnToRefactor?) {
-    if (editor == null || function == null) return
+data class RefactoringParams(
+    val project: Project,
+    val editor: Editor?,
+    val function: FnToRefactor?
+)
 
-    val project = editor.project ?: return
-    val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
+fun handleAceEntryPoint(params: RefactoringParams) {
+    val (project, editor, function) = params
+    function ?: return
 
+    val aceAcknowledgement = AceAcknowledgementViewer.getInstance(project)
     val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
     if (settings.aceAcknowledged)
-        AceService.getInstance().refactor(editor, function)
+        AceService.getInstance().refactor(params)
     else
-        codeSceneDocumentationService.openAceAcknowledgementPanel(editor, function)
+        aceAcknowledgement.open(editor, AceAcknowledgementViewerParams(editor, function))
 }
 
 fun fetchAceCache(path: String, content: String, project: Project): List<FnToRefactor> {

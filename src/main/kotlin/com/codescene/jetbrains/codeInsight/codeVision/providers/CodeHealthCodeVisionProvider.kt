@@ -6,9 +6,9 @@ import com.codescene.data.review.Review
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPanel
-import com.codescene.jetbrains.services.CodeSceneDocumentationService
-import com.codescene.jetbrains.services.DocsSourceType
-import com.codescene.jetbrains.services.DocumentationParams
+import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
+import com.codescene.jetbrains.services.htmlviewer.DocsSourceType
+import com.codescene.jetbrains.services.htmlviewer.DocumentationParams
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
 import com.codescene.jetbrains.util.HealthDetails
@@ -66,7 +66,7 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override fun handleLensClick(editor: Editor, codeSmell: CodeSmell) {
         val project = editor.project!!
         val toolWindowManager = ToolWindowManager.getInstance(project)
-        val service = CodeSceneDocumentationService.getInstance(project)
+        val docViewer = CodeSceneDocumentationViewer.getInstance(project)
 
         val nodeSelected = CodeHealthMonitorPanel.getInstance(project).contentPanel.components
             .filterIsInstance<JTree>()
@@ -74,7 +74,8 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
             ?.let { selectNode(it, editor.virtualFile.path) } ?: false
 
         if (!nodeSelected)
-            service.openDocumentationPanel(
+            docViewer.open(
+                editor,
                 DocumentationParams(
                     editor,
                     CodeSmell(GENERAL_CODE_HEALTH, codeSmell.highlightRange, codeSmell.details),

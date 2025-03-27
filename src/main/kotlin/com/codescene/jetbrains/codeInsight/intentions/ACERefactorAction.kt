@@ -3,6 +3,7 @@ package com.codescene.jetbrains.codeInsight.intentions
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
 import com.codescene.jetbrains.util.Constants.CODESCENE
+import com.codescene.jetbrains.util.RefactoringParams
 import com.codescene.jetbrains.util.handleAceEntryPoint
 import com.intellij.codeInsight.intention.HighPriorityAction
 import com.intellij.codeInsight.intention.IntentionAction
@@ -22,7 +23,7 @@ class ACERefactorAction(private val function: FnToRefactor) : IntentionAction, H
     override fun isAvailable(project: Project, editor: Editor?, file: PsiFile): Boolean = true
 
     override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {
-        handleAceEntryPoint(editor, function)
+        handleAceEntryPoint(RefactoringParams(project, editor, function))
     }
 
     override fun startInWriteAction(): Boolean = false

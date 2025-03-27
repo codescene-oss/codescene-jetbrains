@@ -1,14 +1,12 @@
-package com.codescene.jetbrains.codeInsight.codehealth
+package com.codescene.jetbrains.fileeditor
 
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.CodeNavigationService
-import com.codescene.jetbrains.services.CodeSceneDocumentationService
+import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewer
+import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
 import com.codescene.jetbrains.services.telemetry.TelemetryService
+import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.CODESCENE
-import com.codescene.jetbrains.util.Log
-import com.codescene.jetbrains.util.TelemetryEvents
-import com.codescene.jetbrains.util.getSelectedTextEditor
-import com.codescene.jetbrains.util.handleAceEntryPoint
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorState
 import com.intellij.openapi.project.Project
@@ -33,7 +31,7 @@ import java.beans.PropertyChangeSupport
 import java.net.URI
 import javax.swing.JComponent
 
-class CodeSceneHtmlViewer(val project: Project, private val file: VirtualFile) : FileEditor {
+class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) : FileEditor {
 
     companion object {
         private const val JAVASCRIPT_SEND_MESSAGE = """
@@ -129,7 +127,7 @@ class CodeSceneHtmlViewer(val project: Project, private val file: VirtualFile) :
     private fun handleAction(data: String) {
         when (data) {
             "goto-function-location" -> {
-                val functionLocation = CodeSceneDocumentationService.getInstance(project).functionLocation
+                val functionLocation = CodeSceneDocumentationViewer.getInstance(project).functionLocation
                 scope.launch {
                     functionLocation?.let {
                         CodeNavigationService
@@ -144,11 +142,11 @@ class CodeSceneHtmlViewer(val project: Project, private val file: VirtualFile) :
                 TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_INFO_ACKNOWLEDGED)
 
                 CodeSceneGlobalSettingsStore.getInstance().state.aceAcknowledged = true
-                val function = CodeSceneDocumentationService.getInstance(project).functionToRefactor
+                val function = AceAcknowledgementViewer.getInstance(project).functionToRefactor
 
                 scope.launch(Dispatchers.Main) {
                     val editor = getSelectedTextEditor(project, "")
-                    handleAceEntryPoint(editor, function)
+                    handleAceEntryPoint(RefactoringParams(project, editor, function))
                 }
             }
         }

@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.codeInsight.codehealth
 
-import com.codescene.jetbrains.codeInsight.codehealth.CodeHighlighter.generateHighlightedHtml
+import com.codescene.jetbrains.services.htmlviewer.codehealth.CodeHighlighter.generateHighlightedHtml
+import com.codescene.jetbrains.services.htmlviewer.codehealth.MarkdownCodeDelimiter
 import com.intellij.lang.Language
 import com.intellij.lexer.Lexer
 import com.intellij.openapi.editor.colors.EditorColorsManager
@@ -10,7 +11,7 @@ import com.intellij.openapi.fileTypes.SyntaxHighlighter
 import com.intellij.openapi.fileTypes.SyntaxHighlighterFactory
 import com.intellij.openapi.fileTypes.SyntaxHighlighterFactory.getSyntaxHighlighter
 import com.intellij.psi.tree.IElementType
-import io.mockk.*
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll

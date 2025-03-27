@@ -133,7 +133,7 @@
                 implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.ACECodeVisionProvider"/>
 
         <fileEditorProvider
-                implementation="com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewerProvider"/>
+                implementation="com.codescene.jetbrains.fileeditor.CodeSceneFileEditorProvider"/>
     </extensions>
 
     <projectListeners>

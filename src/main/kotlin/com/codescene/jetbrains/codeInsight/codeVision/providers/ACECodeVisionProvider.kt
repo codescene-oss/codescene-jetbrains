@@ -3,6 +3,7 @@ package com.codescene.jetbrains.codeInsight.codeVision.providers
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.util.RefactoringParams
 import com.codescene.jetbrains.util.fetchAceCache
 import com.codescene.jetbrains.util.getTextRange
 import com.codescene.jetbrains.util.handleAceEntryPoint
@@ -60,6 +61,6 @@ class ACECodeVisionProvider : CodeVisionProvider<Unit> {
     }
 
     private fun handleLensClick(editor: Editor, function: FnToRefactor) {
-        handleAceEntryPoint(editor, function)
+        handleAceEntryPoint(RefactoringParams(editor.project!!, editor, function))
     }
 }

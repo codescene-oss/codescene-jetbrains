@@ -11,11 +11,12 @@ import com.codescene.data.review.Review
 import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.BaseService
-import com.codescene.jetbrains.services.CodeSceneDocumentationService
 import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheEntry
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
+import com.codescene.jetbrains.services.htmlviewer.AceRefactoringResultViewer
 import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.RefactoringParams
 import com.codescene.jetbrains.util.showRefactoringFinishedNotification
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
@@ -99,24 +100,27 @@ class AceService : BaseService(), Disposable {
         refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, codeSmells) }
     }
 
-    fun refactor(editor: Editor, function: FnToRefactor, options: RefactoringOptions? = null) {
-        Log.debug("Initiating refactor for function ${function.name}...")
+    fun refactor(params: RefactoringParams, options: RefactoringOptions? = null) {
+        val (project, _, function) = params
+        Log.debug("Initiating refactor for function ${function!!.name}...")
 
         refactoringScope.launch {
-            withBackgroundProgress(editor.project!!, "Refactoring ${function.name}...", cancellable = false) {
+            withBackgroundProgress(project, "Refactoring ${function!!.name}...", cancellable = false) {
                 try {
                     val startTime = System.nanoTime()
 
                     val result = runWithClassLoaderChange(100_000) {
-                        if (options == null)
-                            ExtensionAPI.refactor(function) else ExtensionAPI.refactor(function, options)
+                        if (options == null) ExtensionAPI.refactor(function) else ExtensionAPI.refactor(
+                            function,
+                            options
+                        )
                     }
 
                     val durationMillis = (System.nanoTime() - startTime) / 1_000_000
                     Log.debug("Refactoring ${function.name} took ${durationMillis}ms.")
 
                     result?.let {
-                        handleRefactoringResult(editor, RefactoredFunction(function.name, result), durationMillis)
+                        handleRefactoringResult(params, RefactoredFunction(function.name, result), durationMillis)
                     }
                 } catch (e: Exception) {
                     //TODO: error notification
@@ -126,15 +130,15 @@ class AceService : BaseService(), Disposable {
         }
     }
 
-    private fun handleRefactoringResult(editor: Editor, function: RefactoredFunction, requestDuration: Long) {
-        if (requestDuration < 1500)
-            CoroutineScope(Dispatchers.Main).launch {
-                CodeSceneDocumentationService
-                    .getInstance(editor.project!!)
-                    .openRefactoringResult(editor, RefactoredFunction(function.name, function.refactoringResult))
-            }
-        else
-            showRefactoringFinishedNotification(editor, RefactoredFunction(function.name, function.refactoringResult))
+    private fun handleRefactoringResult(
+        params: RefactoringParams, function: RefactoredFunction, requestDuration: Long
+    ) {
+        val (project, editor, _) = params
+        if (requestDuration < 1500) CoroutineScope(Dispatchers.Main).launch {
+            AceRefactoringResultViewer.getInstance(project)
+                .open(editor, RefactoredFunction(function.name, function.refactoringResult))
+        }
+        else showRefactoringFinishedNotification(params, RefactoredFunction(function.name, function.refactoringResult))
     }
 
     private fun refactorableFunctionsHandler(editor: Editor, getFunctions: () -> List<FnToRefactor>) {
