@@ -40,7 +40,7 @@ class AceStatusBarWidget : StatusBarWidget.IconPresentation, StatusBarWidget {
             AceStatusRefreshNotifier.TOPIC,
             object : AceStatusRefreshNotifier {
                 override fun refresh() {
-                    Log.warn("Refreshing ACE status in Status Bar...")
+                    Log.debug("Refreshing ACE status in Status Bar...")
                     value = AceService.getInstance().getStatus().value
                     statusBar?.updateWidget(ID())
                 }
@@ -49,7 +49,6 @@ class AceStatusBarWidget : StatusBarWidget.IconPresentation, StatusBarWidget {
 
     override fun getClickConsumer(): Consumer<MouseEvent>? {
         return Consumer { _: MouseEvent ->
-                Log.warn("Button clicked")
             if (value == AceStatus.ERROR.value) {
                 AceService.getInstance().runPreflight(true)
             }

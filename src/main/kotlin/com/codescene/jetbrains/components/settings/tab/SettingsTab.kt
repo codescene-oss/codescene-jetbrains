@@ -27,13 +27,13 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
             }
 
             /*
-        TODO: Uncomment this code when Code Health gate is integrated in plugin:
+            TODO: Uncomment this code when Code Health gate is integrated in plugin:
             row {
                 checkBox(UiLabelsBundle.message("previewCodeHealthGate"))
                     .bindSelected(settings::previewCodeHealthGate)
                     .comment(UiLabelsBundle.message("previewCodeHealthGateComment"))
             }
-        */
+            */
 
             row {
                 checkBox(UiLabelsBundle.message("gitignore"))

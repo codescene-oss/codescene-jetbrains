@@ -30,7 +30,7 @@ data class CodeSceneGlobalSettings(
     var telemetryConsentGiven: Boolean = false,
     var monitorTreeSortOption: MonitorTreeSortOptions = MonitorTreeSortOptions.SCORE_ASCENDING
 ) {
-    var aceStatus: AceStatus by Delegates.observable(AceStatus.DEACTIVATED) { _, oldValue, newValue ->
+    var aceStatus: AceStatus by Delegates.observable(AceStatus.DEACTIVATED) { _, _, newValue ->
         ApplicationManager.getApplication().messageBus.syncPublisher(AceStatusRefreshNotifier.TOPIC)
         .refresh()
     }

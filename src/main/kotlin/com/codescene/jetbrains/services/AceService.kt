@@ -22,17 +22,28 @@ class AceService() : BaseService(), Disposable {
         fun getInstance(): AceService = service<AceService>()
     }
 
-    fun getPreflight(force: Boolean) {
+    fun runPreflight(force: Boolean = false) {
+        if (settings.enableAutoRefactor) {
+            getPreflight(force)
+        } else {
+            CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.DEACTIVATED
+        }
+    }
+
+    fun getStatus(): AceStatus {
+        return CodeSceneGlobalSettingsStore.getInstance().state.aceStatus
+    }
+
+    private fun getPreflight(force: Boolean) {
         var preflight: PreflightResponse? = null
-        Log.warn("Running getPreflightInfo()")
+        Log.debug("Getting preflight data from server")
 
         scope.launch {
             try {
                 preflight = runWithClassLoaderChange {
                     ExtensionAPI.preflight(force)
                 }
-                //todo: change to debug after implementation done
-                Log.warn("Preflight info fetched: $preflight")
+                Log.info("Preflight info fetched from the server")
             } catch (e: Exception) {
                 if (e.message.equals("Operation timed out")) {
                     handleTimeout()
@@ -45,33 +56,17 @@ class AceService() : BaseService(), Disposable {
         }
     }
 
-    fun runPreflight(force: Boolean = false) {
-        if (settings.enableAutoRefactor) {
-            getPreflight(force)
-        } else {
-            CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.DEACTIVATED
-            Log.warn("ACE status is ${CodeSceneGlobalSettingsStore.getInstance().state.aceStatus}")
-        }
-    }
-
     private fun setAceStatus(preflightInfo: PreflightResponse?) {
         if (preflightInfo == null) {
             CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.ERROR
-            Log.warn("ACE status is ${CodeSceneGlobalSettingsStore.getInstance().state.aceStatus}")
         } else {
             CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.ACTIVATED
-            Log.warn("ACE status is ${CodeSceneGlobalSettingsStore.getInstance().state.aceStatus}")
         }
     }
 
     private fun handleTimeout() {
         Log.warn("Preflight info fetching timed out")
         CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.ERROR
-        Log.warn("ACE status is ${CodeSceneGlobalSettingsStore.getInstance().state.aceStatus}")
-    }
-
-    fun getStatus(): AceStatus {
-        return CodeSceneGlobalSettingsStore.getInstance().state.aceStatus
     }
 
     override fun dispose() {

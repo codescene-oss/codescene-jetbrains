@@ -60,7 +60,7 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
         handleDeltaResponse(editor, delta, oldCode)
     }
 
-    private suspend fun getDeltaResponse(editor: Editor, oldCode: String): Delta? {
+    private fun getDeltaResponse(editor: Editor, oldCode: String): Delta? {
         val path = editor.virtualFile.path
 
         val oldReview = ReviewParams(path, oldCode)
@@ -104,5 +104,5 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
     // Dummy implementation to trigger ACE lens:
     private fun isRefactorable(delta: Delta) = delta.functionLevelFindings?.any {
         it?.function?.name?.startsWith("a", true) == true || (it?.function?.name?.startsWith("t", true) == true)
-    } ?: false
+    } == true
 }

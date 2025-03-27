@@ -13,7 +13,7 @@ open class BaseService() {
      * - Clojure dependencies failing due to incompatible URLConnection handling
      *   (e.g., ZipResourceFile$MyURLConnection vs JarURLConnection).
      */
-    protected suspend fun <T> runWithClassLoaderChange(timeout: Long = Long.MAX_VALUE, action: () -> T): T {
+    protected fun <T> runWithClassLoaderChange(action: () -> T): T {
         val originalClassLoader = Thread.currentThread().contextClassLoader
         val classLoader = this@BaseService.javaClass.classLoader
         Thread.currentThread().contextClassLoader = classLoader

@@ -37,7 +37,7 @@ class CodeReviewService(private val project: Project) : CodeSceneService() {
 
     override fun getActiveApiCalls() = CodeSceneCodeVisionProvider.activeReviewApiCalls
 
-    private suspend fun performCodeReview(editor: Editor) {
+    private fun performCodeReview(editor: Editor) {
         val file = editor.virtualFile
         val path = file.path
         val fileName = file.name

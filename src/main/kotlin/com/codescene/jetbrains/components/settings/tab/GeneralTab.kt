@@ -37,6 +37,12 @@ class GeneralTab : Configurable {
 
     override fun getDisplayName(): String = UiLabelsBundle.message("generalTitle")
 
+    override fun isModified(): Boolean = false
+
+    override fun apply() {
+        // No settings to change in this tab
+    }
+
     private val more = listOf(
         UiLabelsBundle.message("documentation") to DOCUMENTATION_URL,
         UiLabelsBundle.message("termsAndPolicies") to TERMS_AND_CONDITIONS_URL,
@@ -58,9 +64,7 @@ class GeneralTab : Configurable {
         layout = BorderLayout()
 
         border = IdeBorderFactory.createTitledBorder(
-            UiLabelsBundle.message("status"),
-            true,
-            JBUI.insetsRight(10)
+            UiLabelsBundle.message("status"), true, JBUI.insetsRight(10)
         )
 
         add(JLabel(UiLabelsBundle.message("ace")).apply {
@@ -108,9 +112,7 @@ class GeneralTab : Configurable {
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
 
         border = IdeBorderFactory.createTitledBorder(
-            UiLabelsBundle.message("more"),
-            true,
-            JBUI.insetsRight(10)
+            UiLabelsBundle.message("more"), true, JBUI.insetsRight(10)
         )
 
         /*
@@ -142,12 +144,6 @@ class GeneralTab : Configurable {
         }
 
         add(panel)
-    }
-
-    override fun isModified(): Boolean = false
-
-    override fun apply() {
-        // No settings to change in this tab
     }
 
     class RoundedBorder(private val radius: Int) : AbstractBorder() {
@@ -195,8 +191,7 @@ class GeneralTab : Configurable {
                     if (Desktop.isDesktopSupported()) Desktop.getDesktop().browse(uri)
 
                     TelemetryService.getInstance().logUsage(
-                        TelemetryEvents.OPEN_LINK,
-                        mutableMapOf<String, Any>(Pair("url", uri))
+                        TelemetryEvents.OPEN_LINK, mutableMapOf<String, Any>(Pair("url", uri))
                     )
                 } catch (e: Exception) {
                     Log.warn("Unable to open link: ${e.message}")
@@ -214,16 +209,13 @@ class GeneralTab : Configurable {
     }
 
     private fun subscribeToAceStatusRefreshEvent() {
-        ApplicationManager.getApplication().messageBus.connect().subscribe(
-            AceStatusRefreshNotifier.TOPIC,
-            object : AceStatusRefreshNotifier {
+        ApplicationManager.getApplication().messageBus.connect()
+            .subscribe(AceStatusRefreshNotifier.TOPIC, object : AceStatusRefreshNotifier {
                 override fun refresh() {
-                    Log.warn("Refreshing ACE status in Settings General tab...")
+                    Log.debug("Refreshing ACE status in Settings General tab...")
 
                     refreshStatusButton()
                 }
             })
     }
-
-
 }
