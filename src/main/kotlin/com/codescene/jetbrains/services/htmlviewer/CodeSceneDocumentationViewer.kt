@@ -1,6 +1,8 @@
 package com.codescene.jetbrains.services.htmlviewer
 
 import com.codescene.data.review.CodeSmell
+import com.codescene.jetbrains.services.telemetry.TelemetryService
+import com.codescene.jetbrains.util.TelemetryEvents
 import com.codescene.jetbrains.util.prepareMarkdownContent
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.command.WriteCommandAction
@@ -17,10 +19,10 @@ data class FunctionLocation(
 )
 
 enum class DocsSourceType(val value: String) {
-    INTENTION_ACTION("diagnostic-item"),
-    CODE_HEALTH_DETAILS("code-health-details"),
+    NONE("none"),
     CODE_VISION("codelens (review)"),
-    NONE("none")
+    INTENTION_ACTION("diagnostic-item"),
+    CODE_HEALTH_DETAILS("code-health-details")
 }
 
 data class DocumentationParams(
@@ -32,13 +34,14 @@ data class DocumentationParams(
 @Service(Service.Level.PROJECT)
 class CodeSceneDocumentationViewer(private val project: Project) : HtmlViewer<DocumentationParams>(project) {
     var functionLocation: FunctionLocation? = null
+        private set
 
     companion object {
         fun getInstance(project: Project) = project.service<CodeSceneDocumentationViewer>()
     }
 
     override fun prepareFile(params: DocumentationParams): LightVirtualFile {
-        val (editor, codeSmell, docsSourceType) = params
+        val (editor, codeSmell) = params
 
         val name = codeSmell.category + ".md"
         val classLoader = this@CodeSceneDocumentationViewer.javaClass.classLoader
@@ -55,5 +58,16 @@ class CodeSceneDocumentationViewer(private val project: Project) : HtmlViewer<Do
         }
 
         return file
+    }
+
+    override fun sendTelemetry(params: DocumentationParams) {
+        if (params.docsSourceType != DocsSourceType.NONE)
+            TelemetryService.getInstance().logUsage(
+                TelemetryEvents.OPEN_DOCS_PANEL,
+                mutableMapOf<String, Any>(
+                    Pair("source", params.docsSourceType),
+                    Pair("category", params.codeSmell.category)
+                )
+            )
     }
 }

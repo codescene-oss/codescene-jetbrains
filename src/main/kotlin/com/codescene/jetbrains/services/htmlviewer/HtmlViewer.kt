@@ -21,7 +21,6 @@ abstract class HtmlViewer<T>(private val project: Project) : LafManagerListener 
         bus.subscribe(LafManagerListener.TOPIC, this)
     }
 
-    //add telemetry handling before docs opened
     fun open(editor: Editor?, params: T) {
         data = params
         this.editor = editor
@@ -34,9 +33,13 @@ abstract class HtmlViewer<T>(private val project: Project) : LafManagerListener 
             splitWindow(document, fileEditorManager)
         else
             openDocumentationWithoutActiveEditor(document, fileEditorManager)
+
+        sendTelemetry(params)
     }
 
     abstract fun prepareFile(params: T): LightVirtualFile
+
+    protected open fun sendTelemetry(params: T) {}
 
     /**
      * Opens the given documentation file in a right-split editor.

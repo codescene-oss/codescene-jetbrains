@@ -5,17 +5,31 @@ import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.api.AceService
+import com.codescene.jetbrains.services.api.RefactoredFunction
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheQuery
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
 import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewer
 import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewerParams
+import com.codescene.jetbrains.services.htmlviewer.AceRefactoringResultViewer
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
+enum class AceEntryPoint(val value: String) {
+    RETRY("retry"),
+    INTENTION_ACTION("codeaction"),
+    ACE_ACKNOWLEDGEMENT("ace-acknowledgement"),
+    CODE_HEALTH_DETAILS("code-health-details"),
+    CODE_VISION("codelens (code-health-monitor)")
+}
 
 data class RefactoringParams(
     val project: Project,
     val editor: Editor?,
-    val function: FnToRefactor?
+    val function: FnToRefactor?,
+    val source: AceEntryPoint
 )
 
 fun handleAceEntryPoint(params: RefactoringParams) {
@@ -56,4 +70,15 @@ private fun shouldCheckRefactorableFunctions(editor: Editor): Boolean {
     //TODO: add language support check from preflight
 
     return true
+}
+
+fun handleRefactoringResult(
+    params: RefactoringParams, function: RefactoredFunction, requestDuration: Long
+) {
+    val (project, editor, _) = params
+    if (requestDuration < 1500) CoroutineScope(Dispatchers.Main).launch {
+        AceRefactoringResultViewer.getInstance(project)
+            .open(editor, RefactoredFunction(function.name, function.refactoringResult))
+    }
+    else showRefactoringFinishedNotification(params, RefactoredFunction(function.name, function.refactoringResult))
 }

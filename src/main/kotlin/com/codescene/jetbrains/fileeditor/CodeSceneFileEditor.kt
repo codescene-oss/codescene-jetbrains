@@ -146,7 +146,7 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
 
                 scope.launch(Dispatchers.Main) {
                     val editor = getSelectedTextEditor(project, "")
-                    handleAceEntryPoint(RefactoringParams(project, editor, function))
+                    handleAceEntryPoint(RefactoringParams(project, editor, function, AceEntryPoint.ACE_ACKNOWLEDGEMENT))
                 }
             }
         }

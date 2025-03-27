@@ -64,27 +64,34 @@ class CodeHealthPanelBuilder(private val project: Project) {
         constraint.ipady = 8
         constraint.insets = JBUI.insets(10, 0)
 
-        val button = OnboardingDialogButtons
-            .createButton(UiLabelsBundle.message("autoRefactor"), CODESCENE_ACE) {
-                val selectedEditor = getSelectedTextEditor(
-                    project,
-                    details.filePath,
-                    "${this::class.simpleName} - ${project.name}"
-                )
-                handleAceEntryPoint(RefactoringParams(project, selectedEditor, details.refactorableFunction))
-            }.also {
-                if (details.refactorableFunction == null) {
-                    it.icon = ACE_DISABLED
-                    it.isEnabled = false
-                    it.toolTipText = "Refactoring is not available for this instance"
-                }
-            }
-
-        add(button, constraint)
+        add(getAutoRefactorButton(details), constraint)
         constraint.ipady = 0
         constraint.insets = JBUI.emptyInsets()
 
     }
+
+    private fun getAutoRefactorButton(details: CodeHealthDetails) = OnboardingDialogButtons
+        .createButton(UiLabelsBundle.message("autoRefactor"), CODESCENE_ACE) {
+            val selectedEditor = getSelectedTextEditor(
+                project,
+                details.filePath,
+                "${this::class.simpleName} - ${project.name}"
+            )
+            handleAceEntryPoint(
+                RefactoringParams(
+                    project,
+                    selectedEditor,
+                    details.refactorableFunction,
+                    AceEntryPoint.CODE_HEALTH_DETAILS
+                )
+            )
+        }.also {
+            if (details.refactorableFunction == null) {
+                it.icon = ACE_DISABLED
+                it.isEnabled = false
+                it.toolTipText = UiLabelsBundle.message("refactoringUnavailable")
+            }
+        }
 
     private fun JPanel.addHeader(details: CodeHealthDetails, constraint: GridBagConstraints) {
         ++constraint.gridy

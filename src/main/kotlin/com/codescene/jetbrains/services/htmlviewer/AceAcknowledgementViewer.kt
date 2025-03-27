@@ -18,6 +18,7 @@ data class AceAcknowledgementViewerParams(
 @Service(Service.Level.PROJECT)
 class AceAcknowledgementViewer(private val project: Project) : HtmlViewer<AceAcknowledgementViewerParams>(project) {
     var functionToRefactor: FnToRefactor? = null
+        private set
 
     companion object {
         fun getInstance(project: Project) = project.service<AceAcknowledgementViewer>()
@@ -26,8 +27,6 @@ class AceAcknowledgementViewer(private val project: Project) : HtmlViewer<AceAck
     override fun prepareFile(params: AceAcknowledgementViewerParams): LightVirtualFile {
         val (editor, function) = params
         functionToRefactor = function
-
-        TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_INFO_PRESENTED)
 
         val classLoader = this@AceAcknowledgementViewer.javaClass.classLoader
 
@@ -44,5 +43,9 @@ class AceAcknowledgementViewer(private val project: Project) : HtmlViewer<AceAck
         val header = prepareHeader(headingParams)
 
         return createTempFile("$ACE_ACKNOWLEDGEMENT.md", "$header$markdownContent", project)
+    }
+
+    override fun sendTelemetry(params: AceAcknowledgementViewerParams) {
+        TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_INFO_PRESENTED)
     }
 }

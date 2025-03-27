@@ -3,10 +3,7 @@ package com.codescene.jetbrains.codeInsight.codeVision.providers
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
-import com.codescene.jetbrains.util.RefactoringParams
-import com.codescene.jetbrains.util.fetchAceCache
-import com.codescene.jetbrains.util.getTextRange
-import com.codescene.jetbrains.util.handleAceEntryPoint
+import com.codescene.jetbrains.util.*
 import com.intellij.codeInsight.codeVision.*
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.openapi.editor.Editor
@@ -61,6 +58,6 @@ class ACECodeVisionProvider : CodeVisionProvider<Unit> {
     }
 
     private fun handleLensClick(editor: Editor, function: FnToRefactor) {
-        handleAceEntryPoint(RefactoringParams(editor.project!!, editor, function))
+        handleAceEntryPoint(RefactoringParams(editor.project!!, editor, function, AceEntryPoint.CODE_VISION))
     }
 }
