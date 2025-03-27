@@ -36,8 +36,7 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
         reviewFile(editor) {
             performDeltaAnalysis(editor)
 
-            project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC)
-                .refresh(editor.virtualFile)
+            project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(editor.virtualFile)
         }
     }
 

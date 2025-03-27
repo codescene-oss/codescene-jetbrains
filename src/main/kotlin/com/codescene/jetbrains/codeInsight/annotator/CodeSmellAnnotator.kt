@@ -40,6 +40,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
         val document = FileDocumentManager.getInstance().getDocument(psiFile.virtualFile) ?: return
         val review = annotationContext.reviewCache
         val ace = annotationContext.aceCache
+
         if (review != null) {
             Log.info("Annotating code smells for file: ${psiFile.name}")
 

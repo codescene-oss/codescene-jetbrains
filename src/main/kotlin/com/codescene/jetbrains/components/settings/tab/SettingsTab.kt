@@ -2,6 +2,7 @@ package com.codescene.jetbrains.components.settings.tab
 
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.services.AceService
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.dsl.builder.bindSelected
@@ -11,32 +12,32 @@ import com.intellij.ui.dsl.builder.panel
 class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
     private val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
-    override fun createPanel(): DialogPanel = panel {
-        row {
-            checkBox(UiLabelsBundle.message("enableCodeLenses"))
-                .bindSelected(settings::enableCodeLenses)
-                .comment(UiLabelsBundle.message("enableCodeLensesComment"))
-        }
+    override fun createPanel(): DialogPanel {
+        return panel {
+            row {
+                checkBox(UiLabelsBundle.message("enableCodeLenses"))
+                    .bindSelected(settings::enableCodeLenses)
+                    .comment(UiLabelsBundle.message("enableCodeLensesComment"))
+            }
 
-        row {
-            checkBox(UiLabelsBundle.message("enableAutoRefactor"))
-                .bindSelected(settings::enableAutoRefactor)
-                .comment(UiLabelsBundle.message("enableAutoRefactorComment"))
-        }
+            row {
+                checkBox(UiLabelsBundle.message("enableAutoRefactor"))
+                    .bindSelected(settings::enableAutoRefactor)
+                    .comment(UiLabelsBundle.message("enableAutoRefactorComment"))
+            }
 
-        //TODO: remove
-        row {
-            checkBox("Ace Acknowledged")
-                .bindSelected(settings::aceAcknowledged)
-                .comment("Test, remove")
-        }
+            //TODO: remove
+            row {
+                checkBox("Ace Acknowledged")
+                    .bindSelected(settings::aceAcknowledged)
+                    .comment("Test, remove")
+            }
 
-
-        row {
-            checkBox(UiLabelsBundle.message("gitignore"))
-                .bindSelected(settings::excludeGitignoreFiles)
-                .comment(UiLabelsBundle.message("gitignoreComment"))
-        }
+            row {
+                checkBox(UiLabelsBundle.message("gitignore"))
+                    .bindSelected(settings::excludeGitignoreFiles)
+                    .comment(UiLabelsBundle.message("gitignoreComment"))
+            }
 
 //        panel {
 //            groupRowsRange(UiLabelsBundle.message("server")) {
@@ -50,5 +51,11 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
 //                }
 //            }
 //        }
+        }
+    }
+
+    override fun apply() {
+        super.apply()
+        AceService.getInstance().runPreflight(true)
     }
 }
