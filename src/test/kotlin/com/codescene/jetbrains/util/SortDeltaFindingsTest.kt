@@ -20,16 +20,16 @@ class SortDeltaFindingsTest {
     private val mockDeltaResults = ConcurrentHashMap(
         mapOf(
             "aFile" to mockk<Delta>(relaxed = true) {
-                every { oldScore } returns Optional.of<Double>(3.21)
-                every { newScore } returns Optional.of<Double>(5.32)
+                every { oldScore } returns Optional.of(3.21)
+                every { newScore } returns Optional.of(5.32)
             },
             "bFile" to mockk<Delta>(relaxed = true) {
-                every { oldScore } returns Optional.of<Double>(5.43)
-                every { newScore } returns Optional.of<Double>(9.32)
+                every { oldScore } returns Optional.of(5.43)
+                every { newScore } returns Optional.of(9.32)
             },
             "cFile" to mockk<Delta>(relaxed = true) {
-                every { oldScore } returns Optional.of<Double>(9.32)
-                every { newScore } returns Optional.of<Double>(1.93)
+                every { oldScore } returns Optional.of(9.32)
+                every { newScore } returns Optional.of(1.93)
             })
     )
 

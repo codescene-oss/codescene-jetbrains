@@ -1,4 +1,4 @@
-package com.codescene.jetbrains.services
+package com.codescene.jetbrains.services.api
 
 import com.codescene.ExtensionAPI
 import com.codescene.data.ace.PreflightResponse
@@ -11,48 +11,51 @@ import com.intellij.openapi.components.service
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Service
 class AceService() : BaseService(), Disposable {
     private val scope = CoroutineScope(Dispatchers.IO)
     private val settings = CodeSceneGlobalSettingsStore.getInstance().state
+    private val dispatcher = Dispatchers.IO
 
     companion object {
         fun getInstance(): AceService = service<AceService>()
     }
 
-    fun runPreflight(force: Boolean = false) {
-        if (settings.enableAutoRefactor) {
+    suspend fun runPreflight(force: Boolean = false): PreflightResponse? {
+        return if (settings.enableAutoRefactor) {
             getPreflight(force)
         } else {
             CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.DEACTIVATED
+            null
         }
     }
 
-    fun getStatus(): AceStatus {
-        return CodeSceneGlobalSettingsStore.getInstance().state.aceStatus
-    }
+    private suspend fun getPreflight(force: Boolean): PreflightResponse? {
+        // todo change to debug
+        Log.warn("Getting preflight data from server")
 
-    private fun getPreflight(force: Boolean) {
-        var preflight: PreflightResponse? = null
-        Log.debug("Getting preflight data from server")
-
-        scope.launch {
+        return withContext(dispatcher) {
+            var preflight: PreflightResponse? = null
             try {
                 preflight = runWithClassLoaderChange {
                     ExtensionAPI.preflight(force)
                 }
                 Log.info("Preflight info fetched from the server")
+
             } catch (e: Exception) {
-                if (e.message.equals("Operation timed out")) {
-                    handleTimeout()
+                if (e.message == "Operation timed out") {
+                    Log.warn("Preflight info fetching timed out")
+                } else {
+                    Log.warn("Error during preflight info fetching: ${e.message}")
                 }
-                Log.warn("Error during preflight info fetching: ${e.message}")
             }
             if (force) {
                 setAceStatus(preflight)
             }
+
+            preflight
         }
     }
 
@@ -62,11 +65,6 @@ class AceService() : BaseService(), Disposable {
         } else {
             CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.ACTIVATED
         }
-    }
-
-    private fun handleTimeout() {
-        Log.warn("Preflight info fetching timed out")
-        CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.ERROR
     }
 
     override fun dispose() {

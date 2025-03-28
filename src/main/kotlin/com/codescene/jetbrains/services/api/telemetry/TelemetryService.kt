@@ -1,9 +1,9 @@
-package com.codescene.jetbrains.services.telemetry
+package com.codescene.jetbrains.services.api.telemetry
 
 import com.codescene.ExtensionAPI
 import com.codescene.data.telemetry.TelemetryEvent
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
-import com.codescene.jetbrains.services.BaseService
+import com.codescene.jetbrains.services.api.BaseService
 import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Log
 import com.intellij.ide.plugins.PluginManagerCore
@@ -30,7 +30,7 @@ class TelemetryService() : BaseService(), Disposable {
 
         val extendedName = "${Constants.TELEMETRY_EDITOR_TYPE}/$eventName"
         // TODO: Get user ID of logged in user when authentication is implemented
-        val userId: String = ""
+        val userId = ""
         val telemetryEvent =
             TelemetryEvent(extendedName, userId, Constants.TELEMETRY_EDITOR_TYPE, getPluginVersion(), false)
         eventData.forEach { telemetryEvent.setAdditionalProperty(it.key, it.value) }
