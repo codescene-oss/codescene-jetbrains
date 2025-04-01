@@ -1,4 +1,4 @@
-package com.codescene.jetbrains.services.telemetry
+package com.codescene.jetbrains.services.api.telemetry
 
 import com.codescene.ExtensionAPI
 import com.codescene.data.telemetry.TelemetryEvent

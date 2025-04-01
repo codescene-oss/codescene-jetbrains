@@ -68,14 +68,11 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
 
         val delta = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview) }
 
-        if (delta?.oldScore?.isEmpty == true)
+        if (delta?.oldScore?.isEmpty == true) {
             return Delta(
-                10.0,
-                delta.newScore.get(),
-                delta.scoreChange,
-                delta.fileLevelFindings,
-                delta.functionLevelFindings
+                10.0, delta.newScore.get(), delta.scoreChange, delta.fileLevelFindings, delta.functionLevelFindings
             )
+        }
 
         return delta
     }
