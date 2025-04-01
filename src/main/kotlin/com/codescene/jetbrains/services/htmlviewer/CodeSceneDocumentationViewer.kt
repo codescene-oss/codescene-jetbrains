@@ -1,7 +1,7 @@
 package com.codescene.jetbrains.services.htmlviewer
 
 import com.codescene.data.review.CodeSmell
-import com.codescene.jetbrains.services.telemetry.TelemetryService
+import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.util.TelemetryEvents
 import com.codescene.jetbrains.util.prepareMarkdownContent
 import com.intellij.openapi.application.runReadAction

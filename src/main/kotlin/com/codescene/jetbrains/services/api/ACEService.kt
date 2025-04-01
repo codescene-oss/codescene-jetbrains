@@ -12,9 +12,9 @@ import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.BaseService
 import com.codescene.jetbrains.services.UIRefreshService
+import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheEntry
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
-import com.codescene.jetbrains.services.telemetry.TelemetryService
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.RefactoringParams
 import com.codescene.jetbrains.util.TelemetryEvents
@@ -34,40 +34,50 @@ data class RefactoredFunction(
 @Service
 class AceService : BaseService(), Disposable {
     private val scope = CoroutineScope(Dispatchers.IO)
+    private val settings = CodeSceneGlobalSettingsStore.getInstance().state
+    private val dispatcher = Dispatchers.IO
+
     private val refactoringScope = CoroutineScope(Dispatchers.IO)
-    private val timeout: Long = 3_000
     private val serviceImplementation: String = this::class.java.simpleName
 
     companion object {
         fun getInstance(): AceService = service<AceService>()
     }
 
-    fun getPreflightInfo(forceRefresh: Boolean = true): PreflightResponse? {
-        val settings = CodeSceneGlobalSettingsStore.getInstance().state
-        var preflightInfo: PreflightResponse? = null
-
-        if (settings.enableAutoRefactor) {
-            scope.launch {
-                withTimeoutOrNull(timeout) {
-                    try {
-                        preflightInfo = runWithClassLoaderChange { ExtensionAPI.preflight(forceRefresh) }
-
-                        Log.warn("Preflight info fetched: $preflightInfo")
-                        settings.aceStatus = AceStatus.ACTIVATED
-                        Log.warn("ACE status is ${CodeSceneGlobalSettingsStore.getInstance().state.aceStatus}")
-                    } catch (e: Exception) {
-                        Log.error("Error during preflight info fetching: ${e.message}")
-                        settings.aceStatus = AceStatus.ERROR
-                        Log.warn("ACE status is ${CodeSceneGlobalSettingsStore.getInstance().state.aceStatus}")
-                    }
-                } ?: handleTimeout()
-            }
+    suspend fun runPreflight(force: Boolean = false): PreflightResponse? {
+        return if (settings.enableAutoRefactor) {
+            getPreflight(force)
         } else {
-            settings.aceStatus = AceStatus.DEACTIVATED
-            Log.warn("ACE status is ${settings.aceStatus}")
+            CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.DEACTIVATED
+            null
         }
+    }
 
-        return preflightInfo
+    private suspend fun getPreflight(force: Boolean): PreflightResponse? {
+        // todo change to debug
+        Log.warn("Getting preflight data from server")
+
+        return withContext(dispatcher) {
+            var preflight: PreflightResponse? = null
+            try {
+                preflight = runWithClassLoaderChange {
+                    ExtensionAPI.preflight(force)
+                }
+                Log.info("Preflight info fetched from the server")
+
+            } catch (e: Exception) {
+                if (e.message == "Operation timed out") {
+                    Log.warn("Preflight info fetching timed out")
+                } else {
+                    Log.warn("Error during preflight info fetching: ${e.message}")
+                }
+            }
+            if (force) {
+                setAceStatus(preflight)
+            }
+
+            preflight
+        }
     }
 
     private fun handleTimeout() {
@@ -160,6 +170,14 @@ class AceService : BaseService(), Disposable {
                 val uiService = UIRefreshService.getInstance(project)
                 uiService.refreshUI(editor, listOf("ACECodeVisionProvider"))
             }
+        }
+    }
+
+    private fun setAceStatus(preflightInfo: PreflightResponse?) {
+        if (preflightInfo == null) {
+            CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.ERROR
+        } else {
+            CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.ACTIVATED
         }
     }
 

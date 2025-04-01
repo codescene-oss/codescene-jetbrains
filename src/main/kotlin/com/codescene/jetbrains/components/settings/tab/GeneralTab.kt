@@ -5,7 +5,7 @@ import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.notifier.AceStatusRefreshNotifier
 import com.codescene.jetbrains.services.AceService
-import com.codescene.jetbrains.services.telemetry.TelemetryService
+import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.util.Constants.CONTACT_URL
 import com.codescene.jetbrains.util.Constants.DOCUMENTATION_URL
 import com.codescene.jetbrains.util.Constants.GREEN

@@ -53,23 +53,21 @@ fun fetchAceCache(path: String, content: String, project: Project): List<FnToRef
     }
 }
 
-fun checkContainsRefactorableFunctions(editor: Editor, result: Review) {
+suspend fun checkContainsRefactorableFunctions(editor: Editor, result: Review) {
     if (shouldCheckRefactorableFunctions(editor)) {
         val aceParams = CodeParams(editor.document.text, editor.virtualFile.extension)
         AceService.getInstance().getRefactorableFunctions(aceParams, result, editor)
     }
 }
 
-//wip
-private fun shouldCheckRefactorableFunctions(editor: Editor): Boolean {
+private suspend fun shouldCheckRefactorableFunctions(editor: Editor): Boolean {
     val state = CodeSceneGlobalSettingsStore.getInstance().state
     if (!state.enableAutoRefactor) return false
 
-    //val preflightResponse = runBlocking { AceService.getInstance().getPreflightInfo(false) }
-    //val isLanguageSupported = preflightResponse?.fileTypes?.contains(editor.virtualFile.extension) ?: false
-    //TODO: add language support check from preflight
+    val preflightResponse = AceService.getInstance().runPreflight()
+    val isLanguageSupported = preflightResponse?.fileTypes?.contains(editor.virtualFile.extension) ?: false
 
-    return true
+    return isLanguageSupported
 }
 
 fun handleRefactoringResult(

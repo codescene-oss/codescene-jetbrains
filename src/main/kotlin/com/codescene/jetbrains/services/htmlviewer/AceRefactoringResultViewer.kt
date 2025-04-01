@@ -1,7 +1,7 @@
 package com.codescene.jetbrains.services.htmlviewer
 
 import com.codescene.jetbrains.services.api.RefactoredFunction
-import com.codescene.jetbrains.services.telemetry.TelemetryService
+import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.util.Constants.ACE_REFACTORING_SUGGESTION
 import com.codescene.jetbrains.util.TelemetryEvents
 import com.codescene.jetbrains.util.createTempFile
