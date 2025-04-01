@@ -46,11 +46,12 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
 
         return when {
             cachedDelta.second != null && hasChanged -> getCodeHealth(
-                HealthDetails(oldScore!!, newScore!!)
+                HealthDetails(oldScore!!.get(), newScore!!.get())
             ).change
 
-            result != null -> if (result.score != null) result.score.toString() else "N/A"
-            else -> null
+            result?.score?.isPresent == true -> result.score.get().toString()
+
+            else -> "N/A".takeIf { result != null }
         }
     }
 

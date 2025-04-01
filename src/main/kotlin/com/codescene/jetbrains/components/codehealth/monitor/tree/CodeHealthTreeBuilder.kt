@@ -5,7 +5,7 @@ import com.codescene.jetbrains.components.codehealth.monitor.tree.listeners.Cust
 import com.codescene.jetbrains.components.codehealth.monitor.tree.listeners.TreeMouseMotionAdapter
 import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.CodeNavigationService
-import com.codescene.jetbrains.services.telemetry.TelemetryService
+import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.util.*
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service

@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.listeners
 
-import com.codescene.jetbrains.services.telemetry.TelemetryService
+import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.util.TelemetryEvents
 import com.intellij.ide.plugins.DynamicPluginListener
 import com.intellij.ide.plugins.IdeaPluginDescriptor

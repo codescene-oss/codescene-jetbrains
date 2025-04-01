@@ -144,10 +144,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
             functionCodeSmell.codeSmells.filterByCategory(categoryToFilter)
         } ?: emptyList()
 
-        val expressionLevelSmells =
-            codeAnalysisResult?.expressionLevelCodeSmells?.filterByCategory(categoryToFilter) ?: emptyList()
-
-        return fileLevelSmells + functionLevelSmells + expressionLevelSmells
+        return fileLevelSmells + functionLevelSmells
     }
 
     private fun getCodeVisionEntry(codeSmell: CodeSmell): ClickableTextCodeVisionEntry =

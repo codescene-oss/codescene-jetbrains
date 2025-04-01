@@ -8,7 +8,7 @@ import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
-import com.codescene.jetbrains.services.telemetry.TelemetryService
+import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.TelemetryEvents
@@ -164,7 +164,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
         when refactoring logic available
     */
     private fun updateAndSendTelemetry(path: String, cachedDelta: Delta) {
-        val scoreChange = cachedDelta.newScore - cachedDelta.oldScore
+        val scoreChange = cachedDelta.newScore.get() - cachedDelta.oldScore.get()
         val numberOfIssues = cachedDelta.fileLevelFindings.size + cachedDelta.functionLevelFindings.size
 
         val telemetryEvent = if (healthMonitoringResults[path] != null)

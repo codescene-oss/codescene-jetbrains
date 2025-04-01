@@ -117,10 +117,10 @@ private fun resolveStatus(delta: Delta, type: NodeType, percentage: String) =
     when (type) {
         NodeType.CODE_HEALTH_NEUTRAL -> ""
         NodeType.CODE_HEALTH_INCREASE ->
-            "Increased to ${round(delta.newScore)} $percentage"
+            "Increased to ${round(delta.newScore.get())} $percentage"
 
         NodeType.CODE_HEALTH_DECREASE ->
-            "Declined from ${round(delta.oldScore)} $percentage"
+            "Declined from ${round(delta.oldScore.get())} $percentage"
 
         else -> throw IllegalArgumentException("Unexpected node type: $type")
     }
@@ -152,7 +152,7 @@ private fun getHealthFinding(
     finding: CodeHealthFinding,
     delta: Delta
 ): CodeHealthDetails {
-    val healthHeader = resolveCodeHealthHeader(finding.nodeType, delta.newScore, delta.oldScore)
+    val healthHeader = resolveCodeHealthHeader(finding.nodeType, delta.newScore.get(), delta.oldScore.get())
 
     return CodeHealthDetails(
         filePath = finding.filePath,
@@ -161,7 +161,7 @@ private fun getHealthFinding(
         healthData = HealthData(
             healthHeader.subText,
             resolveStatus(delta, finding.nodeType, percentage = finding.additionalText),
-            round(delta.newScore)
+            round(delta.newScore.get())
         ),
         body = listOf(
             Paragraph(
@@ -185,11 +185,11 @@ private fun getFunctionFindingBody(changeDetails: List<ChangeDetail>?, finding: 
         val change = it.changeType.value().replaceFirstChar { it.uppercaseChar() }
         val body = it.description.replace(finding.displayName, "<code>${finding.displayName}</code>")
 
-        val range = if (it.position != null) Range(
-            it.position.line,
-            it.position.column,
-            it.position.line,
-            it.position.column
+        val range = if (it.line != null) Range(
+            it.line.get(),
+            0,
+            it.line.get(),
+            0
         ) else null
         val codeSmell = CodeSmell(it.category, range, it.description)
 
@@ -215,7 +215,7 @@ private fun getFunctionFinding(
     delta: Delta
 ): CodeHealthDetails {
     val changeDetails = delta.functionLevelFindings
-        .find { isMatchingFinding(it.function.name, it.function.range?.startLine, finding) }?.changeDetails
+        .find { isMatchingFinding(it.function.name, it.function.range?.get()?.startLine, finding) }?.changeDetails
     val labelAndIcon = if (changeDetails?.count { !isPositiveChange(it.changeType) } ?: 0 >= 1)
         "Improvement opportunity" to AllIcons.Nodes.WarningIntroduction
     else
