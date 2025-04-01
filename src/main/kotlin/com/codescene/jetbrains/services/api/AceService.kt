@@ -53,8 +53,7 @@ class AceService : BaseService(), Disposable {
     }
 
     private suspend fun getPreflight(force: Boolean): PreflightResponse? {
-        // todo change to debug
-        Log.warn("Getting preflight data from server")
+        Log.debug("Getting ACE preflight data from server...", serviceImplementation)
 
         return withContext(dispatcher) {
             var preflight: PreflightResponse? = null
@@ -62,13 +61,13 @@ class AceService : BaseService(), Disposable {
                 preflight = runWithClassLoaderChange {
                     ExtensionAPI.preflight(force)
                 }
-                Log.info("Preflight info fetched from the server")
+                Log.info("Preflight info fetched from the server", serviceImplementation)
 
             } catch (e: Exception) {
                 if (e.message == "Operation timed out") {
-                    Log.warn("Preflight info fetching timed out")
+                    Log.warn("Preflight info fetching timed out", serviceImplementation)
                 } else {
-                    Log.warn("Error during preflight info fetching: ${e.message}")
+                    Log.warn("Error during preflight info fetching: ${e.message}", serviceImplementation)
                 }
             }
             if (force) {
@@ -79,12 +78,6 @@ class AceService : BaseService(), Disposable {
         }
     }
 
-    private fun handleTimeout() {
-        Log.warn("Preflight info fetching timed out")
-        CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.ERROR
-        Log.warn("ACE status is ${CodeSceneGlobalSettingsStore.getInstance().state.aceStatus}")
-    }
-
     /**
      * Retrieves refactorable functions based on the Delta result.
      *
@@ -92,7 +85,10 @@ class AceService : BaseService(), Disposable {
      * fewer refactorable functions compared to a full review.
      */
     fun getRefactorableFunctions(params: CodeParams, delta: Delta, editor: Editor) {
-        Log.debug("Getting refactorable functions for ${editor.virtualFile.path} based on Delta review...")
+        Log.debug(
+            "Getting refactorable functions for ${editor.virtualFile.path} based on Delta review...",
+            serviceImplementation
+        )
 
         refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, delta) }
     }
@@ -105,14 +101,17 @@ class AceService : BaseService(), Disposable {
      */
     fun getRefactorableFunctions(params: CodeParams, review: Review, editor: Editor) {
         val codeSmells = review.fileLevelCodeSmells + review.functionLevelCodeSmells.flatMap { it.codeSmells }
-        Log.debug("Getting refactorable functions for ${editor.virtualFile.path} based on review with ${codeSmells}...")
+        Log.debug(
+            "Getting refactorable functions for ${editor.virtualFile.path} based on review with ${codeSmells}...",
+            serviceImplementation
+        )
 
         refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, codeSmells) }
     }
 
     fun refactor(params: RefactoringParams, options: RefactoringOptions? = null) {
         val (project, _, function, source) = params
-        Log.debug("Initiating refactor for function ${function!!.name}...")
+        Log.debug("Initiating refactor for function ${function!!.name}...", serviceImplementation)
 
         TelemetryService.getInstance().logUsage(
             TelemetryEvents.ACE_REFACTOR_REQUESTED,
@@ -145,7 +144,7 @@ class AceService : BaseService(), Disposable {
         }
 
         val durationMillis = (System.nanoTime() - startTime) / 1_000_000
-        Log.debug("Refactoring ${function!!.name} took ${durationMillis}ms.")
+        Log.debug("Refactoring ${function!!.name} took ${durationMillis}ms.", serviceImplementation)
 
         result?.let {
             handleRefactoringResult(params, RefactoredFunction(function.name, result), durationMillis)
@@ -155,7 +154,6 @@ class AceService : BaseService(), Disposable {
     private fun refactorableFunctionsHandler(editor: Editor, getFunctions: () -> List<FnToRefactor>) {
         val project = editor.project!!
         val path = editor.virtualFile.path
-        val service = "${serviceImplementation} - ${project.name}"
 
         scope.launch {
             val result = runWithClassLoaderChange(100_000) { getFunctions() } ?: return@launch
@@ -164,7 +162,10 @@ class AceService : BaseService(), Disposable {
             AceRefactorableFunctionsCacheService.getInstance(project).put(entry)
 
             if (result.isNotEmpty()) {
-                Log.info("Found ${result.size} refactorable function(s) in $path", service)
+                Log.info(
+                    "Found ${result.size} refactorable function(s) in $path",
+                    "${serviceImplementation} - ${project.name}"
+                )
 
                 val uiService = UIRefreshService.getInstance(project)
                 uiService.refreshUI(editor, listOf("ACECodeVisionProvider"))
