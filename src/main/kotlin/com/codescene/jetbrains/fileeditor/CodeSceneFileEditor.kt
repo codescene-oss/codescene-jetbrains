@@ -6,6 +6,7 @@ import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewer
 import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
 import com.codescene.jetbrains.util.*
+import com.codescene.jetbrains.util.Constants.ACE_ACKNOWLEDGEMENT
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorState
@@ -146,7 +147,9 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
 
                 scope.launch(Dispatchers.Main) {
                     val editor = getSelectedTextEditor(project, "")
+
                     handleAceEntryPoint(RefactoringParams(project, editor, function, AceEntryPoint.ACE_ACKNOWLEDGEMENT))
+                    closeWindow(ACE_ACKNOWLEDGEMENT, project)
                 }
             }
         }
