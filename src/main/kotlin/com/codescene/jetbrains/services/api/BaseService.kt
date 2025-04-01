@@ -1,4 +1,4 @@
-package com.codescene.jetbrains.services
+package com.codescene.jetbrains.services.api
 
 import com.codescene.jetbrains.util.Log
 import kotlinx.coroutines.withTimeoutOrNull

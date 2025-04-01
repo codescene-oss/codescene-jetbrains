@@ -3,8 +3,9 @@ package com.codescene.jetbrains.components.settings.tab
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.config.global.AceStatus
+import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.notifier.AceStatusRefreshNotifier
-import com.codescene.jetbrains.services.AceService
+import com.codescene.jetbrains.services.api.AceService
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.util.Constants.CONTACT_URL
 import com.codescene.jetbrains.util.Constants.DOCUMENTATION_URL
@@ -20,6 +21,9 @@ import com.intellij.openapi.options.Configurable
 import com.intellij.ui.IdeBorderFactory
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.awt.*
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -30,6 +34,7 @@ import javax.swing.border.AbstractBorder
 class GeneralTab : Configurable {
     private var statusButton = getStatusButton()
     private lateinit var status: AceStatus
+    private val scope = CoroutineScope(Dispatchers.IO)
 
     init {
         subscribeToAceStatusRefreshEvent()
@@ -76,13 +81,21 @@ class GeneralTab : Configurable {
     }
 
     private fun getStatusButton(): JButton {
-        status = AceService.getInstance().getStatus()
+        status = CodeSceneGlobalSettingsStore.getInstance().state.aceStatus
         val button = JButton(status.name)
         colorButton(button, status)
 
+        // disabling button on first click to prevent multiple clicks
         button.addActionListener {
             if (status == AceStatus.ERROR) {
-                AceService.getInstance().runPreflight(true)
+                button.isEnabled = false
+                scope.launch {
+                    try {
+                        AceService.getInstance().runPreflight(true)
+                    } finally {
+                        button.isEnabled = true
+                    }
+                }
             }
         }
 
@@ -103,7 +116,7 @@ class GeneralTab : Configurable {
     }
 
     private fun refreshStatusButton() {
-        status = AceService.getInstance().getStatus()
+        status = CodeSceneGlobalSettingsStore.getInstance().state.aceStatus
         statusButton.text = status.name
         colorButton(statusButton, status)
     }

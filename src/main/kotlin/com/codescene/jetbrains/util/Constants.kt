@@ -34,10 +34,13 @@ object Constants {
     const val CODE_HEALTH_MONITOR = "Code Health Monitor"
     const val TELEMETRY_EDITOR_TYPE = "intellij"
 
+    // ACE constants
+    const val ACE_STATUS = "CodeScene ACE Status"
     const val ACE_NOTIFICATION_GROUP = "CodeScene ACE"
     const val ACE_REFACTORING_SUGGESTION = "Refactoring suggestion"
     const val ACE_ACKNOWLEDGEMENT = "CodeScene ACE Auto-Refactoring"
 
+    // Code Smell constants
     const val BRAIN_CLASS = "Brain Class"
     const val BRAIN_METHOD = "Brain Method"
     const val BUMPY_ROAD_AHEAD = "Bumpy Road Ahead"

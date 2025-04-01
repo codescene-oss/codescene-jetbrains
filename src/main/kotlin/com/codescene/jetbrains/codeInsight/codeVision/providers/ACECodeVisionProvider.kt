@@ -43,7 +43,7 @@ class ACECodeVisionProvider : CodeVisionProvider<Unit> {
         val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
 
         refactorableFunctions?.forEach {
-            val range = getTextRange(it.range.startLine to it.range.endLine, editor.document)
+            val range = getTextRange(it.function.range.get().startLine to it.function.range.get().endLine, editor.document)
             val entry = ClickableTextCodeVisionEntry(
                 text = name,
                 providerId = id,
