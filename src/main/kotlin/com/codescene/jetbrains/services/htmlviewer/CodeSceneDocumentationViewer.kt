@@ -8,8 +8,8 @@ import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
-import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiManager
 import com.intellij.testFramework.LightVirtualFile
 
@@ -26,7 +26,7 @@ enum class DocsSourceType(val value: String) {
 }
 
 data class DocumentationParams(
-    val editor: Editor?,
+    val file: VirtualFile?,
     val codeSmell: CodeSmell,
     val docsSourceType: DocsSourceType
 )
@@ -41,23 +41,23 @@ class CodeSceneDocumentationViewer(private val project: Project) : HtmlViewer<Do
     }
 
     override fun prepareFile(params: DocumentationParams): LightVirtualFile {
-        val (editor, codeSmell) = params
+        val (file, codeSmell) = params
 
         val name = codeSmell.category + ".md"
         val classLoader = this@CodeSceneDocumentationViewer.javaClass.classLoader
         val content = prepareMarkdownContent(params, classLoader)
-        val file = LightVirtualFile(name, content)
+        val docFile = LightVirtualFile(name, content)
 
-        editor?.let { functionLocation = FunctionLocation(it.virtualFile.path, codeSmell) }
+        if (file != null) functionLocation = FunctionLocation(file.path, codeSmell)
 
-        val psiFile = runReadAction { PsiManager.getInstance(project).findFile(file) } ?: return file
-        file.isWritable = false
+        val psiFile = runReadAction { PsiManager.getInstance(project).findFile(docFile) } ?: return docFile
+        docFile.isWritable = false
 
         WriteCommandAction.runWriteCommandAction(project) {
             psiFile.virtualFile.refresh(false, false)
         }
 
-        return file
+        return docFile
     }
 
     override fun sendTelemetry(params: DocumentationParams) {

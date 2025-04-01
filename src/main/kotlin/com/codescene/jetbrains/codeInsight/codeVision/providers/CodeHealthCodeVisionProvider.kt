@@ -77,7 +77,7 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
             docViewer.open(
                 editor,
                 DocumentationParams(
-                    editor,
+                    editor.virtualFile,
                     CodeSmell(GENERAL_CODE_HEALTH, codeSmell.highlightRange, codeSmell.details),
                     DocsSourceType.NONE
                 )

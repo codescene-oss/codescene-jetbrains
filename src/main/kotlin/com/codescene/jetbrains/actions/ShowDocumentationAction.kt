@@ -18,7 +18,7 @@ class ShowDocumentationAction : AnAction() {
             val editor = getSelectedTextEditor(project, "", "${this::class.simpleName} - ${project.name}")
 
             val codeSmell = CodeSmell(CODE_HEALTH_MONITOR, Range(1, 1, 1, 1), "")
-            val params = DocumentationParams(editor, codeSmell, DocsSourceType.NONE)
+            val params = DocumentationParams(editor?.virtualFile, codeSmell, DocsSourceType.NONE)
 
             docViewer.open(editor, params)
         }

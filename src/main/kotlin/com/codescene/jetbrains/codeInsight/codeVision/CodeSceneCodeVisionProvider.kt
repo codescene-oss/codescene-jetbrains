@@ -162,7 +162,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         docViewer.open(
             editor,
             DocumentationParams(
-                editor,
+                editor.virtualFile,
                 codeSmell,
                 DocsSourceType.CODE_VISION
             )

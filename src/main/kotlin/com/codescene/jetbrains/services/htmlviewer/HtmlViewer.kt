@@ -28,7 +28,6 @@ abstract class HtmlViewer<T>(private val project: Project) : LafManagerListener 
         val document = prepareFile(params)
         val fileEditorManager = FileEditorManager.getInstance(project)
 
-//        !fileEditorManager.selectedFiles.contains(documentationFile) for general docs
         if (editor != null)
             splitWindow(document, fileEditorManager)
         else
@@ -37,7 +36,7 @@ abstract class HtmlViewer<T>(private val project: Project) : LafManagerListener 
         sendTelemetry(params)
     }
 
-    abstract fun prepareFile(params: T): LightVirtualFile
+    protected abstract fun prepareFile(params: T): LightVirtualFile
 
     protected open fun sendTelemetry(params: T) {}
 

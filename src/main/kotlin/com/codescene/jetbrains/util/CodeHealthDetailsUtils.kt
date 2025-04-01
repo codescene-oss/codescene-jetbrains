@@ -306,7 +306,7 @@ private fun handleMouseClick(project: Project, codeSmell: CodeSmell, filePath: S
             docViewer.open(
                 it,
                 DocumentationParams(
-                    it,
+                    it.virtualFile,
                     codeSmell,
                     DocsSourceType.CODE_HEALTH_DETAILS
                 )

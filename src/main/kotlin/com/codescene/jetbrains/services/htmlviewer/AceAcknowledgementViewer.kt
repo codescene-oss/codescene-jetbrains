@@ -6,12 +6,12 @@ import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.ACE_ACKNOWLEDGEMENT
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
-import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.LightVirtualFile
 
 data class AceAcknowledgementViewerParams(
-    val editor: Editor?,
+    val file: VirtualFile?,
     val function: FnToRefactor
 )
 
@@ -25,7 +25,7 @@ class AceAcknowledgementViewer(private val project: Project) : HtmlViewer<AceAck
     }
 
     override fun prepareFile(params: AceAcknowledgementViewerParams): LightVirtualFile {
-        val (editor, function) = params
+        val (file, function) = params
         functionToRefactor = function
 
         val classLoader = this@AceAcknowledgementViewer.javaClass.classLoader
@@ -35,7 +35,7 @@ class AceAcknowledgementViewer(private val project: Project) : HtmlViewer<AceAck
         val markdownContent = transformMarkdownToHtml(transformParams, true)
 
         val headingParams = HeadingParams(
-            editor = editor,
+            file = file,
             content = markdown,
             classLoader = classLoader,
             standaloneDocumentation = true

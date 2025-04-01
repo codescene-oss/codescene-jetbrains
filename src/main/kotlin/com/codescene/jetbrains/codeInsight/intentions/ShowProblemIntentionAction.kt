@@ -26,7 +26,7 @@ class ShowProblemIntentionAction(private val codeSmell: CodeSmell) : IntentionAc
         if (editor != null) {
             docViewer.open(
                 editor,
-                DocumentationParams(editor, codeSmell, DocsSourceType.INTENTION_ACTION)
+                DocumentationParams(editor.virtualFile, codeSmell, DocsSourceType.INTENTION_ACTION)
             )
         }
     }

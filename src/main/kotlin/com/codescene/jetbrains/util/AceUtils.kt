@@ -42,7 +42,7 @@ fun handleAceEntryPoint(params: RefactoringParams) {
     if (settings.aceAcknowledged)
         AceService.getInstance().refactor(params)
     else
-        aceAcknowledgement.open(editor, AceAcknowledgementViewerParams(editor, function))
+        aceAcknowledgement.open(editor, AceAcknowledgementViewerParams(editor?.virtualFile, function))
 }
 
 fun fetchAceCache(path: String, content: String, project: Project): List<FnToRefactor> {

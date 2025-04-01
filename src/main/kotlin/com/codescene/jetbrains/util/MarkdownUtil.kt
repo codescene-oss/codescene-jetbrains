@@ -9,8 +9,8 @@ import com.codescene.jetbrains.util.Constants.CODE_HEALTH_MONITOR
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.command.WriteCommandAction
-import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.jcef.JBCefScrollbarsHelper
@@ -27,7 +27,7 @@ data class HeadingParams(
     val standaloneDocumentation: Boolean,
     val content: String,
     val classLoader: ClassLoader,
-    val editor: Editor? = null
+    val file: VirtualFile? = null
 )
 
 data class TransformMarkdownParams(
@@ -46,7 +46,7 @@ data class HtmlPart(
  * which is then added to separately created header as base for all styling.
  */
 fun prepareMarkdownContent(params: DocumentationParams, classLoader: ClassLoader): String {
-    val (editor, codeSmell) = params
+    val (file, codeSmell) = params
 
     val codeSmellName = codeSmell.category
     val codeSmellFileName = categoryToFileName(codeSmellName) + ".md"
@@ -68,7 +68,7 @@ fun prepareMarkdownContent(params: DocumentationParams, classLoader: ClassLoader
     val markdownContent =
         transformMarkdownToHtml(TransformMarkdownParams(content, codeSmellName, standaloneDocumentation))
 
-    val header = prepareHeader(HeadingParams(codeSmell, standaloneDocumentation, content, classLoader, editor))
+    val header = prepareHeader(HeadingParams(codeSmell, standaloneDocumentation, content, classLoader, file))
 
     return "$header$markdownContent"
 }
@@ -201,14 +201,14 @@ fun appendSubpart(content: StringBuilder, htmlPart: HtmlPart) {
  * Also, it generates header HTML content.
  */
 fun prepareHeader(params: HeadingParams): String {
-    val (codeSmell, standaloneDocumentation, _, classLoader, editor) = params
+    val (codeSmell, standaloneDocumentation, _, classLoader, file) = params
 
     // styling
     val style = getStyling(classLoader)
 
     // components
     val heading = getHeading(params)
-    val documentationSubHeader = if (!standaloneDocumentation) getDocumentationSubHeader(editor, codeSmell) else ""
+    val documentationSubHeader = if (!standaloneDocumentation) getDocumentationSubHeader(file, codeSmell) else ""
 
     // language=HTML
     return """
@@ -280,8 +280,8 @@ fun getStyling(classLoader: ClassLoader): String {
  * no sub-header is returned.
  *
  */
-fun getDocumentationSubHeader(editor: Editor?, codeSmell: CodeSmell?): String {
-    val fileName = editor?.virtualFile?.name ?: ""
+fun getDocumentationSubHeader(file: VirtualFile?, codeSmell: CodeSmell?): String {
+    val fileName = file?.name ?: ""
     val lineNumber = codeSmell?.highlightRange?.startLine ?: 1
 
     return """
