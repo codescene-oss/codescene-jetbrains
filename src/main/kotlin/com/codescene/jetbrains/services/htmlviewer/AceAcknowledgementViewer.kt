@@ -9,13 +9,7 @@ import com.codescene.jetbrains.util.Constants.ACE_ACKNOWLEDGEMENT_FILE
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.LightVirtualFile
-
-data class AceAcknowledgementViewerParams(
-    val file: VirtualFile?,
-    val function: FnToRefactor
-)
 
 @Service(Service.Level.PROJECT)
 class AceAcknowledgementViewer(private val project: Project) : HtmlViewer<FnToRefactor>(project) {

@@ -9,7 +9,7 @@ import com.codescene.jetbrains.services.api.CodeReviewService
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
 import com.codescene.jetbrains.services.cache.ReviewCacheService
 import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
-import com.codescene.jetbrains.services.htmlviewer.DocsSourceType
+import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
 import com.codescene.jetbrains.services.htmlviewer.DocumentationParams
 import com.codescene.jetbrains.util.getCachedDelta
 import com.codescene.jetbrains.util.getTextRange
@@ -162,9 +162,11 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         docViewer.open(
             editor,
             DocumentationParams(
-                editor.virtualFile,
-                codeSmell,
-                DocsSourceType.CODE_VISION
+                codeSmell.category,
+                editor.virtualFile.name,
+                editor.virtualFile.path,
+                codeSmell.highlightRange.startLine,
+                DocsEntryPoint.CODE_VISION
             )
         )
     }

@@ -133,7 +133,7 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
                     functionLocation?.let {
                         CodeNavigationService
                             .getInstance(project)
-                            .focusOnLine(it.fileName, it.codeSmell.highlightRange?.startLine ?: 1)
+                            .focusOnLine(it.fileName, it.focusLine ?: 1)
                     }
                 }
             }

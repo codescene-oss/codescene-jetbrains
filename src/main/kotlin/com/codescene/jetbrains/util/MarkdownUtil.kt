@@ -16,7 +16,7 @@ val oneBacktick = MarkdownCodeDelimiter.SINGLE_LINE.value
 
 data class TransformMarkdownParams(
     val originalContent: String,
-    val codeSmellName: String = "",
+    val heading: String = "",
     val standaloneDocumentation: Boolean = false
 )
 
@@ -37,10 +37,10 @@ data class CreateTempFileParams(
 fun transformMarkdownToHtml(
     params: TransformMarkdownParams
 ): String {
-    val (originalContent, codeSmellName, standaloneDocumentation) = params
+    val (originalContent, heading, standaloneDocumentation) = params
 
     val content = if (!standaloneDocumentation)
-        "$codeSmellName\n\n$originalContent"
+        "$heading\n\n$originalContent"
     else originalContent.split("\n\n", limit = 2)[1]
 
     val parts = content.split("## ")

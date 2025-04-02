@@ -41,6 +41,8 @@ class HtmlContentBuilder {
                 ?: ""
         else ""
 
+        println(logoPath)
+
         this.title =
             """
         |    <h2 class="icon-header">

@@ -14,7 +14,7 @@ import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.components.codehealth.monitor.tree.NodeType
 import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
-import com.codescene.jetbrains.services.htmlviewer.DocsSourceType
+import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
 import com.codescene.jetbrains.services.htmlviewer.DocumentationParams
 import com.codescene.jetbrains.util.Constants.GREEN
 import com.codescene.jetbrains.util.Constants.ORANGE
@@ -306,9 +306,11 @@ private fun handleMouseClick(project: Project, codeSmell: CodeSmell, filePath: S
             docViewer.open(
                 it,
                 DocumentationParams(
-                    it.virtualFile,
-                    codeSmell,
-                    DocsSourceType.CODE_HEALTH_DETAILS
+                    codeSmell.category,
+                    it.virtualFile.name,
+                    it.virtualFile.path,
+                    codeSmell.highlightRange.startLine,
+                    DocsEntryPoint.CODE_HEALTH_DETAILS
                 )
             )
         }

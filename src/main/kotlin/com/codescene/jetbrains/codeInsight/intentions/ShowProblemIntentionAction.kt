@@ -2,7 +2,7 @@ package com.codescene.jetbrains.codeInsight.intentions
 
 import com.codescene.data.review.CodeSmell
 import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
-import com.codescene.jetbrains.services.htmlviewer.DocsSourceType
+import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
 import com.codescene.jetbrains.services.htmlviewer.DocumentationParams
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.intellij.codeInsight.intention.IntentionAction
@@ -26,7 +26,13 @@ class ShowProblemIntentionAction(private val codeSmell: CodeSmell) : IntentionAc
         if (editor != null) {
             docViewer.open(
                 editor,
-                DocumentationParams(editor.virtualFile, codeSmell, DocsSourceType.INTENTION_ACTION)
+                DocumentationParams(
+                    codeSmell.category,
+                    editor.virtualFile.name,
+                    editor.virtualFile.path,
+                    codeSmell.highlightRange.startLine,
+                    DocsEntryPoint.INTENTION_ACTION
+                )
             )
         }
     }
