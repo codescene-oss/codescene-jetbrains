@@ -35,6 +35,7 @@ object Constants {
     const val TELEMETRY_EDITOR_TYPE = "intellij"
 
     // ACE constants
+    const val ACE_ACKNOWLEDGEMENT_FILE = "ace-info.md"
     const val ACE_STATUS = "CodeScene ACE Status"
     const val ACE_NOTIFICATION_GROUP = "CodeScene ACE"
     const val ACE_REFACTORING_SUGGESTION = "Refactoring suggestion"

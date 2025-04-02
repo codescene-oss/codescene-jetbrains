@@ -2,15 +2,13 @@ package com.codescene.jetbrains.services.htmlviewer
 
 import com.codescene.data.review.CodeSmell
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
-import com.codescene.jetbrains.util.TelemetryEvents
-import com.codescene.jetbrains.util.prepareMarkdownContent
-import com.intellij.openapi.application.runReadAction
-import com.intellij.openapi.command.WriteCommandAction
+import com.codescene.jetbrains.services.htmlviewer.codehealth.HtmlContentBuilder
+import com.codescene.jetbrains.util.*
+import com.codescene.jetbrains.util.Constants.ISSUES_PATH
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiManager
 import com.intellij.testFramework.LightVirtualFile
 
 data class FunctionLocation(
@@ -42,22 +40,19 @@ class CodeSceneDocumentationViewer(private val project: Project) : HtmlViewer<Do
 
     override fun prepareFile(params: DocumentationParams): LightVirtualFile {
         val (file, codeSmell) = params
+        file?.let { functionLocation = FunctionLocation(file.path, codeSmell) }
 
-        val name = codeSmell.category + ".md"
-        val classLoader = this@CodeSceneDocumentationViewer.javaClass.classLoader
-        val content = prepareMarkdownContent(params, classLoader)
-        val docFile = LightVirtualFile(name, content)
+        val fileName = codeSmell.category + ".md"
+        val contentParams = TransformMarkdownParams(getContent(codeSmell), codeSmell.category)
 
-        if (file != null) functionLocation = FunctionLocation(file.path, codeSmell)
+        val fileContent = HtmlContentBuilder()
+            .title(codeSmell.category)
+            .usingStyleSheet(Constants.STYLE_BASE_PATH + "code-smell.css")
+            .functionLocation(file?.name ?: "", codeSmell.highlightRange.startLine)
+            .content(contentParams)
+            .build()
 
-        val psiFile = runReadAction { PsiManager.getInstance(project).findFile(docFile) } ?: return docFile
-        docFile.isWritable = false
-
-        WriteCommandAction.runWriteCommandAction(project) {
-            psiFile.virtualFile.refresh(false, false)
-        }
-
-        return docFile
+        return createTempFile(CreateTempFileParams(fileName, fileContent, project))
     }
 
     override fun sendTelemetry(params: DocumentationParams) {
@@ -69,5 +64,15 @@ class CodeSceneDocumentationViewer(private val project: Project) : HtmlViewer<Do
                     Pair("category", params.codeSmell.category)
                 )
             )
+    }
+
+    private fun getContent(codeSmell: CodeSmell): String {
+        val filePath = "${ISSUES_PATH}${categoryToFileName(codeSmell.category)}.md"
+
+        return this@CodeSceneDocumentationViewer.javaClass.classLoader
+            .getResourceAsStream(filePath)
+            ?.bufferedReader()
+            ?.readText()
+            ?: ""
     }
 }

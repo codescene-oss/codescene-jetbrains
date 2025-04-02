@@ -9,7 +9,6 @@ import com.codescene.jetbrains.services.api.RefactoredFunction
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheQuery
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
 import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewer
-import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewerParams
 import com.codescene.jetbrains.services.htmlviewer.AceRefactoringResultViewer
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
@@ -42,7 +41,7 @@ fun handleAceEntryPoint(params: RefactoringParams) {
     if (settings.aceAcknowledged)
         AceService.getInstance().refactor(params)
     else
-        aceAcknowledgement.open(editor, AceAcknowledgementViewerParams(editor?.virtualFile, function))
+        aceAcknowledgement.open(editor, function)
 }
 
 fun fetchAceCache(path: String, content: String, project: Project): List<FnToRefactor> {

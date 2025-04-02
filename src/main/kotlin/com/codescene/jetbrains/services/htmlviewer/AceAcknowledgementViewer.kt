@@ -2,8 +2,10 @@ package com.codescene.jetbrains.services.htmlviewer
 
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
+import com.codescene.jetbrains.services.htmlviewer.codehealth.HtmlContentBuilder
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.ACE_ACKNOWLEDGEMENT
+import com.codescene.jetbrains.util.Constants.ACE_ACKNOWLEDGEMENT_FILE
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -16,7 +18,7 @@ data class AceAcknowledgementViewerParams(
 )
 
 @Service(Service.Level.PROJECT)
-class AceAcknowledgementViewer(private val project: Project) : HtmlViewer<AceAcknowledgementViewerParams>(project) {
+class AceAcknowledgementViewer(private val project: Project) : HtmlViewer<FnToRefactor>(project) {
     var functionToRefactor: FnToRefactor? = null
         private set
 
@@ -24,28 +26,31 @@ class AceAcknowledgementViewer(private val project: Project) : HtmlViewer<AceAck
         fun getInstance(project: Project) = project.service<AceAcknowledgementViewer>()
     }
 
-    override fun prepareFile(params: AceAcknowledgementViewerParams): LightVirtualFile {
-        val (file, function) = params
-        functionToRefactor = function
+    override fun prepareFile(params: FnToRefactor): LightVirtualFile {
+        functionToRefactor = params
 
-        val classLoader = this@AceAcknowledgementViewer.javaClass.classLoader
+        val markdown = getContent()
+        val title = markdown.split("\n\n", limit = 2)[0]
+        val transformParams = TransformMarkdownParams(originalContent = markdown, standaloneDocumentation = true)
 
-        val markdown = classLoader.getResourceAsStream("ace-info.md")?.bufferedReader()?.readText() ?: ""
-        val transformParams = TransformMarkdownParams(markdown, "codeSmellName", true)
-        val markdownContent = transformMarkdownToHtml(transformParams, true)
+        val fileContent = HtmlContentBuilder()
+            .title(title, Constants.LOGO_PATH)
+            .usingStyleSheet(Constants.STYLE_BASE_PATH + "code-smell.css")
+            .usingStyleSheet(Constants.STYLE_BASE_PATH + "ace.css")
+            .content(transformParams)
+            .build()
 
-        val headingParams = HeadingParams(
-            file = file,
-            content = markdown,
-            classLoader = classLoader,
-            standaloneDocumentation = true
-        )
-        val header = prepareHeader(headingParams)
-
-        return createTempFile("$ACE_ACKNOWLEDGEMENT.md", "$header$markdownContent", project)
+        return createTempFile(CreateTempFileParams("$ACE_ACKNOWLEDGEMENT.md", fileContent, project))
     }
 
-    override fun sendTelemetry(params: AceAcknowledgementViewerParams) {
+    override fun sendTelemetry(params: FnToRefactor) {
         TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_INFO_PRESENTED)
     }
+
+    private fun getContent() = this@AceAcknowledgementViewer.javaClass.classLoader
+        .getResourceAsStream(ACE_ACKNOWLEDGEMENT_FILE)
+        ?.bufferedReader()
+        ?.readText()
+        ?: ""
+
 }

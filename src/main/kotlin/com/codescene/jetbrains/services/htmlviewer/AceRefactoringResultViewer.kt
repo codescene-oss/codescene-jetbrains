@@ -3,6 +3,7 @@ package com.codescene.jetbrains.services.htmlviewer
 import com.codescene.jetbrains.services.api.RefactoredFunction
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.util.Constants.ACE_REFACTORING_SUGGESTION
+import com.codescene.jetbrains.util.CreateTempFileParams
 import com.codescene.jetbrains.util.TelemetryEvents
 import com.codescene.jetbrains.util.createTempFile
 import com.intellij.openapi.components.Service
@@ -22,8 +23,9 @@ class AceRefactoringResultViewer(private val project: Project) : HtmlViewer<Refa
 
         //Temporary viewing solution:
         return createTempFile(
-            "$ACE_REFACTORING_SUGGESTION.md",
-            """
+            CreateTempFileParams(
+                "$ACE_REFACTORING_SUGGESTION.md",
+                """
                 <html>
                   <p> 
                     This is a placeholder for the result of $name's refactoring.
@@ -33,16 +35,17 @@ class AceRefactoringResultViewer(private val project: Project) : HtmlViewer<Refa
                         <li>Reasons summary: ${refactoringResult.reasons.map { it.summary }.joinToString(", ")}</li>
                         <li>Added code smells: ${refactoringResult.refactoringProperties.addedCodeSmells.joinToString(", ")}</li>
                         <li>Removed code smells: ${
-                refactoringResult.refactoringProperties.removedCodeSmells.joinToString(
-                    ", "
-                )
-            }</li>
+                    refactoringResult.refactoringProperties.removedCodeSmells.joinToString(
+                        ", "
+                    )
+                }</li>
                         <li>Code: ${refactoringResult.code} </li>
                     </ul>
                   </p>
                 </html>
             """.trimIndent(),
-            project
+                project
+            )
         )
     }
 
