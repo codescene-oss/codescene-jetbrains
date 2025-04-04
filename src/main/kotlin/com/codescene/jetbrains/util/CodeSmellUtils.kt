@@ -140,7 +140,7 @@ val codeSmellNames = listOf(
     Constants.STRING_HEAVY_FUNCTION_ARGUMENTS,
 )
 
-// this list needs to match documentation files for code smells, code health and code health monitor (/docs)
+// this list needs to match documentation files for code smells, code health, code health monitor and ACE
 val acceptedFileNames = aceDocs + codeSmellNames + generalDocs
 
 fun Color.webRgba(alpha: Double = this.alpha.toDouble()): String {

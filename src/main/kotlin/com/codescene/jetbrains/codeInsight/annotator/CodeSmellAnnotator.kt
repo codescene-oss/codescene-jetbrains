@@ -52,13 +52,6 @@ class CodeSmellAnnotator : ExternalAnnotator<
         }
     }
 
-    private fun getRefactorableFunction(codeSmell: CodeSmell, refactorableFunctions: List<FnToRefactor>) =
-        refactorableFunctions.find { function ->
-            function.refactoringTargets.any { target ->
-                target.category == codeSmell.category && target.line == codeSmell.highlightRange.startLine
-            }
-        }
-
     private fun annotateCodeSmell(
         codeSmell: CodeSmell,
         document: Document,

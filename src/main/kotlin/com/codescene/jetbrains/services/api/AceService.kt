@@ -138,7 +138,7 @@ class AceService : BaseService(), Disposable {
         val function = params.function
         val startTime = System.nanoTime()
 
-        val result = runWithClassLoaderChange(100_000) {
+        val result = runWithClassLoaderChange {
             if (options == null) ExtensionAPI.refactor(function)
             else ExtensionAPI.refactor(function, options)
         }
@@ -156,7 +156,7 @@ class AceService : BaseService(), Disposable {
         val path = editor.virtualFile.path
 
         scope.launch {
-            val result = runWithClassLoaderChange(100_000) { getFunctions() } ?: return@launch
+            val result = runWithClassLoaderChange { getFunctions() } ?: return@launch
 
             val entry = AceRefactorableFunctionCacheEntry(path, editor.document.text, result)
             AceRefactorableFunctionsCacheService.getInstance(project).put(entry)

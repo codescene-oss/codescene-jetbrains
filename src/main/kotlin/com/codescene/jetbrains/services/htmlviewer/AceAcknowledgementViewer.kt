@@ -25,7 +25,7 @@ class AceAcknowledgementViewer(private val project: Project) : HtmlViewer<FnToRe
 
         val markdown = getContent()
         val title = markdown.split("\n\n", limit = 2)[0]
-        val transformParams = TransformMarkdownParams(originalContent = markdown, standaloneDocumentation = true)
+        val transformParams = TransformMarkdownParams(originalContent = markdown, generalDocumentation = true)
 
         val fileContent = HtmlContentBuilder()
             .title(title, Constants.LOGO_PATH)
@@ -42,7 +42,7 @@ class AceAcknowledgementViewer(private val project: Project) : HtmlViewer<FnToRe
     }
 
     private fun getContent() = this@AceAcknowledgementViewer.javaClass.classLoader
-        .getResourceAsStream(ACE_ACKNOWLEDGEMENT_FILE)
+        .getResourceAsStream(ACE_ACKNOWLEDGEMENT_FILE) //This file has not been added to shared docs yet
         ?.bufferedReader()
         ?.readText()
         ?: ""

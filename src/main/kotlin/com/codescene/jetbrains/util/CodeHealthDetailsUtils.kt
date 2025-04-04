@@ -20,7 +20,6 @@ import com.codescene.jetbrains.util.Constants.GREEN
 import com.codescene.jetbrains.util.Constants.ORANGE
 import com.codescene.jetbrains.util.Constants.RED
 import com.intellij.icons.AllIcons
-import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.fileTypes.FileTypeManager
@@ -237,14 +236,6 @@ private fun getFunctionFinding(
         type = CodeHealthDetailsType.FUNCTION,
         refactorableFunction = getRefactorableFunction(finding, project)
     )
-}
-
-private fun getRefactorableFunction(finding: CodeHealthFinding, project: Project): FnToRefactor? {
-    val file = LocalFileSystem.getInstance().findFileByPath(finding.filePath)
-    val document = file?.let { FileDocumentManager.getInstance().getDocument(file) }
-    val aceEntry = fetchAceCache(finding.filePath, document?.text ?: "", project)
-
-    return aceEntry.find { it.name == finding.displayName && it.range.startLine == finding.focusLine }
 }
 
 private fun getFileFinding(

@@ -17,7 +17,7 @@ val oneBacktick = MarkdownCodeDelimiter.SINGLE_LINE.value
 data class TransformMarkdownParams(
     val originalContent: String,
     val heading: String = "",
-    val standaloneDocumentation: Boolean = false
+    val generalDocumentation: Boolean = false
 )
 
 data class HtmlPart(

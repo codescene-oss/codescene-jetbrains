@@ -15,6 +15,6 @@ a [proven business impact](https://codescene.com/hubfs/web_docs/Business-impact-
 [View CodeScene's AI Privacy Principles](https://codescene.com/product/ace/principles)
 
 <div id="ace-button-container">
-    <button id="ace-button">Show me CodeScene ACE</button>
-    <span id="ace-span">You can disable CodeScene ACE anytime in settings.</span>
+  <button id="ace-button">Show me CodeScene ACE</button>
+  <span id="ace-span">You can disable CodeScene ACE anytime in settings.</span>
 </div>

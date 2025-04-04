@@ -158,8 +158,7 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
     override fun getComponent(): JComponent = panel
     override fun getPreferredFocusedComponent(): JComponent = panel
     override fun getName(): String = "$CODESCENE Html Viewer"
-    override fun setState(state: FileEditorState) { /* implementation not needed */
-    }
+    override fun setState(state: FileEditorState) { /* implementation not needed */}
 
     override fun isModified(): Boolean = false
     override fun isValid(): Boolean = file.isValid

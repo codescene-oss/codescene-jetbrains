@@ -51,7 +51,7 @@ class CodeSceneDocumentationViewer(private val project: Project) : HtmlViewer<Do
 
         if (!isGeneralDocumentation) builder
             .title(heading)
-            .functionLocation(fileName, focusLine!!)
+            .functionLocation(fileName, focusLine ?: 1)
         else builder.title(heading, Constants.LOGO_PATH)
 
         val fileContent = builder

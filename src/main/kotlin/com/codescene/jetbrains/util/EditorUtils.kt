@@ -20,7 +20,7 @@ fun getSelectedTextEditor(project: Project, filePath: String, source: String = "
 
 fun closeWindow(fileName: String, project: Project) {
     val editorManager = FileEditorManagerEx.getInstanceEx(project)
-    val aceDoc = editorManager.windows
+    val docFile = editorManager.windows
         .firstOrNull { editorWindow ->
             editorWindow
                 .fileList
@@ -32,6 +32,6 @@ fun closeWindow(fileName: String, project: Project) {
             matchingFile?.let { window to it }
         }
 
-    val (editorWindow, virtualFile) = aceDoc ?: return
+    val (editorWindow, virtualFile) = docFile ?: return
     editorWindow.closeFile(virtualFile)
 }
