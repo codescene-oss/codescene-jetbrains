@@ -127,7 +127,6 @@ fun aceStatusDelegate(): ReadWriteProperty<Any?, AceStatus> =
 fun refreshAceUi(newValue: AceStatus, scope: CoroutineScope = CoroutineScope(Dispatchers.IO)) = scope.launch {
     ProjectManager.getInstance().openProjects.forEach { project ->
         val editor = FileEditorManager.getInstance(project).selectedTextEditor
-        val uiService = UIRefreshService.getInstance(project)
 
         editor?.let {
             if (newValue == AceStatus.ACTIVATED)
@@ -136,7 +135,8 @@ fun refreshAceUi(newValue: AceStatus, scope: CoroutineScope = CoroutineScope(Dis
                     .get(ReviewCacheQuery(it.document.text, it.virtualFile.path))
                     ?.let { cache -> checkContainsRefactorableFunctions(it, cache) }
             else
-                uiService.refreshUI(it, listOf("ACECodeVisionProvider"))
+                UIRefreshService.getInstance(project)
+                    .refreshUI(it, listOf("ACECodeVisionProvider"))
 
             project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(null)
         }
