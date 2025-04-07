@@ -33,7 +33,6 @@ data class RefactoredFunction(
 @Service
 class AceService : BaseService(), Disposable {
     private val scope = CoroutineScope(Dispatchers.IO)
-    private val settings = CodeSceneGlobalSettingsStore.getInstance().state
     private val dispatcher = Dispatchers.IO
 
     private val refactoringScope = CoroutineScope(Dispatchers.IO)
@@ -44,7 +43,7 @@ class AceService : BaseService(), Disposable {
     }
 
     suspend fun runPreflight(force: Boolean = false): PreflightResponse? {
-        return if (settings.enableAutoRefactor) {
+        return if (CodeSceneGlobalSettingsStore.getInstance().state.enableAutoRefactor) {
             getPreflight(force)
         } else {
             CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.DEACTIVATED
@@ -134,7 +133,7 @@ class AceService : BaseService(), Disposable {
         }
     }
 
-    private suspend fun handleRefactoring(params: RefactoringParams, options: RefactoringOptions? = null) {
+    private fun handleRefactoring(params: RefactoringParams, options: RefactoringOptions? = null) {
         val function = params.function
         val startTime = System.nanoTime()
 
@@ -156,7 +155,7 @@ class AceService : BaseService(), Disposable {
         val path = editor.virtualFile.path
 
         scope.launch {
-            val result = runWithClassLoaderChange { getFunctions() } ?: return@launch
+            val result = runWithClassLoaderChange { getFunctions() }
 
             val entry = AceRefactorableFunctionCacheEntry(path, editor.document.text, result)
             AceRefactorableFunctionsCacheService.getInstance(project).put(entry)

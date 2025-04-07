@@ -5,20 +5,31 @@ import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
+import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.notifier.AceStatusRefreshNotifier
+import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
+import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.api.AceService
 import com.codescene.jetbrains.services.api.RefactoredFunction
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheQuery
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
+import com.codescene.jetbrains.services.cache.ReviewCacheQuery
+import com.codescene.jetbrains.services.cache.ReviewCacheService
 import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewer
 import com.codescene.jetbrains.services.htmlviewer.AceRefactoringResultViewer
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.vfs.LocalFileSystem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.properties.Delegates
+import kotlin.properties.ReadWriteProperty
 
 enum class AceEntryPoint(val value: String) {
     RETRY("retry"),
@@ -41,6 +52,11 @@ fun handleAceEntryPoint(params: RefactoringParams) {
 
     val aceAcknowledgement = AceAcknowledgementViewer.getInstance(project)
     val settings = CodeSceneGlobalSettingsStore.getInstance().state
+
+    if (!settings.enableAutoRefactor) {
+        Log.warn("Cannot use ACE as it is disabled.")
+        return
+    }
 
     if (settings.aceAcknowledged)
         AceService.getInstance().refactor(params)
@@ -97,4 +113,32 @@ fun getRefactorableFunction(finding: CodeHealthFinding, project: Project): FnToR
     val aceEntry = fetchAceCache(finding.filePath, document?.text ?: "", project)
 
     return aceEntry.find { it.name == finding.displayName && it.range.startLine == finding.focusLine }
+}
+
+fun aceStatusDelegate(): ReadWriteProperty<Any?, AceStatus> =
+    Delegates.observable(AceStatus.DEACTIVATED) { _, _, newValue ->
+        refreshAceUi(newValue)
+
+        ApplicationManager.getApplication().messageBus
+            .syncPublisher(AceStatusRefreshNotifier.TOPIC)
+            .refresh()
+    }
+
+fun refreshAceUi(newValue: AceStatus, scope: CoroutineScope = CoroutineScope(Dispatchers.IO)) = scope.launch {
+    ProjectManager.getInstance().openProjects.forEach { project ->
+        val editor = FileEditorManager.getInstance(project).selectedTextEditor
+        val uiService = UIRefreshService.getInstance(project)
+
+        editor?.let {
+            if (newValue == AceStatus.ACTIVATED)
+                ReviewCacheService
+                    .getInstance(project)
+                    .get(ReviewCacheQuery(it.document.text, it.virtualFile.path))
+                    ?.let { cache -> checkContainsRefactorableFunctions(it, cache) }
+            else
+                uiService.refreshUI(it, listOf("ACECodeVisionProvider"))
+
+            project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(null)
+        }
+    }
 }
