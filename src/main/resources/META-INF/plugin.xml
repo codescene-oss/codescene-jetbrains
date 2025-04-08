@@ -14,7 +14,7 @@
         <action
                 text="Settings"
                 id="ShowSettingsAction"
-                icon="AllIcons.General.Gear"
+                icon="AllIcons.General.GearPlain"
                 description="Open the settings dialog"
                 class="com.codescene.jetbrains.actions.ShowSettingsAction"/>
 
@@ -51,6 +51,7 @@
         <postStartupActivity implementation="com.codescene.jetbrains.listeners.ProjectStartupActivity"/>
 
         <notificationGroup id="CodeScene" displayType="STICKY_BALLOON"/>
+        <notificationGroup id="CodeScene ACE" displayType="STICKY_BALLOON"/>
 
         <applicationService serviceImplementation="com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore"/>
 
@@ -129,10 +130,10 @@
         <codeInsight.codeVisionProvider
                 implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.CodeHealthCodeVisionProvider"/>
         <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.ACECodeVisionProvider"/>
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.AceCodeVisionProvider"/>
 
         <fileEditorProvider
-                implementation="com.codescene.jetbrains.codeInsight.codehealth.CodeSceneHtmlViewerProvider"/>
+                implementation="com.codescene.jetbrains.fileeditor.CodeSceneFileEditorProvider"/>
         <statusBarWidgetFactory
                 implementation="com.codescene.jetbrains.components.statusbar.AceStatusBarWidgetFactory"
                 id="AceStatusBarWidgetFactory"

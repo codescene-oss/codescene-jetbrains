@@ -151,9 +151,8 @@ class CodeHealthTreeBuilder(private val project: Project) {
         } else {
             (event.source as? JTree)?.clearSelection()
 
-            project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
             handleDeselectionTelemetry()
-            selectedNode = null
+            deselectNodeAndCodeHealthFinding()
         }
     }
 

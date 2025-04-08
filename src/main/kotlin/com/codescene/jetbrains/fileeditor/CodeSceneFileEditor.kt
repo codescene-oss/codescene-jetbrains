@@ -1,10 +1,13 @@
-package com.codescene.jetbrains.codeInsight.codehealth
+package com.codescene.jetbrains.fileeditor
 
+import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.CodeNavigationService
-import com.codescene.jetbrains.services.CodeSceneDocumentationService
+import com.codescene.jetbrains.services.api.telemetry.TelemetryService
+import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewer
+import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
+import com.codescene.jetbrains.util.*
+import com.codescene.jetbrains.util.Constants.ACE_ACKNOWLEDGEMENT
 import com.codescene.jetbrains.util.Constants.CODESCENE
-import com.codescene.jetbrains.util.Log
-import com.codescene.jetbrains.util.getSelectedTextEditor
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorState
 import com.intellij.openapi.project.Project
@@ -29,7 +32,7 @@ import java.beans.PropertyChangeSupport
 import java.net.URI
 import javax.swing.JComponent
 
-class CodeSceneHtmlViewer(val project: Project, private val file: VirtualFile) : FileEditor {
+class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) : FileEditor {
 
     companion object {
         private const val JAVASCRIPT_SEND_MESSAGE = """
@@ -37,14 +40,20 @@ class CodeSceneHtmlViewer(val project: Project, private val file: VirtualFile) :
                 %s
             };
         """
-        private const val JAVASCRIPT_ADD_EVENT_LISTENER = """
+        private const val FUNCTION_LOCATION = """
             document.getElementById('function-location').addEventListener('click', function() {
                  window.sendMessage('goto-function-location');
             });
+            """
+        private const val ACE_BUTTON = """
             document.getElementById('ace-button').addEventListener('click', function() {
-                 window.sendMessage('ace-button-clicked');
+                 window.sendMessage('show-me-ace');
             });
-        """
+            """
+        private val eventListeners = listOf(
+            FUNCTION_LOCATION,
+            ACE_BUTTON
+        )
     }
 
     private val jcefBrowser: JBCefBrowser = JBCefBrowser()
@@ -59,7 +68,8 @@ class CodeSceneHtmlViewer(val project: Project, private val file: VirtualFile) :
         panel.add(jcefBrowser.component, java.awt.BorderLayout.CENTER)
         val markdownContent = String(file.contentsToByteArray(), file.charset)
         jcefBrowser.loadHTML(markdownContent)
-        jsQuery.addHandler { data -> handleAction(data)
+        jsQuery.addHandler { data ->
+            handleAction(data)
             null
         }
         initializeJavascriptCallback()
@@ -111,37 +121,45 @@ class CodeSceneHtmlViewer(val project: Project, private val file: VirtualFile) :
             JAVASCRIPT_SEND_MESSAGE.format(jsQuery.inject("data")),
             null, 0
         )
-        browser?.executeJavaScript(JAVASCRIPT_ADD_EVENT_LISTENER, null, 0)
+
+        eventListeners.forEach { browser?.executeJavaScript(it, null, 0) }
     }
 
     private fun handleAction(data: String) {
         when (data) {
             "goto-function-location" -> {
-                val functionLocation = CodeSceneDocumentationService.getInstance(project).functionLocation
+                val functionLocation = CodeSceneDocumentationViewer.getInstance(project).functionLocation
                 scope.launch {
                     functionLocation?.let {
                         CodeNavigationService
                             .getInstance(project)
-                            .focusOnLine(it.fileName, it.codeSmell.highlightRange?.startLine ?: 1)
+                            .focusOnLine(it.fileName, it.focusLine ?: 1)
                     }
                 }
             }
-            "ace-button-clicked" -> {
+
+            "show-me-ace" -> {
+                Log.info("ACE acknowledged", "${this::javaClass::name} - ${project.name}")
+                TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_INFO_ACKNOWLEDGED)
+
+                CodeSceneGlobalSettingsStore.getInstance().state.aceAcknowledged = true
+                val function = AceAcknowledgementViewer.getInstance(project).functionToRefactor
+
                 scope.launch(Dispatchers.Main) {
-                    val service = CodeSceneDocumentationService.getInstance(project)
                     val editor = getSelectedTextEditor(project, "")
-                    service.openAcePanel(editor)
+
+                    handleAceEntryPoint(RefactoringParams(project, editor, function, AceEntryPoint.ACE_ACKNOWLEDGEMENT))
+                    closeWindow(ACE_ACKNOWLEDGEMENT, project)
                 }
             }
-            // TODO handle other type of messages here (e.g. refactoring)
         }
-
     }
 
     override fun getComponent(): JComponent = panel
     override fun getPreferredFocusedComponent(): JComponent = panel
     override fun getName(): String = "$CODESCENE Html Viewer"
     override fun setState(state: FileEditorState) { /* implementation not needed */}
+
     override fun isModified(): Boolean = false
     override fun isValid(): Boolean = file.isValid
     override fun getFile(): VirtualFile = file

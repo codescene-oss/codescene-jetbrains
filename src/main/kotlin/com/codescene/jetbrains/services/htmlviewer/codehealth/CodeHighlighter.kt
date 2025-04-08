@@ -1,4 +1,4 @@
-package com.codescene.jetbrains.codeInsight.codehealth
+package com.codescene.jetbrains.services.htmlviewer.codehealth
 
 import com.codescene.jetbrains.util.webRgba
 import com.intellij.lang.Language

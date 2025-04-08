@@ -107,11 +107,10 @@ fun categoryToFileName(category: String): String {
     return category.trim().replace(" ", "-").replace(",", "").toLowerCasePreservingASCIIRules()
 }
 
-// this list needs to match documentation files for code smells, code health and code health monitor (/docs)
+val generalDocs = listOf(Constants.GENERAL_CODE_HEALTH, Constants.CODE_HEALTH_MONITOR)
+val aceDocs = listOf(Constants.ACE_ACKNOWLEDGEMENT, Constants.ACE_REFACTORING_SUGGESTION)
+
 val codeSmellNames = listOf(
-    Constants.ACE,
-    Constants.GENERAL_CODE_HEALTH,
-    Constants.CODE_HEALTH_MONITOR,
     Constants.BRAIN_CLASS,
     Constants.BRAIN_METHOD,
     Constants.BUMPY_ROAD_AHEAD,
@@ -140,6 +139,9 @@ val codeSmellNames = listOf(
     Constants.PRIMITIVE_OBSESSION,
     Constants.STRING_HEAVY_FUNCTION_ARGUMENTS,
 )
+
+// this list needs to match documentation files for code smells, code health, code health monitor and ACE
+val acceptedFileNames = aceDocs + codeSmellNames + generalDocs
 
 fun Color.webRgba(alpha: Double = this.alpha.toDouble()): String {
     return "rgba($red, $green, $blue, $alpha)"

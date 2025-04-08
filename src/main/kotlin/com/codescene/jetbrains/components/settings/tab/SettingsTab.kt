@@ -30,14 +30,12 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                     .comment(UiLabelsBundle.message("enableAutoRefactorComment"))
             }
 
-            /*
-            TODO: Uncomment this code when Code Health gate is integrated in plugin:
+            //TODO: remove
             row {
-                checkBox(UiLabelsBundle.message("previewCodeHealthGate"))
-                    .bindSelected(settings::previewCodeHealthGate)
-                    .comment(UiLabelsBundle.message("previewCodeHealthGateComment"))
+                checkBox("Ace Acknowledged")
+                    .bindSelected(settings::aceAcknowledged)
+                    .comment("Test, remove")
             }
-            */
 
             row {
                 checkBox(UiLabelsBundle.message("gitignore"))

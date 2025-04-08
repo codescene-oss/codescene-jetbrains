@@ -1,7 +1,5 @@
 CodeScene ACE - AI Powered Refactoring
 
-<div id="ace-div">
-
 [CodeScene ACE](https://codescene.com/product/ai-coding) combines multiple LLMs with fact-based validation.
 ACE chooses the best LLM for the job, validates its output, and proposes refactoring for cleaner code which is easier
 to maintain.
@@ -19,5 +17,4 @@ a [proven business impact](https://codescene.com/hubfs/web_docs/Business-impact-
 <div id="ace-button-container">
   <button id="ace-button">Show me CodeScene ACE</button>
   <span id="ace-span">You can disable CodeScene ACE anytime in settings.</span>
-</div>
 </div>

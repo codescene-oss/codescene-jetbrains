@@ -1,11 +1,9 @@
 package com.codescene.jetbrains.codeInsight.codeVision.providers
 
-import com.codescene.data.delta.FunctionFinding
+import com.codescene.data.ace.FnToRefactor
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
-import com.codescene.jetbrains.services.CodeSceneDocumentationService
-import com.codescene.jetbrains.util.getCachedDelta
-import com.codescene.jetbrains.util.getTextRange
+import com.codescene.jetbrains.util.*
 import com.intellij.codeInsight.codeVision.*
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.openapi.editor.Editor
@@ -13,7 +11,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 
 @Suppress("UnstableApiUsage")
-class ACECodeVisionProvider : CodeVisionProvider<Unit> {
+class AceCodeVisionProvider : CodeVisionProvider<Unit> {
     override val id: String = this::class.simpleName!!
 
     override val name: String = "CodeScene ACE"
@@ -29,37 +27,27 @@ class ACECodeVisionProvider : CodeVisionProvider<Unit> {
     }
 
     override fun computeCodeVision(editor: Editor, uiData: Unit): CodeVisionState {
-        editor.project ?: return CodeVisionState.READY_EMPTY
+        val settings = CodeSceneGlobalSettingsStore.getInstance().state
+        if (editor.project == null || !settings.enableAutoRefactor) return CodeVisionState.READY_EMPTY
 
-        val cachedDelta = getCachedDelta(editor)
-
-        // TODO: Preflight to check if supported?
-
-        // Dummy implementation to trigger ACE lens:
-        val refactorableFunctions = cachedDelta.second?.functionLevelFindings?.filter {
-            (it?.function?.name?.startsWith("a", true) == true || (it?.function?.name?.startsWith(
-                "t",
-                true
-            ) == true) && it.function.range != null)
-        }
-
-        val lenses = getLens(editor, refactorableFunctions)
+        val aceResults = fetchAceCache(editor.virtualFile.path, editor.document.text, editor.project!!)
+        val lenses = getLens(editor, aceResults)
 
         return CodeVisionState.Ready(lenses)
     }
 
     private fun getLens(
         editor: Editor,
-        refactorableFunctions: List<FunctionFinding>?
+        refactorableFunctions: List<FnToRefactor>?
     ): List<Pair<TextRange, CodeVisionEntry>> {
         val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
 
         refactorableFunctions?.forEach {
-            val range = getTextRange(it.function.range.get().startLine to it.function.range.get().endLine, editor.document)
+            val range = getTextRange(it.range.startLine to it.range.endLine, editor.document)
             val entry = ClickableTextCodeVisionEntry(
                 text = name,
                 providerId = id,
-                onClick = { _, sourceEditor -> handleLensClick(sourceEditor) },
+                onClick = { _, sourceEditor -> handleLensClick(sourceEditor, it) },
                 icon = CODESCENE_ACE
             )
 
@@ -69,10 +57,7 @@ class ACECodeVisionProvider : CodeVisionProvider<Unit> {
         return lenses
     }
 
-    private fun handleLensClick(editor: Editor) {
-        val project = editor.project ?: return
-        val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
-
-        codeSceneDocumentationService.openAcePanel(editor)
+    private fun handleLensClick(editor: Editor, function: FnToRefactor) {
+        handleAceEntryPoint(RefactoringParams(editor.project!!, editor, function, AceEntryPoint.CODE_VISION))
     }
 }

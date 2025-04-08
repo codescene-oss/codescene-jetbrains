@@ -1,9 +1,9 @@
 package com.codescene.jetbrains.codeInsight.intentions
 
 import com.codescene.data.review.CodeSmell
-import com.codescene.jetbrains.services.CodeSceneDocumentationService
-import com.codescene.jetbrains.services.DocsSourceType
-import com.codescene.jetbrains.services.DocumentationParams
+import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
+import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
+import com.codescene.jetbrains.services.htmlviewer.DocumentationParams
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.intellij.codeInsight.intention.IntentionAction
 import com.intellij.codeInsight.intention.LowPriorityAction
@@ -22,9 +22,18 @@ class ShowProblemIntentionAction(private val codeSmell: CodeSmell) : IntentionAc
     override fun isAvailable(project: Project, editor: Editor?, file: PsiFile): Boolean = true
 
     override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {
-        val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
+        val docViewer = CodeSceneDocumentationViewer.getInstance(project)
         if (editor != null) {
-            codeSceneDocumentationService.openDocumentationPanel(DocumentationParams(editor, codeSmell, DocsSourceType.INTENTION_ACTION))
+            docViewer.open(
+                editor,
+                DocumentationParams(
+                    codeSmell.category,
+                    editor.virtualFile.name,
+                    editor.virtualFile.path,
+                    codeSmell.highlightRange.startLine,
+                    DocsEntryPoint.INTENTION_ACTION
+                )
+            )
         }
     }
 

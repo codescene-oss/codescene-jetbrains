@@ -21,9 +21,6 @@ import kotlinx.coroutines.Job
 
 @Service(Service.Level.PROJECT)
 class CodeDeltaService(private val project: Project) : CodeSceneService() {
-    private val uiRefreshService: UIRefreshService = UIRefreshService.getInstance(project)
-    private val deltaCacheService: DeltaCacheService = DeltaCacheService.getInstance(project)
-
     companion object {
         fun getInstance(project: Project): CodeDeltaService = project.service<CodeDeltaService>()
     }
@@ -80,29 +77,17 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
     private suspend fun handleDeltaResponse(editor: Editor, delta: Delta?, oldCode: String) {
         val path = editor.virtualFile.path
         val currentCode = editor.document.text
+        val cacheService = DeltaCacheService.getInstance(project)
 
         if (delta == null) {
             Log.info("Received null response from $CODESCENE delta API.", "$serviceImplementation - ${project.name}")
 
-            deltaCacheService.invalidate(path)
+            cacheService.invalidate(path)
         } else {
-            val lensProviders = mutableListOf("CodeHealthCodeVisionProvider")
-
-            // TODO: update according to ACE flow
-            if (isRefactorable(delta)) {
-                lensProviders.add("ACECodeVisionProvider")
-                uiRefreshService.refreshAnnotations(editor)
-            }
-
-            uiRefreshService.refreshCodeVision(editor, lensProviders)
+            UIRefreshService.getInstance(project).refreshCodeVision(editor, listOf("CodeHealthCodeVisionProvider"))
         }
 
         val cacheEntry = DeltaCacheEntry(path, oldCode, currentCode, delta)
-        deltaCacheService.put(cacheEntry)
+        cacheService.put(cacheEntry)
     }
-
-    // Dummy implementation to trigger ACE lens:
-    private fun isRefactorable(delta: Delta) = delta.functionLevelFindings?.any {
-        it?.function?.name?.startsWith("a", true) == true || (it?.function?.name?.startsWith("t", true) == true)
-    } == true
 }

@@ -6,7 +6,7 @@ import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.detail.slider.CustomSlider
 import com.codescene.jetbrains.components.layout.ResponsiveLayout
-import com.codescene.jetbrains.services.CodeSceneDocumentationService
+import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_URL
 import com.intellij.ide.ui.laf.darcula.ui.OnboardingDialogButtons
@@ -31,6 +31,7 @@ class CodeHealthPanelBuilder(private val project: Project) {
     }
 
     fun getPanel(details: CodeHealthDetails) = JPanel().apply {
+        val settings = CodeSceneGlobalSettingsStore.getInstance().state
         Log.debug("Rendering panel for $details...", service)
 
         val isCodeHealth = details.type == CodeHealthDetailsType.HEALTH
@@ -48,7 +49,7 @@ class CodeHealthPanelBuilder(private val project: Project) {
             addCodeHealthHeader(details, constraint)
             if (details.healthData!!.status.isNotEmpty()) addHealthDecline(details, constraint)
             addSlider(details, constraint)
-        } else
+        } else if (settings.enableAutoRefactor)
             addAutoRefactorButton(details, constraint)
 
         addBody(details, constraint)
@@ -63,24 +64,34 @@ class CodeHealthPanelBuilder(private val project: Project) {
         constraint.ipady = 8
         constraint.insets = JBUI.insets(10, 0)
 
-        val button = OnboardingDialogButtons
-            .createButton(UiLabelsBundle.message("autoRefactor"), CODESCENE_ACE) {
-                val selectedEditor =
-                    getSelectedTextEditor(project, details.filePath, "${this::class.simpleName} - ${project.name}")
-                CodeSceneDocumentationService.getInstance(project).openAcePanel(selectedEditor)
-            }.also {
-                if (details.isRefactorable == false) {
-                    it.icon = ACE_DISABLED
-                    it.isEnabled = false
-                    it.toolTipText = "Refactoring is not possible for this instance" //TODO: better tooltip
-                }
-            }
-
-        add(button, constraint)
+        add(getAutoRefactorButton(details), constraint)
         constraint.ipady = 0
         constraint.insets = JBUI.emptyInsets()
 
     }
+
+    private fun getAutoRefactorButton(details: CodeHealthDetails) = OnboardingDialogButtons
+        .createButton(UiLabelsBundle.message("autoRefactor"), CODESCENE_ACE) {
+            val selectedEditor = getSelectedTextEditor(
+                project,
+                details.filePath,
+                "${this::class.simpleName} - ${project.name}"
+            )
+            handleAceEntryPoint(
+                RefactoringParams(
+                    project,
+                    selectedEditor,
+                    details.refactorableFunction,
+                    AceEntryPoint.CODE_HEALTH_DETAILS
+                )
+            )
+        }.also {
+            if (details.refactorableFunction == null) {
+                it.icon = ACE_DISABLED
+                it.isEnabled = false
+                it.toolTipText = UiLabelsBundle.message("refactoringUnavailable")
+            }
+        }
 
     private fun JPanel.addHeader(details: CodeHealthDetails, constraint: GridBagConstraints) {
         ++constraint.gridy

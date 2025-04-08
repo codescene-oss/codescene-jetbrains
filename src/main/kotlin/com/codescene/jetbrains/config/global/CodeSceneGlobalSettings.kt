@@ -1,10 +1,8 @@
 package com.codescene.jetbrains.config.global
 
-import com.codescene.jetbrains.notifier.AceStatusRefreshNotifier
 import com.codescene.jetbrains.util.Constants.CODESCENE_SERVER_URL
-import com.intellij.openapi.application.ApplicationManager
+import com.codescene.jetbrains.util.aceStatusDelegate
 import org.jetbrains.annotations.NonNls
-import kotlin.properties.Delegates
 
 enum class AceStatus(val value: String) {
     ACTIVATED("Activated"),
@@ -22,7 +20,7 @@ enum class MonitorTreeSortOptions {
 data class CodeSceneGlobalSettings(
     @NonNls var serverUrl: String = CODESCENE_SERVER_URL,
 
-    var enableCodeLenses: Boolean = true,
+    var enableCodeLenses: Boolean = true, //TODO: refresh (remove) code vision immediately upon change
     var enableAutoRefactor: Boolean = false,
     var aceAcknowledged: Boolean = false,
     var excludeGitignoreFiles: Boolean = true,
@@ -30,8 +28,5 @@ data class CodeSceneGlobalSettings(
     var telemetryConsentGiven: Boolean = false,
     var monitorTreeSortOption: MonitorTreeSortOptions = MonitorTreeSortOptions.SCORE_ASCENDING
 ) {
-    var aceStatus: AceStatus by Delegates.observable(AceStatus.DEACTIVATED) { _, _, newValue ->
-        ApplicationManager.getApplication().messageBus.syncPublisher(AceStatusRefreshNotifier.TOPIC)
-        .refresh()
-    }
+    var aceStatus: AceStatus by aceStatusDelegate()
 }
