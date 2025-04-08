@@ -130,7 +130,7 @@
         <codeInsight.codeVisionProvider
                 implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.CodeHealthCodeVisionProvider"/>
         <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.ACECodeVisionProvider"/>
+                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.AceCodeVisionProvider"/>
 
         <fileEditorProvider
                 implementation="com.codescene.jetbrains.fileeditor.CodeSceneFileEditorProvider"/>

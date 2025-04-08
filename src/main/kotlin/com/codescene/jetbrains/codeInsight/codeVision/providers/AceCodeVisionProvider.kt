@@ -11,7 +11,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 
 @Suppress("UnstableApiUsage")
-class ACECodeVisionProvider : CodeVisionProvider<Unit> {
+class AceCodeVisionProvider : CodeVisionProvider<Unit> {
     override val id: String = this::class.simpleName!!
 
     override val name: String = "CodeScene ACE"

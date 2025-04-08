@@ -3,7 +3,7 @@ package com.codescene.jetbrains.codeInsight.annotator
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Review
-import com.codescene.jetbrains.codeInsight.intentions.ACERefactorAction
+import com.codescene.jetbrains.codeInsight.intentions.AceRefactorAction
 import com.codescene.jetbrains.codeInsight.intentions.ShowProblemIntentionAction
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
@@ -72,7 +72,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
             .highlightType(ProblemHighlightType.WARNING)
             .withFix(ShowProblemIntentionAction(codeSmell))
 
-        function?.let { annotationBuilder.withFix(ACERefactorAction(function)) }
+        function?.let { annotationBuilder.withFix(AceRefactorAction(function)) }
 
         annotationBuilder.create()
     }

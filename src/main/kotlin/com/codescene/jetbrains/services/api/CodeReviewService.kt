@@ -18,9 +18,6 @@ import kotlinx.coroutines.Job
 
 @Service(Service.Level.PROJECT)
 class CodeReviewService(private val project: Project) : CodeSceneService() {
-    private val cacheService: ReviewCacheService = ReviewCacheService.getInstance(project)
-    private val uiRefreshService: UIRefreshService = UIRefreshService.getInstance(project)
-
     companion object {
         fun getInstance(project: Project): CodeReviewService = project.service<CodeReviewService>()
     }
@@ -32,7 +29,7 @@ class CodeReviewService(private val project: Project) : CodeSceneService() {
     override fun review(editor: Editor) {
         reviewFile(editor) {
             performCodeReview(editor)
-            uiRefreshService.refreshUI(editor, CodeSceneCodeVisionProvider.getProviders())
+            UIRefreshService.getInstance(project).refreshUI(editor, CodeSceneCodeVisionProvider.getProviders())
         }
     }
 
@@ -48,7 +45,7 @@ class CodeReviewService(private val project: Project) : CodeSceneService() {
         val result = runWithClassLoaderChange { ExtensionAPI.review(params) } ?: return
 
         val entry = ReviewCacheEntry(fileContents = code, filePath = path, response = result)
-        cacheService.put(entry)
+        ReviewCacheService.getInstance(project).put(entry)
 
         checkContainsRefactorableFunctions(editor, result)
 

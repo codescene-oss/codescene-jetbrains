@@ -14,7 +14,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Iconable
 import com.intellij.psi.PsiFile
 
-class ACERefactorAction(private val function: FnToRefactor) : IntentionAction, HighPriorityAction, Iconable {
+class AceRefactorAction(private val function: FnToRefactor) : IntentionAction, HighPriorityAction, Iconable {
     private val name = "Refactor using $CODESCENE ACE"
 
     override fun getText(): String = name
