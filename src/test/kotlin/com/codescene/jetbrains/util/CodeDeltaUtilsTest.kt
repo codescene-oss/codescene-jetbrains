@@ -20,19 +20,19 @@ class CodeDeltaUtilsTest(
             ChangeDetail.ChangeType.DEGRADED,
             "Code Smell",
             "Duplicate Code",
-            com.codescene.data.delta.Position(5, 40)
+            5
         ),
         ChangeDetail(
             ChangeDetail.ChangeType.INTRODUCED,
             "Code Smell",
             "Large Method",
-            com.codescene.data.delta.Position(20, 40)
+            20
         ),
         ChangeDetail(
             ChangeDetail.ChangeType.FIXED,
             "Code Smell",
             "Bumpy Road Ahead",
-            com.codescene.data.delta.Position(5, 40)
+            5
         ),
     )
 
