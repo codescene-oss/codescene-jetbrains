@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.1.1] - 2025-04-11
+- **Added**
+  - Device ID:
+    - to track users with enabled analytics,
+    - presented in About tab.
+
 ### [0.1.0] - 2025-02-27
 - **Added**
   - Plugin settings UI form allowing users to configure options such as enabling code vision and choosing whether to analyze files ignored by .gitignore.
