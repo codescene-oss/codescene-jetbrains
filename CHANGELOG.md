@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.1.5-codescene-eap] - 2025-04-11
+- **Added**
+  - Device ID:
+    - to track users with enabled analytics,
+    - presented in About tab.
+
 ### [0.1.4-codescene-eap] - 2025-03-17
 - **Changed**
   - Code Health Monitor:

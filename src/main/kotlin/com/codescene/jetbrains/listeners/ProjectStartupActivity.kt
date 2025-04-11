@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.listeners
 
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.config.global.DeviceIdStore
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.showTelemetryConsentNotification
 import com.intellij.ide.plugins.IdeaPluginDescriptor
@@ -13,6 +14,7 @@ import com.intellij.openapi.vfs.VirtualFileManager
 
 class ProjectStartupActivity : ProjectActivity {
     override suspend fun execute(project: Project) {
+        DeviceIdStore.get()
         val disposable = project as Disposable
 
         val consentGiven = CodeSceneGlobalSettingsStore.getInstance().state.telemetryConsentGiven

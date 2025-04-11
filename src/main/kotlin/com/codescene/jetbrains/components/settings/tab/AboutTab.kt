@@ -3,6 +3,7 @@ package com.codescene.jetbrains.components.settings.tab
 import com.codescene.jetbrains.CodeSceneIcons.LOGO
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.config.global.DeviceIdStore
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Constants.CODESCENE_URL
 import com.codescene.jetbrains.util.Constants.TELEMETRY_EVENTS_URL
@@ -11,6 +12,7 @@ import com.codescene.jetbrains.util.Log
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.IdeBorderFactory
+import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI.Borders
 import com.intellij.util.ui.UIUtil
 import java.awt.*
@@ -28,6 +30,7 @@ class AboutTab : BoundConfigurable(UiLabelsBundle.message("aboutTitle")) {
         border = Borders.empty(10)
         add(aboutSection, BorderLayout.NORTH)
         add(telemetrySection, BorderLayout.CENTER)
+        add(deviceIdSection, BorderLayout.SOUTH)
     }
 
     override fun isModified() = (settings.telemetryConsentGiven != telemetryCheckbox.isSelected)
@@ -85,6 +88,13 @@ class AboutTab : BoundConfigurable(UiLabelsBundle.message("aboutTitle")) {
         gbc.gridy = 3
         gbc.weighty = 1.0
         add(getTelemetryConsentCheckbox(), gbc)
+    }
+
+    private val deviceIdSection = JTextArea().apply {
+        text = "device-id: ${DeviceIdStore.get()}"
+        foreground = JBColor.GRAY
+        isEditable = false
+        isOpaque = false
     }
 
     private fun getTelemetryDescription() = JTextArea(UiLabelsBundle.message("telemetryDescription")).apply {

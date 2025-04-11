@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.services.telemetry
 
-import com.codescene.jetbrains.services.BaseService
+import com.codescene.jetbrains.services.api.BaseService
 import com.intellij.openapi.components.Service
 import com.intellij.util.PathUtil.getFileExtension
 
