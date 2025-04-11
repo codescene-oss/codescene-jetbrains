@@ -145,10 +145,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
             functionCodeSmell.codeSmells.filterByCategory(categoryToFilter)
         } ?: emptyList()
 
-        val expressionLevelSmells =
-            codeAnalysisResult?.expressionLevelCodeSmells?.filterByCategory(categoryToFilter) ?: emptyList()
-
-        return fileLevelSmells + functionLevelSmells + expressionLevelSmells
+        return fileLevelSmells + functionLevelSmells
     }
 
     private fun getCodeVisionEntry(codeSmell: CodeSmell): ClickableTextCodeVisionEntry =
@@ -163,7 +160,13 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         val project = editor.project ?: return
         val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
 
-        codeSceneDocumentationService.openDocumentationPanel(DocumentationParams(editor, codeSmell, DocsSourceType.CODE_VISION))
+        codeSceneDocumentationService.openDocumentationPanel(
+            DocumentationParams(
+                editor,
+                codeSmell,
+                DocsSourceType.CODE_VISION
+            )
+        )
     }
 
     private fun markApiCallInProgress(filePath: String, apiCalls: MutableSet<String>) {

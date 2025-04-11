@@ -5,13 +5,14 @@ import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.config.global.MonitorTreeSortOptions
 import com.intellij.openapi.application.Application
 import com.intellij.openapi.application.ApplicationManager
-import com.jetbrains.rd.util.ConcurrentHashMap
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 class SortDeltaFindingsTest {
     private lateinit var mockApplication: Application
@@ -19,16 +20,16 @@ class SortDeltaFindingsTest {
     private val mockDeltaResults = ConcurrentHashMap(
         mapOf(
             "aFile" to mockk<Delta>(relaxed = true) {
-                every { oldScore } returns 3.21
-                every { newScore } returns 5.32
+                every { oldScore } returns Optional.of(3.21)
+                every { newScore } returns Optional.of(5.32)
             },
             "bFile" to mockk<Delta>(relaxed = true) {
-                every { oldScore } returns 5.43
-                every { newScore } returns 9.32
+                every { oldScore } returns Optional.of(5.43)
+                every { newScore } returns Optional.of(9.32)
             },
             "cFile" to mockk<Delta>(relaxed = true) {
-                every { oldScore } returns 9.32
-                every { newScore } returns 1.93
+                every { oldScore } returns Optional.of(9.32)
+                every { newScore } returns Optional.of(1.93)
             })
     )
 

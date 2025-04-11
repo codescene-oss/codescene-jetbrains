@@ -43,7 +43,6 @@ class CodeSmellAnnotator : ExternalAnnotator<
             reviewCache.fileLevelCodeSmells.forEach { annotateCodeSmell(it, document, holder) }
             reviewCache.functionLevelCodeSmells.flatMap { it.codeSmells }
                 .forEach { annotateCodeSmell(it, document, holder) }
-            reviewCache.expressionLevelCodeSmells.forEach { annotateCodeSmell(it, document, holder) }
 
             Log.info("Successfully annotated code smells for file: ${psiFile.name}")
         }
