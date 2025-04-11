@@ -11,14 +11,14 @@ import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
 
 fun getHealthFinding(filePath: String, delta: Delta): CodeHealthFinding {
-    val healthDetails = HealthDetails(delta.oldScore, delta.newScore)
+    val healthDetails = HealthDetails(delta.oldScore.get(), delta.newScore.get())
     val (change, percentage) = getCodeHealth(healthDetails)
 
     return CodeHealthFinding(
         filePath = filePath,
         displayName = "Code Health: $change",
         additionalText = if (percentage.isNotEmpty()) "($percentage)" else "",
-        nodeType = resolveHealthNodeType(delta.oldScore, delta.newScore)
+        nodeType = resolveHealthNodeType(delta.oldScore.get(), delta.newScore.get())
     )
 }
 
@@ -42,13 +42,13 @@ fun getFunctionFinding(filePath: String, function: Function, details: List<Chang
     tooltip = getFunctionDeltaTooltip(function, details),
     filePath,
     displayName = function.name,
-    focusLine = function.range?.startLine,
+    focusLine = function.range?.get()?.startLine,
     nodeType = NodeType.FUNCTION_FINDING,
     functionFindingIssues = details.size
 )
 
 fun getRootNode(filePath: String, delta: Delta): CodeHealthFinding {
-    val (_, percentage) = getCodeHealth(HealthDetails(delta.oldScore, delta.newScore))
+    val (_, percentage) = getCodeHealth(HealthDetails(delta.oldScore.get(), delta.newScore.get()))
 
     val count = delta.functionLevelFindings.flatMap { it.changeDetails }.count { canBeImproved(it.changeType) } +
             delta.fileLevelFindings.count { canBeImproved(it.changeType) }
