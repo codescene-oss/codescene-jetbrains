@@ -95,7 +95,7 @@ fun handleRefactoringResult(
     val (project, editor, _) = params
     if (requestDuration < 1500) CoroutineScope(Dispatchers.Main).launch {
         AceRefactoringResultViewer.getInstance(project)
-            .open(editor, RefactoredFunction(function.name, function.refactoringResult))
+            .open(editor, RefactoredFunction(function.name, function.refactoringResult, function.fileName, function.focusLine))
     }
     else showRefactoringFinishedNotification(params, RefactoredFunction(function.name, function.refactoringResult))
 }

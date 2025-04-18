@@ -1,6 +1,8 @@
 package com.codescene.jetbrains.services.htmlviewer.codehealth
 
+import com.codescene.jetbrains.util.HtmlPart
 import com.codescene.jetbrains.util.TransformMarkdownParams
+import com.codescene.jetbrains.util.appendSubpart
 import com.codescene.jetbrains.util.transformMarkdownToHtml
 import com.intellij.ui.jcef.JBCefScrollbarsHelper
 import java.util.stream.Collectors
@@ -18,6 +20,11 @@ class HtmlContentBuilder {
 
     fun content(params: TransformMarkdownParams) = apply {
         this.content = transformMarkdownToHtml(params)
+    }
+
+    fun content(contentBuilder: StringBuilder, params: HtmlPart) = apply {
+        appendSubpart(contentBuilder, params)
+        this.content = contentBuilder.toString()
     }
 
     fun usingStyleSheet(stylePath: String) = apply {

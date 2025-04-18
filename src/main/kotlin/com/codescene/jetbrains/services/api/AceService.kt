@@ -27,7 +27,9 @@ import kotlinx.coroutines.*
 
 data class RefactoredFunction(
     val name: String,
-    val refactoringResult: RefactorResponse
+    val refactoringResult: RefactorResponse,
+    val fileName: String = "",
+    val focusLine: Int? = null
 )
 
 @Service
@@ -146,7 +148,12 @@ class AceService : BaseService(), Disposable {
         Log.debug("Refactoring ${function!!.name} took ${durationMillis}ms.", serviceImplementation)
 
         result?.let {
-            handleRefactoringResult(params, RefactoredFunction(function.name, result), durationMillis)
+            handleRefactoringResult(params, RefactoredFunction(
+                function.name,
+                result,
+                params.editor?.virtualFile?.name ?: "",
+                params.function.range.startLine
+            ), durationMillis)
         }
     }
 

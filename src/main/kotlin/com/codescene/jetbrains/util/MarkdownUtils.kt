@@ -131,21 +131,6 @@ fun convertMarkdownToHtml(markdown: String): String {
 }
 
 /**
- * Method to append single collapsable part to the current HTML content.
- */
-fun appendSubpart(content: StringBuilder, htmlPart: HtmlPart) {
-    content.append(
-        """
-            <div>
-                <details open>
-                    <summary>${htmlPart.title}</summary>
-            """.trimIndent()
-    )
-        .append(htmlPart.body)
-        .append("\n</details></div>\n\n")
-}
-
-/**
  * Method to create virtual file for our generated documentation content.
  */
 fun createTempFile(params: CreateTempFileParams): LightVirtualFile {
