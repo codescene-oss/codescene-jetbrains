@@ -75,6 +75,15 @@ private fun isExcludedByGitignore(file: VirtualFile, ignoredFiles: List<String>)
 
 private fun inSupportedLanguages(extension: String) = supportedLanguages.containsKey(extension)
 
+fun getLanguageByExtension(extension: String): String {
+    return (if (supportedLanguages[extension] is List<*>) {
+        (supportedLanguages[extension] as List<*>).first()
+    } else {
+        supportedLanguages[extension]
+    }).toString()
+    return "unknown"
+}
+
 fun isFileSupported(project: Project, virtualFile: VirtualFile): Boolean {
     val excludeGitignoreFiles = CodeSceneGlobalSettingsStore.getInstance().state.excludeGitignoreFiles
 

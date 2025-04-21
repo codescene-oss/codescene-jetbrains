@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.services.htmlviewer.codehealth
 
+import com.codescene.jetbrains.services.htmlviewer.codehealth.CodeHighlighter.generateHighlightedHtml
 import com.codescene.jetbrains.util.HtmlPart
 import com.codescene.jetbrains.util.TransformMarkdownParams
 import com.codescene.jetbrains.util.appendSubpart
@@ -22,8 +23,23 @@ class HtmlContentBuilder {
         this.content = transformMarkdownToHtml(params)
     }
 
-    fun content(contentBuilder: StringBuilder, params: HtmlPart) = apply {
-        appendSubpart(contentBuilder, params)
+    fun content(contentBuilder: StringBuilder, params: HtmlPart?) = apply {
+        params?.let {
+            if (params.isCode) {
+                val highlightedBody: String = generateHighlightedHtml(
+                    params.body,
+                    params.languageString,
+                    MarkdownCodeDelimiter.MULTI_LINE
+                )
+
+                val newBody = params.body.replace(params.body, highlightedBody)
+                appendSubpart(contentBuilder, HtmlPart(params.title, newBody, params.isCode, params.languageString))
+                this.content = contentBuilder.toString()
+            } else {
+                appendSubpart(contentBuilder, params)
+                this.content = contentBuilder.toString()
+            }
+        }
         this.content = contentBuilder.toString()
     }
 

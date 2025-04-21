@@ -12,6 +12,8 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.LightVirtualFile
 
 abstract class HtmlViewer<T>(private val project: Project) : LafManagerListener {
+    var functionLocation: FunctionLocation? = null
+        protected set
     private var data: T? = null
     private var editor: Editor? = null
 

@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.config.global
 
+import com.codescene.jetbrains.services.htmlviewer.FunctionLocation
 import com.codescene.jetbrains.util.Constants.CODESCENE_SERVER_URL
 import com.codescene.jetbrains.util.aceStatusDelegate
 import org.jetbrains.annotations.NonNls
@@ -26,7 +27,8 @@ data class CodeSceneGlobalSettings(
     var excludeGitignoreFiles: Boolean = true,
     var previewCodeHealthGate: Boolean = false,
     var telemetryConsentGiven: Boolean = false,
-    var monitorTreeSortOption: MonitorTreeSortOptions = MonitorTreeSortOptions.SCORE_ASCENDING
+    var monitorTreeSortOption: MonitorTreeSortOptions = MonitorTreeSortOptions.SCORE_ASCENDING,
+    var lastFunctionLocation: FunctionLocation? = null
 ) {
     var aceStatus: AceStatus by aceStatusDelegate()
 }

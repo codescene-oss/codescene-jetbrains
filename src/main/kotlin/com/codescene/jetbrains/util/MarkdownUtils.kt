@@ -22,7 +22,9 @@ data class TransformMarkdownParams(
 
 data class HtmlPart(
     val title: String,
-    val body: String
+    val body: String,
+    val isCode: Boolean = false,
+    val languageString: String = "un"
 )
 
 data class CreateTempFileParams(

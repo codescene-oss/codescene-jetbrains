@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.services.htmlviewer
 
+import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.codehealth.HtmlContentBuilder
 import com.codescene.jetbrains.util.*
@@ -33,9 +34,6 @@ data class DocumentationParams(
 
 @Service(Service.Level.PROJECT)
 class CodeSceneDocumentationViewer(private val project: Project) : HtmlViewer<DocumentationParams>(project) {
-    var functionLocation: FunctionLocation? = null
-        private set
-
     companion object {
         fun getInstance(project: Project) = project.service<CodeSceneDocumentationViewer>()
     }
@@ -44,7 +42,7 @@ class CodeSceneDocumentationViewer(private val project: Project) : HtmlViewer<Do
         val (heading, fileName, filePath, focusLine) = params
         val isGeneralDocumentation = generalDocs.contains(heading)
 
-        functionLocation = FunctionLocation(focusLine, filePath)
+        CodeSceneGlobalSettingsStore.getInstance().state.lastFunctionLocation = FunctionLocation(focusLine, filePath)
 
         val builder = HtmlContentBuilder()
         val contentParams = TransformMarkdownParams(getContent(heading), heading, isGeneralDocumentation)
