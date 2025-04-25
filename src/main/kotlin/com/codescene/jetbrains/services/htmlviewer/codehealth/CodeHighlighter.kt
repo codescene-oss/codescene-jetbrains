@@ -1,12 +1,16 @@
-package com.codescene.jetbrains.codeInsight.codehealth
+package com.codescene.jetbrains.services.htmlviewer.codehealth
 
 import com.codescene.jetbrains.util.webRgba
 import com.intellij.lang.Language
 import com.intellij.lexer.Lexer
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorColorsScheme
+import com.intellij.openapi.fileTypes.PlainTextFileType
 import com.intellij.openapi.fileTypes.SyntaxHighlighter
 import com.intellij.openapi.fileTypes.SyntaxHighlighterFactory
+import com.intellij.openapi.project.ProjectManager
+import com.intellij.psi.PsiFileFactory
+import com.intellij.psi.codeStyle.CodeStyleManager
 
 object CodeHighlighter {
     /**
@@ -27,6 +31,9 @@ object CodeHighlighter {
             "java" -> language = Language.findLanguageByID(languageId.uppercase()) ?: Language.ANY
             "javascript" -> language = Language.findLanguageByID("JavaScript") ?: Language.ANY
         }
+
+        // code formatting
+
 
         // Syntax highlighting
         val highlighter = SyntaxHighlighterFactory.getSyntaxHighlighter(language, null, null)
@@ -57,8 +64,19 @@ object CodeHighlighter {
             MarkdownCodeDelimiter.SINGLE_LINE -> highlightedCode.append("</code>")
         }
 
-        return highlightedCode.toString().replace("\t", "    ")
+        return highlightedCode.toString().replace("\t", "    ").trim()
     }
+
+    private fun reformatCode(code: String, language: Language): String {
+        val project = ProjectManager.getInstance().defaultProject
+        val fileType = language.associatedFileType ?: PlainTextFileType.INSTANCE
+        val psiFile = PsiFileFactory.getInstance(project)
+            .createFileFromText("Dummy.${fileType.defaultExtension}", fileType, code)
+
+        CodeStyleManager.getInstance(project).reformat(psiFile)
+        return psiFile.text
+    }
+
 
     private fun printSupportedLanguages() {
         Language.getRegisteredLanguages().forEach {

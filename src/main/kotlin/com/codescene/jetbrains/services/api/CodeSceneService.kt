@@ -1,7 +1,7 @@
 package com.codescene.jetbrains.services.api
 
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
-import com.codescene.jetbrains.services.telemetry.TelemetryService
+import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.TelemetryEvents
@@ -55,6 +55,8 @@ abstract class CodeSceneService : BaseService(), Disposable {
                     } catch (e: TimeoutCancellationException) {
                         handleError(editor, FailureType.TIMED_OUT, e.message)
                     } catch (e: CancellationException) {
+                        // because of Intellij's bug https://youtrack.jetbrains.com/issue/IJPL-5335/Non-cancellable-progress-indicator-can-be-cancelled
+                        // even if we have cancellable false, we should handle cancellation
                         handleError(editor, FailureType.CANCELLED, e.message)
                     } catch (e: Exception) {
                         handleError(editor, FailureType.FAILED, e.message)
@@ -95,15 +97,15 @@ abstract class CodeSceneService : BaseService(), Disposable {
         return "$serviceImplementation - ${editor.project!!.name}"
     }
 
-    private fun handleError(editor: Editor, type: FailureType, exceptionMessage: String?) {
-        val newProgressMessage = getProgressMessage(editor.virtualFile.name) + type.value
+    private fun handleError(editor: Editor, failureType: FailureType, exceptionMessage: String?) {
+        val newProgressMessage = getProgressMessage(editor.virtualFile.name) + failureType.value
         val service = getServiceForLogging(editor)
         scope.launch {
             withBackgroundProgress(editor.project!!, newProgressMessage, cancellable = false) {
                 delay(failureIndicatorDelay)
             }
         }
-        when (type) {
+        when (failureType) {
             FailureType.CANCELLED -> Log.info("Review canceled for file ${editor.virtualFile.name}.", service)
             FailureType.FAILED -> Log.error("Error during review for file ${editor.virtualFile.name} - $exceptionMessage", service)
             FailureType.TIMED_OUT -> logTimeout(editor)

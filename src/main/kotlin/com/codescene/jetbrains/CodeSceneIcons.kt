@@ -47,4 +47,10 @@ object CodeSceneIcons {
 
     @JvmField
     val METHOD_FIXED = getIcon("/images/methodFixed.svg", javaClass)
+
+    @JvmField
+    val CODESCENE_ACE = getIcon("/images/codeSceneAce.svg", javaClass)
+
+    @JvmField
+    val ACE_DISABLED = getIcon("/images/aceStatusDisabled.svg", javaClass)
 }

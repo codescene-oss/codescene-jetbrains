@@ -7,6 +7,7 @@ import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.cache.ReviewCacheEntry
 import com.codescene.jetbrains.services.cache.ReviewCacheService
 import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.checkContainsRefactorableFunctions
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
@@ -17,9 +18,6 @@ import kotlinx.coroutines.Job
 
 @Service(Service.Level.PROJECT)
 class CodeReviewService(private val project: Project) : CodeSceneService() {
-    private val cacheService: ReviewCacheService = ReviewCacheService.getInstance(project)
-    private val uiRefreshService: UIRefreshService = UIRefreshService.getInstance(project)
-
     companion object {
         fun getInstance(project: Project): CodeReviewService = project.service<CodeReviewService>()
     }
@@ -31,23 +29,25 @@ class CodeReviewService(private val project: Project) : CodeSceneService() {
     override fun review(editor: Editor) {
         reviewFile(editor) {
             performCodeReview(editor)
-            uiRefreshService.refreshUI(editor)
+            UIRefreshService.getInstance(project).refreshUI(editor, CodeSceneCodeVisionProvider.getProviders())
         }
     }
 
     override fun getActiveApiCalls() = CodeSceneCodeVisionProvider.activeReviewApiCalls
 
-    private fun performCodeReview(editor: Editor) {
+    private suspend fun performCodeReview(editor: Editor) {
         val file = editor.virtualFile
         val path = file.path
         val fileName = file.name
         val code = editor.document.text
 
         val params = ReviewParams(path, code)
-        val result = runWithClassLoaderChange { ExtensionAPI.review(params) }
+        val result = runWithClassLoaderChange { ExtensionAPI.review(params) } ?: return
 
         val entry = ReviewCacheEntry(fileContents = code, filePath = path, response = result)
-        cacheService.put(entry)
+        ReviewCacheService.getInstance(project).put(entry)
+
+        checkContainsRefactorableFunctions(editor, result)
 
         Log.debug(
             "Review response cached for file $fileName with path $path",

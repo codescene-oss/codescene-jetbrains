@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.listeners
 
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.services.api.AceService
 import com.codescene.jetbrains.config.global.DeviceIdStore
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.showTelemetryConsentNotification
@@ -26,6 +27,8 @@ class ProjectStartupActivity : ProjectActivity {
 
         addStateListener()
         VirtualFileManager.getInstance().addAsyncFileListener(FileChangeListener(project), disposable)
+
+        AceService.getInstance().runPreflight(true)
     }
 
     private fun addStateListener() = PluginInstaller.addStateListener(object : PluginStateListener {

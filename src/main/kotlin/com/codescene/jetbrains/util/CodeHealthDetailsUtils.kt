@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.util
 
+import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.delta.ChangeDetail
 import com.codescene.data.delta.Delta
 import com.codescene.data.review.CodeSmell
@@ -12,9 +13,9 @@ import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL_FOUND
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.components.codehealth.monitor.tree.NodeType
-import com.codescene.jetbrains.services.CodeSceneDocumentationService
-import com.codescene.jetbrains.services.DocsSourceType
-import com.codescene.jetbrains.services.DocumentationParams
+import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
+import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
+import com.codescene.jetbrains.services.htmlviewer.DocumentationParams
 import com.codescene.jetbrains.util.Constants.GREEN
 import com.codescene.jetbrains.util.Constants.ORANGE
 import com.codescene.jetbrains.util.Constants.RED
@@ -63,6 +64,7 @@ data class CodeHealthDetails(
     val body: List<Paragraph>,
     val type: CodeHealthDetailsType,
     val healthData: HealthData? = null,
+    val refactorableFunction: FnToRefactor? = null,
 )
 
 enum class HealthState(val label: String, val color: JBColor) {
@@ -211,7 +213,8 @@ fun isMatchingFinding(displayName: String, focusLine: Int?, finding: CodeHealthF
 private fun getFunctionFinding(
     file: Pair<String, String>?,
     finding: CodeHealthFinding,
-    delta: Delta
+    delta: Delta,
+    project: Project
 ): CodeHealthDetails {
     val changeDetails = delta.functionLevelFindings
         .find { isMatchingFinding(it.function.name, it.function.range?.get()?.startLine, finding) }?.changeDetails
@@ -230,7 +233,8 @@ private fun getFunctionFinding(
             CodeHealthDetailsType.FUNCTION
         ),
         body = getFunctionFindingBody(changeDetails, finding),
-        type = CodeHealthDetailsType.FUNCTION
+        type = CodeHealthDetailsType.FUNCTION,
+        refactorableFunction = getRefactorableFunction(finding, project)
     )
 }
 
@@ -260,7 +264,7 @@ private fun getFileFinding(
     )
 }
 
-fun getHealthFinding(delta: Delta, finding: CodeHealthFinding): CodeHealthDetails? {
+fun getHealthFinding(delta: Delta, finding: CodeHealthFinding, project: Project): CodeHealthDetails? {
     val file = extractUsingRegex(finding.filePath, Regex(".*/([^/]+)\\.([^.]+)$")) { (fileName, extension) ->
         fileName to extension
     }
@@ -270,7 +274,7 @@ fun getHealthFinding(delta: Delta, finding: CodeHealthFinding): CodeHealthDetail
             getHealthFinding(file, finding, delta)
 
         NodeType.FILE_FINDING, NodeType.FILE_FINDING_FIXED -> getFileFinding(file, finding)
-        NodeType.FUNCTION_FINDING -> getFunctionFinding(file, finding, delta)
+        NodeType.FUNCTION_FINDING -> getFunctionFinding(file, finding, delta, project)
         else -> null
     }
 }
@@ -278,7 +282,7 @@ fun getHealthFinding(delta: Delta, finding: CodeHealthFinding): CodeHealthDetail
 private fun handleMouseClick(project: Project, codeSmell: CodeSmell, filePath: String) {
     val editorManager = FileEditorManager.getInstance(project)
     val file = LocalFileSystem.getInstance().findFileByPath(filePath)
-    val documentationService = CodeSceneDocumentationService.getInstance(project)
+    val docViewer = CodeSceneDocumentationViewer.getInstance(project)
 
     file?.let {
         if (!editorManager.isFileOpen(file)) editorManager.openFile(file, true)
@@ -290,11 +294,14 @@ private fun handleMouseClick(project: Project, codeSmell: CodeSmell, filePath: S
 
         editorManager.openTextEditor(fileDescriptor, true)
         editorManager.selectedTextEditor?.let {
-            documentationService.openDocumentationPanel(
+            docViewer.open(
+                it,
                 DocumentationParams(
-                    it,
-                    codeSmell,
-                    DocsSourceType.CODE_HEALTH_DETAILS
+                    codeSmell.category,
+                    it.virtualFile.name,
+                    it.virtualFile.path,
+                    codeSmell.highlightRange.startLine,
+                    DocsEntryPoint.CODE_HEALTH_DETAILS
                 )
             )
         }

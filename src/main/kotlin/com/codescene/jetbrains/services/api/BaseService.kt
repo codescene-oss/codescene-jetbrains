@@ -26,11 +26,11 @@ open class BaseService() {
             val result = action()
 
             val elapsedTime = System.currentTimeMillis() - startTime
-            Log.info("Received response from CodeScene API in ${elapsedTime}ms", serviceImplementation)
 
+            Log.info("Received response from CodeScene API in ${elapsedTime}ms", serviceImplementation)
             result
         } catch (e: Exception) {
-            Log.error("Exception during ClassLoader change operation: ${e.message}", serviceImplementation)
+            Log.debug("Exception during CodeScene API operation ", serviceImplementation)
 
             throw (e)
         } finally {

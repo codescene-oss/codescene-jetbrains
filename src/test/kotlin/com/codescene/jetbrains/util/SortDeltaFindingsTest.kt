@@ -11,7 +11,7 @@ import io.mockk.mockkStatic
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import java.util.*
+import java.util.Optional
 import java.util.concurrent.ConcurrentHashMap
 
 class SortDeltaFindingsTest {
