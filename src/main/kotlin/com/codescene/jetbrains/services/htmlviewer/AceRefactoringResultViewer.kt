@@ -31,8 +31,8 @@ class AceRefactoringResultViewer(private val project: Project) : HtmlViewer<Refa
         val functionData = """
             <script id="function-data" type="application/json">
               {
-                 "fileName": "${fileName}",
-                 "focusLine": ${startLine}
+                 "fileName": "$fileName",
+                 "focusLine": $startLine
               }
             </script>
         """.trimIndent()
@@ -42,14 +42,16 @@ class AceRefactoringResultViewer(private val project: Project) : HtmlViewer<Refa
             .replace("\\", "\\\\")
             .replace("\"", "\\\"")
             .replace("\n", "\\n")
+            .replace("\t", "\\t")
 
         val rangeData = """
             <script id="refactoring-data" type="application/json">
               {
-                 "filePath": "${fileName}",
-                 "startLine": ${startLine},
-                 "endLine": ${endLine},
-                 "code": "$sanitizedCode"
+                 "filePath": "$fileName",
+                 "startLine": $startLine,
+                 "endLine": $endLine,
+                 "code": "$sanitizedCode",
+                 "windowTitle": "${refactoredFunction?.refactoringWindowType}"
               }
             </script>
         """.trimIndent()

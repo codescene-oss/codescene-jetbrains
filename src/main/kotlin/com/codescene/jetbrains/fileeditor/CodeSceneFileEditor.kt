@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.fileeditor
 
+import com.codescene.data.ace.RefactoringOptions
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.CodeNavigationService
 import com.codescene.jetbrains.services.api.AceService
@@ -7,7 +8,6 @@ import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewer
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.ACE_ACKNOWLEDGEMENT
-import com.codescene.jetbrains.util.Constants.ACE_REFACTORING_SUGGESTION
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorState
@@ -28,6 +28,7 @@ import org.json.JSONObject
 import java.awt.Desktop
 import java.beans.PropertyChangeListener
 import java.beans.PropertyChangeSupport
+import java.io.File
 import java.net.URI
 import javax.swing.JComponent
 
@@ -60,10 +61,15 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
             });
             """
         private const val ACE_BUTTON_RETRY = """
-            document.getElementById('ace-button-retry').addEventListener('click', function() {
-                 window.sendMessage(JSON.stringify({
-                    action: 'ace-retry'
-                 }));
+            document.getElementById('retry-refactor-button').addEventListener('click', function() {
+                const webViewData = document.getElementById('refactoring-data');
+                const data = JSON.parse(webViewData.textContent);
+                if (webViewData) {
+                    window.sendMessage(JSON.stringify({
+                        action: 'ace-retry-refactor',
+                        windowTitle: data.windowTitle
+                    }));
+                }
             });
             """
         private const val ACCEPT_REFACTORING = """
@@ -81,14 +87,30 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
                 }
             });
             """
+        private const val REJECT_REFACTORING = """
+            document.getElementById('reject-refactor-button').addEventListener('click', function() {
+                const webViewData = document.getElementById('refactoring-data');
+                const data = JSON.parse(webViewData.textContent);
+                if (webViewData) {
+                    window.sendMessage(JSON.stringify({
+                        action: 'ace-reject-refactor',
+                        windowTitle: data.windowTitle
+                    }));
+                }
+            });
+            """
         private val eventListeners = listOf(
             FUNCTION_LOCATION,
             ACE_BUTTON,
-            ACCEPT_REFACTORING
+            ACCEPT_REFACTORING,
+            REJECT_REFACTORING,
+            ACE_BUTTON_RETRY
         )
     }
 
-    private val jcefBrowser: JBCefBrowser = JBCefBrowser()
+    // for development purposes only
+    private val jcefBrowser: JBCefBrowser = JBCefBrowser.createBuilder().setEnableOpenDevToolsMenuItem(true).build()
+//    private val jcefBrowser: JBCefBrowser = JBCefBrowser()
     private val jsQuery = JBCefJSQuery.create(jcefBrowser as JBCefBrowserBase)
     private val panel: JBPanel<*> = JBPanel<JBPanel<*>>()
     private val propertyChangeSupport = PropertyChangeSupport(this)
@@ -188,14 +210,23 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
                 }
             }
 
-            "ace-retry" -> {
+            "ace-retry-refactor" -> {
+                val closeWindowScope = CoroutineScope(Dispatchers.Main)
+                val fileName = json.get("windowTitle") as String
+
+                //TODO: add isCached and traceId to metadata for telemetry
+//                TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_REFACTOR_R)
+
                 val function = AceService.getInstance().lastFunctionToRefactor
-                scope.launch(Dispatchers.Main) {
+                val options = RefactoringOptions()
+                options.setSkipCache(true)
+                closeWindowScope.launch {
                     val editor = getSelectedTextEditor(project, "")
 
-                    handleAceEntryPoint(RefactoringParams(project, editor, function, AceEntryPoint.CODE_VISION))
-                    closeWindow(ACE_ACKNOWLEDGEMENT, project)
-                    delay(2000)
+                    handleAceEntryPoint(
+                        RefactoringParams(project, editor, function, AceEntryPoint.CODE_VISION),
+                        options)
+                    closeWindow(fileName, project)
                 }
             }
 
@@ -209,7 +240,16 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
                 //TODO: add isCached and traceId to metadata for telemetry
                 TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_REFACTOR_APPLIED)
                 replaceCodeSnippet(ReplaceCodeSnippetArgs(project, path, start, end, code))
-                acceptRefactorScope.launch { closeWindow(ACE_REFACTORING_SUGGESTION, project) }
+                acceptRefactorScope.launch { closeWindow(File(path).name, project) }
+            }
+
+            "ace-reject-refactor" -> {
+                val rejectRefactorScope = CoroutineScope(Dispatchers.Main)
+                val fileName = json.get("windowTitle") as String
+
+                //TODO: add isCached and traceId to metadata for telemetry
+//                TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_REFACTOR_R)
+                rejectRefactorScope.launch { closeWindow(fileName, project) }
             }
         }
     }

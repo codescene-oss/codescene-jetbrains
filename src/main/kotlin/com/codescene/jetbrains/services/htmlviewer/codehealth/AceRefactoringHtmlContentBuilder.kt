@@ -12,7 +12,7 @@ class AceRefactoringHtmlContentBuilder : HtmlContentBuilder() {
     private var aceButtons = """
                 |<div class="ace-buttons-container">
                 |   <button id="accept-refactor-button" class="ace-button-style ace-button-blue">Accept Auto-Refactor</button>
-                |   <button id="reject-refactoring-button" class="ace-button-style ace-button-gray">Reject</button>
+                |   <button id="reject-refactor-button" class="ace-button-style ace-button-gray">Reject</button>
                 |</div>
             """
 
@@ -45,7 +45,7 @@ class AceRefactoringHtmlContentBuilder : HtmlContentBuilder() {
     private fun retryButton(): String {
         return """
             |<div>
-            |<button id="ace-button-retry" class="ace-button-style ace-button-blue">Retry Auto-Refactor</button>
+            |<button id="retry-refactor-button" class="ace-button-style ace-button-blue">Retry Auto-Refactor</button>
             |</div>
         """.trimMargin()
     }
