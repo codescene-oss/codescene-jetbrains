@@ -7,7 +7,6 @@ import com.codescene.jetbrains.services.htmlviewer.codehealth.CodeHighlighter.ge
 import com.codescene.jetbrains.util.TransformMarkdownParams
 import com.codescene.jetbrains.util.getLanguageByExtension
 import com.intellij.util.PathUtil.getFileExtension
-import kotlin.text.isNotEmpty
 
 class AceRefactoringHtmlContentBuilder: HtmlContentBuilder() {
 
@@ -110,6 +109,7 @@ class AceRefactoringHtmlContentBuilder: HtmlContentBuilder() {
             |$summary
             |$reasons
             |$code
+            |$webViewData
             |</body>
             |</html>
         """.trimMargin()

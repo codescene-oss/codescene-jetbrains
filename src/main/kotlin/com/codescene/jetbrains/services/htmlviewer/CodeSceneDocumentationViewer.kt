@@ -1,7 +1,5 @@
 package com.codescene.jetbrains.services.htmlviewer
 
-import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
-import com.codescene.jetbrains.config.global.FunctionLocation
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.codehealth.DocumentationHtmlContentBuilder
 import com.codescene.jetbrains.util.*
@@ -38,14 +36,22 @@ class CodeSceneDocumentationViewer(private val project: Project) : HtmlViewer<Do
         val (heading, fileName, filePath, focusLine) = params
         val isGeneralDocumentation = generalDocs.contains(heading)
 
-        CodeSceneGlobalSettingsStore.getInstance().state.lastFunctionLocation = FunctionLocation(focusLine, filePath)
-
         val builder = DocumentationHtmlContentBuilder()
         val contentParams = TransformMarkdownParams(getContent(heading), heading, isGeneralDocumentation)
+
+        val scriptTag = """
+            <script id="function-data" type="application/json">
+              {
+                 "fileName": "$filePath",
+                 "focusLine": $focusLine
+              }
+            </script>
+        """.trimIndent()
 
         if (!isGeneralDocumentation) builder
             .title(heading)
             .functionLocation(fileName, focusLine ?: 1)
+            .withWebViewData(scriptTag)
         else builder.title(heading, Constants.LOGO_PATH)
 
         val fileContent = builder

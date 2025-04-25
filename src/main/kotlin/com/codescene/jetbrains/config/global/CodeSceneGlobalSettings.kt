@@ -17,11 +17,6 @@ enum class MonitorTreeSortOptions {
     SCORE_DESCENDING  // Sort by smallest decline
 }
 
-data class FunctionLocation(
-    val focusLine: Int?,
-    val fileName: String
-)
-
 data class CodeSceneGlobalSettings(
     @NonNls var serverUrl: String = CODESCENE_SERVER_URL,
 
@@ -32,7 +27,6 @@ data class CodeSceneGlobalSettings(
     var previewCodeHealthGate: Boolean = false,
     var telemetryConsentGiven: Boolean = false,
     var monitorTreeSortOption: MonitorTreeSortOptions = MonitorTreeSortOptions.SCORE_ASCENDING,
-    var lastFunctionLocation: FunctionLocation = FunctionLocation(1, "")
 ) {
     var aceStatus: AceStatus by aceStatusDelegate()
 }

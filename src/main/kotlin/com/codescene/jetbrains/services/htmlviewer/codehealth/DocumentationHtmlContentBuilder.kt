@@ -29,6 +29,7 @@ class DocumentationHtmlContentBuilder: HtmlContentBuilder() {
             |        $title
             |        $focusLine
             |        <hr>
+            |        $webViewData
             |        $content
             |    </body>
             |</html>

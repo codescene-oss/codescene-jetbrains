@@ -1,7 +1,5 @@
 package com.codescene.jetbrains.services.htmlviewer
 
-import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
-import com.codescene.jetbrains.config.global.FunctionLocation
 import com.codescene.jetbrains.services.api.RefactoredFunction
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.codehealth.AceRefactoringHtmlContentBuilder
@@ -13,6 +11,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.testFramework.LightVirtualFile
+import java.io.File
 
 @Service(Service.Level.PROJECT)
 class AceRefactoringResultViewer(private val project: Project) : HtmlViewer<RefactoredFunction>(project) {
@@ -21,20 +20,33 @@ class AceRefactoringResultViewer(private val project: Project) : HtmlViewer<Refa
     }
 
     override fun prepareFile(params: RefactoredFunction): LightVirtualFile {
-        CodeSceneGlobalSettingsStore.getInstance().state.lastFunctionLocation = FunctionLocation(params.focusLine ?: 1, params.fileName)
-        val refactoringResult = params.refactoringResult
+        val (_, refactoringResult, fileName, focusLine) = params
         val title = refactoringResult.confidence.title
         val builder = AceRefactoringHtmlContentBuilder()
 
-        val fileContent = builder
+        val scriptTag = """
+            <script id="function-data" type="application/json">
+              {
+                 "fileName": "${fileName}",
+                 "focusLine": ${focusLine}
+              }
+            </script>
+        """.trimIndent()
+
+        val fileContentBuilder = builder
             .title(title)
-            .functionLocation(params.fileName, params.focusLine ?: 1)
             .usingStyleSheet(STYLE_BASE_PATH + "ace-results.css")
             .usingStyleSheet(STYLE_BASE_PATH + "code-smell.css")
             .summary(refactoringResult.confidence)
             .reasons(refactoringResult)
             .code(params)
-            .build()
+
+        if (fileName.isNotEmpty()) {
+            fileContentBuilder.functionLocation(File(fileName).name, focusLine ?: 1)
+                .withWebViewData(scriptTag)
+        }
+
+        val fileContent = fileContentBuilder.build()
 
         return createTempFile(CreateTempFileParams("$title.md", fileContent, project))
 

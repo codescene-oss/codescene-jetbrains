@@ -25,6 +25,7 @@ import org.cef.browser.CefFrame
 import org.cef.handler.CefLoadHandlerAdapter
 import org.cef.handler.CefRequestHandlerAdapter
 import org.cef.network.CefRequest
+import org.json.JSONObject
 import java.awt.Desktop
 import java.beans.PropertyChangeListener
 import java.beans.PropertyChangeSupport
@@ -41,12 +42,22 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
         """
         private const val FUNCTION_LOCATION = """
             document.getElementById('function-location').addEventListener('click', function() {
-                 window.sendMessage('goto-function-location');
+                 const scriptTag = document.getElementById('function-data');
+                 if (scriptTag) {
+                   const functionData = JSON.parse(scriptTag.textContent);
+                   window.sendMessage(JSON.stringify({
+                    action: 'goto-function-location',
+                    focusLine: functionData.focusLine,
+                    fileName: functionData.fileName,
+                   }));
+                 }
             });
             """
         private const val ACE_BUTTON = """
             document.getElementById('ace-button').addEventListener('click', function() {
-                 window.sendMessage('show-me-ace');
+                 window.sendMessage(JSON.stringify({
+                    action: 'show-me-ace'
+                 }));
             });
             """
         private val eventListeners = listOf(
@@ -125,15 +136,18 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
     }
 
     private fun handleAction(data: String) {
-        when (data) {
+        val json = JSONObject(data)
+        val action = json.get("action") ?: ""
+
+        when (action) {
             "goto-function-location" -> {
-                val functionLocation = CodeSceneGlobalSettingsStore.getInstance().state.lastFunctionLocation
+                val fileName = json.get("fileName") as String
+                val focusLine = json.get("focusLine") as Int
                 scope.launch {
-                    functionLocation?.let {
-                        CodeNavigationService
-                            .getInstance(project)
-                            .focusOnLine(it.fileName, it.focusLine ?: 1)
-                    }
+                    CodeNavigationService
+                        .getInstance(project)
+                        .focusOnLine(fileName, focusLine)
+
                 }
             }
 
@@ -157,7 +171,8 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
     override fun getComponent(): JComponent = panel
     override fun getPreferredFocusedComponent(): JComponent = panel
     override fun getName(): String = "$CODESCENE Html Viewer"
-    override fun setState(state: FileEditorState) { /* implementation not needed */}
+    override fun setState(state: FileEditorState) { /* implementation not needed */
+    }
 
     override fun isModified(): Boolean = false
     override fun isValid(): Boolean = file.isValid

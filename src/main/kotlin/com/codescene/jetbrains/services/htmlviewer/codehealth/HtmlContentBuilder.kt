@@ -14,12 +14,18 @@ abstract class HtmlContentBuilder {
     protected var summary: String = ""
     protected var reasons: String = ""
     protected var code: String = ""
+    protected var webViewData: String = ""
     protected var customStyle = StringBuilder(
         """
         |${JBCefScrollbarsHelper.buildScrollbarsStyle().trim()}
         |${PreviewThemeStyles.createStylesheet().trim()}
     """.trimMargin().trim()
     )
+
+    fun withWebViewData(html: String) = apply {
+        this.webViewData = html
+    }
+
 
     fun usingStyleSheet(stylePath: String) = apply {
         val classLoader = this@HtmlContentBuilder.javaClass.classLoader

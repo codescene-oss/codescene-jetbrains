@@ -93,11 +93,16 @@ fun handleRefactoringResult(
     params: RefactoringParams, function: RefactoredFunction, requestDuration: Long
 ) {
     val (project, editor, _) = params
+    val refactoredFunction = RefactoredFunction(
+        function.name,
+        function.refactoringResult,
+        params.editor?.virtualFile?.path ?: "",
+        function.focusLine
+    )
     if (requestDuration < 1500) CoroutineScope(Dispatchers.Main).launch {
-        AceRefactoringResultViewer.getInstance(project)
-            .open(editor, RefactoredFunction(function.name, function.refactoringResult, function.fileName, function.focusLine))
+        AceRefactoringResultViewer.getInstance(project).open(editor, refactoredFunction)
     }
-    else showRefactoringFinishedNotification(params, RefactoredFunction(function.name, function.refactoringResult))
+    else showRefactoringFinishedNotification(params, refactoredFunction)
 }
 
 fun getRefactorableFunction(codeSmell: CodeSmell, refactorableFunctions: List<FnToRefactor>) =
