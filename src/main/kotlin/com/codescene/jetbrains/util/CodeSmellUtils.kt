@@ -117,7 +117,11 @@ fun categoryToFileName(category: String): String {
 }
 
 val generalDocs = listOf(Constants.GENERAL_CODE_HEALTH, Constants.CODE_HEALTH_MONITOR)
-val aceDocs = listOf(Constants.ACE_ACKNOWLEDGEMENT, Constants.ACE_REFACTORING_SUGGESTION)
+val aceDocs = listOf(
+    Constants.ACE_ACKNOWLEDGEMENT,
+    Constants.ACE_REFACTORING_SUGGESTION,
+    Constants.ACE_REFACTORING_RESULTS,
+    Constants.ACE_REFACTORING_RECOMMENDATION)
 
 val codeSmellNames = listOf(
     Constants.BRAIN_CLASS,

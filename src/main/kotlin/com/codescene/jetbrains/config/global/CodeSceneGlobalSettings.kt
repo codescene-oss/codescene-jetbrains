@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.config.global
 
-import com.codescene.jetbrains.services.htmlviewer.FunctionLocation
 import com.codescene.jetbrains.util.Constants.CODESCENE_SERVER_URL
 import com.codescene.jetbrains.util.aceStatusDelegate
 import org.jetbrains.annotations.NonNls
@@ -18,6 +17,11 @@ enum class MonitorTreeSortOptions {
     SCORE_DESCENDING  // Sort by smallest decline
 }
 
+data class FunctionLocation(
+    val focusLine: Int?,
+    val fileName: String
+)
+
 data class CodeSceneGlobalSettings(
     @NonNls var serverUrl: String = CODESCENE_SERVER_URL,
 
@@ -28,7 +32,7 @@ data class CodeSceneGlobalSettings(
     var previewCodeHealthGate: Boolean = false,
     var telemetryConsentGiven: Boolean = false,
     var monitorTreeSortOption: MonitorTreeSortOptions = MonitorTreeSortOptions.SCORE_ASCENDING,
-    var lastFunctionLocation: FunctionLocation? = null
+    var lastFunctionLocation: FunctionLocation = FunctionLocation(1, "")
 ) {
     var aceStatus: AceStatus by aceStatusDelegate()
 }

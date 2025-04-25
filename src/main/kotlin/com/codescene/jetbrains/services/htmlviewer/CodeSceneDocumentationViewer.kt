@@ -1,8 +1,9 @@
 package com.codescene.jetbrains.services.htmlviewer
 
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.config.global.FunctionLocation
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
-import com.codescene.jetbrains.services.htmlviewer.codehealth.HtmlContentBuilder
+import com.codescene.jetbrains.services.htmlviewer.codehealth.DocumentationHtmlContentBuilder
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_MONITOR
 import com.codescene.jetbrains.util.Constants.DOCUMENTATION_BASE_PATH
@@ -12,11 +13,6 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.testFramework.LightVirtualFile
-
-data class FunctionLocation(
-    val focusLine: Int?,
-    val fileName: String
-)
 
 enum class DocsEntryPoint(val value: String) {
     CODE_VISION("codelens (review)"),
@@ -44,7 +40,7 @@ class CodeSceneDocumentationViewer(private val project: Project) : HtmlViewer<Do
 
         CodeSceneGlobalSettingsStore.getInstance().state.lastFunctionLocation = FunctionLocation(focusLine, filePath)
 
-        val builder = HtmlContentBuilder()
+        val builder = DocumentationHtmlContentBuilder()
         val contentParams = TransformMarkdownParams(getContent(heading), heading, isGeneralDocumentation)
 
         if (!isGeneralDocumentation) builder

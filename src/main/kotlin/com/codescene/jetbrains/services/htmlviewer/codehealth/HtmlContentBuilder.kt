@@ -1,47 +1,25 @@
 package com.codescene.jetbrains.services.htmlviewer.codehealth
 
-import com.codescene.jetbrains.services.htmlviewer.codehealth.CodeHighlighter.generateHighlightedHtml
-import com.codescene.jetbrains.util.HtmlPart
+import com.codescene.data.ace.Confidence
+import com.codescene.data.ace.RefactorResponse
+import com.codescene.jetbrains.services.api.RefactoredFunction
 import com.codescene.jetbrains.util.TransformMarkdownParams
-import com.codescene.jetbrains.util.appendSubpart
-import com.codescene.jetbrains.util.transformMarkdownToHtml
 import com.intellij.ui.jcef.JBCefScrollbarsHelper
 import java.util.stream.Collectors
 
-class HtmlContentBuilder {
-    private var title: String = ""
-    private var content: String = ""
-    private var focusLine: String = ""
-    private var customStyle = StringBuilder(
+abstract class HtmlContentBuilder {
+    protected var title: String = ""
+    protected var focusLine: String = ""
+    protected var content: String = ""
+    protected var summary: String = ""
+    protected var reasons: String = ""
+    protected var code: String = ""
+    protected var customStyle = StringBuilder(
         """
-        ${JBCefScrollbarsHelper.buildScrollbarsStyle()}
-        ${PreviewThemeStyles.createStylesheet()}
-    """.trimIndent()
+        |${JBCefScrollbarsHelper.buildScrollbarsStyle().trim()}
+        |${PreviewThemeStyles.createStylesheet().trim()}
+    """.trimMargin().trim()
     )
-
-    fun content(params: TransformMarkdownParams) = apply {
-        this.content = transformMarkdownToHtml(params)
-    }
-
-    fun content(contentBuilder: StringBuilder, params: HtmlPart?) = apply {
-        params?.let {
-            if (params.isCode) {
-                val highlightedBody: String = generateHighlightedHtml(
-                    params.body,
-                    params.languageString,
-                    MarkdownCodeDelimiter.MULTI_LINE
-                )
-
-                val newBody = params.body.replace(params.body, highlightedBody)
-                appendSubpart(contentBuilder, HtmlPart(params.title, newBody, params.isCode, params.languageString))
-                this.content = contentBuilder.toString()
-            } else {
-                appendSubpart(contentBuilder, params)
-                this.content = contentBuilder.toString()
-            }
-        }
-        this.content = contentBuilder.toString()
-    }
 
     fun usingStyleSheet(stylePath: String) = apply {
         val classLoader = this@HtmlContentBuilder.javaClass.classLoader
@@ -64,47 +42,60 @@ class HtmlContentBuilder {
                 ?: ""
         else ""
 
-        this.title =
-            """
-        |    <h2 class="icon-header">
-        |        $logo
-        |        $title
-        |    </h2>
-        """.trimMargin()
+        if (logo.isEmpty()) {
+            this.title =
+                """
+                |<h2 class="icon-header">
+                |$title
+                |</h2>
+                """.trimMargin().trim()
+        } else {
+            this.title =
+                """
+                |<h2 class="icon-header">
+                |$logo 
+                |$title
+                |</h2>
+                """.trimMargin().trim()
+        }
     }
 
     fun functionLocation(fileName: String, focusLine: Int) = apply {
         this.focusLine =
             """
-        |    <div class="documentation-header">
-        |        <p>
-        |            <span id="function-location">$fileName&nbsp;&nbsp;
-        |                <span id="line-number">[Ln&nbsp;$focusLine]</span>
-        |            </span>
-        |        </p>
-        |    </div>
-        """.trimMargin()
+        |<div class="documentation-header">
+        |<p>
+        |<span id="function-location">$fileName&nbsp;&nbsp;
+        |<span id="line-number">[Ln&nbsp;$focusLine]</span>
+        |</span>
+        |</p>
+        |</div>
+        """.trimMargin().trim()
     }
 
-    // language=HTML
-    fun build() = """
-            |<!DOCTYPE html>
-            |<html lang="en">
-            |    <head>
-            |        <meta charset="UTF-8">
-            |        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
-            |        <style>
-            |            $customStyle
-            |        </style>
-            |    </head>
-            |    <body>
-            |        <br>
-            |        $title
-            |        $focusLine
-            |        <hr>
-            |        $content
-            |    </body>
-            |</html>
-        """.trimMargin()
+    fun removeEmptyLines(html: String): String {
+        val result = StringBuilder()
+        var insidePre = false
 
+        html.lineSequence().forEach { line ->
+            val trimmed = line.trim()
+
+            if (trimmed.contains("<pre", ignoreCase = true)) insidePre = true
+            if (!insidePre && trimmed.isBlank()) return@forEach
+
+            result.appendLine(line)
+
+            if (trimmed.contains("</pre>", ignoreCase = true)) insidePre = false
+        }
+
+        return result.toString().trim()
+    }
+
+    abstract fun build(): String
+    abstract fun summary(confidence: Confidence): HtmlContentBuilder
+    abstract fun reasons(refactoringResult: RefactorResponse): HtmlContentBuilder
+    abstract fun code(refactoredFunction: RefactoredFunction): HtmlContentBuilder
+    abstract fun content(params: TransformMarkdownParams?): HtmlContentBuilder
 }
+
+
