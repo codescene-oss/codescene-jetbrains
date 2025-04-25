@@ -102,12 +102,12 @@
 
 .ace-buttons-container {
     display: flex;
-    justify-content: center;
+    justify-content: left;
     gap: 20px;
 }
 
 .ace-button-style {
-    border-radius: 6px;
+    border-radius: 1px;
     padding: 7px 10px;
     font-size: 13px;
     cursor: pointer;

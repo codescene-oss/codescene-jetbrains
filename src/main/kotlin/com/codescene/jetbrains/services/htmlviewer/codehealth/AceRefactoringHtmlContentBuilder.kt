@@ -23,14 +23,13 @@ class AceRefactoringHtmlContentBuilder : HtmlContentBuilder() {
 
         val levelClass = "level-$level"
         if (level == 0) {
-            this.summary =
-                """
+            this.summary = """
                 |<div class="refactoring-summary $levelClass">
                 |<div class="refactoring-summary-header $levelClass">$description</div>
                 |<span>$details</span>
                 |${retryButton()}
                 |</div>
-                """.trimMargin().trim()
+            """.trimMargin().trim()
         } else {
             this.summary =
                 """
@@ -38,6 +37,7 @@ class AceRefactoringHtmlContentBuilder : HtmlContentBuilder() {
                 |<div class="refactoring-summary-header $levelClass">$description</div>
                 |<span>$details</span>
                 |</div>
+                |$aceButtons
                 """.trimMargin().trim()
         }
     }
@@ -45,7 +45,7 @@ class AceRefactoringHtmlContentBuilder : HtmlContentBuilder() {
     private fun retryButton(): String {
         return """
             |<div>
-            |<button id="ace-button-retry">Retry Auto-Refactor</button>
+            |<button id="ace-button-retry" class="ace-button-style ace-button-blue">Retry Auto-Refactor</button>
             |</div>
         """.trimMargin()
     }
@@ -132,7 +132,6 @@ class AceRefactoringHtmlContentBuilder : HtmlContentBuilder() {
             |$focusLine
             |<hr>
             |$summary
-            |$aceButtons
             |$reasons
             |$code
             |$webViewData
