@@ -2,6 +2,7 @@ package com.codescene.jetbrains.fileeditor
 
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.CodeNavigationService
+import com.codescene.jetbrains.services.api.AceService
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewer
 import com.codescene.jetbrains.util.*
@@ -19,6 +20,7 @@ import com.intellij.ui.jcef.JBCefJSQuery
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
@@ -57,6 +59,13 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
             document.getElementById('ace-button').addEventListener('click', function() {
                  window.sendMessage(JSON.stringify({
                     action: 'show-me-ace'
+                 }));
+            });
+            """
+        private const val ACE_BUTTON_RETRY = """
+            document.getElementById('ace-button-retry').addEventListener('click', function() {
+                 window.sendMessage(JSON.stringify({
+                    action: 'ace-retry'
                  }));
             });
             """
@@ -163,6 +172,17 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
 
                     handleAceEntryPoint(RefactoringParams(project, editor, function, AceEntryPoint.ACE_ACKNOWLEDGEMENT))
                     closeWindow(ACE_ACKNOWLEDGEMENT, project)
+                }
+            }
+
+            "ace-retry" -> {
+                val function = AceService.getInstance().lastFunctionToRefactor
+                scope.launch(Dispatchers.Main) {
+                    val editor = getSelectedTextEditor(project, "")
+
+                    handleAceEntryPoint(RefactoringParams(project, editor, function, AceEntryPoint.CODE_VISION))
+                    closeWindow(ACE_ACKNOWLEDGEMENT, project)
+                    delay(2000)
                 }
             }
         }

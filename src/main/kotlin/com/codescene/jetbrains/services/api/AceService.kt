@@ -29,11 +29,15 @@ data class RefactoredFunction(
     val name: String,
     val refactoringResult: RefactorResponse,
     val fileName: String = "",
-    val focusLine: Int? = null
+    val focusLine: Int? = null,
+    var refactoringWindowType: String = ""
 )
 
 @Service
 class AceService : BaseService(), Disposable {
+    var lastFunctionToRefactor: FnToRefactor? = null
+        private set
+
     private val scope = CoroutineScope(Dispatchers.IO)
     private val dispatcher = Dispatchers.IO
 
@@ -112,6 +116,7 @@ class AceService : BaseService(), Disposable {
 
     fun refactor(params: RefactoringParams, options: RefactoringOptions? = null) {
         val (project, _, function, source) = params
+        lastFunctionToRefactor = function
         Log.debug("Initiating refactor for function ${function!!.name}...", serviceImplementation)
 
         TelemetryService.getInstance().logUsage(

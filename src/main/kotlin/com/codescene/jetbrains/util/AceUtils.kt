@@ -97,7 +97,8 @@ fun handleRefactoringResult(
         function.name,
         function.refactoringResult,
         params.editor?.virtualFile?.path ?: "",
-        function.focusLine
+        function.focusLine,
+        function.refactoringResult.confidence.title
     )
     if (requestDuration < 1500) CoroutineScope(Dispatchers.Main).launch {
         AceRefactoringResultViewer.getInstance(project).open(editor, refactoredFunction)

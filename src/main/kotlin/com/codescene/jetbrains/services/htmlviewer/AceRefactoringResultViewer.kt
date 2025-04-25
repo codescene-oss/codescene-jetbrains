@@ -15,11 +15,15 @@ import java.io.File
 
 @Service(Service.Level.PROJECT)
 class AceRefactoringResultViewer(private val project: Project) : HtmlViewer<RefactoredFunction>(project) {
+    var refactoredFunction: RefactoredFunction? = null
+        private set
+
     companion object {
         fun getInstance(project: Project) = project.service<AceRefactoringResultViewer>()
     }
 
     override fun prepareFile(params: RefactoredFunction): LightVirtualFile {
+        refactoredFunction = params
         val (_, refactoringResult, fileName, focusLine) = params
         val title = refactoringResult.confidence.title
         val builder = AceRefactoringHtmlContentBuilder()
@@ -35,6 +39,7 @@ class AceRefactoringResultViewer(private val project: Project) : HtmlViewer<Refa
 
         val fileContentBuilder = builder
             .title(title)
+            .functionLocation(params.fileName, params.focusLine ?: 1)
             .usingStyleSheet(STYLE_BASE_PATH + "ace-results.css")
             .usingStyleSheet(STYLE_BASE_PATH + "code-smell.css")
             .summary(refactoringResult.confidence)

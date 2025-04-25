@@ -16,13 +16,32 @@ class AceRefactoringHtmlContentBuilder: HtmlContentBuilder() {
         val description = confidence.recommendedAction.description
 
         val levelClass = "level-$level"
-        this.summary =
-            """
-        |<div class="refactoring-summary $levelClass">
-        |<div class="refactoring-summary-header $levelClass">$description</div>
-        |<span>$details</span>
-        |</div>
-        """.trimMargin().trim()
+        if (level == 0) {
+            this.summary =
+                """
+                |<div class="refactoring-summary $levelClass">
+                |<div class="refactoring-summary-header $levelClass">$description</div>
+                |<span>$details</span>
+                |${retryButton()}
+                |</div>
+                """.trimMargin().trim()
+        } else {
+            this.summary =
+                """
+                |<div class="refactoring-summary $levelClass">
+                |<div class="refactoring-summary-header $levelClass">$description</div>
+                |<span>$details</span>
+                |</div>
+                """.trimMargin().trim()
+        }
+    }
+
+    private fun retryButton(): String {
+        return """
+            |<div>
+            |<button id="ace-button-retry">Retry Auto-Refactor</button>
+            |</div>
+        """.trimMargin()
     }
 
     override fun reasons(refactoringResult: RefactorResponse) = apply {

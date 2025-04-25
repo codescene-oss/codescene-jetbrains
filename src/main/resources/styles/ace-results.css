@@ -80,6 +80,22 @@
   margin-top: 12px;
 }
 
-#retry-button {
-  margin-top: 12px;
+#ace-button-retry {
+    color: white;
+    background-color: #3f6dc7;
+    border: 2px solid #3f6dc7;
+    border-radius: 1px;
+    padding: 5px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+#ace-button .icon svg {
+    width: 0.3em;
+    height: 0.3em;
 }
