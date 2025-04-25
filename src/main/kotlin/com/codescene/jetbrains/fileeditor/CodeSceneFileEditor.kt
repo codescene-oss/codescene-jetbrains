@@ -28,7 +28,6 @@ import org.json.JSONObject
 import java.awt.Desktop
 import java.beans.PropertyChangeListener
 import java.beans.PropertyChangeSupport
-import java.io.File
 import java.net.URI
 import javax.swing.JComponent
 
@@ -82,7 +81,8 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
                         filePath: data.filePath,
                         startLine: data.startLine,
                         endLine: data.endLine,
-                        code: data.code
+                        code: data.code,
+                        windowTitle: data.windowTitle
                     }));
                 }
             });
@@ -236,11 +236,12 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
                 val end = json.get("endLine") as Int
                 val path = json.get("filePath") as String
                 val code = json.get("code") as String
+                val fileName = json.get("windowTitle") as String
 
                 //TODO: add isCached and traceId to metadata for telemetry
                 TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_REFACTOR_APPLIED)
                 replaceCodeSnippet(ReplaceCodeSnippetArgs(project, path, start, end, code))
-                acceptRefactorScope.launch { closeWindow(File(path).name, project) }
+                acceptRefactorScope.launch { closeWindow(fileName, project) }
             }
 
             "ace-reject-refactor" -> {
