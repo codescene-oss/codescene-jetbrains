@@ -116,7 +116,7 @@ fun containsSingleBacktick(string: String): Boolean {
     if (string.contains(oneBacktick)) {
         for (i in string.indices) {
             // checking if there is only single ` without other thick before or after
-            if (string[i] == '`' && surroundingCharactersNotBackticks(string, i)) {
+            if (string[i] == '`' && surroundingCharactersNotBackticks(CharactersBackticksData(string, i))) {
                 return true
             }
         }

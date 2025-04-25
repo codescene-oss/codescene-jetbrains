@@ -12,6 +12,11 @@ import io.ktor.util.*
 import java.awt.Color
 import java.io.File
 
+data class CharactersBackticksData (
+    val inputString: String,
+    val indexOfTick: Int
+)
+
 private val supportedLanguages = mapOf(
     "js" to "javascript",
     "mjs" to "javascript",
@@ -81,7 +86,6 @@ fun getLanguageByExtension(extension: String): String {
     } else {
         supportedLanguages[extension]
     }).toString()
-    return "unknown"
 }
 
 fun isFileSupported(project: Project, virtualFile: VirtualFile): Boolean {
@@ -160,8 +164,8 @@ fun Color.webRgba(alpha: Double = this.alpha.toDouble()): String {
     return "rgba($red, $green, $blue, $alpha)"
 }
 
-fun surroundingCharactersNotBackticks(string: String, indexOfTick: Int): Boolean {
-    return nextCharacterNotBacktick(string, indexOfTick) && previousCharacterNotBacktick(string, indexOfTick)
+fun surroundingCharactersNotBackticks(data: CharactersBackticksData): Boolean {
+    return nextCharacterNotBacktick(data.inputString, data.indexOfTick) && previousCharacterNotBacktick(data.inputString, data.indexOfTick)
 }
 
 private fun nextCharacterNotBacktick(string: String, indexOfTick: Int): Boolean {
