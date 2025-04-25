@@ -10,9 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - ACE entry points from:
     - Code Health details,
     - code vision (lens),
-    - intention actions (in-editor + problems tab),
-    - code smell documentation.
+    - intention actions (in-editor + problems tab)
   - ACE promotion and policy box as the first step upon using the entry points.
+  - ACE refactoring results UI to show refactoring info
+  - Buttons in refactoring results UI
+    - Accept Auto-Refactor - to apply proposed refactoring
+    - Reject - to reject proposed refactoring
+    - Retry Auto-Refactor - to retry refactoring
 
 ### [0.1.4-codescene-eap] - 2025-03-17
 - **Changed**
