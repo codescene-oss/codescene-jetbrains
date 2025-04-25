@@ -2,7 +2,7 @@ package com.codescene.jetbrains.services.htmlviewer
 
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
-import com.codescene.jetbrains.services.htmlviewer.codehealth.HtmlContentBuilder
+import com.codescene.jetbrains.services.htmlviewer.codehealth.DocumentationHtmlContentBuilder
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.ACE_ACKNOWLEDGEMENT
 import com.codescene.jetbrains.util.Constants.ACE_ACKNOWLEDGEMENT_FILE
@@ -27,7 +27,7 @@ class AceAcknowledgementViewer(private val project: Project) : HtmlViewer<FnToRe
         val title = markdown.split("\n\n", limit = 2)[0]
         val transformParams = TransformMarkdownParams(originalContent = markdown, generalDocumentation = true)
 
-        val fileContent = HtmlContentBuilder()
+        val fileContent = DocumentationHtmlContentBuilder()
             .title(title, Constants.LOGO_PATH)
             .usingStyleSheet(Constants.STYLE_BASE_PATH + "code-smell.css")
             .usingStyleSheet(Constants.STYLE_BASE_PATH + "ace.css")

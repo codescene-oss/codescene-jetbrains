@@ -75,6 +75,15 @@ private fun isExcludedByGitignore(file: VirtualFile, ignoredFiles: List<String>)
 
 private fun inSupportedLanguages(extension: String) = supportedLanguages.containsKey(extension)
 
+fun getLanguageByExtension(extension: String): String {
+    return (if (supportedLanguages[extension] is List<*>) {
+        (supportedLanguages[extension] as List<*>).first()
+    } else {
+        supportedLanguages[extension]
+    }).toString()
+    return "unknown"
+}
+
 fun isFileSupported(project: Project, virtualFile: VirtualFile): Boolean {
     val excludeGitignoreFiles = CodeSceneGlobalSettingsStore.getInstance().state.excludeGitignoreFiles
 
@@ -108,7 +117,11 @@ fun categoryToFileName(category: String): String {
 }
 
 val generalDocs = listOf(Constants.GENERAL_CODE_HEALTH, Constants.CODE_HEALTH_MONITOR)
-val aceDocs = listOf(Constants.ACE_ACKNOWLEDGEMENT, Constants.ACE_REFACTORING_SUGGESTION)
+val aceDocs = listOf(
+    Constants.ACE_ACKNOWLEDGEMENT,
+    Constants.ACE_REFACTORING_SUGGESTION,
+    Constants.ACE_REFACTORING_RESULTS,
+    Constants.ACE_REFACTORING_RECOMMENDATION)
 
 val codeSmellNames = listOf(
     Constants.BRAIN_CLASS,

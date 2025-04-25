@@ -1,7 +1,7 @@
 package com.codescene.jetbrains.services.htmlviewer
 
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
-import com.codescene.jetbrains.services.htmlviewer.codehealth.HtmlContentBuilder
+import com.codescene.jetbrains.services.htmlviewer.codehealth.DocumentationHtmlContentBuilder
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_MONITOR
 import com.codescene.jetbrains.util.Constants.DOCUMENTATION_BASE_PATH
@@ -11,11 +11,6 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.testFramework.LightVirtualFile
-
-data class FunctionLocation(
-    val focusLine: Int?,
-    val fileName: String
-)
 
 enum class DocsEntryPoint(val value: String) {
     CODE_VISION("codelens (review)"),
@@ -33,9 +28,6 @@ data class DocumentationParams(
 
 @Service(Service.Level.PROJECT)
 class CodeSceneDocumentationViewer(private val project: Project) : HtmlViewer<DocumentationParams>(project) {
-    var functionLocation: FunctionLocation? = null
-        private set
-
     companion object {
         fun getInstance(project: Project) = project.service<CodeSceneDocumentationViewer>()
     }
@@ -44,14 +36,22 @@ class CodeSceneDocumentationViewer(private val project: Project) : HtmlViewer<Do
         val (heading, fileName, filePath, focusLine) = params
         val isGeneralDocumentation = generalDocs.contains(heading)
 
-        functionLocation = FunctionLocation(focusLine, filePath)
-
-        val builder = HtmlContentBuilder()
+        val builder = DocumentationHtmlContentBuilder()
         val contentParams = TransformMarkdownParams(getContent(heading), heading, isGeneralDocumentation)
+
+        val scriptTag = """
+            <script id="function-data" type="application/json">
+              {
+                 "fileName": "$filePath",
+                 "focusLine": $focusLine
+              }
+            </script>
+        """.trimIndent()
 
         if (!isGeneralDocumentation) builder
             .title(heading)
             .functionLocation(fileName, focusLine ?: 1)
+            .withWebViewData(scriptTag)
         else builder.title(heading, Constants.LOGO_PATH)
 
         val fileContent = builder

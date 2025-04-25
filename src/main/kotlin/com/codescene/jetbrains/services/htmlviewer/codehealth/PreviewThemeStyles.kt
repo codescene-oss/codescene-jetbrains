@@ -20,23 +20,23 @@ object PreviewThemeStyles {
 
         // language=CSS
         return """
-            body {
-              background-color: $backgroundColorGlobalString;
-              color: $foregroundColorGlobalString;
-              font-size: ${fontSize + 1}px;
-            }
-            a {
-              color: $linkForegroundColorString;
-            }
-            pre, code, hr {
-              background-color: $codeBackgroundColorString;
-            }
-            #function-location:hover {
-              background-color: $codeBackgroundColorString;
-            }
-            #line-number {
-              color: $disabledColorString;
-            }
-            """.trimIndent()
+            |body {
+            |  background-color: $backgroundColorGlobalString;
+            |  color: $foregroundColorGlobalString;
+            |  font-size: ${fontSize + 1}px;
+            |}
+            |a {
+            |  color: $linkForegroundColorString;
+            |}
+            |pre, code, hr {
+            |  background-color: $codeBackgroundColorString;
+            |}
+            |#function-location:hover {
+            |  background-color: $codeBackgroundColorString;
+            |}
+            |#line-number {
+            |  color: $disabledColorString;
+            |}
+        """.trimMargin().trim()
     }
 }

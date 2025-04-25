@@ -39,6 +39,8 @@ object Constants {
     const val ACE_STATUS = "CodeScene ACE Status"
     const val ACE_NOTIFICATION_GROUP = "CodeScene ACE"
     const val ACE_REFACTORING_SUGGESTION = "Refactoring suggestion"
+    const val ACE_REFACTORING_RECOMMENDATION = "Refactoring recommendation"
+    const val ACE_REFACTORING_RESULTS = "Refactoring results"
     const val ACE_ACKNOWLEDGEMENT = "CodeScene ACE Auto-Refactoring"
 
     // Code Smell constants

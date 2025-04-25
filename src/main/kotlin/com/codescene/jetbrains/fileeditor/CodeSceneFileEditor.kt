@@ -1,10 +1,11 @@
 package com.codescene.jetbrains.fileeditor
 
+import com.codescene.data.ace.RefactoringOptions
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.CodeNavigationService
+import com.codescene.jetbrains.services.api.AceService
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewer
-import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.ACE_ACKNOWLEDGEMENT
 import com.codescene.jetbrains.util.Constants.CODESCENE
@@ -17,18 +18,17 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JBCefJSQuery
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.handler.CefLoadHandlerAdapter
 import org.cef.handler.CefRequestHandlerAdapter
 import org.cef.network.CefRequest
+import org.json.JSONObject
 import java.awt.Desktop
 import java.beans.PropertyChangeListener
 import java.beans.PropertyChangeSupport
+import java.io.File
 import java.net.URI
 import javax.swing.JComponent
 
@@ -42,21 +42,75 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
         """
         private const val FUNCTION_LOCATION = """
             document.getElementById('function-location').addEventListener('click', function() {
-                 window.sendMessage('goto-function-location');
+                 const webViewData = document.getElementById('function-data');
+                 if (webViewData) {
+                   const functionData = JSON.parse(webViewData.textContent);
+                   window.sendMessage(JSON.stringify({
+                    action: 'goto-function-location',
+                    focusLine: functionData.focusLine,
+                    fileName: functionData.fileName,
+                   }));
+                 }
             });
             """
         private const val ACE_BUTTON = """
             document.getElementById('ace-button').addEventListener('click', function() {
-                 window.sendMessage('show-me-ace');
+                 window.sendMessage(JSON.stringify({
+                    action: 'show-me-ace'
+                 }));
+            });
+            """
+        private const val ACE_BUTTON_RETRY = """
+            document.getElementById('retry-refactor-button').addEventListener('click', function() {
+                const webViewData = document.getElementById('refactoring-data');
+                const data = JSON.parse(webViewData.textContent);
+                if (webViewData) {
+                    window.sendMessage(JSON.stringify({
+                        action: 'ace-retry-refactor',
+                        windowTitle: data.windowTitle
+                    }));
+                }
+            });
+            """
+        private const val ACCEPT_REFACTORING = """
+            document.getElementById('accept-refactor-button').addEventListener('click', function() {
+                const webViewData = document.getElementById('refactoring-data');
+                const data = JSON.parse(webViewData.textContent);
+                if (webViewData) {
+                    window.sendMessage(JSON.stringify({
+                        action: 'ace-accept-refactor',
+                        filePath: data.filePath,
+                        startLine: data.startLine,
+                        endLine: data.endLine,
+                        code: data.code
+                    }));
+                }
+            });
+            """
+        private const val REJECT_REFACTORING = """
+            document.getElementById('reject-refactor-button').addEventListener('click', function() {
+                const webViewData = document.getElementById('refactoring-data');
+                const data = JSON.parse(webViewData.textContent);
+                if (webViewData) {
+                    window.sendMessage(JSON.stringify({
+                        action: 'ace-reject-refactor',
+                        windowTitle: data.windowTitle
+                    }));
+                }
             });
             """
         private val eventListeners = listOf(
             FUNCTION_LOCATION,
-            ACE_BUTTON
+            ACE_BUTTON,
+            ACCEPT_REFACTORING,
+            REJECT_REFACTORING,
+            ACE_BUTTON_RETRY
         )
     }
 
-    private val jcefBrowser: JBCefBrowser = JBCefBrowser()
+    // for development purposes only
+    private val jcefBrowser: JBCefBrowser = JBCefBrowser.createBuilder().setEnableOpenDevToolsMenuItem(true).build()
+//    private val jcefBrowser: JBCefBrowser = JBCefBrowser()
     private val jsQuery = JBCefJSQuery.create(jcefBrowser as JBCefBrowserBase)
     private val panel: JBPanel<*> = JBPanel<JBPanel<*>>()
     private val propertyChangeSupport = PropertyChangeSupport(this)
@@ -126,15 +180,18 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
     }
 
     private fun handleAction(data: String) {
-        when (data) {
+        val json = JSONObject(data)
+        val action = json.get("action") ?: ""
+
+        when (action) {
             "goto-function-location" -> {
-                val functionLocation = CodeSceneDocumentationViewer.getInstance(project).functionLocation
+                val fileName = json.get("fileName") as String
+                val focusLine = json.get("focusLine") as Int
                 scope.launch {
-                    functionLocation?.let {
-                        CodeNavigationService
-                            .getInstance(project)
-                            .focusOnLine(it.fileName, it.focusLine ?: 1)
-                    }
+                    CodeNavigationService
+                        .getInstance(project)
+                        .focusOnLine(fileName, focusLine)
+
                 }
             }
 
@@ -152,13 +209,56 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
                     closeWindow(ACE_ACKNOWLEDGEMENT, project)
                 }
             }
+
+            "ace-retry-refactor" -> {
+                val closeWindowScope = CoroutineScope(Dispatchers.Main)
+                val fileName = json.get("windowTitle") as String
+
+                //TODO: add isCached and traceId to metadata for telemetry
+//                TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_REFACTOR_R)
+
+                val function = AceService.getInstance().lastFunctionToRefactor
+                val options = RefactoringOptions()
+                options.setSkipCache(true)
+                closeWindowScope.launch {
+                    val editor = getSelectedTextEditor(project, "")
+
+                    handleAceEntryPoint(
+                        RefactoringParams(project, editor, function, AceEntryPoint.CODE_VISION),
+                        options)
+                    closeWindow(fileName, project)
+                }
+            }
+
+            "ace-accept-refactor" -> {
+                val acceptRefactorScope = CoroutineScope(Dispatchers.Main)
+                val start = json.get("startLine") as Int
+                val end = json.get("endLine") as Int
+                val path = json.get("filePath") as String
+                val code = json.get("code") as String
+
+                //TODO: add isCached and traceId to metadata for telemetry
+                TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_REFACTOR_APPLIED)
+                replaceCodeSnippet(ReplaceCodeSnippetArgs(project, path, start, end, code))
+                acceptRefactorScope.launch { closeWindow(File(path).name, project) }
+            }
+
+            "ace-reject-refactor" -> {
+                val rejectRefactorScope = CoroutineScope(Dispatchers.Main)
+                val fileName = json.get("windowTitle") as String
+
+                //TODO: add isCached and traceId to metadata for telemetry
+//                TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_REFACTOR_R)
+                rejectRefactorScope.launch { closeWindow(fileName, project) }
+            }
         }
     }
 
     override fun getComponent(): JComponent = panel
     override fun getPreferredFocusedComponent(): JComponent = panel
     override fun getName(): String = "$CODESCENE Html Viewer"
-    override fun setState(state: FileEditorState) { /* implementation not needed */}
+    override fun setState(state: FileEditorState) { /* implementation not needed */
+    }
 
     override fun isModified(): Boolean = false
     override fun isValid(): Boolean = file.isValid

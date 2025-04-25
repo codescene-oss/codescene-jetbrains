@@ -22,7 +22,9 @@ data class TransformMarkdownParams(
 
 data class HtmlPart(
     val title: String,
-    val body: String
+    val body: String,
+    val isCode: Boolean = false,
+    val languageString: String = "un"
 )
 
 data class CreateTempFileParams(
@@ -128,21 +130,6 @@ fun convertMarkdownToHtml(markdown: String): String {
     val document: Node = parser.parse(markdown)
 
     return "<body>${renderer.render(document)}</body>"
-}
-
-/**
- * Method to append single collapsable part to the current HTML content.
- */
-fun appendSubpart(content: StringBuilder, htmlPart: HtmlPart) {
-    content.append(
-        """
-            <div>
-                <details open>
-                    <summary>${htmlPart.title}</summary>
-            """.trimIndent()
-    )
-        .append(htmlPart.body)
-        .append("\n</details></div>\n\n")
 }
 
 /**

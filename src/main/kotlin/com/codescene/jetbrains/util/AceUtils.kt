@@ -2,6 +2,7 @@ package com.codescene.jetbrains.util
 
 import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.data.ace.FnToRefactor
+import com.codescene.data.ace.RefactoringOptions
 import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
@@ -46,7 +47,7 @@ data class RefactoringParams(
     val source: AceEntryPoint
 )
 
-fun handleAceEntryPoint(params: RefactoringParams) {
+fun handleAceEntryPoint(params: RefactoringParams, options: RefactoringOptions? = null) {
     val (project, editor, function) = params
     function ?: return
 
@@ -59,7 +60,7 @@ fun handleAceEntryPoint(params: RefactoringParams) {
     }
 
     if (settings.aceAcknowledged)
-        AceService.getInstance().refactor(params)
+        AceService.getInstance().refactor(params, options)
     else
         aceAcknowledgement.open(editor, function)
 }
@@ -93,11 +94,18 @@ fun handleRefactoringResult(
     params: RefactoringParams, function: RefactoredFunction, requestDuration: Long
 ) {
     val (project, editor, _) = params
+    val refactoredFunction = RefactoredFunction(
+        function.name,
+        function.refactoringResult,
+        params.editor?.virtualFile?.path ?: "",
+        function.startLine,
+        function.endLine,
+        function.refactoringResult.confidence.title
+    )
     if (requestDuration < 1500) CoroutineScope(Dispatchers.Main).launch {
-        AceRefactoringResultViewer.getInstance(project)
-            .open(editor, RefactoredFunction(function.name, function.refactoringResult))
+        AceRefactoringResultViewer.getInstance(project).open(editor, refactoredFunction)
     }
-    else showRefactoringFinishedNotification(params, RefactoredFunction(function.name, function.refactoringResult))
+    else showRefactoringFinishedNotification(params, refactoredFunction)
 }
 
 fun getRefactorableFunction(codeSmell: CodeSmell, refactorableFunctions: List<FnToRefactor>) =

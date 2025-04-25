@@ -27,11 +27,18 @@ import kotlinx.coroutines.*
 
 data class RefactoredFunction(
     val name: String,
-    val refactoringResult: RefactorResponse
+    val refactoringResult: RefactorResponse,
+    val fileName: String = "",
+    val startLine: Int? = null,
+    val endLine: Int? = null,
+    var refactoringWindowType: String = ""
 )
 
 @Service
 class AceService : BaseService(), Disposable {
+    var lastFunctionToRefactor: FnToRefactor? = null
+        private set
+
     private val scope = CoroutineScope(Dispatchers.IO)
     private val dispatcher = Dispatchers.IO
 
@@ -110,6 +117,7 @@ class AceService : BaseService(), Disposable {
 
     fun refactor(params: RefactoringParams, options: RefactoringOptions? = null) {
         val (project, _, function, source) = params
+        lastFunctionToRefactor = function
         Log.debug("Initiating refactor for function ${function!!.name}...", serviceImplementation)
 
         TelemetryService.getInstance().logUsage(
@@ -146,7 +154,14 @@ class AceService : BaseService(), Disposable {
         Log.debug("Refactoring ${function!!.name} took ${durationMillis}ms.", serviceImplementation)
 
         result?.let {
-            handleRefactoringResult(params, RefactoredFunction(function.name, result), durationMillis)
+            val refactoredFunction = RefactoredFunction(
+                function.name,
+                result,
+                params.editor?.virtualFile?.name ?: "",
+                params.function.range.startLine,
+                params.function.range.endLine
+            )
+            handleRefactoringResult(params, refactoredFunction, durationMillis)
         }
     }
 
