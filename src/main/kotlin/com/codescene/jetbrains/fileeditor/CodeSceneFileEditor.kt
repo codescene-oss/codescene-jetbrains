@@ -48,7 +48,6 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
                     action: 'goto-function-location',
                     focusLine: functionData.focusLine,
                     fileName: functionData.fileName,
-                    code: functionData.code,
                    }));
                  }
             });
