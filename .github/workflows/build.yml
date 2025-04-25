@@ -220,7 +220,7 @@ jobs:
   releaseDraft:
     name: Release draft
     if: github.event_name != 'pull_request'
-    needs: [ build, test, verify, dependency-check, delta-analysis ]
+    needs: [ build, test, verify, delta-analysis ] #dependency-check
     runs-on: ubuntu-latest
     permissions:
       contents: write

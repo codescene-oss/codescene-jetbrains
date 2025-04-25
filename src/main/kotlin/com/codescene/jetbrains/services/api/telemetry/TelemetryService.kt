@@ -3,6 +3,7 @@ package com.codescene.jetbrains.services.api.telemetry
 import com.codescene.ExtensionAPI
 import com.codescene.data.telemetry.TelemetryEvent
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.config.global.DeviceIdStore
 import com.codescene.jetbrains.services.api.BaseService
 import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Log
@@ -17,7 +18,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 @Service
-class TelemetryService() : BaseService(), Disposable {
+class TelemetryService : BaseService(), Disposable {
     private val scope = CoroutineScope(Dispatchers.IO)
 
     companion object {
@@ -33,6 +34,8 @@ class TelemetryService() : BaseService(), Disposable {
         val userId = ""
         val telemetryEvent =
             TelemetryEvent(extendedName, userId, Constants.TELEMETRY_EDITOR_TYPE, getPluginVersion(), false)
+
+        telemetryEvent.setAdditionalProperty("device-id", DeviceIdStore.get())
         eventData.forEach { telemetryEvent.setAdditionalProperty(it.key, it.value) }
 
         scope.launch {

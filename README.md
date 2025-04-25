@@ -3,10 +3,6 @@
 <!-- Plugin description -->
 [CodeScene](https://www.codescene.com) - the only code analysis tool with a proven business impact.
 
-## Code Health Monitor
-
-Track code health in real-time as you work by using the Monitor.
-
 ## Code Health Analysis
 
 CodeScene’s [Code Health](https://codescene.io/docs/guides/technical/code-health.html) metric is the software industry’s
