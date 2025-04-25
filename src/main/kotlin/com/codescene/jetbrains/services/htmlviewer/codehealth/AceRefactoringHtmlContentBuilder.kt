@@ -8,7 +8,13 @@ import com.codescene.jetbrains.util.TransformMarkdownParams
 import com.codescene.jetbrains.util.getLanguageByExtension
 import com.intellij.util.PathUtil.getFileExtension
 
-class AceRefactoringHtmlContentBuilder: HtmlContentBuilder() {
+class AceRefactoringHtmlContentBuilder : HtmlContentBuilder() {
+    private var aceButtons = """
+                |<div class="ace-buttons-container">
+                |   <button id="accept-refactor-button" class="ace-button-style ace-button-blue">Accept Auto-Refactor</button>
+                |   <button id="reject-refactoring-button" class="ace-button-style ace-button-gray">Reject</button>
+                |</div>
+            """
 
     override fun summary(confidence: Confidence) = apply {
         val level = confidence.level.value()
@@ -126,6 +132,7 @@ class AceRefactoringHtmlContentBuilder: HtmlContentBuilder() {
             |$focusLine
             |<hr>
             |$summary
+            |$aceButtons
             |$reasons
             |$code
             |$webViewData

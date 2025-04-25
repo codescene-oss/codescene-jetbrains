@@ -99,3 +99,34 @@
     width: 0.3em;
     height: 0.3em;
 }
+
+.ace-buttons-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.ace-button-style {
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border: 2px solid transparent;
+}
+
+.ace-button-blue {
+    color: white;
+    background-color: #3f6dc7;
+    border-color: #3f6dc7;
+}
+
+.ace-button-gray {
+    color: white;
+    background-color: #45484d;
+    border-color: #45484d;
+}
