@@ -24,22 +24,39 @@ class AceRefactoringResultViewer(private val project: Project) : HtmlViewer<Refa
 
     override fun prepareFile(params: RefactoredFunction): LightVirtualFile {
         refactoredFunction = params
-        val (_, refactoringResult, fileName, focusLine) = params
+        val (_, refactoringResult, fileName, startLine, endLine) = params
         val title = refactoringResult.confidence.title
         val builder = AceRefactoringHtmlContentBuilder()
 
-        val scriptTag = """
+        val functionData = """
             <script id="function-data" type="application/json">
               {
                  "fileName": "${fileName}",
-                 "focusLine": ${focusLine}
+                 "focusLine": ${startLine}
+              }
+            </script>
+        """.trimIndent()
+
+        //JSON encouters errors while parsing on the web view side if we don't do this:
+        val sanitizedCode = refactoringResult.code
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", "\\n")
+
+        val rangeData = """
+            <script id="refactoring-data" type="application/json">
+              {
+                 "filePath": "${fileName}",
+                 "startLine": ${startLine},
+                 "endLine": ${endLine},
+                 "code": "$sanitizedCode"
               }
             </script>
         """.trimIndent()
 
         val fileContentBuilder = builder
             .title(title)
-            .functionLocation(params.fileName, params.focusLine ?: 1)
+            .functionLocation(params.fileName, params.startLine ?: 1)
             .usingStyleSheet(STYLE_BASE_PATH + "ace-results.css")
             .usingStyleSheet(STYLE_BASE_PATH + "code-smell.css")
             .summary(refactoringResult.confidence)
@@ -47,8 +64,10 @@ class AceRefactoringResultViewer(private val project: Project) : HtmlViewer<Refa
             .code(params)
 
         if (fileName.isNotEmpty()) {
-            fileContentBuilder.functionLocation(File(fileName).name, focusLine ?: 1)
-                .withWebViewData(scriptTag)
+            fileContentBuilder
+                .functionLocation(File(fileName).name, startLine ?: 1)
+                .withWebViewData(functionData)
+                .withWebViewData(rangeData)
         }
 
         val fileContent = fileContentBuilder.build()

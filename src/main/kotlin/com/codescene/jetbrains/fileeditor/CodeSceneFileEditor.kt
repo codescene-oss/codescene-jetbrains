@@ -7,6 +7,7 @@ import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewer
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.ACE_ACKNOWLEDGEMENT
+import com.codescene.jetbrains.util.Constants.ACE_REFACTORING_SUGGESTION
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorState
@@ -17,11 +18,7 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JBCefJSQuery
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.handler.CefLoadHandlerAdapter
@@ -44,13 +41,14 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
         """
         private const val FUNCTION_LOCATION = """
             document.getElementById('function-location').addEventListener('click', function() {
-                 const scriptTag = document.getElementById('function-data');
-                 if (scriptTag) {
-                   const functionData = JSON.parse(scriptTag.textContent);
+                 const webViewData = document.getElementById('function-data');
+                 if (webViewData) {
+                   const functionData = JSON.parse(webViewData.textContent);
                    window.sendMessage(JSON.stringify({
                     action: 'goto-function-location',
                     focusLine: functionData.focusLine,
                     fileName: functionData.fileName,
+                    code: functionData.code,
                    }));
                  }
             });
@@ -69,9 +67,25 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
                  }));
             });
             """
+        private const val ACCEPT_REFACTORING = """
+            document.getElementById('accept-refactor-button').addEventListener('click', function() {
+                const webViewData = document.getElementById('refactoring-data');
+                const data = JSON.parse(webViewData.textContent);
+                if (webViewData) {
+                    window.sendMessage(JSON.stringify({
+                        action: 'ace-accept-refactor',
+                        filePath: data.filePath,
+                        startLine: data.startLine,
+                        endLine: data.endLine,
+                        code: data.code
+                    }));
+                }
+            });
+            """
         private val eventListeners = listOf(
             FUNCTION_LOCATION,
-            ACE_BUTTON
+            ACE_BUTTON,
+            ACCEPT_REFACTORING
         )
     }
 
@@ -184,6 +198,19 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
                     closeWindow(ACE_ACKNOWLEDGEMENT, project)
                     delay(2000)
                 }
+            }
+
+            "ace-accept-refactor" -> {
+                val acceptRefactorScope = CoroutineScope(Dispatchers.Main)
+                val start = json.get("startLine") as Int
+                val end = json.get("endLine") as Int
+                val path = json.get("filePath") as String
+                val code = json.get("code") as String
+
+                //TODO: add isCached and traceId to metadata for telemetry
+                TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_REFACTOR_APPLIED)
+                replaceCodeSnippet(ReplaceCodeSnippetArgs(project, path, start, end, code))
+                acceptRefactorScope.launch { closeWindow(ACE_REFACTORING_SUGGESTION, project) }
             }
         }
     }

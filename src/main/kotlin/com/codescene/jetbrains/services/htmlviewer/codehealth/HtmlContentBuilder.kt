@@ -23,9 +23,8 @@ abstract class HtmlContentBuilder {
     )
 
     fun withWebViewData(html: String) = apply {
-        this.webViewData = html
+        this.webViewData += "\n$html"
     }
-
 
     fun usingStyleSheet(stylePath: String) = apply {
         val classLoader = this@HtmlContentBuilder.javaClass.classLoader
@@ -79,6 +78,7 @@ abstract class HtmlContentBuilder {
         """.trimMargin().trim()
     }
 
+    //todo: remove if unused?
     fun removeEmptyLines(html: String): String {
         val result = StringBuilder()
         var insidePre = false

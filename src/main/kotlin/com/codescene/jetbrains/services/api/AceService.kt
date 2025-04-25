@@ -29,7 +29,8 @@ data class RefactoredFunction(
     val name: String,
     val refactoringResult: RefactorResponse,
     val fileName: String = "",
-    val focusLine: Int? = null,
+    val startLine: Int? = null,
+    val endLine: Int? = null,
     var refactoringWindowType: String = ""
 )
 
@@ -153,12 +154,14 @@ class AceService : BaseService(), Disposable {
         Log.debug("Refactoring ${function!!.name} took ${durationMillis}ms.", serviceImplementation)
 
         result?.let {
-            handleRefactoringResult(params, RefactoredFunction(
+            val refactoredFunction = RefactoredFunction(
                 function.name,
                 result,
                 params.editor?.virtualFile?.name ?: "",
-                params.function.range.startLine
-            ), durationMillis)
+                params.function.range.startLine,
+                params.function.range.endLine
+            )
+            handleRefactoringResult(params, refactoredFunction, durationMillis)
         }
     }
 
