@@ -1,4 +1,4 @@
-package com.codescene.jetbrains.services.telemetry
+package com.codescene.jetbrains.services.api.telemetry
 
 import com.codescene.jetbrains.services.api.BaseService
 import com.intellij.openapi.components.Service

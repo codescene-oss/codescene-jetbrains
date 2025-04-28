@@ -21,9 +21,6 @@ import kotlinx.coroutines.Job
 
 @Service(Service.Level.PROJECT)
 class CodeDeltaService(private val project: Project) : CodeSceneService() {
-    private val uiRefreshService: UIRefreshService = UIRefreshService.getInstance(project)
-    private val deltaCacheService: DeltaCacheService = DeltaCacheService.getInstance(project)
-
     companion object {
         fun getInstance(project: Project): CodeDeltaService = project.service<CodeDeltaService>()
     }
@@ -36,15 +33,24 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
         reviewFile(editor) {
             performDeltaAnalysis(editor)
 
-            project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC)
-                .refresh(editor.virtualFile)
+            project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(editor.virtualFile)
         }
     }
 
     override fun getActiveApiCalls() = CodeSceneCodeVisionProvider.activeDeltaApiCalls
 
+    /**
+     * Performs delta analysis by comparing the current editor content against a baseline.
+     *
+     * The baseline for delta analysis is determined as follows:
+     * - If available, it uses the code/content from the branch creation commit.
+     * - If the branch creation commit is not found or the analysis is run in a detached HEAD state,
+     *   it falls back to comparing against the best score of 10.0.
+     */
     private suspend fun performDeltaAnalysis(editor: Editor) {
-        val oldCode = GitService.getInstance(project).getHeadCommit(editor.virtualFile)
+        val oldCode = GitService
+            .getInstance(project)
+            .getBranchCreationCommitCode(editor.virtualFile)
 
         val delta = getDeltaResponse(editor, oldCode)
 
@@ -56,6 +62,7 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
 
         val oldReview = ReviewParams(path, oldCode)
         val newReview = ReviewParams(path, editor.document.text)
+
         val delta = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview) }
 
         if (delta?.oldScore?.isEmpty == true) {
@@ -70,15 +77,17 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
     private suspend fun handleDeltaResponse(editor: Editor, delta: Delta?, oldCode: String) {
         val path = editor.virtualFile.path
         val currentCode = editor.document.text
+        val cacheService = DeltaCacheService.getInstance(project)
 
         if (delta == null) {
             Log.info("Received null response from $CODESCENE delta API.", "$serviceImplementation - ${project.name}")
 
-            deltaCacheService.invalidate(path)
-        } else
-            uiRefreshService.refreshCodeVision(editor, listOf("CodeHealthCodeVisionProvider"))
+            cacheService.invalidate(path)
+        } else {
+            UIRefreshService.getInstance(project).refreshCodeVision(editor, listOf("CodeHealthCodeVisionProvider"))
+        }
 
         val cacheEntry = DeltaCacheEntry(path, oldCode, currentCode, delta)
-        deltaCacheService.put(cacheEntry)
+        cacheService.put(cacheEntry)
     }
 }

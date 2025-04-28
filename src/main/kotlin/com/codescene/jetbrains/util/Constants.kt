@@ -18,7 +18,6 @@ object Constants {
     const val CODESCENE_URL = "https://codescene.com"
     const val CODE_HEALTH_URL = "${DOCUMENTATION_URL}guides/technical/code-health.html"
     const val TERMS_AND_CONDITIONS_URL = "$CODESCENE_URL/policies"
-    const val AI_PRINCIPLES_URL = "$CODESCENE_URL/ace/principles"
     const val CONTACT_URL = "$CODESCENE_URL/company/contact-us"
     const val FREE_TRIAL_URL = "$CODESCENE_URL/product/free-trial?trial-experiment-variant=free_trial_landing_page_with_form"
     const val SUPPORT_URL = "https://supporthub.codescene.com/kb-tickets/new"
@@ -38,6 +37,16 @@ object Constants {
     const val CODE_HEALTH_MONITOR = "Code Health Monitor"
     const val TELEMETRY_EDITOR_TYPE = "intellij"
 
+    // ACE constants
+    const val ACE_ACKNOWLEDGEMENT_FILE = "ace-info.md"
+    const val ACE_STATUS = "CodeScene ACE Status"
+    const val ACE_NOTIFICATION_GROUP = "CodeScene ACE"
+    const val ACE_REFACTORING_SUGGESTION = "Refactoring suggestion"
+    const val ACE_REFACTORING_RECOMMENDATION = "Refactoring recommendation"
+    const val ACE_REFACTORING_RESULTS = "Refactoring results"
+    const val ACE_ACKNOWLEDGEMENT = "CodeScene ACE Auto-Refactoring"
+
+    // Code Smell constants
     const val BRAIN_CLASS = "Brain Class"
     const val BRAIN_METHOD = "Brain Method"
     const val BUMPY_ROAD_AHEAD = "Bumpy Road Ahead"

@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.util
 
-import com.codescene.data.review.CodeSmell
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.intellij.openapi.application.runReadAction
@@ -12,6 +11,11 @@ import com.intellij.openapi.vfs.VirtualFile
 import io.ktor.util.*
 import java.awt.Color
 import java.io.File
+
+data class CharactersBackticksData (
+    val inputString: String,
+    val indexOfTick: Int
+)
 
 private val supportedLanguages = mapOf(
     "js" to "javascript",
@@ -76,6 +80,14 @@ private fun isExcludedByGitignore(file: VirtualFile, ignoredFiles: List<String>)
 
 private fun inSupportedLanguages(extension: String) = supportedLanguages.containsKey(extension)
 
+fun getLanguageByExtension(extension: String): String {
+    return (if (supportedLanguages[extension] is List<*>) {
+        (supportedLanguages[extension] as List<*>).first()
+    } else {
+        supportedLanguages[extension]
+    }).toString()
+}
+
 fun isFileSupported(project: Project, virtualFile: VirtualFile): Boolean {
     val excludeGitignoreFiles = CodeSceneGlobalSettingsStore.getInstance().state.excludeGitignoreFiles
 
@@ -93,10 +105,10 @@ fun isFileSupported(project: Project, virtualFile: VirtualFile): Boolean {
 }
 
 fun getTextRange(
-    codeSmell: CodeSmell, document: Document,
+    range: Pair<Int, Int>, document: Document,
 ): TextRange {
-    val start = document.getLineStartOffset(codeSmell.highlightRange.startLine - 1)
-    val end = document.getLineEndOffset(codeSmell.highlightRange.endLine - 1)
+    val start = document.getLineStartOffset(range.first - 1)
+    val end = document.getLineEndOffset(range.second - 1)
 
     return TextRange(start, end)
 }
@@ -108,10 +120,14 @@ fun categoryToFileName(category: String): String {
     return category.trim().replace(" ", "-").replace(",", "").toLowerCasePreservingASCIIRules()
 }
 
-// this list needs to match documentation files for code smells, code health and code health monitor (/docs)
+val generalDocs = listOf(Constants.GENERAL_CODE_HEALTH, Constants.CODE_HEALTH_MONITOR)
+val aceDocs = listOf(
+    Constants.ACE_ACKNOWLEDGEMENT,
+    Constants.ACE_REFACTORING_SUGGESTION,
+    Constants.ACE_REFACTORING_RESULTS,
+    Constants.ACE_REFACTORING_RECOMMENDATION)
+
 val codeSmellNames = listOf(
-    Constants.GENERAL_CODE_HEALTH,
-    Constants.CODE_HEALTH_MONITOR,
     Constants.BRAIN_CLASS,
     Constants.BRAIN_METHOD,
     Constants.BUMPY_ROAD_AHEAD,
@@ -141,12 +157,15 @@ val codeSmellNames = listOf(
     Constants.STRING_HEAVY_FUNCTION_ARGUMENTS,
 )
 
+// this list needs to match documentation files for code smells, code health, code health monitor and ACE
+val acceptedFileNames = aceDocs + codeSmellNames + generalDocs
+
 fun Color.webRgba(alpha: Double = this.alpha.toDouble()): String {
     return "rgba($red, $green, $blue, $alpha)"
 }
 
-fun surroundingCharactersNotBackticks(string: String, indexOfTick: Int): Boolean {
-    return nextCharacterNotBacktick(string, indexOfTick) && previousCharacterNotBacktick(string, indexOfTick)
+fun surroundingCharactersNotBackticks(data: CharactersBackticksData): Boolean {
+    return nextCharacterNotBacktick(data.inputString, data.indexOfTick) && previousCharacterNotBacktick(data.inputString, data.indexOfTick)
 }
 
 private fun nextCharacterNotBacktick(string: String, indexOfTick: Int): Boolean {

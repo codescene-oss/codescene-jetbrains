@@ -26,7 +26,7 @@ class CodeSmellUtilsTest {
         every { document.getLineStartOffset(startLine) } returns startOffset
         every { document.getLineEndOffset(endLine) } returns endOffset
 
-        val result = getTextRange(codeSmell, document)
+        val result = getTextRange(codeSmell.highlightRange.startLine to codeSmell.highlightRange.endLine, document)
 
         assertEquals(TextRange(startOffset, endOffset), result)
         verify(exactly = 1) { document.getLineStartOffset(startLine) }
@@ -91,63 +91,63 @@ class CodeSmellUtilsTest {
     @Test
     fun `surroundingCharactersNotBackticks return true for single backtick`() {
         val inputString = "`"
-        val result = surroundingCharactersNotBackticks(inputString, inputString.indexOf('`'))
+        val result = surroundingCharactersNotBackticks(CharactersBackticksData(inputString, inputString.indexOf('`')))
         assertEquals(true, result)
     }
 
     @Test
     fun `surroundingCharactersNotBackticks return true for single backtick in the end of string`() {
         val inputString = "some string with backtick `"
-        val result = surroundingCharactersNotBackticks(inputString, inputString.indexOf('`'))
+        val result = surroundingCharactersNotBackticks(CharactersBackticksData(inputString, inputString.indexOf('`')))
         assertEquals(true, result)
     }
 
     @Test
     fun `surroundingCharactersNotBackticks return true for single backtick in the middle of string`() {
         val inputString = "some string with backtick ` in the middle"
-        val result = surroundingCharactersNotBackticks(inputString, inputString.indexOf('`'))
+        val result = surroundingCharactersNotBackticks(CharactersBackticksData(inputString, inputString.indexOf('`')))
         assertEquals(true, result)
     }
 
     @Test
     fun `surroundingCharactersNotBackticks return true for single backtick at the start of string`() {
         val inputString = "` some string with backtick at start"
-        val result = surroundingCharactersNotBackticks(inputString, inputString.indexOf('`'))
+        val result = surroundingCharactersNotBackticks(CharactersBackticksData(inputString, inputString.indexOf('`')))
         assertEquals(true, result)
     }
 
     @Test
     fun `surroundingCharactersNotBackticks return false for two backticks`() {
         val inputString = "``"
-        val result = surroundingCharactersNotBackticks(inputString, inputString.indexOf('`'))
+        val result = surroundingCharactersNotBackticks(CharactersBackticksData(inputString, inputString.indexOf('`')))
         assertEquals(false, result)
     }
 
     @Test
     fun `surroundingCharactersNotBackticks return false for two backticks when checking second`() {
         val inputString = "``"
-        val result = surroundingCharactersNotBackticks(inputString, inputString.lastIndexOf('`'))
+        val result = surroundingCharactersNotBackticks(CharactersBackticksData(inputString, inputString.lastIndexOf('`')))
         assertEquals(false, result)
     }
 
     @Test
     fun `surroundingCharactersNotBackticks return false for three backticks when checking first`() {
         val inputString = "some text before ``` and after"
-        val result = surroundingCharactersNotBackticks(inputString, inputString.indexOf('`'))
+        val result = surroundingCharactersNotBackticks(CharactersBackticksData(inputString, inputString.indexOf('`')))
         assertEquals(false, result)
     }
 
     @Test
     fun `surroundingCharactersNotBackticks return false for three backticks when checking second`() {
         val inputString = "some text before ``` and after"
-        val result = surroundingCharactersNotBackticks(inputString, inputString.indexOf('`') + 1)
+        val result = surroundingCharactersNotBackticks(CharactersBackticksData(inputString, inputString.indexOf('`') + 1))
         assertEquals(false, result)
     }
 
     @Test
     fun `surroundingCharactersNotBackticks return false for three backticks when checking third`() {
         val inputString = "some text before ``` and after"
-        val result = surroundingCharactersNotBackticks(inputString, inputString.lastIndexOf('`'))
+        val result = surroundingCharactersNotBackticks(CharactersBackticksData(inputString, inputString.lastIndexOf('`')))
         assertEquals(false, result)
     }
 }

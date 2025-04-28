@@ -3,7 +3,7 @@ package com.codescene.jetbrains.components.codehealth.detail
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPanel
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
-import com.codescene.jetbrains.services.telemetry.TelemetryService
+import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.util.CodeHealthDetails
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.TelemetryEvents
@@ -96,11 +96,8 @@ class CodeHealthDetailsPanel(private val project: Project) {
 
     fun refreshContent(finding: CodeHealthFinding?) {
         details = finding?.let {
-            CodeHealthMonitorPanel.getInstance(project).healthMonitoringResults[it.filePath]?.let { data ->
-                getHealthFinding(
-                    data,
-                    it
-                )
+            CodeHealthMonitorPanel.getInstance(project).healthMonitoringResults[it.filePath]?.let { delta ->
+                getHealthFinding(delta, it, project)
             }
         }
 

@@ -4,13 +4,13 @@ import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
-import com.codescene.jetbrains.services.CodeSceneDocumentationService
-import com.codescene.jetbrains.services.DocsSourceType
-import com.codescene.jetbrains.services.DocumentationParams
 import com.codescene.jetbrains.services.api.CodeDeltaService
 import com.codescene.jetbrains.services.api.CodeReviewService
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
 import com.codescene.jetbrains.services.cache.ReviewCacheService
+import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
+import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
+import com.codescene.jetbrains.services.htmlviewer.DocumentationParams
 import com.codescene.jetbrains.util.getCachedDelta
 import com.codescene.jetbrains.util.getTextRange
 import com.codescene.jetbrains.util.isFileSupported
@@ -123,7 +123,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
 
         getCodeSmellsByCategory(result).forEach { smell ->
-            val range = getTextRange(smell, editor.document)
+            val range = getTextRange(smell.highlightRange.startLine to smell.highlightRange.endLine, editor.document)
 
             val entry = getCodeVisionEntry(smell)
 
@@ -158,13 +158,16 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
     open fun handleLensClick(editor: Editor, codeSmell: CodeSmell) {
         val project = editor.project ?: return
-        val codeSceneDocumentationService = CodeSceneDocumentationService.getInstance(project)
+        val docViewer = CodeSceneDocumentationViewer.getInstance(project)
 
-        codeSceneDocumentationService.openDocumentationPanel(
+        docViewer.open(
+            editor,
             DocumentationParams(
-                editor,
-                codeSmell,
-                DocsSourceType.CODE_VISION
+                codeSmell.category,
+                editor.virtualFile.name,
+                editor.virtualFile.path,
+                codeSmell.highlightRange.startLine,
+                DocsEntryPoint.CODE_VISION
             )
         )
     }
