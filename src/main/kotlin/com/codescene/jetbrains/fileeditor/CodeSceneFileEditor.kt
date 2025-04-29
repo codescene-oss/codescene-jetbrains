@@ -108,8 +108,6 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
         )
     }
 
-    // for development purposes only
-//    private val jcefBrowser: JBCefBrowser = JBCefBrowser.createBuilder().setEnableOpenDevToolsMenuItem(true).build()
     private val jcefBrowser: JBCefBrowser = JBCefBrowser()
     private val jsQuery = JBCefJSQuery.create(jcefBrowser as JBCefBrowserBase)
     private val panel: JBPanel<*> = JBPanel<JBPanel<*>>()
