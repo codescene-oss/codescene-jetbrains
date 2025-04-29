@@ -16,7 +16,7 @@ class AceCodeVisionProvider : CodeVisionProvider<Unit> {
 
     override val name: String = "CodeScene ACE"
 
-    override val defaultAnchor = CodeVisionAnchorKind.Right
+    override val defaultAnchor = CodeVisionAnchorKind.Top
 
     override val relativeOrderings: List<CodeVisionRelativeOrdering> = emptyList()
 

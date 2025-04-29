@@ -249,7 +249,7 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
                 val fileName = json.get("windowTitle") as String
 
                 //TODO: add isCached and traceId to metadata for telemetry
-//                TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_REFACTOR_R)
+                TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_REFACTOR_REJECTED)
                 rejectRefactorScope.launch { closeWindow(fileName, project) }
             }
         }

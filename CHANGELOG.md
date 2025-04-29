@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.2.1] - 2025-04-29
+- **Changed**
+    - Enable ACE refactoring by default
+- **Fixed**
+    - Minor ACE fixes and improvements
+
 ### [0.2.0] - 2025-04-28
 - **Added**
     - ACE entry points from:
