@@ -30,13 +30,6 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                     .comment(UiLabelsBundle.message("enableAutoRefactorComment"))
             }
 
-            //TODO: remove
-            row {
-                checkBox("Ace Acknowledged")
-                    .bindSelected(settings::aceAcknowledged)
-                    .comment("Test, remove")
-            }
-
             row {
                 checkBox(UiLabelsBundle.message("gitignore"))
                     .bindSelected(settings::excludeGitignoreFiles)

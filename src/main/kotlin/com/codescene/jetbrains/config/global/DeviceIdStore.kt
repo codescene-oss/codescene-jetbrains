@@ -13,7 +13,7 @@ object DeviceIdStore : BaseService() {
         deviceId = try {
             runWithClassLoaderChange { DevToolsAPI.deviceId() }
         } catch (e: Exception) {
-            Log.error("Failed to fetch device ID: ${e.message}")
+            Log.warn("Failed to fetch device ID: ${e.message}")
             ""
         }
 

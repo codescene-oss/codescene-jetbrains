@@ -7,6 +7,7 @@ import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.notifier.AceStatusRefreshNotifier
 import com.codescene.jetbrains.services.api.AceService
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
+import com.codescene.jetbrains.util.Constants.AI_PRINCIPLES_URL
 import com.codescene.jetbrains.util.Constants.CONTACT_URL
 import com.codescene.jetbrains.util.Constants.DOCUMENTATION_URL
 import com.codescene.jetbrains.util.Constants.GREEN
@@ -51,7 +52,7 @@ class GeneralTab : Configurable {
     private val more = listOf(
         UiLabelsBundle.message("documentation") to DOCUMENTATION_URL,
         UiLabelsBundle.message("termsAndPolicies") to TERMS_AND_CONDITIONS_URL,
-//        UiLabelsBundle.message("aiPrinciples") to AI_PRINCIPLES_URL, TODO: uncomment when ACE capabilities are added
+        UiLabelsBundle.message("aiPrinciples") to AI_PRINCIPLES_URL,
         UiLabelsBundle.message("contactCodeScene") to CONTACT_URL,
         UiLabelsBundle.message("supportTicket") to SUPPORT_URL
     )
