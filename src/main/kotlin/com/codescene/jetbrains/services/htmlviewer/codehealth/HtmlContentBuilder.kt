@@ -78,25 +78,6 @@ abstract class HtmlContentBuilder {
         """.trimMargin().trim()
     }
 
-    //todo: remove if unused?
-    fun removeEmptyLines(html: String): String {
-        val result = StringBuilder()
-        var insidePre = false
-
-        html.lineSequence().forEach { line ->
-            val trimmed = line.trim()
-
-            if (trimmed.contains("<pre", ignoreCase = true)) insidePre = true
-            if (!insidePre && trimmed.isBlank()) return@forEach
-
-            result.appendLine(line)
-
-            if (trimmed.contains("</pre>", ignoreCase = true)) insidePre = false
-        }
-
-        return result.toString().trim()
-    }
-
     abstract fun build(): String
     abstract fun summary(confidence: Confidence): HtmlContentBuilder
     abstract fun reasons(refactoringResult: RefactorResponse): HtmlContentBuilder

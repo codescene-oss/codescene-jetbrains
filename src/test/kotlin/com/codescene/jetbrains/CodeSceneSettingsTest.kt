@@ -51,7 +51,7 @@ class CodeSceneGlobalSettingsStoreTest : BasePlatformTestCase() {
     private fun assertDefaultState(state: CodeSceneGlobalSettings) {
         assertEquals(defaultServerUrl, state.serverUrl)
         assertTrue(state.enableCodeLenses)
-        assertFalse(state.enableAutoRefactor)
+        assertTrue(state.enableAutoRefactor)
         assertTrue(state.excludeGitignoreFiles)
         assertFalse(state.previewCodeHealthGate)
     }

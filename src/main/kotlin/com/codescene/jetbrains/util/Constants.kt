@@ -19,6 +19,7 @@ object Constants {
     const val TERMS_AND_CONDITIONS_URL = "$CODESCENE_URL/policies"
     const val CONTACT_URL = "$CODESCENE_URL/company/contact-us"
     const val SUPPORT_URL = "https://supporthub.codescene.com/kb-tickets/new"
+    const val AI_PRINCIPLES_URL = "$CODESCENE_URL/product/ace/principles"
 
     const val REPOSITORY_URL = "https://github.com/codescene-oss/codescene-jetbrains"
     const val TELEMETRY_SAMPLES_URL =
