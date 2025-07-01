@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.services
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.components.Service
@@ -49,8 +50,10 @@ class CodeNavigationService(val project: Project) {
 
     private suspend fun openEditorAndMoveCaret(file: VirtualFile, line: Int) = withContext(Dispatchers.Main) {
         val openFileDescriptor = OpenFileDescriptor(project, file, line - 1, 0)
-        val editor = FileEditorManager.getInstance(project)
-            .openTextEditor(openFileDescriptor, true)
+        val editor = ApplicationManager.getApplication().runReadAction<Editor?> {
+            FileEditorManager.getInstance(project)
+                .openTextEditor(openFileDescriptor, true)
+        }
 
         if (editor != null) {
             moveCaret(editor, line)
