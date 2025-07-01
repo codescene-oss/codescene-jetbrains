@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.2.2-codescene-eap] - 2025-07-01
+- **Fixed**
+  - Minor ACE fixes and improvements
+  - Unhandled exception on empty range optional
+
 ### [0.2.1-codescene-eap] - 2025-04-29
 - **Changed**
   - Enable ACE refactoring by default

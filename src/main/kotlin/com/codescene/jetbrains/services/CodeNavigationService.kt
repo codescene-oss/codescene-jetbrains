@@ -50,7 +50,7 @@ class CodeNavigationService(val project: Project) {
 
     private suspend fun openEditorAndMoveCaret(file: VirtualFile, line: Int) = withContext(Dispatchers.Main) {
         val openFileDescriptor = OpenFileDescriptor(project, file, line - 1, 0)
-        val editor = ApplicationManager.getApplication().runReadAction<Editor?> {
+        val editor = runReadAction {
             FileEditorManager.getInstance(project)
                 .openTextEditor(openFileDescriptor, true)
         }
