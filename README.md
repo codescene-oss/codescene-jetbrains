@@ -1,10 +1,10 @@
 # CodeScene - Code Analysis and Refactoring
 
 <!-- Plugin description -->
-✨ New: ACE AI-Powered Refactoring! ✨
-
 [CodeScene](https://www.codescene.com) - the only code analysis tool with a proven business impact.
 Now also with AI-Powered Refactoring.
+
+✨ New: ACE AI-Powered Refactoring! ✨
 
 ## Augmented Code Engineering
 
