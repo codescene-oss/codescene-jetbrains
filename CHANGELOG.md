@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.2.2] - 2025-08-04
+- **Changed**
+    - Bump Extension API version
+
 ### [0.2.1] - 2025-04-29
 - **Changed**
     - Enable ACE refactoring by default
