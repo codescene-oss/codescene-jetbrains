@@ -204,7 +204,7 @@ jobs:
       - name: Install cs tool with debug info
         run: |
           set -x  # Print each command before executing it
-          curl -L -v -o /tmp/cs.zip https://downloads.codescene.io/enterprise/cli/cs-linux-amd64-b856f3592ebd34c012c3a6e528eeed103183a045.zip
+          curl -L -v -o /tmp/cs.zip https://downloads.codescene.io/enterprise/cli/cs-linux-amd64-99371f204d1502e328bf4fa26b4bdf3e6f05fd0f.zip
       
           echo "=== File info ==="
           file /tmp/cs.zip || true
