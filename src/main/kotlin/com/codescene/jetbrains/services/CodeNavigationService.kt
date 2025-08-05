@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.services
 
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.WriteIntentReadAction
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.components.Service
@@ -19,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.lang.RuntimeException
 
 @Service(Service.Level.PROJECT)
 class CodeNavigationService(val project: Project) {
@@ -49,12 +51,16 @@ class CodeNavigationService(val project: Project) {
     }
 
     private suspend fun openEditorAndMoveCaret(file: VirtualFile, line: Int) = withContext(Dispatchers.Main) {
-        val openFileDescriptor = OpenFileDescriptor(project, file, line - 1, 0)
-        val editor = runReadAction {
+        // Only calculate/capture data in runReadAction, NOT open the editor!
+        val openFileDescriptor = runReadAction {
+            OpenFileDescriptor(project, file, line - 1, 0)
+        }
+
+        // Open the editor outside runReadAction
+        val editor = WriteIntentReadAction.compute<Editor?, RuntimeException> {
             FileEditorManager.getInstance(project)
                 .openTextEditor(openFileDescriptor, true)
         }
-
         if (editor != null) {
             moveCaret(editor, line)
         }
