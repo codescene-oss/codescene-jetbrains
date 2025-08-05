@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.services
 
-import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.WriteIntentReadAction
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.application.runWriteAction
@@ -17,13 +17,14 @@ import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.lang.RuntimeException
 
 @Service(Service.Level.PROJECT)
-class CodeNavigationService(val project: Project) {
+class CodeNavigationService(val project: Project): Disposable {
     private val scope = CoroutineScope(Dispatchers.IO)
 
     companion object {
@@ -75,5 +76,9 @@ class CodeNavigationService(val project: Project) {
             caretModel.moveToLogicalPosition(position)
             editor.scrollingModel.scrollToCaret(ScrollType.CENTER)
         }
+    }
+
+    override fun dispose() {
+        scope.cancel()
     }
 }

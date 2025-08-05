@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.util
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -7,10 +8,6 @@ import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import java.io.File
 
 fun getSelectedTextEditor(project: Project, filePath: String, source: String = ""): Editor? {
     val editorManager = FileEditorManager.getInstance(project)
@@ -51,22 +48,22 @@ data class ReplaceCodeSnippetArgs(
     val newContent: String
 )
 
-fun replaceCodeSnippet(args: ReplaceCodeSnippetArgs, scope: CoroutineScope = CoroutineScope(Dispatchers.Main)) {
+fun replaceCodeSnippet(args: ReplaceCodeSnippetArgs) {
     val (project, filePath, startLine, endLine, newContent) = args
 
-    val file = File(filePath)
+    val file = java.io.File(filePath)
     val virtualFile = LocalFileSystem.getInstance().findFileByIoFile(file) ?: return
     val openFileDescriptor = OpenFileDescriptor(project, virtualFile)
 
-    scope.launch {
+    // Always run UI/editor actions on EDT
+    ApplicationManager.getApplication().invokeLater {
         val editor = FileEditorManager.getInstance(project).openTextEditor(openFileDescriptor, true)
-
-        editor?.document?.let {
-            val startOffset = it.getLineStartOffset(startLine - 1)
-            val endOffset = it.getLineEndOffset(endLine - 1)
+        editor?.document?.let { document ->
+            val startOffset = document.getLineStartOffset(startLine - 1)
+            val endOffset = document.getLineEndOffset(endLine - 1)
 
             WriteCommandAction.runWriteCommandAction(project) {
-                it.replaceString(startOffset, endOffset, newContent)
+                document.replaceString(startOffset, endOffset, newContent)
             }
         }
     }

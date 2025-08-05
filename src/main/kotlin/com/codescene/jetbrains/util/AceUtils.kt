@@ -117,8 +117,16 @@ fun getRefactorableFunction(codeSmell: CodeSmell, refactorableFunctions: List<Fn
 
 fun getRefactorableFunction(finding: CodeHealthFinding, project: Project): FnToRefactor? {
     val file = LocalFileSystem.getInstance().findFileByPath(finding.filePath)
-    val document = file?.let { FileDocumentManager.getInstance().getDocument(file) }
-    val aceEntry = fetchAceCache(finding.filePath, document?.text ?: "", project)
+
+    val documentText = if (file != null) {
+        ApplicationManager.getApplication().runReadAction<String> {
+            FileDocumentManager.getInstance().getDocument(file)?.text
+        }
+    } else {
+        null
+    }
+
+    val aceEntry = fetchAceCache(finding.filePath, documentText ?: "", project)
 
     return aceEntry.find { it.name == finding.displayName && it.range.startLine == finding.focusLine }
 }
