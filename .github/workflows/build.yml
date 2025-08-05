@@ -211,6 +211,7 @@ jobs:
 
   delta-analysis:
     name: CodeScene delta analysis
+    if: github.event_name != 'pull_request'
     needs: [ build ]
     runs-on: ubuntu-latest
     steps:
