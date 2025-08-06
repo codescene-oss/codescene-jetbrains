@@ -13,6 +13,7 @@ ACE chooses the best LLM for the job, validates its output, and proposes refacto
 to maintain.
 
 ACE supported languages:
+- c#
 - java
 - javascript
 - typescript
