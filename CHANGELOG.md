@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.2.2] - 2025-08-06
+- **Changed**
+    - Bump Extension API version
+- **Fixed**
+    - Bugs related to IntelliJ's threading model
+
 ### [0.2.1] - 2025-04-29
 - **Changed**
     - Enable ACE refactoring by default

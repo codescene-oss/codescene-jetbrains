@@ -3,6 +3,7 @@ package com.codescene.jetbrains.util
 import com.codescene.data.delta.ChangeDetail
 import com.codescene.data.delta.Delta
 import com.codescene.data.delta.Function
+import com.codescene.data.delta.Range
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.components.codehealth.monitor.tree.NodeType
 import com.intellij.openapi.util.text.StringUtil.pluralize
@@ -42,7 +43,7 @@ fun getFunctionFinding(filePath: String, function: Function, details: List<Chang
     tooltip = getFunctionDeltaTooltip(function, details),
     filePath,
     displayName = function.name,
-    focusLine = function.range?.get()?.startLine,
+    focusLine = function.range?.orElse(Range(1,1,1,1))?.startLine,
     nodeType = NodeType.FUNCTION_FINDING,
     functionFindingIssues = details.size
 )
