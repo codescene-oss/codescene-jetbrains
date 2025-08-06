@@ -8,6 +8,7 @@ import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
+import java.io.File
 
 fun getSelectedTextEditor(project: Project, filePath: String, source: String = ""): Editor? {
     val editorManager = FileEditorManager.getInstance(project)
@@ -51,7 +52,7 @@ data class ReplaceCodeSnippetArgs(
 fun replaceCodeSnippet(args: ReplaceCodeSnippetArgs) {
     val (project, filePath, startLine, endLine, newContent) = args
 
-    val file = java.io.File(filePath)
+    val file = File(filePath)
     val virtualFile = LocalFileSystem.getInstance().findFileByIoFile(file) ?: return
     val openFileDescriptor = OpenFileDescriptor(project, virtualFile)
 
