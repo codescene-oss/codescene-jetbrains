@@ -217,7 +217,7 @@ private fun getFunctionFinding(
     project: Project
 ): CodeHealthDetails {
     val changeDetails = delta.functionLevelFindings
-        .find { isMatchingFinding(it.function.name, it.function.range?.get()?.startLine, finding) }?.changeDetails
+        .find { isMatchingFinding(it.function.name, it.function.range?.orElse(com.codescene.data.delta.Range(1,1,1,1))?.startLine, finding) }?.changeDetails
     val labelAndIcon = if (changeDetails?.count { !isPositiveChange(it.changeType) } ?: 0 >= 1)
         "Improvement opportunity" to AllIcons.Nodes.WarningIntroduction
     else

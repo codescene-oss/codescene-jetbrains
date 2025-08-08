@@ -1,5 +1,7 @@
 package com.codescene.jetbrains.services
 
+import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.WriteIntentReadAction
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.components.Service
@@ -15,12 +17,14 @@ import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.lang.RuntimeException
 
 @Service(Service.Level.PROJECT)
-class CodeNavigationService(val project: Project) {
+class CodeNavigationService(val project: Project): Disposable {
     private val scope = CoroutineScope(Dispatchers.IO)
 
     companion object {
@@ -48,10 +52,16 @@ class CodeNavigationService(val project: Project) {
     }
 
     private suspend fun openEditorAndMoveCaret(file: VirtualFile, line: Int) = withContext(Dispatchers.Main) {
-        val openFileDescriptor = OpenFileDescriptor(project, file, line - 1, 0)
-        val editor = FileEditorManager.getInstance(project)
-            .openTextEditor(openFileDescriptor, true)
+        // Only calculate/capture data in runReadAction, NOT open the editor!
+        val openFileDescriptor = runReadAction {
+            OpenFileDescriptor(project, file, line - 1, 0)
+        }
 
+        // Open the editor outside runReadAction
+        val editor = WriteIntentReadAction.compute<Editor?, RuntimeException> {
+            FileEditorManager.getInstance(project)
+                .openTextEditor(openFileDescriptor, true)
+        }
         if (editor != null) {
             moveCaret(editor, line)
         }
@@ -66,5 +76,9 @@ class CodeNavigationService(val project: Project) {
             caretModel.moveToLogicalPosition(position)
             editor.scrollingModel.scrollToCaret(ScrollType.CENTER)
         }
+    }
+
+    override fun dispose() {
+        scope.cancel()
     }
 }

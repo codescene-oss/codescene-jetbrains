@@ -133,8 +133,8 @@ class AceService : BaseService(), Disposable {
                 try {
                     handleRefactoring(params, options)
                 } catch (e: Exception) {
-                    //TODO: error notification
-                    println(e.message)
+                    //TODO: error notification, handle out of credits case separately
+                    Log.warn("Problem occurred during ACE refactoring: ${e.message}")
                 }
             }
         }
