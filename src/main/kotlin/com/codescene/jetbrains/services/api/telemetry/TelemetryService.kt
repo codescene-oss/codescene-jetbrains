@@ -44,8 +44,8 @@ class TelemetryService : BaseService(), Disposable {
                     ExtensionAPI.sendTelemetry(telemetryEvent)
                 }
                 Log.debug("Telemetry event logged: ${telemetryEvent.eventName}")
-            } catch (_: Exception) {
-                Log.debug("Error during telemetry event $extendedName sending")
+            } catch  (e: Exception) {
+                Log.debug("Error during telemetry event $extendedName sending. Error message: ${e.message}")
             }
         }
     }
