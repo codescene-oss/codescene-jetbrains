@@ -73,8 +73,7 @@ class AceService : BaseService(), Disposable {
                 if (e.message == "Operation timed out") {
                     Log.warn("Preflight info fetching timed out", serviceImplementation)
                 } else {
-                    Log.warn("Error during preflight info fetching: ${e.message}", serviceImplementation)
-                }
+                    Log.warn("Error during preflight info fetching. Error message: ${e.message}", serviceImplementation)                }
             }
             if (force) {
                 setAceStatus(preflight)

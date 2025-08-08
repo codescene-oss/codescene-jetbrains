@@ -114,8 +114,7 @@ class AboutTab : BoundConfigurable(UiLabelsBundle.message("aboutTitle")) {
                     try {
                         Desktop.getDesktop().browse(URI(url))
                     } catch (ex: Exception) {
-                        ex.printStackTrace()
-                    }
+                        Log.error("Failed to open URL [$url] on label click. Error message: ${ex.message}")                    }
                 }
             }
         })
@@ -145,8 +144,7 @@ class AboutTab : BoundConfigurable(UiLabelsBundle.message("aboutTitle")) {
                     try {
                         Desktop.getDesktop().browse(URI.create(CODESCENE_URL))
                     } catch (e: Exception) {
-                        Log.error("Unable to open $CODESCENE_URL: ${e.stackTraceToString()}")
-                    }
+                        Log.error("Unable to open $CODESCENE_URL. Error message: ${e.message}")                    }
                 }
             })
         }

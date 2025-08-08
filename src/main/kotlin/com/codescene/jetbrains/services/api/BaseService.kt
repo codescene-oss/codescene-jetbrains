@@ -30,8 +30,7 @@ open class BaseService() {
             Log.info("Received response from CodeScene API in ${elapsedTime}ms", serviceImplementation)
             result
         } catch (e: Exception) {
-            Log.debug("Exception during CodeScene API operation ", serviceImplementation)
-
+            Log.debug("Exception during CodeScene API operation. Error message: ${e.message}", serviceImplementation)
             throw (e)
         } finally {
             Thread.currentThread().contextClassLoader = originalClassLoader
