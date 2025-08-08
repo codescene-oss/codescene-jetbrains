@@ -208,8 +208,7 @@ class GeneralTab : Configurable {
                         TelemetryEvents.OPEN_LINK, mutableMapOf<String, Any>(Pair("url", uri))
                     )
                 } catch (e: Exception) {
-                    Log.warn("Unable to open link: ${e.message}")
-                }
+                    Log.warn("Unable to open link. Error message: ${e.message}")                }
             }
 
             override fun mouseEntered(e: MouseEvent?) {
