@@ -47,7 +47,7 @@ class CodeReviewService(private val project: Project) : CodeSceneService() {
         val entry = ReviewCacheEntry(fileContents = code, filePath = path, response = result)
         ReviewCacheService.getInstance(project).put(entry)
 
-        checkContainsRefactorableFunctions(editor, result)
+//        checkContainsRefactorableFunctions(editor, result)
 
         Log.debug(
             "Review response cached for file $fileName with path $path",

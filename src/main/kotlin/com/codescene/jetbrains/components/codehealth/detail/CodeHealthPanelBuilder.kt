@@ -64,7 +64,8 @@ class CodeHealthPanelBuilder(private val project: Project) {
         constraint.ipady = 8
         constraint.insets = JBUI.insets(10, 0)
 
-        add(getAutoRefactorButton(details), constraint)
+//      remove ACE from public version
+//        add(getAutoRefactorButton(details), constraint)
         constraint.ipady = 0
         constraint.insets = JBUI.emptyInsets()
 
