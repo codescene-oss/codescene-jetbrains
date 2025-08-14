@@ -2,32 +2,6 @@
 
 <!-- Plugin description -->
 [CodeScene](https://www.codescene.com) - the only code analysis tool with a proven business impact.
-Now also with AI-Powered Refactoring.
-
-✨ New: ACE AI-Powered Refactoring! ✨
-
-## Augmented Code Engineering
-
-[CodeScene ACE](https://codescene.io/docs/auto-refactor/index.html) combines multiple LLMs with fact-based validation.
-ACE chooses the best LLM for the job, validates its output, and proposes refactorings for cleaner code which is easier
-to maintain.
-
-ACE supported languages:
-- c#
-- java
-- javascript
-- typescript
-- javascriptreact
-- typescriptreact
-
-ACE supported code smells:
-- Complex Conditional
-- Bumpy Road Ahead
-- Complex Method
-- Deep, Nested Complexity
-- Large Method
-
-Also, only functions under 130 lines (200 for java) of code will be considered for refactoring (ignoring commented lines).
 
 ## Code Health Analysis
 
