@@ -1,9 +1,9 @@
 package com.codescene.jetbrains.codeInsight.annotator
 //CS-5145 remove ace from public version
-//import com.codescene.data.ace.FnToRefactor
+import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Review
-//import com.codescene.jetbrains.codeInsight.intentions.AceRefactorAction
+import com.codescene.jetbrains.codeInsight.intentions.AceRefactorAction
 import com.codescene.jetbrains.codeInsight.intentions.ShowProblemIntentionAction
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
@@ -98,7 +98,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
         val cache = fetchCache(file, content)
 //        val aceCache = fetchAceCache(file.virtualFile.path, content, file.project)
 
-        return AnnotationContext(cache, /*aceCache*/)
+        return AnnotationContext(cache /*, aceCache*/)
     }
 
     override fun doAnnotate(collectedInfo: AnnotationContext): AnnotationContext? =
