@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### [0.2.3] - 2025-08-14
 - **Fixed**
     - Added user-friendly error messages
+    - Device id generation on Windows OS
 - **Changed**
     - Removed ACE from public version
     - Bump Extension API version 1.0.5
