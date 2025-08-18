@@ -149,7 +149,7 @@ fun refreshAceUi(newValue: AceStatus, scope: CoroutineScope = CoroutineScope(Dis
                 ReviewCacheService
                     .getInstance(project)
                     .get(ReviewCacheQuery(it.document.text, it.virtualFile.path))
-                    ?.let { cache -> checkContainsRefactorableFunctions(it, cache) }
+//                    ?.let { cache -> checkContainsRefactorableFunctions(it, cache) }
             else
                 UIRefreshService.getInstance(project)
                     .refreshUI(it, listOf("ACECodeVisionProvider"))

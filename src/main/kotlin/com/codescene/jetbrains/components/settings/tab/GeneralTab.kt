@@ -61,25 +61,25 @@ class GeneralTab : Configurable {
         return JPanel().apply {
             layout = BorderLayout()
 
-            add(getAceSection(), BorderLayout.NORTH)
+//            add(getAceSection(), BorderLayout.NORTH)
             add(getMoreSection(), BorderLayout.CENTER)
         }
     }
 
-    private fun getAceSection() = JPanel().apply {
-        layout = BorderLayout()
-
-        border = IdeBorderFactory.createTitledBorder(
-            UiLabelsBundle.message("status"), true, JBUI.insetsRight(10)
-        )
-
-        add(JLabel(UiLabelsBundle.message("ace")).apply {
-            icon = CODESCENE_ACE
-        }, BorderLayout.WEST)
-
-        add(statusButton, BorderLayout.EAST)
-        add(Box.createVerticalStrut(20), BorderLayout.SOUTH)
-    }
+//    private fun getAceSection() = JPanel().apply {
+//        layout = BorderLayout()
+//
+//        border = IdeBorderFactory.createTitledBorder(
+//            UiLabelsBundle.message("status"), true, JBUI.insetsRight(10)
+//        )
+//
+//        add(JLabel(UiLabelsBundle.message("ace")).apply {
+//            icon = CODESCENE_ACE
+//        }, BorderLayout.WEST)
+//
+//        add(statusButton, BorderLayout.EAST)
+//        add(Box.createVerticalStrut(20), BorderLayout.SOUTH)
+//    }
 
     private fun getStatusButton(): JButton {
         status = CodeSceneGlobalSettingsStore.getInstance().state.aceStatus
