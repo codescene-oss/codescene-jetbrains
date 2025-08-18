@@ -149,7 +149,7 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
                             }
                         }
                     } catch (e: Exception) {
-                        Log.debug("Unable to open uri in external browser: ${e.message}")
+                        Log.debug("Unable to open uri in external browser. Error message: ${e.message}")
                     }
                 }
                 return false
