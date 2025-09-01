@@ -26,7 +26,7 @@ data class CodeSceneGlobalSettings(
     var excludeGitignoreFiles: Boolean = true,
     var previewCodeHealthGate: Boolean = false,
     var telemetryConsentGiven: Boolean = false,
-    val codeHealthMonitorEnabled: Boolean = true, //Freemium version
+    val codeHealthMonitorEnabled: Boolean = true, //MONITOR-EAP
     var monitorTreeSortOption: MonitorTreeSortOptions = MonitorTreeSortOptions.SCORE_ASCENDING
 ) {
     var aceStatus: AceStatus by aceStatusDelegate()

@@ -45,7 +45,7 @@ class TelemetryService : BaseService(), Disposable {
                 }
                 Log.debug("Telemetry event logged: ${telemetryEvent.eventName}")
             } catch  (e: Exception) {
-                Log.debug("Error during telemetry event $extendedName sending. Error message: ${e.message}")
+                Log.debug("Error during telemetry event $extendedName sending.")
             }
         }
     }

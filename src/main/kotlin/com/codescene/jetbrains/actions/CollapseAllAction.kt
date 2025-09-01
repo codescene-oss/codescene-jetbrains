@@ -11,13 +11,4 @@ class CollapseAllAction : AnAction() {
     }
 
     override fun getActionUpdateThread() = ActionUpdateThread.BGT
-
-    /**
-     * Disables all collapse for freemium version of the plugin, since it does not have the Code Health Monitor feature.
-     */
-    override fun update(e: AnActionEvent) {
-        super.update(e)
-        val presentation = e.presentation
-        presentation.isEnabled = false
-    }
 }
