@@ -12,6 +12,7 @@ plugins {
     alias(libs.plugins.kotlin) // Kotlin support
     alias(libs.plugins.intelliJPlatform) // IntelliJ Platform Gradle Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
+    kotlin("plugin.serialization") version "2.2.0"
 }
 
 group = providers.gradleProperty("pluginGroup").get()
@@ -52,6 +53,7 @@ dependencies {
     implementation("org.reflections:reflections:$reflectionsVersion")
     implementation("codescene.extension:api:$codeSceneExtensionAPIVersion")
     implementation("com.vladsch.flexmark:flexmark-all:$flexmarkVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 
     testImplementation(libs.junit)
     testImplementation("io.mockk:mockk:${mockkVersion}")
