@@ -65,6 +65,11 @@
                 icon="com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW"
                 factoryClass="com.codescene.jetbrains.components.window.CodeSceneToolWindowFactory"/>
 
+        <toolWindow
+                id="CodeSceneHome"
+                icon="AllIcons.Actions.Colors"
+                factoryClass="com.codescene.jetbrains.components.window.HomeToolWindowFactory"/>
+
         <!-- An empty language attribute applies to all languages -->
         <externalAnnotator
                 language=""
