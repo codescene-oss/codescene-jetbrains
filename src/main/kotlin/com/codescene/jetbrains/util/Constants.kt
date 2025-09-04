@@ -80,4 +80,14 @@ object Constants {
     const val POTENTIALLY_LOW_COHESION = "Potentially Low Cohesion"
     const val PRIMITIVE_OBSESSION = "Primitive Obsession"
     const val STRING_HEAVY_FUNCTION_ARGUMENTS = "String Heavy Function Arguments"
+
+    // CWF
+    val ALLOWED_DOMAINS = listOf(
+        "https://refactoring.com",
+        "https://en.wikipedia.org",
+        "https://codescene.io",
+        "https://codescene.com",
+        "https://blog.ploeh.dk/2018/08/27/on-constructor-over-injection/",
+        "https://supporthub.codescene.com"
+    )
 }
