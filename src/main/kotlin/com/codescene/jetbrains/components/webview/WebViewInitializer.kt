@@ -11,8 +11,6 @@ import com.intellij.openapi.project.Project
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-const val IDE_TYPE = "JetBrains"
-
 @Service(Service.Level.PROJECT)
 class WebViewInitializer {
     companion object {
