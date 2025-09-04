@@ -1,8 +1,15 @@
 package com.codescene.jetbrains.components.webview
 
+import com.codescene.jetbrains.components.webview.data.CwfData
+import com.codescene.jetbrains.components.webview.data.EditorMessages
+import com.codescene.jetbrains.components.webview.data.HomeData
+import com.codescene.jetbrains.components.webview.data.View
+import com.codescene.jetbrains.util.Log
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 const val IDE_TYPE = "JetBrains"
 
@@ -33,45 +40,81 @@ class WebViewInitializer {
         val targetJs = "{{jsScript}}"
         val targetCss = "{{css}}"
 
-        var modifiedHtml = html
-        modifiedHtml = modifiedHtml.replace(targetCss, "<style>$css</style>")
-        modifiedHtml = modifiedHtml.replace(targetJs, """<script type="module">$js</script>""")
-
         val initialData = """
             <script type="module">
-              document.addEventListener("click", (e) => {
-                const link = e.target.closest("a");
-                if (link && link.href) {
-                  e.preventDefault();
-                  window.cefQuery({ request: JSON.stringify({ messageType: "open-link", payload: link.href }) });
-                }
-              });
+              ${getLinkClickHandler()}
               function setContext() {
-                window.ideContext = {
-                  "ideType": "$IDE_TYPE",
-                  "view": "$view",
-                  "pro": false, 
-                  "devmode": true,
-                  "featureFlags": ["open-settings"],
-                  "data": {
-                    "fileDeltaData": [],
-                    "jobs": []
-                  } 
-                }
+                window.ideContext = ${getInitialContext(view, isPro = false, isDevMode = true)}
               }
               setContext();
             </script>
         """.trimIndent()
 
+        var modifiedHtml = html
+        modifiedHtml = modifiedHtml.replace(targetCss, "<style>$css</style>")
+        modifiedHtml = modifiedHtml.replace(targetJs, """<script type="module">$js</script>""")
         modifiedHtml = modifiedHtml.replace(targetInitialData, initialData)
 
         return modifiedHtml
     }
 
+    private fun getInitialContext(view: String, isPro: Boolean, isDevMode: Boolean): String {
+        val json = Json {
+            encodeDefaults = true
+            prettyPrint = true
+        }
+
+        when (view) {
+            View.HOME.value -> {
+                val data = buildCwfData(HomeData(), view, isPro, isDevMode)
+                val dataJson = json.encodeToString<CwfData<HomeData>>(data)
+
+                return dataJson
+            }
+
+            View.ACE.value -> {
+                return "" // Not implemented
+            }
+
+            else -> {
+                Log.warn(
+                    "Unknown view. Unable to get initial context for CWF.",
+                    WebViewInitializer::class::simpleName.toString()
+                )
+                return "{}";
+            }
+        }
+    }
+
+    private fun <T> buildCwfData(
+        data: T,
+        view: String,
+        isPro: Boolean,
+        isDevMode: Boolean,
+        featureFlags: List<String> = emptyList()
+    ): CwfData<T> = CwfData(
+        view = view,
+        pro = isPro,
+        devmode = isDevMode,
+        featureFlags = featureFlags,
+        data = data
+    )
+
+    private fun getLinkClickHandler() = """
+        document.addEventListener("click", (e) => {
+            const link = e.target.closest("a");
+            if (link && link.href) {
+                e.preventDefault();
+                window.cefQuery({
+                    request: JSON.stringify({
+                        messageType: "${EditorMessages.OPEN_LINK.value}",
+                        payload: link.href
+                    })
+                });
+            }
+        });
+    """.trimIndent()
+
     private fun getFileContent(resource: String) =
-        this@WebViewInitializer.javaClass.classLoader
-            .getResourceAsStream(resource)
-            ?.bufferedReader()
-            ?.readText()
-            ?: ""
+        this@WebViewInitializer.javaClass.classLoader.getResourceAsStream(resource)?.bufferedReader()?.readText() ?: ""
 }
