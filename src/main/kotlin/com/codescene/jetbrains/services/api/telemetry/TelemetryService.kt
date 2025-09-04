@@ -32,8 +32,13 @@ class TelemetryService : BaseService(), Disposable {
         val extendedName = "${Constants.TELEMETRY_EDITOR_TYPE}/$eventName"
         // TODO: Get user ID of logged in user when authentication is implemented
         val userId = ""
-        val telemetryEvent =
-            TelemetryEvent(extendedName, userId, Constants.TELEMETRY_EDITOR_TYPE, getPluginVersion(), false)
+        val telemetryEvent = TelemetryEvent(
+            extendedName,
+            userId,
+            Constants.TELEMETRY_EDITOR_TYPE,
+            getPluginVersion(),
+            false
+        )
 
         telemetryEvent.setAdditionalProperty("device-id", DeviceIdStore.get())
         eventData.forEach { telemetryEvent.setAdditionalProperty(it.key, it.value) }
@@ -44,8 +49,8 @@ class TelemetryService : BaseService(), Disposable {
                     ExtensionAPI.sendTelemetry(telemetryEvent)
                 }
                 Log.debug("Telemetry event logged: ${telemetryEvent.eventName}")
-            } catch  (e: Exception) {
-                Log.debug("Error during telemetry event $extendedName sending. Error message: ${e.message}")
+            } catch (e: Exception) {
+                Log.debug("Error during telemetry event $extendedName sending.")
             }
         }
     }

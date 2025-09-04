@@ -39,12 +39,20 @@ class WebViewInitializer {
 
         val initialData = """
             <script type="module">
+              document.addEventListener("click", (e) => {
+                const link = e.target.closest("a");
+                if (link && link.href) {
+                  e.preventDefault();
+                  window.cefQuery({ request: JSON.stringify({ messageType: "open-link", payload: link.href }) });
+                }
+              });
               function setContext() {
                 window.ideContext = {
                   "ideType": "$IDE_TYPE",
                   "view": "$view",
                   "pro": false, 
                   "devmode": true,
+                  "featureFlags": ["open-settings"],
                   "data": {
                     "fileDeltaData": [],
                     "jobs": []
