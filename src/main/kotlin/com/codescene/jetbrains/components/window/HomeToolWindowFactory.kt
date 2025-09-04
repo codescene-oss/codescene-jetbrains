@@ -54,10 +54,7 @@ internal class HomeToolWindowFactory: ToolWindowFactory {
             }
 
             content = ContentFactory.getInstance()
-                .createContent(JBScrollPane(jcefBrowser.component).apply {
-                    verticalScrollBarPolicy = JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
-                    horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_NEVER
-                }, null, false)
+                .createContent(jcefBrowser.component, null, false)
         } else {
             content = ContentFactory.getInstance()
                 .createContent(
