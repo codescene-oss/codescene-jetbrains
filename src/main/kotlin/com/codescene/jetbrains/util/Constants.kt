@@ -82,6 +82,7 @@ object Constants {
     const val STRING_HEAVY_FUNCTION_ARGUMENTS = "String Heavy Function Arguments"
 
     // CWF
+    const val IDE_TYPE = "JetBrains"
     val ALLOWED_DOMAINS = listOf(
         "https://refactoring.com",
         "https://en.wikipedia.org",
