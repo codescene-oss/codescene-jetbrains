@@ -1,7 +1,9 @@
 package com.codescene.jetbrains.components.window
 
+import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.webview.WebViewInitializer
-import com.codescene.jetbrains.components.webview.WebViewMessageHandler
+import com.codescene.jetbrains.components.webview.data.View
+import com.codescene.jetbrains.components.webview.handler.CwfMessageHandler
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
@@ -13,7 +15,7 @@ import com.intellij.ui.jcef.JBCefBrowser
 import org.cef.browser.CefMessageRouter
 import javax.swing.JLabel
 
-internal class HomeToolWindowFactory: ToolWindowFactory {
+internal class HomeToolWindowFactory : ToolWindowFactory {
     private lateinit var project: Project
     private val jcefBrowser: JBCefBrowser = JBCefBrowser.createBuilder()
         .setEnableOpenDevToolsMenuItem(true)
@@ -42,8 +44,9 @@ internal class HomeToolWindowFactory: ToolWindowFactory {
 
         if (JBCefApp.isSupported()) {
             val webViewInitializer = WebViewInitializer.getInstance(project);
-            val html = webViewInitializer.getInitialScript("home")
-            val messageHandler = WebViewMessageHandler.getInstance(project)
+            val html = webViewInitializer.getInitialScript(View.HOME.value)
+
+            val messageHandler = CwfMessageHandler.getInstance(project)
             val messageRouter = CefMessageRouter.create()
 
             messageRouter.addHandler(messageHandler, true)
@@ -58,7 +61,7 @@ internal class HomeToolWindowFactory: ToolWindowFactory {
         } else {
             content = ContentFactory.getInstance()
                 .createContent(
-                    JBScrollPane().apply { add(JLabel("JCEF is not supported. Render some placeholder here...")) },
+                    JBScrollPane().apply { add(JLabel(UiLabelsBundle.message("jcefNotSupported"))) },
                     null,
                     false
                 )
