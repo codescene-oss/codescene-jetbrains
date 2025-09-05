@@ -44,35 +44,44 @@ class WebViewInitializer : LafManagerListener {
     fun getInitialScript(view: String, browser: JBCefBrowser): String {
         this.browser = browser
 
-        val html = getFileContent("build/index.html")
         val css = getFileContent("build/assets/index.css")
         val js = getFileContent("build/assets/index.js")
 
-        val targetInitialData = "{{initialDataContext}}"
-        val targetJs = "{{jsScript}}"
-        val targetCss = "{{css}}"
-
-        val initialData = """
-            <script type="module">
-              ${getLinkClickHandler()}
-              function setContext() {
-                window.ideContext = ${getInitialContext(view, isPro = false, isDevMode = true)}
-                const css = `${StyleHelper.getInstance().generateCssVariablesFromTheme()}`;
-                const style = document.createElement('style');
-                style.id = '{STYLE_ELEMENT_ID}';
-                style.textContent = css;
-                document.head.appendChild(style);
-              }
-              setContext();
-            </script>
+        return """
+            <!DOCTYPE html>
+            <html lang="en">
+              <head>
+                <meta charset="UTF-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <meta http-equiv="Content-Security-Policy" content="
+                  default-src 'none';
+                  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*;
+                  style-src 'self' 'unsafe-inline' https://*;
+                  img-src 'self' data: 'unsafe-inline' https://*;
+                  font-src 'self';
+                  connect-src https://*;
+                ">
+                <title>JetBrains React Webview</title>
+                <style>$css</style>
+                <script type="module">
+                  ${getLinkClickHandler()}
+                  function setContext() {
+                    window.ideContext = ${getInitialContext(view, isPro = false, isDevMode = true)}
+                    const css = `${StyleHelper.getInstance().generateCssVariablesFromTheme()}`;
+                    const style = document.createElement('style');
+                    style.id = '{STYLE_ELEMENT_ID}';
+                    style.textContent = css;
+                    document.head.appendChild(style);
+                  }
+                  setContext();
+                </script>
+              </head>
+              <body>
+                <div id="root"></div>
+                <script type="module">$js</script>
+              </body>
+            </html>
         """.trimIndent()
-
-        var modifiedHtml = html
-        modifiedHtml = modifiedHtml.replace(targetCss, "<style>$css</style>")
-        modifiedHtml = modifiedHtml.replace(targetJs, """<script type="module">$js</script>""")
-        modifiedHtml = modifiedHtml.replace(targetInitialData, initialData)
-
-        return modifiedHtml
     }
 
     /**
