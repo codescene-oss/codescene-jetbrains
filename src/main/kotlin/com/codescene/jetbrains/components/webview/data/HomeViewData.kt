@@ -41,9 +41,9 @@ data class FileDeltaData(
 
 @Serializable
 data class DeltaForFile(
-    @SerialName("old-score") val oldScore: Int,
-    @SerialName("new-score") val newScore: Int,
-    @SerialName("score-change") val scoreChange: Int,
+    @SerialName("old-score") val oldScore: Double,
+    @SerialName("new-score") val newScore: Double,
+    @SerialName("score-change") val scoreChange: Double,
     @SerialName("file-level-findings") val fileLevelFindings: List<ChangeDetail>,
     @SerialName("function-level-findings") val functionLevelFindings: List<FunctionFinding>,
 )
@@ -60,7 +60,7 @@ data class ChangeDetail(
 data class FunctionFinding(
     val function: FunctionInfo,
     @SerialName("change-details") val changeDetails: List<ChangeDetail>,
-    @SerialName("refactorable-fn") val functionToRefactor: FunctionToRefactor,
+    @SerialName("refactorable-fn") val functionToRefactor: FunctionToRefactor? = null,
 )
 
 @Serializable
@@ -80,8 +80,7 @@ data class RefactoringTarget(
 
 @Serializable
 data class File(
-    val fn: FunctionInfo?,
-    @SerialName("file-name") val fileName: String
+    val fileName: String
 )
 
 @Serializable

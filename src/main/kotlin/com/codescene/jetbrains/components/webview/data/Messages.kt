@@ -1,7 +1,8 @@
 package com.codescene.jetbrains.components.webview.data
 
 enum class LifecycleMessages(val value: String) {
-    INIT("init")
+    INIT("init"),
+    UPDATE_RENDERER("update-renderer")
 }
 
 enum class LoginMessages(val value: String) {

@@ -33,4 +33,6 @@ abstract class CacheService<Q, E, V, R> {
             Log.debug("[$cacheImplementation] $oldKey to $newKey.")
         }
     }
+
+    fun getAll(): List<Pair<String, V>> = cache.entries.map { it.key to it.value }
 }
