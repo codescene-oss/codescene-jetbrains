@@ -80,8 +80,6 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
             EditorMessages.OPEN_LINK.value -> {
                 val url = message.payload?.jsonPrimitive?.contentOrNull
                 handleOpenUrl(url)
-
-                handleOpenUrl(url)
             }
 
             EditorMessages.OPEN_SETTINGS.value -> handleOpenSettings()
@@ -111,9 +109,9 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
     fun postMessage(message: String) {
         browser.executeJavaScript(
             """
-                    console.log("Sending message to webview...");
-                    window.postMessage($message);
-                """.trimIndent(), null, 0
+              console.log("Sending message to webview...");
+              window.postMessage($message);
+            """.trimIndent(), null, 0
         )
     }
 

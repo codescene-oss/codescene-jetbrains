@@ -21,7 +21,7 @@ data class CwfData<T>(
     val view: String,
     val data: T? = null,
     val ideType: String = IDE_TYPE,
-    val featureFlags: List<String> = emptyList(),
+    val featureFlags: List<String> = listOf("open-settings" ),
 
     /**
      * Determines whether additional features for certain WebViews will be shown.

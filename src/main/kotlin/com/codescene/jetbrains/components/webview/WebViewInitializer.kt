@@ -161,13 +161,11 @@ class WebViewInitializer : LafManagerListener {
         data: T,
         view: String,
         isPro: Boolean,
-        isDevMode: Boolean,
-        featureFlags: List<String> = emptyList()
+        isDevMode: Boolean
     ): CwfData<T> = CwfData(
         view = view,
         pro = isPro,
         devmode = isDevMode,
-        featureFlags = featureFlags,
         data = data
     )
 
