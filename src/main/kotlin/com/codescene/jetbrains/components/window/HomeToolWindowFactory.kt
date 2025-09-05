@@ -44,7 +44,7 @@ internal class HomeToolWindowFactory : ToolWindowFactory {
 
         if (JBCefApp.isSupported()) {
             val webViewInitializer = WebViewInitializer.getInstance(project);
-            val html = webViewInitializer.getInitialScript(View.HOME.value)
+            val html = webViewInitializer.getInitialScript(View.HOME.value, jcefBrowser)
 
             val messageHandler = CwfMessageHandler.getInstance(project)
             val messageRouter = CefMessageRouter.create()
