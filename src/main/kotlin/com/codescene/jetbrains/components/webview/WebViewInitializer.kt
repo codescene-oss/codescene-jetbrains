@@ -44,8 +44,8 @@ class WebViewInitializer : LafManagerListener {
     fun getInitialScript(view: String, browser: JBCefBrowser): String {
         this.browser = browser
 
-        val css = getFileContent("build/assets/index.css")
-        val js = getFileContent("build/assets/index.js")
+        val css = getFileContent("cs-cwf/assets/index.css")
+        val js = getFileContent("cs-cwf/assets/index.js")
 
         return """
             <!DOCTYPE html>
@@ -54,19 +54,19 @@ class WebViewInitializer : LafManagerListener {
                 <meta charset="UTF-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                 <meta http-equiv="Content-Security-Policy" content="
-                  default-src 'none';
-                  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*;
-                  style-src 'self' 'unsafe-inline' https://*;
-                  img-src 'self' data: 'unsafe-inline' https://*;
-                  font-src 'self';
-                  connect-src https://*;
+                default-src 'none';
+                script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*;
+                style-src 'self' 'unsafe-inline' https://*;
+                img-src 'self' data: 'unsafe-inline' https://*;
+                font-src 'self';
+                connect-src https://*;
                 ">
                 <title>JetBrains React Webview</title>
                 <style>$css</style>
                 <script type="module">
                   ${getLinkClickHandler()}
                   function setContext() {
-                    window.ideContext = ${getInitialContext(view, isPro = false, isDevMode = true)}
+                    window.ideContext = ${getInitialContext(view, isPro = true, isDevMode = true)}
                     const css = `${StyleHelper.getInstance().generateCssVariablesFromTheme()}`;
                     const style = document.createElement('style');
                     style.id = '{STYLE_ELEMENT_ID}';
