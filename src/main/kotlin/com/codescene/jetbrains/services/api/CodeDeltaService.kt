@@ -60,7 +60,6 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
             view = View.HOME.value,
             pro = true,
             devmode = true,
-            featureFlags = listOf("open-settings"),
             data = HomeData(
                 signedIn = true,
                 fileDeltaData = deltaResults.map { result ->
