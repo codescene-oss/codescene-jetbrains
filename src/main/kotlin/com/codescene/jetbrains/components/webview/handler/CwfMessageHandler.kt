@@ -2,19 +2,25 @@ package com.codescene.jetbrains.components.webview.handler
 
 import com.codescene.jetbrains.components.webview.data.CWFMessage
 import com.codescene.jetbrains.components.webview.data.EditorMessages
+import com.codescene.jetbrains.components.webview.data.GotoFunctionLocation
 import com.codescene.jetbrains.components.webview.data.LifecycleMessages
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.util.Constants.ALLOWED_DOMAINS
 import com.codescene.jetbrains.util.TelemetryEvents
 import com.intellij.ide.BrowserUtil
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
+import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.LocalFileSystem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.callback.CefQueryCallback
@@ -22,6 +28,7 @@ import org.cef.handler.CefMessageRouterHandlerAdapter
 
 @Service(Service.Level.PROJECT)
 class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerAdapter() {
+    private lateinit var browser: CefBrowser
 
     companion object {
         fun getInstance(project: Project): CwfMessageHandler = project.service<CwfMessageHandler>()
@@ -57,12 +64,34 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
     ): Boolean {
         if (request == null) return false
 
-        val message = Json.decodeFromString<CWFMessage>(request);
+        browser?.let { this.browser = browser }
+
+        val json = Json {
+            encodeDefaults = true
+            prettyPrint = true
+        }
+
+        val message = json.decodeFromString<CWFMessage>(request);
 
         when (message.messageType) {
-            LifecycleMessages.INIT.value -> postMessage("file-tree", browser) // webview is ready to take on new messages
-            EditorMessages.OPEN_LINK.value -> handleOpenUrl(message.payload)
+            LifecycleMessages.INIT.value -> postMessage(
+                "file-tree"
+            ) // webview is ready to take on new messages
+            EditorMessages.OPEN_LINK.value -> {
+                val url = message.payload?.jsonPrimitive?.contentOrNull
+                handleOpenUrl(url)
+
+                handleOpenUrl(url)
+            }
+
             EditorMessages.OPEN_SETTINGS.value -> handleOpenSettings()
+            EditorMessages.GOTO_FUNCTION_LOCATION.value -> {
+                val openFileMessage = message.payload?.let {
+                    json.decodeFromJsonElement(GotoFunctionLocation.serializer(), it)
+                }
+                openFileMessage?.let { handleOpenFile(openFileMessage) }
+            }
+
             else -> {
                 println("Unknown message type: ${message.messageType}")
 
@@ -79,15 +108,12 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         // TODO...
     }
 
-    private fun postMessage(type: String, browser: CefBrowser?, payload: String = "[]") {
-        browser?.executeJavaScript(
+    fun postMessage(message: String) {
+        browser.executeJavaScript(
             """
-                console.log("JetBrains has received the 'init' message! Ready to take on messages.");
-                window.postMessage({
-                    messageType: "$type",
-                    payload: $payload,
-                });
-            """.trimIndent(), null, 0
+                    console.log("Sending message to webview...");
+                    window.postMessage($message);
+                """.trimIndent(), null, 0
         )
     }
 
@@ -108,5 +134,17 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
             ShowSettingsUtil.getInstance().showSettingsDialog(project, "CodeScene")
         }
         TelemetryService.getInstance().logUsage(TelemetryEvents.OPEN_SETTINGS)
+    }
+
+    private fun handleOpenFile(message: GotoFunctionLocation) {
+        val filePath = message.fileName ?: return
+        val line = message.fn?.range?.startLine ?: 0
+        val column = message.fn?.range?.startColumn ?: 0
+
+        ApplicationManager.getApplication().invokeLaterOnWriteThread {
+            LocalFileSystem.getInstance().findFileByPath(filePath)?.let { file ->
+                OpenFileDescriptor(project, file, line, column).navigate(true)
+            }
+        }
     }
 }
