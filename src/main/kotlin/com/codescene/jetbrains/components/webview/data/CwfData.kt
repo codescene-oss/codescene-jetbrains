@@ -3,6 +3,7 @@ package com.codescene.jetbrains.components.webview.data
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.util.Constants.IDE_TYPE
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 enum class View(val value: String) {
     ACE("ace"),
@@ -12,7 +13,7 @@ enum class View(val value: String) {
 @Serializable
 data class CWFMessage(
     val messageType: String,
-    val payload: String? = null
+    val payload: JsonElement? = null
 )
 
 @Serializable
