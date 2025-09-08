@@ -11,7 +11,7 @@ enum class View(val value: String) {
 }
 
 @Serializable
-data class CWFMessage(
+data class CwfMessage(
     val messageType: String,
     val payload: JsonElement? = null
 )
