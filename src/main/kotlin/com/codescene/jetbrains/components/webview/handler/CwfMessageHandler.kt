@@ -1,12 +1,14 @@
 package com.codescene.jetbrains.components.webview.handler
 
-import com.codescene.jetbrains.components.webview.data.CWFMessage
-import com.codescene.jetbrains.components.webview.data.EditorMessages
-import com.codescene.jetbrains.components.webview.data.GotoFunctionLocation
-import com.codescene.jetbrains.components.webview.data.LifecycleMessages
+import com.codescene.jetbrains.components.webview.data.*
+import com.codescene.jetbrains.components.webview.util.docNameMap
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
+import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
+import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
+import com.codescene.jetbrains.services.htmlviewer.DocumentationParams
 import com.codescene.jetbrains.util.Constants.ALLOWED_DOMAINS
 import com.codescene.jetbrains.util.TelemetryEvents
+import com.codescene.jetbrains.util.getSelectedTextEditor
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
@@ -25,6 +27,7 @@ import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefMessageRouterHandlerAdapter
+import java.io.File
 
 @Service(Service.Level.PROJECT)
 class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerAdapter() {
@@ -77,18 +80,12 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
             LifecycleMessages.INIT.value -> postMessage(
                 "file-tree"
             ) // webview is ready to take on new messages
-            EditorMessages.OPEN_LINK.value -> {
-                val url = message.payload?.jsonPrimitive?.contentOrNull
-                handleOpenUrl(url)
-            }
 
+            EditorMessages.OPEN_LINK.value -> handleOpenUrl(message)
             EditorMessages.OPEN_SETTINGS.value -> handleOpenSettings()
-            EditorMessages.GOTO_FUNCTION_LOCATION.value -> {
-                val openFileMessage = message.payload?.let {
-                    json.decodeFromJsonElement(GotoFunctionLocation.serializer(), it)
-                }
-                openFileMessage?.let { handleOpenFile(openFileMessage) }
-            }
+            EditorMessages.GOTO_FUNCTION_LOCATION.value -> handleGotoFunctionLocation(message, json)
+
+            PanelMessages.OPEN_DOCS_FOR_FUNCTION.value -> handleOpenDocs(message, json)
 
             else -> {
                 println("Unknown message type: ${message.messageType}")
@@ -115,7 +112,39 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         )
     }
 
-    private fun handleOpenUrl(url: String?) {
+    private fun handleOpenDocs(message: CWFMessage, json: Json) {
+        val openDocsMessage = message.payload?.let {
+            json.decodeFromJsonElement(OpenDocsForFunction.serializer(), it)
+        }
+
+        openDocsMessage?.let {
+            CoroutineScope(Dispatchers.Main).launch {
+                val docViewer = CodeSceneDocumentationViewer.getInstance(project)
+                val editor = getSelectedTextEditor(project, "", "${this::class.simpleName} - ${project.name}")
+
+                val params = DocumentationParams(
+                    heading = docNameMap[openDocsMessage.docType] ?: "",
+                    fileName = File(openDocsMessage.fileName).name,
+                    filePath = openDocsMessage.fileName,
+                    focusLine = openDocsMessage.fn?.range?.startLine ?: 0,
+                    docsEntryPoint = DocsEntryPoint.CODE_VISION
+                )
+
+                docViewer.open(editor, params)
+            }
+        }
+    }
+
+    private fun handleGotoFunctionLocation(message: CWFMessage, json: Json) {
+        val openFileMessage = message.payload?.let {
+            json.decodeFromJsonElement(GotoFunctionLocation.serializer(), it)
+        }
+        openFileMessage?.let { handleOpenFile(openFileMessage) }
+    }
+
+    private fun handleOpenUrl(message: CWFMessage) {
+        val url = message.payload?.jsonPrimitive?.contentOrNull
+
         if (url.isNullOrBlank()) return
 
         if (ALLOWED_DOMAINS.any { url.startsWith(it) }) {
