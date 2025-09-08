@@ -74,7 +74,7 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
             prettyPrint = true
         }
 
-        val message = json.decodeFromString<CWFMessage>(request);
+        val message = json.decodeFromString<CwfMessage>(request);
 
         when (message.messageType) {
             LifecycleMessages.INIT.value -> postMessage(
@@ -112,7 +112,7 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         )
     }
 
-    private fun handleOpenDocs(message: CWFMessage, json: Json) {
+    private fun handleOpenDocs(message: CwfMessage, json: Json) {
         val openDocsMessage = message.payload?.let {
             json.decodeFromJsonElement(OpenDocsForFunction.serializer(), it)
         }
@@ -135,14 +135,14 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         }
     }
 
-    private fun handleGotoFunctionLocation(message: CWFMessage, json: Json) {
+    private fun handleGotoFunctionLocation(message: CwfMessage, json: Json) {
         val openFileMessage = message.payload?.let {
             json.decodeFromJsonElement(GotoFunctionLocation.serializer(), it)
         }
         openFileMessage?.let { handleOpenFile(openFileMessage) }
     }
 
-    private fun handleOpenUrl(message: CWFMessage) {
+    private fun handleOpenUrl(message: CwfMessage) {
         val url = message.payload?.jsonPrimitive?.contentOrNull
 
         if (url.isNullOrBlank()) return

@@ -4,8 +4,11 @@ import com.codescene.ExtensionAPI
 import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.data.delta.Delta
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
-import com.codescene.jetbrains.components.webview.data.*
+import com.codescene.jetbrains.components.webview.data.CwfData
+import com.codescene.jetbrains.components.webview.data.HomeData
 import com.codescene.jetbrains.components.webview.handler.CwfMessageHandler
+import com.codescene.jetbrains.components.webview.mapper.CodeHealthMonitorMapper
+import com.codescene.jetbrains.components.webview.util.parseMessage
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.UIRefreshService
@@ -24,7 +27,6 @@ import com.intellij.openapi.project.Project
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.serialization.json.Json
 
 @Service(Service.Level.PROJECT)
 class CodeDeltaService(private val project: Project) : CodeSceneService() {
@@ -41,85 +43,11 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
             performDeltaAnalysis(editor)
 
             updateMonitor()
-            project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(editor.virtualFile)
+            project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(editor.virtualFile) // TODO: remove, old CHM implementation
         }
     }
 
     override fun getActiveApiCalls() = CodeSceneCodeVisionProvider.activeDeltaApiCalls
-
-    // TODO: move
-    private fun updateMonitor() {
-        val json = Json {
-            encodeDefaults = true
-            prettyPrint = true
-        }
-
-        val deltaResults = DeltaCacheService.getInstance(project).getAll()
-
-        val cwfData = CwfData(
-            view = View.HOME.value,
-            pro = true,
-            devmode = true,
-            data = HomeData(
-                signedIn = true,
-                fileDeltaData = deltaResults.map { result ->
-                    val deltaResponse = result.second.deltaApiResponse
-
-                    FileDeltaData(
-                        file = File(
-                            fileName = result.first,
-                        ),
-                        delta = DeltaForFile(
-                            oldScore = deltaResponse?.oldScore?.get() ?: 0.0,
-                            newScore = deltaResponse?.newScore?.get() ?: 0.0,
-                            scoreChange = deltaResponse?.scoreChange?.toDouble() ?: 0.0,
-                            fileLevelFindings = deltaResponse?.fileLevelFindings
-                                ?.map { finding ->
-                                    ChangeDetail(
-                                        line = finding.line.get(),
-                                        description = finding.description,
-                                        changeType = finding.changeType.value(),
-                                        category = finding.category
-                                    )
-                                } ?: emptyList(),
-                            functionLevelFindings = deltaResponse?.functionLevelFindings
-                                ?.map { fn ->
-                                    FunctionFinding(
-                                        function = FunctionInfo(
-                                            name = fn.function.name,
-                                            range = Range(
-                                                startLine = fn.function.range?.get()?.startLine ?: 0,
-                                                endLine = fn.function.range?.get()?.endLine ?: 0,
-                                                startColumn = fn.function.range?.get()?.startColumn ?: 0,
-                                                endColumn = fn.function.range?.get()?.endColumn ?: 0
-                                            )
-                                        ),
-                                        changeDetails = fn.changeDetails
-                                            ?.map { cd ->
-                                                ChangeDetail(
-                                                    line = cd.line?.get(),
-                                                    description = cd.description,
-                                                    changeType = cd.changeType.value(),
-                                                    category = cd.category
-                                                )
-                                            } ?: emptyList()
-                                    )
-                                } ?: emptyList()
-                        )
-                    )
-                }
-            )
-        )
-        val payloadJson = json.encodeToJsonElement(CwfData.serializer(HomeData.serializer()), cwfData)
-
-        val message = CWFMessage(
-            messageType = LifecycleMessages.UPDATE_RENDERER.value,
-            payload = payloadJson
-        )
-
-        val dataJson = json.encodeToString(CWFMessage.serializer(), message)
-        CwfMessageHandler.getInstance(project).postMessage(dataJson)
-    }
 
     /**
      * Performs delta analysis by comparing the current editor content against a baseline.
@@ -182,5 +110,28 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
 
         val cacheEntry = DeltaCacheEntry(path, oldCode, currentCode, delta)
         cacheService.put(cacheEntry)
+    }
+
+    /**
+     * Updates the Code Health Monitor in the Home view (CWF).
+     *
+     * This method retrieves the latest delta analysis results from the
+     * [DeltaCacheService], maps them to [CwfData] using
+     * [CodeHealthMonitorMapper], serializes the data into a JSON string,
+     * and posts it to the [CwfMessageHandler] for rendering in the UI.
+     *
+     * The JSON message is created using [parseMessage], which ensures the
+     * correct serializer is used.
+     */
+    private fun updateMonitor() {
+        val mapper = CodeHealthMonitorMapper.getInstance()
+        val deltaResults = DeltaCacheService.getInstance(project).getAll()
+
+        val dataJson = parseMessage(
+            mapper = { mapper.toCwfData(deltaResults) },
+            serializer = CwfData.serializer(HomeData.serializer())
+        )
+
+        CwfMessageHandler.getInstance(project).postMessage(dataJson)
     }
 }
