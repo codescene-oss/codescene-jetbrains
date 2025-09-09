@@ -125,7 +125,7 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
      */
     private fun updateMonitor() {
         val mapper = CodeHealthMonitorMapper.getInstance()
-        val deltaResults = DeltaCacheService.getInstance(project).getAll()
+        val deltaResults = DeltaCacheService.getInstance(project).getAll().filter { it.second.deltaApiResponse != null }
 
         val dataJson = parseMessage(
             mapper = { mapper.toCwfData(deltaResults) },

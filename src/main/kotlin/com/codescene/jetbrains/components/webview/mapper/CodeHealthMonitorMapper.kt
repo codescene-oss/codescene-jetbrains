@@ -16,31 +16,30 @@ class CodeHealthMonitorMapper {
         deltaResults: List<Pair<String, DeltaCacheItem>>,
         pro: Boolean = true,
         devmode: Boolean = true
-    ): CwfData<HomeData> {
-        return CwfData(
-            pro = pro,
-            devmode = devmode,
-            view = View.HOME.value,
-            data = HomeData(
-                signedIn = true,
-                fileDeltaData = getFileDeltaData(deltaResults)
-            )
+    ): CwfData<HomeData> = CwfData(
+        pro = pro,
+        devmode = devmode,
+        view = View.HOME.value,
+        data = HomeData(
+            signedIn = true,
+            fileDeltaData = getFileDeltaData(deltaResults)
         )
-    }
+    )
 
     private fun getFileDeltaData(deltaResults: List<Pair<String, DeltaCacheItem>>) = deltaResults.map { result ->
-        val deltaResponse = result.second.deltaApiResponse
+        val deltaResponse = result.second.deltaApiResponse!!
+        val changeDetails = getChangeDetails(deltaResponse.fileLevelFindings)
+        val fLevelFindings = getFunctionLevelFindings(deltaResponse.functionLevelFindings)
 
-        FileDeltaData(
-            file = File(fileName = result.first),
-            delta = DeltaForFile(
-                oldScore = deltaResponse?.oldScore?.get() ?: 0.0,
-                newScore = deltaResponse?.newScore?.get() ?: 0.0,
-                scoreChange = deltaResponse?.scoreChange?.toDouble() ?: 0.0,
-                fileLevelFindings = getChangeDetails(deltaResponse?.fileLevelFindings),
-                functionLevelFindings = getFunctionLevelFindings(deltaResponse?.functionLevelFindings)
-            )
+        val deltaForFile = DeltaForFile(
+            fileLevelFindings = changeDetails,
+            functionLevelFindings = fLevelFindings,
+            oldScore = deltaResponse.oldScore?.get() ?: 0.0,
+            newScore = deltaResponse.newScore?.get() ?: 0.0,
+            scoreChange = deltaResponse.scoreChange?.toDouble() ?: 0.0
         )
+
+        FileDeltaData(file = File(fileName = result.first), delta = deltaForFile)
     }
 
     private fun getChangeDetails(changeDetails: List<com.codescene.data.delta.ChangeDetail>?) =
@@ -53,20 +52,26 @@ class CodeHealthMonitorMapper {
             )
         } ?: emptyList()
 
-    private fun getFunctionLevelFindings(functionLevelFindings: List<com.codescene.data.delta.FunctionFinding>?) =
-        functionLevelFindings
-            ?.map { fn ->
-                FunctionFinding(
-                    function = FunctionInfo(
-                        name = fn.function.name,
-                        range = Range(
-                            endLine = fn.function.range?.get()?.endLine ?: 0,
-                            endColumn = fn.function.range?.get()?.endColumn ?: 0,
-                            startLine = fn.function.range?.get()?.startLine ?: 0,
-                            startColumn = fn.function.range?.get()?.startColumn ?: 0
-                        )
-                    ),
-                    changeDetails = getChangeDetails(fn.changeDetails)
-                )
-            } ?: emptyList()
+    private fun getFunctionLevelFindings(
+        functionLevelFindings: List<com.codescene.data.delta.FunctionFinding>?
+    ): List<FunctionFinding> {
+        if (functionLevelFindings.isNullOrEmpty()) return emptyList()
+
+        return functionLevelFindings.map { fn ->
+            val range = if (fn.function.range.isPresent) fn.function.range.get() else null
+
+            FunctionFinding(
+                function = FunctionInfo(
+                    name = fn.function.name,
+                    range = Range(
+                        startLine = range?.startLine ?: 0,
+                        startColumn = range?.startColumn ?: 0,
+                        endLine = range?.endLine ?: 0,
+                        endColumn = range?.endColumn ?: 0
+                    )
+                ),
+                changeDetails = getChangeDetails(fn.changeDetails)
+            )
+        }
+    }
 }
