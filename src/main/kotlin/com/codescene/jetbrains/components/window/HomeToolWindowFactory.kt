@@ -16,11 +16,6 @@ import org.cef.browser.CefMessageRouter
 import javax.swing.JLabel
 
 internal class HomeToolWindowFactory : ToolWindowFactory {
-    private lateinit var project: Project
-    private val jcefBrowser: JBCefBrowser = JBCefBrowser.createBuilder()
-        .setEnableOpenDevToolsMenuItem(true)
-        .build()
-
     /**
      * Creates and sets up the content for the ToolWindow in the JetBrains IDE.
      * This method configures the JCEF browser to render a React app if JCEF is supported.
@@ -39,8 +34,10 @@ internal class HomeToolWindowFactory : ToolWindowFactory {
      * @param toolWindow The tool window where the content will be displayed.
      */
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        this.project = project
         val content: Content
+        val jcefBrowser = JBCefBrowser.createBuilder()
+            .setEnableOpenDevToolsMenuItem(true)
+            .build()
 
         if (JBCefApp.isSupported()) {
             val webViewInitializer = WebViewInitializer.getInstance(project);
