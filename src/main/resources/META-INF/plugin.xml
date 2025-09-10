@@ -62,12 +62,12 @@
 
         <toolWindow
                 id="CodeScene"
-                icon="com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW"
+                icon="AllIcons.Actions.Colors"
                 factoryClass="com.codescene.jetbrains.components.window.CodeSceneToolWindowFactory"/>
 
         <toolWindow
                 id="CodeSceneHome"
-                icon="AllIcons.Actions.Colors"
+                icon="AllIcons.Actions.Lightning"
                 factoryClass="com.codescene.jetbrains.components.window.HomeToolWindowFactory"/>
 
         <!-- An empty language attribute applies to all languages -->
@@ -139,10 +139,10 @@
 
         <fileEditorProvider
                 implementation="com.codescene.jetbrains.fileeditor.CodeSceneFileEditorProvider"/>
-<!--        <statusBarWidgetFactory-->
-<!--                implementation="com.codescene.jetbrains.components.statusbar.AceStatusBarWidgetFactory"-->
-<!--                id="AceStatusBarWidgetFactory"-->
-<!--        />-->
+        <!--        <statusBarWidgetFactory-->
+        <!--                implementation="com.codescene.jetbrains.components.statusbar.AceStatusBarWidgetFactory"-->
+        <!--                id="AceStatusBarWidgetFactory"-->
+        <!--        />-->
     </extensions>
 
     <projectListeners>
