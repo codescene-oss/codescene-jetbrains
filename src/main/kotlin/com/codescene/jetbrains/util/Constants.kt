@@ -91,4 +91,9 @@ object Constants {
         "https://blog.ploeh.dk/2018/08/27/on-constructor-over-injection/",
         "https://supporthub.codescene.com"
     )
+    const val DELTA_ANALYSIS_JOB = "deltaAnalysis"
+    const val AUTO_REFACTOR_JOB = "autoRefactor"
+    const val JOB_STATE_RUNNING = "running"
+    const val JOB_STATE_QUEUED = "queued"
+
 }
