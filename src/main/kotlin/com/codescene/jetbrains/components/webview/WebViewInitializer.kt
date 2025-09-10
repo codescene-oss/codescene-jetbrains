@@ -66,7 +66,7 @@ class WebViewInitializer : LafManagerListener {
                 <script type="module">
                   ${getLinkClickHandler()}
                   function setContext() {
-                    window.ideContext = ${getInitialContext(view, isPro = true, isDevMode = true)}
+                    window.ideContext = ${getInitialContext(view, isPro = true, isDevMode = false)}
                     const css = `${StyleHelper.getInstance().generateCssVariablesFromTheme()}`;
                     const style = document.createElement('style');
                     style.id = '{STYLE_ELEMENT_ID}';
