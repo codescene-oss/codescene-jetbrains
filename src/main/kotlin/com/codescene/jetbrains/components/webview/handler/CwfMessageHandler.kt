@@ -7,6 +7,7 @@ import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
 import com.codescene.jetbrains.services.htmlviewer.DocumentationParams
 import com.codescene.jetbrains.util.Constants.ALLOWED_DOMAINS
+import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.TelemetryEvents
 import com.codescene.jetbrains.util.getSelectedTextEditor
 import com.intellij.ide.BrowserUtil
@@ -104,7 +105,12 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
     }
 
     fun postMessage(message: String) {
-        browser.executeJavaScript(
+        if (!::browser.isInitialized) {
+            Log.warn("Browser is not initialized", this::class::simpleName.toString())
+            return
+        }
+
+        browser?.executeJavaScript(
             """
               console.log("Sending message to webview...");
               window.postMessage($message);
