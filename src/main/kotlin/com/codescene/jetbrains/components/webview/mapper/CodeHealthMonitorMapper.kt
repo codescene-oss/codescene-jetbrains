@@ -14,6 +14,7 @@ class CodeHealthMonitorMapper {
 
     fun toCwfData(
         deltaResults: List<Pair<String, DeltaCacheItem>>,
+        activeJobs: MutableSet<String>,
         pro: Boolean = true,
         devmode: Boolean = true
     ): CwfData<HomeData> = CwfData(
@@ -22,21 +23,31 @@ class CodeHealthMonitorMapper {
         view = View.HOME.value,
         data = HomeData(
             signedIn = true,
+            jobs = getActiveJobs(activeJobs),
             fileDeltaData = getFileDeltaData(deltaResults)
         )
     )
 
+    private fun getActiveJobs(activeJobs: MutableSet<String>) =
+        activeJobs.map { job ->
+            AnalysisJob(
+                type = "deltaAnalysis",
+                state = "running",
+                file = FileMetaType(fileName = job)
+            )
+        }
+
     private fun getFileDeltaData(deltaResults: List<Pair<String, DeltaCacheItem>>) = deltaResults.map { result ->
         val deltaResponse = result.second.deltaApiResponse!!
         val changeDetails = getChangeDetails(deltaResponse.fileLevelFindings)
-        val fLevelFindings = getFunctionLevelFindings(deltaResponse.functionLevelFindings)
+        val functionLevelFindings = getFunctionLevelFindings(deltaResponse.functionLevelFindings)
 
         val deltaForFile = DeltaForFile(
             fileLevelFindings = changeDetails,
-            functionLevelFindings = fLevelFindings,
-            oldScore = deltaResponse.oldScore?.get() ?: 0.0,
-            newScore = deltaResponse.newScore?.get() ?: 0.0,
-            scoreChange = deltaResponse.scoreChange?.toDouble() ?: 0.0
+            functionLevelFindings = functionLevelFindings,
+            scoreChange = deltaResponse.scoreChange?.toDouble() ?: 0.0,
+            newScore = deltaResponse.newScore.orElse(null),
+            oldScore = deltaResponse.oldScore.orElse(null)
         )
 
         FileDeltaData(file = File(fileName = result.first), delta = deltaForFile)
@@ -45,10 +56,10 @@ class CodeHealthMonitorMapper {
     private fun getChangeDetails(changeDetails: List<com.codescene.data.delta.ChangeDetail>?) =
         changeDetails?.map { finding ->
             ChangeDetail(
-                line = finding.line.get(),
                 category = finding.category,
                 description = finding.description,
-                changeType = finding.changeType.value()
+                changeType = finding.changeType.value(),
+                line = if (finding.line.isPresent) finding.line.get() else 0
             )
         } ?: emptyList()
 

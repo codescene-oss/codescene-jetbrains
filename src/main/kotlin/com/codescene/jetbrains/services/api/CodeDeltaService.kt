@@ -15,11 +15,10 @@ import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.cache.DeltaCacheEntry
 import com.codescene.jetbrains.services.cache.DeltaCacheService
+import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Constants.DELTA
-import com.codescene.jetbrains.util.Log
-import com.codescene.jetbrains.util.TelemetryEvents
-import com.codescene.jetbrains.util.getTelemetryInfo
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
@@ -42,12 +41,22 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
         reviewFile(editor) {
             performDeltaAnalysis(editor)
 
-            updateMonitor()
-            project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(editor.virtualFile) // TODO: remove, old CHM implementation
+            project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC)
+                .refresh(editor.virtualFile) // TODO: remove, old CHM implementation
         }
     }
 
     override fun getActiveApiCalls() = CodeSceneCodeVisionProvider.activeDeltaApiCalls
+
+    override fun removeActiveCall(filePath: String) {
+        super.removeActiveCall(filePath)
+        updateMonitor()
+    }
+
+    override fun addActiveCall(filePath: String, job: Job) {
+        super.addActiveCall(filePath, job)
+        updateMonitor()
+    }
 
     /**
      * Performs delta analysis by comparing the current editor content against a baseline.
@@ -86,7 +95,7 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
             )
         )
 
-        if (result?.oldScore?.isEmpty == true) {
+        if (result?.oldScore?.isEmpty == true && result?.newScore?.isEmpty == false) {
             return Delta(
                 10.0, result.newScore.get(), result.scoreChange, result.fileLevelFindings, result.functionLevelFindings
             )
@@ -125,13 +134,21 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
      */
     private fun updateMonitor() {
         val mapper = CodeHealthMonitorMapper.getInstance()
-        val deltaResults = DeltaCacheService.getInstance(project).getAll().filter { it.second.deltaApiResponse != null }
+        val deltaResults = DeltaCacheService.getInstance(project).getAll()
 
         val dataJson = parseMessage(
-            mapper = { mapper.toCwfData(deltaResults) },
+            mapper = { mapper.toCwfData(deltaResults, getActiveApiCalls()) },
             serializer = CwfData.serializer(HomeData.serializer())
         )
 
+        updateToolWindowIcon(
+            UpdateToolWindowIconParams(
+                project = project,
+                toolWindowId = "CodeSceneHome", // TODO: update
+                baseIcon = AllIcons.Actions.Lightning, // TODO: update
+                hasNotification = deltaResults.isNotEmpty()
+            )
+        )
         CwfMessageHandler.getInstance(project).postMessage(dataJson)
     }
 }
