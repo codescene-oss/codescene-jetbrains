@@ -62,7 +62,7 @@
 
         <toolWindow
                 id="CodeScene"
-                icon="AllIcons.Actions.Colors"
+                icon="com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW"
                 factoryClass="com.codescene.jetbrains.components.window.CodeSceneToolWindowFactory"/>
 
         <toolWindow
