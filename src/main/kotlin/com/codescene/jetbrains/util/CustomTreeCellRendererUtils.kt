@@ -25,7 +25,7 @@ fun getTooltip(node: CodeHealthFinding) =
     }
 
 fun getText(node: CodeHealthFinding, displayPercentage: Boolean): String {
-    val displayName = File(node.displayName).name
+    val displayName = if (node.nodeType == NodeType.ROOT) File(node.displayName).name else node.displayName
 
     return if (!displayPercentage)
         displayName
