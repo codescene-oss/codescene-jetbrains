@@ -12,7 +12,7 @@ import javax.swing.JSlider
 import javax.swing.plaf.basic.BasicSliderUI
 import kotlin.math.roundToInt
 
-class CustomSlider(value: Double) : JSlider() {
+class CustomSlider(value: String) : JSlider() {
     init {
         isOpaque = false
         isEnabled = false
@@ -22,7 +22,7 @@ class CustomSlider(value: Double) : JSlider() {
         minimum = 0
         maximum = 1000
 
-        setSliderPosition(value)
+        if (value != "N/A") setSliderPosition(value.toDouble())
 
         setUI(object : BasicSliderUI(this) {
             override fun paintThumb(g: Graphics) {}
