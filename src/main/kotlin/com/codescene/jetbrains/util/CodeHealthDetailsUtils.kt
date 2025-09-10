@@ -54,7 +54,7 @@ enum class CodeHealthDetailsType {
 data class HealthData(
     val header: String,
     val status: String,
-    val score: Double,
+    val score: String,
 )
 
 data class CodeHealthDetails(
@@ -70,13 +70,15 @@ data class CodeHealthDetails(
 enum class HealthState(val label: String, val color: JBColor) {
     UNHEALTHY("Unhealthy", RED),
     PROBLEMATIC("Problematic", ORANGE),
-    HEALTHY("Healthy", GREEN);
+    HEALTHY("Healthy", GREEN),
+    UNSCORABLE("N/A", JBColor.GRAY);
 
     companion object {
-        fun fromScore(score: Double): HealthState =
+        fun fromScore(score: String): HealthState =
             when {
-                score < 4.0 -> UNHEALTHY
-                score in 4.0..8.9 -> PROBLEMATIC
+                score == UNSCORABLE.label -> UNSCORABLE
+                score.toDouble() < 4.0 -> UNHEALTHY
+                score.toDouble() in 4.0..8.9 -> PROBLEMATIC
                 else -> HEALTHY
             }
     }
@@ -88,7 +90,7 @@ data class CodeHealthHeader(
     val icon: Icon
 )
 
-fun resolveHealthBadge(score: Double): Pair<String, JBColor> = HealthState.fromScore(score).let { it.label to it.color }
+fun resolveHealthBadge(score: String): Pair<String, JBColor> = HealthState.fromScore(score).let { it.label to it.color }
 
 private fun createSubHeader(
     file: Pair<String, String>?,
@@ -117,30 +119,33 @@ private fun <T> extractUsingRegex(input: String, regex: Regex, extractor: (Match
 private fun resolveStatus(delta: Delta, type: NodeType, percentage: String) =
     when (type) {
         NodeType.CODE_HEALTH_NEUTRAL -> ""
-        NodeType.CODE_HEALTH_INCREASE ->
-            "Increased to ${round(delta.newScore.get())} $percentage"
-
-        NodeType.CODE_HEALTH_DECREASE ->
-            "Declined from ${round(delta.oldScore.get())} $percentage"
+        NodeType.CODE_HEALTH_INCREASE -> if (delta.newScore.isPresent) "Increased to ${round(delta.newScore.get())} $percentage" else ""
+        NodeType.CODE_HEALTH_DECREASE -> if (delta.oldScore.isPresent) "Declined from ${round(delta.oldScore.get())} $percentage" else ""
 
         else -> throw IllegalArgumentException("Unexpected node type: $type")
     }
 
-private fun resolveCodeHealthHeader(type: NodeType, newScore: Double, oldScore: Double): CodeHealthHeader? =
+private fun resolveCodeHealthHeader(type: NodeType, newScore: Double?, oldScore: Double?): CodeHealthHeader? =
     when (type) {
         NodeType.CODE_HEALTH_NEUTRAL -> {
             CodeHealthHeader(
-                "Code Health Unchanged", round(oldScore).toString(), CODE_HEALTH_NEUTRAL
+                "Code Health Unchanged",
+                if (oldScore == null) "N/A" else round(oldScore).toString(),
+                CODE_HEALTH_NEUTRAL
             )
         }
 
         NodeType.CODE_HEALTH_INCREASE -> {
-            CodeHealthHeader("Code Health Increasing", round(newScore).toString(), CODE_HEALTH_INCREASE)
+            CodeHealthHeader(
+                "Code Health Increasing",
+                if (newScore == null) "N/A" else round(newScore).toString(),
+                CODE_HEALTH_INCREASE
+            )
         }
 
         NodeType.CODE_HEALTH_DECREASE -> {
             CodeHealthHeader(
-                "Code Health Decreasing", round(newScore).toString(),
+                "Code Health Decreasing", if (newScore == null) "N/A" else round(newScore).toString(),
                 CODE_HEALTH_DECREASE
             )
         }
@@ -153,7 +158,10 @@ private fun getHealthFinding(
     finding: CodeHealthFinding,
     delta: Delta
 ): CodeHealthDetails {
-    val healthHeader = resolveCodeHealthHeader(finding.nodeType, delta.newScore.get(), delta.oldScore.get())
+    val oldScore = delta.oldScore.orElse(null)
+    val newScore = delta.newScore.orElse(null)
+
+    val healthHeader = resolveCodeHealthHeader(finding.nodeType, newScore, oldScore)
 
     return CodeHealthDetails(
         filePath = finding.filePath,
@@ -162,7 +170,7 @@ private fun getHealthFinding(
         healthData = HealthData(
             healthHeader.subText,
             resolveStatus(delta, finding.nodeType, percentage = finding.additionalText),
-            round(delta.newScore.get())
+            if (delta.newScore.isPresent) round(delta.newScore.get()).toString() else "N/A"
         ),
         body = listOf(
             Paragraph(
@@ -217,7 +225,13 @@ private fun getFunctionFinding(
     project: Project
 ): CodeHealthDetails {
     val changeDetails = delta.functionLevelFindings
-        .find { isMatchingFinding(it.function.name, it.function.range?.orElse(com.codescene.data.delta.Range(1,1,1,1))?.startLine, finding) }?.changeDetails
+        .find {
+            isMatchingFinding(
+                it.function.name,
+                it.function.range?.orElse(com.codescene.data.delta.Range(1, 1, 1, 1))?.startLine,
+                finding
+            )
+        }?.changeDetails
     val labelAndIcon = if (changeDetails?.count { !isPositiveChange(it.changeType) } ?: 0 >= 1)
         "Improvement opportunity" to AllIcons.Nodes.WarningIntroduction
     else
