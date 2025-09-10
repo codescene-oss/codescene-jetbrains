@@ -7,9 +7,9 @@ import kotlinx.serialization.Serializable
 data class HomeData( // Code Health Monitor
     val user: User? = null,
     val signedIn: Boolean = false,
-    val jobs: List<Job> = emptyList(),
     val commitBaseline: String? = null, // "default" | "HEAD" | "branchCreate"
     val showOnboarding: Boolean = false,
+    val jobs: List<AnalysisJob> = emptyList(),
     val fileDeltaData: List<FileDeltaData> = emptyList(),
     val autoRefactor: AutoRefactorConfig = AutoRefactorConfig()
 )
@@ -27,13 +27,6 @@ data class AutoRefactorConfig(
 )
 
 @Serializable
-data class Job(
-    val file: File,
-    val type: String,
-    val state: String
-)
-
-@Serializable
 data class FileDeltaData(
     val file: File,
     val delta: DeltaForFile
@@ -41,8 +34,8 @@ data class FileDeltaData(
 
 @Serializable
 data class DeltaForFile(
-    @SerialName("old-score") val oldScore: Double,
-    @SerialName("new-score") val newScore: Double,
+    @SerialName("old-score") val oldScore: Double?,
+    @SerialName("new-score") val newScore: Double?,
     @SerialName("score-change") val scoreChange: Double,
     @SerialName("file-level-findings") val fileLevelFindings: List<ChangeDetail>,
     @SerialName("function-level-findings") val functionLevelFindings: List<FunctionFinding>,

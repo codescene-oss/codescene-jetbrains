@@ -34,5 +34,5 @@ abstract class CacheService<Q, E, V, R> {
         }
     }
 
-    fun getAll(): List<Pair<String, V>> = cache.entries.map { it.key to it.value }
+    open fun getAll(): List<Pair<String, V>> = cache.entries.map { it.key to it.value }
 }
