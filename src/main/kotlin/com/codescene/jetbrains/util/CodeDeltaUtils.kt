@@ -10,6 +10,7 @@ import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.text.StringUtil.pluralize
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 private fun MutableList<String>.countFixesAndDegradations(details: List<ChangeDetail>) {
@@ -46,9 +47,16 @@ fun sortDeltaFindings(
 
     return when (sortingCriteria) {
         MonitorTreeSortOptions.FILE_NAME -> entryList.sortedBy { it.key }
-        MonitorTreeSortOptions.SCORE_ASCENDING -> entryList.sortedByDescending { it.value.oldScore.get() - it.value.newScore.get() }
-        MonitorTreeSortOptions.SCORE_DESCENDING -> entryList.sortedBy { it.value.oldScore.get() - it.value.newScore.get() }
+        MonitorTreeSortOptions.SCORE_ASCENDING -> entryList.sortedBy { safeScoreDelta(it.value.newScore, it.value.oldScore) }
+        MonitorTreeSortOptions.SCORE_DESCENDING -> entryList.sortedByDescending { safeScoreDelta(it.value.newScore, it.value.oldScore) }
     }
+}
+
+private fun safeScoreDelta(newScore: Optional<Double>, oldScore: Optional<Double>): Double {
+    val old = oldScore.orElse(null)
+    val new = newScore.orElse(null)
+
+    return if (old != null && new != null) old - new else Double.NEGATIVE_INFINITY
 }
 
 fun extractFileName(input: String): String? {

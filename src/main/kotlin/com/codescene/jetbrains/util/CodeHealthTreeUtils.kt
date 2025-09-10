@@ -12,20 +12,22 @@ import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
 
 fun getHealthFinding(filePath: String, delta: Delta): CodeHealthFinding {
-    val healthDetails = HealthDetails(delta.oldScore.get(), delta.newScore.get())
+    val oldScore = delta.oldScore.orElse(null)
+    val newScore = delta.newScore.orElse(null)
+    val healthDetails = HealthDetails(oldScore, newScore)
     val (change, percentage) = getCodeHealth(healthDetails)
 
     return CodeHealthFinding(
         filePath = filePath,
         displayName = "Code Health: $change",
         additionalText = if (percentage.isNotEmpty()) "($percentage)" else "",
-        nodeType = resolveHealthNodeType(delta.oldScore.get(), delta.newScore.get())
+        nodeType = resolveHealthNodeType(oldScore, newScore)
     )
 }
 
-private fun resolveHealthNodeType(oldScore: Double, newScore: Double): NodeType =
-    if (oldScore > newScore) NodeType.CODE_HEALTH_DECREASE
-    else if (oldScore == newScore) NodeType.CODE_HEALTH_NEUTRAL
+private fun resolveHealthNodeType(oldScore: Double?, newScore: Double?): NodeType =
+    if ((oldScore == null || newScore == null) || (oldScore == newScore)) NodeType.CODE_HEALTH_NEUTRAL
+    else if (oldScore > newScore) NodeType.CODE_HEALTH_DECREASE
     else NodeType.CODE_HEALTH_INCREASE
 
 fun getFileFinding(filePath: String, result: ChangeDetail): CodeHealthFinding {
@@ -43,13 +45,13 @@ fun getFunctionFinding(filePath: String, function: Function, details: List<Chang
     tooltip = getFunctionDeltaTooltip(function, details),
     filePath,
     displayName = function.name,
-    focusLine = function.range?.orElse(Range(1,1,1,1))?.startLine,
+    focusLine = function.range?.orElse(Range(1, 1, 1, 1))?.startLine,
     nodeType = NodeType.FUNCTION_FINDING,
     functionFindingIssues = details.size
 )
 
 fun getRootNode(filePath: String, delta: Delta): CodeHealthFinding {
-    val (_, percentage) = getCodeHealth(HealthDetails(delta.oldScore.get(), delta.newScore.get()))
+    val (_, percentage) = getCodeHealth(HealthDetails(delta.oldScore.orElse(null), delta.newScore.orElse(null)))
 
     val count = delta.functionLevelFindings.flatMap { it.changeDetails }.count { canBeImproved(it.changeType) } +
             delta.fileLevelFindings.count { canBeImproved(it.changeType) }
