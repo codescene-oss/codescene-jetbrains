@@ -1,9 +1,6 @@
 package com.codescene.jetbrains.components.webview
 
-import com.codescene.jetbrains.components.webview.data.CwfData
-import com.codescene.jetbrains.components.webview.data.EditorMessages
-import com.codescene.jetbrains.components.webview.data.HomeData
-import com.codescene.jetbrains.components.webview.data.View
+import com.codescene.jetbrains.components.webview.data.*
 import com.codescene.jetbrains.components.webview.util.StyleHelper
 import com.codescene.jetbrains.util.Log
 import com.intellij.ide.ui.LafManager
@@ -41,7 +38,7 @@ class WebViewInitializer : LafManagerListener {
      *
      * @return The modified HTML document as a string.
      */
-    fun getInitialScript(view: String, browser: JBCefBrowser): String {
+    fun getInitialScript(view: String, browser: JBCefBrowser, initialData: Any? = null): String {
         this.browser = browser
 
         val css = getFileContent("cs-cwf/assets/index.css")
@@ -66,7 +63,7 @@ class WebViewInitializer : LafManagerListener {
                 <script type="module">
                   ${getLinkClickHandler()}
                   function setContext() {
-                    window.ideContext = ${getInitialContext(view, isPro = true, isDevMode = false)}
+                    window.ideContext = ${getInitialContext(view, initialData)}
                     const css = `${StyleHelper.getInstance().generateCssVariablesFromTheme()}`;
                     const style = document.createElement('style');
                     style.id = '{STYLE_ELEMENT_ID}';
@@ -124,12 +121,15 @@ class WebViewInitializer : LafManagerListener {
      * the payload depends on the requested [view].
      *
      * Currently supported views:
-     * - [View.HOME]: Creates and serializes a [HomeData] instance wrapped
-     *   in [CwfData].
+     * - [View.HOME]: Creates and serializes a [HomeData] instance wrapped in [CwfData].
+     * - [View.DOCS]: Not yet implemented, returns an empty string.
      * - [View.ACE]: Not yet implemented, returns an empty string.
      * - Any other value: Logs a warning and returns an empty JSON object (`{}`).
      */
-    private fun getInitialContext(view: String, isPro: Boolean, isDevMode: Boolean): String {
+    private fun getInitialContext(view: String, initialData: Any? = null): String {
+        val isDevMode = System.getProperty("cwfIsDevMode")?.toBoolean() ?: false
+        val isPro = true // TODO: resolve with auth
+
         val json = Json {
             encodeDefaults = true
             prettyPrint = true
@@ -139,6 +139,15 @@ class WebViewInitializer : LafManagerListener {
             View.HOME.value -> {
                 val data = buildCwfData(HomeData(), view, isPro, isDevMode)
                 val dataJson = json.encodeToString<CwfData<HomeData>>(data)
+
+                return dataJson
+            }
+
+            View.DOCS.value -> {
+                if (initialData !is DocsData) return "{}"
+
+                val data = buildCwfData(initialData, view, isPro, isDevMode)
+                val dataJson = json.encodeToString<CwfData<DocsData>>(data)
 
                 return dataJson
             }
