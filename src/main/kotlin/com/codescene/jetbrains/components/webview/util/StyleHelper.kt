@@ -64,6 +64,10 @@ class StyleHelper {
             val editorFontFamily = scheme.editorFontName
             val editorBackground = scheme.defaultBackground
 
+            val defaultFont = UIManager.getFont("Label.font")
+            val fontSize = defaultFont.size
+            val fontFamily = defaultFont.family
+
             val textFg = UIManager.getColor("Label.foreground")
             val linkFg = UIManager.getColor("Hyperlink.linkColor")
             val buttonBg = UIManager.getColor("Button.default.startBackground")
@@ -84,8 +88,12 @@ class StyleHelper {
             sb.appendLine("  --cs-theme-foreground: #$textFgHex;")
             sb.appendLine("  --cs-theme-panel-background: #$textFgHex;")
             sb.appendLine("  --cs-theme-textCodeBlock-background: #$editorBgHex;")
+
+//            sb.appendLine("  --cs-theme-font-family: '$fontFamily', sans-serif;") TODO
+            sb.appendLine("  --cs-theme-font-size: ${fontSize}px;")
             sb.appendLine("  --cs-theme-editor-font-family: '$editorFontFamily', monospace;")
             sb.appendLine("  --cs-theme-editor-font-size: ${editorFontSize}px;")
+
             sb.appendLine("  --cs-theme-button-foreground: #$buttonFgHex;")
             sb.appendLine("  --cs-theme-button-background: #$buttonBgHex;")
             sb.appendLine("  --cs-theme-button-secondaryForeground: #$buttonFgHex;")
