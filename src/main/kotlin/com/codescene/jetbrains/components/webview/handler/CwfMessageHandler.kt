@@ -2,11 +2,10 @@ package com.codescene.jetbrains.components.webview.handler
 
 import com.codescene.jetbrains.components.webview.data.*
 import com.codescene.jetbrains.components.webview.util.docNameMap
+import com.codescene.jetbrains.fileeditor.CWF_DOCS_DATA_KEY
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
-import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
-import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
-import com.codescene.jetbrains.services.htmlviewer.DocumentationParams
 import com.codescene.jetbrains.util.Constants.ALLOWED_DOMAINS
+import com.codescene.jetbrains.util.FileUtils
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.TelemetryEvents
 import com.codescene.jetbrains.util.getSelectedTextEditor
@@ -14,10 +13,12 @@ import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.testFramework.LightVirtualFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -28,7 +29,6 @@ import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefMessageRouterHandlerAdapter
-import java.io.File
 
 @Service(Service.Level.PROJECT)
 class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerAdapter() {
@@ -123,20 +123,28 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
             json.decodeFromJsonElement(OpenDocsForFunction.serializer(), it)
         }
 
+        val fileEditorManager = FileEditorManager.getInstance(project)
+
         openDocsMessage?.let {
+            val docsData = DocsData(
+                docType = openDocsMessage.docType,
+                fileData = FileMetaType(
+                    fileName = openDocsMessage.fileName,
+                    fn = openDocsMessage.fn
+                )
+            )
+
+            val fileName = docNameMap[openDocsMessage.docType] ?: "Code smell documentation"
+            val file = LightVirtualFile(fileName)
+            file.putUserData(CWF_DOCS_DATA_KEY, docsData)
+
             CoroutineScope(Dispatchers.Main).launch {
-                val docViewer = CodeSceneDocumentationViewer.getInstance(project)
                 val editor = getSelectedTextEditor(project, "", "${this::class.simpleName} - ${project.name}")
 
-                val params = DocumentationParams(
-                    heading = docNameMap[openDocsMessage.docType] ?: "",
-                    fileName = File(openDocsMessage.fileName).name,
-                    filePath = openDocsMessage.fileName,
-                    focusLine = openDocsMessage.fn?.range?.startLine ?: 0,
-                    docsEntryPoint = DocsEntryPoint.CODE_VISION
-                )
-
-                docViewer.open(editor, params)
+                if (editor != null)
+                    FileUtils.splitWindow(file, fileEditorManager, project)
+                else
+                    FileUtils.openDocumentationWithoutActiveEditor(file, fileEditorManager)
             }
         }
     }

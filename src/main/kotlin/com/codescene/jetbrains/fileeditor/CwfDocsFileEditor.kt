@@ -1,0 +1,58 @@
+package com.codescene.jetbrains.fileeditor
+
+import com.codescene.jetbrains.components.webview.WebViewFactory
+import com.codescene.jetbrains.components.webview.data.DocsData
+import com.codescene.jetbrains.components.webview.data.View
+import com.intellij.openapi.fileEditor.FileEditor
+import com.intellij.openapi.fileEditor.FileEditorState
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.UserDataHolderBase
+import com.intellij.openapi.vfs.VirtualFile
+import java.beans.PropertyChangeListener
+import javax.swing.JComponent
+
+@Suppress("UnstableApiUsage")
+internal class CwfDocsFileEditor(
+    project: Project,
+    private val file: VirtualFile,
+    data: DocsData
+) : UserDataHolderBase(), FileEditor {
+    private val component: JComponent
+
+    init {
+        val content = WebViewFactory.createWebViewComponent(
+            project = project,
+            view = View.DOCS.value,
+            initialData = data
+        )
+        component = content.component
+    }
+
+    override fun getComponent() = component
+
+    override fun getFile() = file
+
+    override fun getPreferredFocusedComponent() = component
+
+    override fun getName(): String = file.nameWithoutExtension
+
+    override fun setState(p0: FileEditorState) {
+        // No implementation needed
+    }
+
+    override fun isModified() = false
+
+    override fun isValid() = file.isValid
+
+    override fun addPropertyChangeListener(p0: PropertyChangeListener) {
+        // No implementation needed
+    }
+
+    override fun removePropertyChangeListener(p0: PropertyChangeListener) {
+        // No implementation needed
+    }
+
+    override fun dispose() {
+        // no explicit dispose needed, WebViewFactory already wires JCEF browser lifecycle
+    }
+}

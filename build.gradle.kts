@@ -150,6 +150,9 @@ tasks {
 
     runIde {
         classpath += sourceSets["main"].runtimeClasspath
+
+        val devMode = project.findProperty("cwfIsDevMode")?.toString()?.toBoolean() ?: false
+        systemProperty("cwfIsDevMode", devMode)
     }
 
     register<JavaExec>("run") {
