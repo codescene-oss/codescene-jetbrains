@@ -168,6 +168,7 @@ tasks {
     }
 
     buildPlugin {
+        dependsOn("fetchCwf")
         dependsOn("fetchDocs")
     }
 }
@@ -194,9 +195,11 @@ intellijPlatformTesting {
 }
 
 tasks.register("fetchDocs") {
-    group = "documentation"
+    group = "codescene assets"
     description = "Get the docs asset from the latest GitHub release."
 
+    val assetName = "docs"
+    val assetType = assetName
     val user = "empear-analytics"
     val repo = "codescene-ide-protocol"
     val token = if (System.getenv("CI") == "true")
@@ -213,58 +216,88 @@ tasks.register("fetchDocs") {
             connection.inputStream.reader().readText()
         }
 
-        val (tag, assetUrl) = parseResponse(releasesJson)
-        saveDocs(tag, assetUrl, token)
+        val (tag, assetUrl) = parseResponse(releasesJson, assetName)
+        saveAsset(tag, assetUrl, token, assetType)
+    }
+}
+
+tasks.register("fetchCwf") {
+    group = "codescene assets"
+    description = "Get the CWF (webview) asset from the latest GitHub release."
+
+    val assetName = "cs-webview"
+    val assetType = "cs-cwf"
+    val user = "empear-analytics"
+    val repo = "cs-webview"
+    val token = if (System.getenv("CI") == "true")
+        System.getenv("CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN")
+    else
+        System.getenv("GH_PACKAGE_TOKEN")
+
+    doLast {
+        val apiUrl = "https://api.github.com/repos/$user/$repo/releases"
+
+        val releasesJson = run {
+            val connection = URL(apiUrl).openConnection() as HttpURLConnection
+            connection.setRequestProperty("Authorization", "token $token")
+            connection.inputStream.reader().readText()
+        }
+
+        val (tag, assetUrl) = parseResponse(releasesJson, assetName)
+        saveAsset(tag, assetUrl, token, assetType)
     }
 }
 
 @Suppress("UNCHECKED_CAST")
-fun parseResponse(json: String): Pair<String, String> {
+fun parseResponse(json: String, assetName: String): Pair<String, String> {
     val releases = JsonSlurper().parseText(json) as List<Map<String, Any>>
     val release = releases.find { it["prerelease"] == false && it["draft"] == false }
         ?: throw GradleException("No suitable release found.")
     val tag = release["tag_name"] as String
 
     val assets = release["assets"] as List<Map<String, Any>>
-    val docsAsset = assets.find { (it["name"] as String) == "docs.zip" }
+
+    val latest = if (assetName == "docs") "${assetName}.zip" else "${assetName}-${tag}.zip"
+    val docsAsset = assets.find { (it["name"] as String) == latest }
         ?: throw GradleException("No docs found in the latest release.")
+
     val assetUrl = docsAsset["url"] as String
 
-    logger.trace("Found docs for release $tag")
+    logger.trace("Found $assetName for release: $tag")
 
     return tag to assetUrl
 }
 
-fun saveDocs(tag: String, assetUrl: String, token: String) {
-    logger.lifecycle("Downloading assets for release: $tag")
+fun saveAsset(tag: String, assetUrl: String, token: String, assetType: String = "") {
+    logger.lifecycle("Downloading '$assetType' assets for release: $tag")
 
     val resources = File("src/main/resources")
-    val docsFolder = File(resources, "docs")
-    val outputFile = File(docsFolder, "$tag.zip")
+    val assetFolder = File(resources, assetType)
+    val outputFile = File(assetFolder, "$tag.zip")
 
-    if (docsFolder.exists()) {
-        docsFolder.listFiles()?.forEach { it.deleteRecursively() }
-        logger.debug("Deleted old documentation files: ${docsFolder.absolutePath}")
+    if (assetFolder.exists()) {
+        assetFolder.listFiles()?.forEach { it.deleteRecursively() }
+        logger.debug("Deleted old asset files: ${assetFolder.absolutePath}")
     } else {
-        docsFolder.mkdirs()
-        logger.debug("Created docs folder: ${docsFolder.absolutePath}")
+        assetFolder.mkdirs()
+        logger.debug("Created asset folder: ${assetFolder.absolutePath}")
     }
 
-    val docs = URL(assetUrl).openConnection().apply {
+    val assets = URL(assetUrl).openConnection().apply {
         setRequestProperty("Authorization", "token $token")
         setRequestProperty("Accept", "application/octet-stream")
         connect()
     }
 
     outputFile.outputStream().use {
-        docs.inputStream.use { input ->
+        assets.inputStream.use { input ->
             input.copyTo(it)
         }
     }
 
     logger.lifecycle("Download completed: ${outputFile.absolutePath}")
 
-    unzip(outputFile, resources)
+    unzip(outputFile, assetFolder)
 }
 
 fun unzip(zipFile: File, outputDir: File) {
@@ -273,8 +306,16 @@ fun unzip(zipFile: File, outputDir: File) {
     ZipInputStream(zipFile.inputStream()).use { zis ->
         var entry = zis.nextEntry
 
+        val topLevel = entry?.name?.split("/")?.firstOrNull() ?: ""
+
         while (entry != null) {
-            val outFile = File(outputDir, entry.name)
+            // Remove top-level folder if it's redundant (like "docs/")
+            val relativePath = if (topLevel.contains("docs") && entry.name.startsWith("$topLevel/"))
+                entry.name.removePrefix("$topLevel/")
+            else
+                entry.name
+
+            val outFile = File(outputDir, relativePath)
 
             if (entry.isDirectory) {
                 outFile.mkdirs()
