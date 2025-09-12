@@ -161,7 +161,7 @@ tasks {
     }
 
     buildPlugin {
-//        dependsOn("fetchCwf")
+        dependsOn("fetchCwf")
         dependsOn("fetchDocs")
     }
 }
