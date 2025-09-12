@@ -4,6 +4,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.ui.JBColor
+import com.intellij.ui.jcef.JBCefScrollbarsHelper
 import java.awt.Color
 import javax.swing.UIManager
 
@@ -52,6 +53,7 @@ class StyleHelper {
      * - `--cs-theme-button-background`: Primary button background color.
      * - `--cs-theme-button-secondaryForeground`: Secondary button text color.
      * - `--cs-theme-button-secondaryBackground`: Secondary button background color.
+     * - `--cs-theme-scroll-bar-thumb`: Scrollbar thumb background color.
      *
      * Note:
      * - The set of available theme keys is documented in:
@@ -79,6 +81,7 @@ class StyleHelper {
             val buttonFgHex = toHex(buttonFg)
             val buttonBgHex = toHex(buttonBg)
             val editorBgHex = toHex(editorBackground)
+            val scrollbarThumbHex = getScrollbarHex()
             val buttonSecondaryBgHex = toHex(buttonSecondaryBg)
 
             val sb = StringBuilder()
@@ -88,6 +91,7 @@ class StyleHelper {
             sb.appendLine("  --cs-theme-foreground: #$textFgHex;")
             sb.appendLine("  --cs-theme-panel-background: #$textFgHex;")
             sb.appendLine("  --cs-theme-textCodeBlock-background: #$editorBgHex;")
+            sb.appendLine("  --cs-theme-scroll-bar-thumb: #$scrollbarThumbHex;")
 
 //            sb.appendLine("  --cs-theme-font-family: '$fontFamily', sans-serif;") TODO
             sb.appendLine("  --cs-theme-font-size: ${fontSize}px;")
@@ -111,5 +115,29 @@ class StyleHelper {
         } catch (e: Exception) {
             ""
         }
+    }
+
+    private fun getScrollbarHex(): String {
+        val css = JBCefScrollbarsHelper.buildScrollbarsStyle()
+
+        val regex = """::-webkit-scrollbar-thumb\s*\{[^}]*background-color:\s*([^;]+);""".toRegex()
+        val match = regex.find(css)
+
+        match?.let {
+            val rgba = match.groupValues[1].trim()
+            val rgbaRegex = """rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)""".toRegex()
+            val rgbaMatch = rgbaRegex.find(rgba)
+
+            rgbaMatch?.let {
+                val r = rgbaMatch.groupValues[1].toInt().coerceIn(0, 255)
+                val g = rgbaMatch.groupValues[2].toInt().coerceIn(0, 255)
+                val b = rgbaMatch.groupValues[3].toInt().coerceIn(0, 255)
+                val a = (rgbaMatch.groupValues.getOrNull(4)?.toFloatOrNull() ?: 1f).coerceIn(0f, 1f)
+
+                return String.format("%02X%02X%02X%02X", r, g, b, (a * 255).toInt())
+            }
+        }
+
+        return ""
     }
 }
