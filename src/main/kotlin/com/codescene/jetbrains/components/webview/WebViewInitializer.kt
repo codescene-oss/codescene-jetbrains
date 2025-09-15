@@ -15,7 +15,7 @@ import kotlinx.serialization.json.Json
 
 @Service(Service.Level.PROJECT)
 class WebViewInitializer : LafManagerListener {
-    private lateinit var browser: JBCefBrowser
+    private val browsers = mutableMapOf<String, JBCefBrowser>()
 
     companion object {
         fun getInstance(project: Project): WebViewInitializer = project.service<WebViewInitializer>()
@@ -25,6 +25,16 @@ class WebViewInitializer : LafManagerListener {
         val bus = ApplicationManager.getApplication().messageBus.connect()
         bus.subscribe(LafManagerListener.TOPIC, this)
     }
+
+    private fun registerBrowser(id: String, browser: JBCefBrowser) {
+        browsers[id] = browser
+    }
+
+    fun unregisterBrowser(id: String) {
+        browsers.remove(id)
+    }
+
+    fun getBrowser(view: String): JBCefBrowser? = browsers[view]
 
     /**
      * Prepares and modifies the HTML document by embedding the CSS and JavaScript directly into the HTML.
@@ -39,7 +49,7 @@ class WebViewInitializer : LafManagerListener {
      * @return The modified HTML document as a string.
      */
     fun getInitialScript(view: String, browser: JBCefBrowser, initialData: Any? = null): String {
-        this.browser = browser
+        registerBrowser(view, browser)
 
         val css = getFileContent("cs-cwf/assets/index.css")
         val js = getFileContent("cs-cwf/assets/index.js")
@@ -94,8 +104,6 @@ class WebViewInitializer : LafManagerListener {
      * matches the active IDE theme.
      */
     override fun lookAndFeelChanged(p0: LafManager) {
-        println("Look and feel changed, updating theme...") // TODO: remove
-
         val css = StyleHelper.getInstance().generateCssVariablesFromTheme()
 
         val js = """
@@ -110,7 +118,7 @@ class WebViewInitializer : LafManagerListener {
         })();
         """.trimIndent()
 
-        browser.cefBrowser.executeJavaScript(js, null, 0)
+        browsers.values.forEach { it.cefBrowser.executeJavaScript(js, null, 0) }
     }
 
     /**
