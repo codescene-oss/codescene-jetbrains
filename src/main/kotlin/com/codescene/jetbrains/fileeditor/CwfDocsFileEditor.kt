@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.fileeditor
 
 import com.codescene.jetbrains.components.webview.WebViewFactory
+import com.codescene.jetbrains.components.webview.WebViewInitializer
 import com.codescene.jetbrains.components.webview.data.DocsData
 import com.codescene.jetbrains.components.webview.data.View
 import com.intellij.openapi.fileEditor.FileEditor
@@ -13,7 +14,7 @@ import javax.swing.JComponent
 
 @Suppress("UnstableApiUsage")
 internal class CwfDocsFileEditor(
-    project: Project,
+    private val project: Project,
     private val file: VirtualFile,
     data: DocsData
 ) : UserDataHolderBase(), FileEditor {
@@ -53,6 +54,6 @@ internal class CwfDocsFileEditor(
     }
 
     override fun dispose() {
-        // no explicit dispose needed, WebViewFactory already wires JCEF browser lifecycle
+        WebViewInitializer.getInstance(project).unregisterBrowser(View.DOCS.value)
     }
 }

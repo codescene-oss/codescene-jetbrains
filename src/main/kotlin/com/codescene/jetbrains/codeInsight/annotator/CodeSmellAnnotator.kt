@@ -1,14 +1,15 @@
 package com.codescene.jetbrains.codeInsight.annotator
 //CS-5145 remove ace from public version
-import com.codescene.data.ace.FnToRefactor
-import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Review
-import com.codescene.jetbrains.codeInsight.intentions.AceRefactorAction
+import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
 import com.codescene.jetbrains.codeInsight.intentions.ShowProblemIntentionAction
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
 import com.codescene.jetbrains.services.cache.ReviewCacheService
-import com.codescene.jetbrains.util.*
+import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.formatCodeSmellMessage
+import com.codescene.jetbrains.util.getTextRange
+import com.codescene.jetbrains.util.isFileSupported
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.ExternalAnnotator
@@ -44,8 +45,27 @@ class CodeSmellAnnotator : ExternalAnnotator<
         if (review != null) {
             Log.info("Annotating code smells for file: ${psiFile.name}")
 
-            review.fileLevelCodeSmells.forEach { annotateCodeSmell(it, document, holder /*, ace*/) }
-            review.functionLevelCodeSmells.flatMap { it.codeSmells }
+            review.fileLevelCodeSmells.forEach {
+                annotateCodeSmell(
+                    CodeVisionCodeSmell(
+                        details = it.details,
+                        highlightRange = it.highlightRange,
+                        category = it.category
+                    ), document, holder /*, ace*/
+                )
+            }
+            review.functionLevelCodeSmells
+                .flatMap { functionSmell ->
+                    functionSmell.codeSmells
+                        .map { codeSmell ->
+                            CodeVisionCodeSmell(
+                                details = codeSmell.details,
+                                category = codeSmell.category,
+                                highlightRange = codeSmell.highlightRange,
+                                functionName = functionSmell.function
+                            )
+                        }
+                }
                 .forEach { annotateCodeSmell(it, document, holder /*, ace*/) }
 
             Log.info("Successfully annotated code smells for file: ${psiFile.name}")
@@ -53,7 +73,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
     }
 
     private fun annotateCodeSmell(
-        codeSmell: CodeSmell,
+        codeSmell: CodeVisionCodeSmell,
         document: Document,
         holder: AnnotationHolder,
 //        refactorableFunctions: List<FnToRefactor>

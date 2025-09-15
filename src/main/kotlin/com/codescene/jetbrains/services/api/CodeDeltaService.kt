@@ -6,6 +6,7 @@ import com.codescene.data.delta.Delta
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.components.webview.data.CwfData
 import com.codescene.jetbrains.components.webview.data.HomeData
+import com.codescene.jetbrains.components.webview.data.View
 import com.codescene.jetbrains.components.webview.handler.CwfMessageHandler
 import com.codescene.jetbrains.components.webview.mapper.CodeHealthMonitorMapper
 import com.codescene.jetbrains.components.webview.util.parseMessage
@@ -149,6 +150,6 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
                 hasNotification = deltaResults.isNotEmpty()
             )
         )
-        CwfMessageHandler.getInstance(project).postMessage(dataJson)
+        CwfMessageHandler.getInstance(project).postMessage(View.HOME.value, dataJson)
     }
 }
