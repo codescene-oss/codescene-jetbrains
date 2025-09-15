@@ -1,10 +1,10 @@
 package com.codescene.jetbrains.codeInsight.codeVision.providers
 
-import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Range
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
+import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
 import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPanel
 import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
 import com.codescene.jetbrains.services.htmlviewer.DocumentationParams
@@ -27,7 +27,7 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override val categoryToFilter = HEALTH_SCORE
 
     private fun getCodeVisionEntry(description: String): ClickableTextCodeVisionEntry {
-        val codeHealth = CodeSmell("Code Health", Range(1, 1, 1, 1), "")
+        val codeHealth = CodeVisionCodeSmell(category = "Code Health", highlightRange = Range(1, 1, 1, 1), details = "")
 
         return ClickableTextCodeVisionEntry(
             "Code Health: $description",
@@ -67,7 +67,7 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
         return arrayListOf(TextRange(0, 0) to entry)
     }
 
-    override fun handleLensClick(editor: Editor, codeSmell: CodeSmell) {
+    override fun handleLensClick(editor: Editor, codeSmell: CodeVisionCodeSmell) {
         val project = editor.project!!
         val toolWindowManager = ToolWindowManager.getInstance(project)
         val docViewer = CodeSceneDocumentationViewer.getInstance(project)

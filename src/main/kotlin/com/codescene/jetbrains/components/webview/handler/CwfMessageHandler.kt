@@ -1,24 +1,21 @@
 package com.codescene.jetbrains.components.webview.handler
 
+import com.codescene.jetbrains.components.webview.WebViewInitializer
 import com.codescene.jetbrains.components.webview.data.*
-import com.codescene.jetbrains.components.webview.util.docNameMap
-import com.codescene.jetbrains.fileeditor.CWF_DOCS_DATA_KEY
+import com.codescene.jetbrains.components.webview.util.openDocs
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
+import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
 import com.codescene.jetbrains.util.Constants.ALLOWED_DOMAINS
-import com.codescene.jetbrains.util.FileUtils
-import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.TelemetryEvents
-import com.codescene.jetbrains.util.getSelectedTextEditor
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.testFramework.LightVirtualFile
+import com.intellij.ui.jcef.JBCefBrowser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -32,8 +29,6 @@ import org.cef.handler.CefMessageRouterHandlerAdapter
 
 @Service(Service.Level.PROJECT)
 class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerAdapter() {
-    private lateinit var browser: CefBrowser
-
     companion object {
         fun getInstance(project: Project): CwfMessageHandler = project.service<CwfMessageHandler>()
     }
@@ -68,8 +63,6 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
     ): Boolean {
         if (request == null) return false
 
-        browser?.let { this.browser = browser }
-
         val json = Json {
             encodeDefaults = true
             prettyPrint = true
@@ -78,9 +71,8 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         val message = json.decodeFromString<CwfMessage>(request);
 
         when (message.messageType) {
-            LifecycleMessages.INIT.value -> postMessage(
-                "file-tree"
-            ) // webview is ready to take on new messages
+            LifecycleMessages.INIT.value -> { /* TODO */
+            }
 
             EditorMessages.OPEN_LINK.value -> handleOpenUrl(message)
             EditorMessages.OPEN_SETTINGS.value -> handleOpenSettings()
@@ -104,49 +96,33 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         // TODO...
     }
 
-    fun postMessage(message: String) {
-        if (!::browser.isInitialized) {
-            Log.warn("Browser is not initialized", this::class::simpleName.toString())
-            return
-        }
+    fun postMessage(view: String, message: String, browser: JBCefBrowser? = null) {
+        val registeredBrowser = browser ?: WebViewInitializer.getInstance(project).getBrowser(view)
 
-        browser?.executeJavaScript(
-            """
+        registeredBrowser?.let {
+            it.cefBrowser.executeJavaScript(
+                """
               console.log("Sending message to webview...");
               window.postMessage($message);
             """.trimIndent(), null, 0
-        )
+            )
+        }
     }
 
     private fun handleOpenDocs(message: CwfMessage, json: Json) {
         val openDocsMessage = message.payload?.let {
             json.decodeFromJsonElement(OpenDocsForFunction.serializer(), it)
-        }
+        } ?: return
 
-        val fileEditorManager = FileEditorManager.getInstance(project)
-
-        openDocsMessage?.let {
-            val docsData = DocsData(
-                docType = openDocsMessage.docType,
-                fileData = FileMetaType(
-                    fileName = openDocsMessage.fileName,
-                    fn = openDocsMessage.fn
-                )
+        val docsData = DocsData(
+            docType = openDocsMessage.docType,
+            fileData = FileMetaType(
+                fileName = openDocsMessage.fileName,
+                fn = openDocsMessage.fn
             )
+        )
 
-            val fileName = docNameMap[openDocsMessage.docType] ?: "Code smell documentation"
-            val file = LightVirtualFile(fileName)
-            file.putUserData(CWF_DOCS_DATA_KEY, docsData)
-
-            CoroutineScope(Dispatchers.Main).launch {
-                val editor = getSelectedTextEditor(project, "", "${this::class.simpleName} - ${project.name}")
-
-                if (editor != null)
-                    FileUtils.splitWindow(file, fileEditorManager, project)
-                else
-                    FileUtils.openDocumentationWithoutActiveEditor(file, fileEditorManager)
-            }
-        }
+        openDocs(docsData, project, DocsEntryPoint.CODE_HEALTH_DETAILS)
     }
 
     private fun handleGotoFunctionLocation(message: CwfMessage, json: Json) {
@@ -182,9 +158,12 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         val line = message.fn?.range?.startLine ?: 0
         val column = message.fn?.range?.startColumn ?: 0
 
-        ApplicationManager.getApplication().invokeLaterOnWriteThread {
-            LocalFileSystem.getInstance().findFileByPath(filePath)?.let { file ->
-                OpenFileDescriptor(project, file, line, column).navigate(true)
+        ApplicationManager.getApplication().executeOnPooledThread {
+            val file = LocalFileSystem.getInstance().findFileByPath(filePath)
+            file?.let {
+                ApplicationManager.getApplication().invokeLater {
+                    OpenFileDescriptor(project, file, line, column).navigate(true)
+                }
             }
         }
     }

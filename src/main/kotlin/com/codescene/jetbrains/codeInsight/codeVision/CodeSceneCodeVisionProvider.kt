@@ -1,16 +1,21 @@
 package com.codescene.jetbrains.codeInsight.codeVision
 
 import com.codescene.data.review.CodeSmell
+import com.codescene.data.review.Range
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL
+import com.codescene.jetbrains.components.webview.data.DocsData
+import com.codescene.jetbrains.components.webview.data.FileMetaType
+import com.codescene.jetbrains.components.webview.data.Fn
+import com.codescene.jetbrains.components.webview.data.RangeCamelCase
+import com.codescene.jetbrains.components.webview.util.nameDocMap
+import com.codescene.jetbrains.components.webview.util.openDocs
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.api.CodeDeltaService
 import com.codescene.jetbrains.services.api.CodeReviewService
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
 import com.codescene.jetbrains.services.cache.ReviewCacheService
-import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
-import com.codescene.jetbrains.services.htmlviewer.DocumentationParams
 import com.codescene.jetbrains.util.getCachedDelta
 import com.codescene.jetbrains.util.getTextRange
 import com.codescene.jetbrains.util.isFileSupported
@@ -20,6 +25,13 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
 import org.reflections.Reflections
 import java.util.concurrent.ConcurrentHashMap
+
+data class CodeVisionCodeSmell(
+    val details: String,
+    val category: String,
+    val highlightRange: Range,
+    val functionName: String? = null
+)
 
 @Suppress("UnstableApiUsage")
 abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
@@ -137,18 +149,34 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         return this.filter { it.category == categoryToFilter }
     }
 
-    private fun getCodeSmellsByCategory(codeAnalysisResult: Review?): List<CodeSmell> {
+    private fun getCodeSmellsByCategory(codeAnalysisResult: Review?): List<CodeVisionCodeSmell> {
         val fileLevelSmells =
-            codeAnalysisResult?.fileLevelCodeSmells?.filterByCategory(categoryToFilter) ?: emptyList()
+            codeAnalysisResult?.fileLevelCodeSmells?.filterByCategory(categoryToFilter)?.map { smell ->
+                CodeVisionCodeSmell(
+                    details = smell.details,
+                    category = smell.category,
+                    highlightRange = smell.highlightRange
+                )
+            } ?: emptyList()
 
-        val functionLevelSmells = codeAnalysisResult?.functionLevelCodeSmells?.flatMap { functionCodeSmell ->
-            functionCodeSmell.codeSmells.filterByCategory(categoryToFilter)
-        } ?: emptyList()
+        val functionLevelSmells = codeAnalysisResult?.functionLevelCodeSmells
+            ?.flatMap { function ->
+                function.codeSmells
+                    .filterByCategory(categoryToFilter)
+                    .map { smell ->
+                        CodeVisionCodeSmell(
+                            functionName = function.function,
+                            details = smell.details,
+                            category = smell.category,
+                            highlightRange = smell.highlightRange
+                        )
+                    }
+            } ?: emptyList()
 
         return fileLevelSmells + functionLevelSmells
     }
 
-    private fun getCodeVisionEntry(codeSmell: CodeSmell): ClickableTextCodeVisionEntry =
+    private fun getCodeVisionEntry(codeSmell: CodeVisionCodeSmell): ClickableTextCodeVisionEntry =
         ClickableTextCodeVisionEntry(
             codeSmell.category,
             id,
@@ -156,20 +184,26 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
             CODE_SMELL
         )
 
-    open fun handleLensClick(editor: Editor, codeSmell: CodeSmell) {
+    open fun handleLensClick(editor: Editor, codeSmell: CodeVisionCodeSmell) {
         val project = editor.project ?: return
-        val docViewer = CodeSceneDocumentationViewer.getInstance(project)
 
-        docViewer.open(
-            editor,
-            DocumentationParams(
-                codeSmell.category,
-                editor.virtualFile.name,
-                editor.virtualFile.path,
-                codeSmell.highlightRange.startLine,
-                DocsEntryPoint.CODE_VISION
+        val docsData = DocsData(
+            docType = nameDocMap[codeSmell.category] ?: "",
+            fileData = FileMetaType(
+                fileName = editor.virtualFile.name,
+                fn = Fn(
+                    name = codeSmell.functionName ?: "",
+                    range = RangeCamelCase(
+                        endLine = codeSmell.highlightRange.endLine,
+                        startLine = codeSmell.highlightRange.startLine,
+                        endColumn = codeSmell.highlightRange.endColumn,
+                        startColumn = codeSmell.highlightRange.startColumn
+                    )
+                )
             )
         )
+
+        openDocs(docsData, project, DocsEntryPoint.CODE_VISION)
     }
 
     private fun markApiCallInProgress(filePath: String, apiCalls: MutableSet<String>) {
