@@ -190,7 +190,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         val docsData = DocsData(
             docType = nameDocMap[codeSmell.category] ?: "",
             fileData = FileMetaType(
-                fileName = editor.virtualFile.name,
+                fileName = editor.virtualFile.path,
                 fn = Fn(
                     name = codeSmell.functionName ?: "",
                     range = RangeCamelCase(

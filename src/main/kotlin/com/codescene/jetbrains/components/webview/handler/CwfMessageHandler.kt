@@ -3,6 +3,7 @@ package com.codescene.jetbrains.components.webview.handler
 import com.codescene.jetbrains.components.webview.WebViewInitializer
 import com.codescene.jetbrains.components.webview.data.*
 import com.codescene.jetbrains.components.webview.util.openDocs
+import com.codescene.jetbrains.components.webview.util.updateMonitor
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
 import com.codescene.jetbrains.util.Constants.ALLOWED_DOMAINS
@@ -71,8 +72,7 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         val message = json.decodeFromString<CwfMessage>(request);
 
         when (message.messageType) {
-            LifecycleMessages.INIT.value -> { /* TODO */
-            }
+            LifecycleMessages.INIT.value -> handleInit(message)
 
             EditorMessages.OPEN_LINK.value -> handleOpenUrl(message)
             EditorMessages.OPEN_SETTINGS.value -> handleOpenSettings()
@@ -90,6 +90,11 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         callback?.success("Message processed.")
 
         return true
+    }
+
+    private fun handleInit(message: CwfMessage) {
+        val payload = message.payload
+        if (payload.toString() == View.HOME.value) updateMonitor(project)
     }
 
     override fun onQueryCanceled(browser: CefBrowser?, frame: CefFrame?, queryId: Long) {
