@@ -96,7 +96,7 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         // TODO...
     }
 
-    fun postMessage(view: String, message: String, browser: JBCefBrowser? = null) {
+    fun postMessage(view: View, message: String, browser: JBCefBrowser? = null) {
         val registeredBrowser = browser ?: WebViewInitializer.getInstance(project).getBrowser(view)
 
         registeredBrowser?.let {

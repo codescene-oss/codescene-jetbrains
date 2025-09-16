@@ -150,6 +150,6 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
                 hasNotification = deltaResults.isNotEmpty()
             )
         )
-        CwfMessageHandler.getInstance(project).postMessage(View.HOME.value, dataJson)
+        CwfMessageHandler.getInstance(project).postMessage(View.HOME, dataJson)
     }
 }
