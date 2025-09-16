@@ -4,12 +4,7 @@ import com.codescene.ExtensionAPI
 import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.data.delta.Delta
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
-import com.codescene.jetbrains.components.webview.data.CwfData
-import com.codescene.jetbrains.components.webview.data.HomeData
-import com.codescene.jetbrains.components.webview.data.View
-import com.codescene.jetbrains.components.webview.handler.CwfMessageHandler
-import com.codescene.jetbrains.components.webview.mapper.CodeHealthMonitorMapper
-import com.codescene.jetbrains.components.webview.util.parseMessage
+import com.codescene.jetbrains.components.webview.util.updateMonitor
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.UIRefreshService
@@ -18,8 +13,8 @@ import com.codescene.jetbrains.services.cache.DeltaCacheEntry
 import com.codescene.jetbrains.services.cache.DeltaCacheService
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.CODESCENE
+import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.Constants.DELTA
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
@@ -51,12 +46,12 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
 
     override fun removeActiveCall(filePath: String) {
         super.removeActiveCall(filePath)
-        updateMonitor()
+        updateMonitor(project)
     }
 
     override fun addActiveCall(filePath: String, job: Job) {
         super.addActiveCall(filePath, job)
-        updateMonitor()
+        updateMonitor(project)
     }
 
     /**
@@ -120,36 +115,5 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
 
         val cacheEntry = DeltaCacheEntry(path, oldCode, currentCode, delta)
         cacheService.put(cacheEntry)
-    }
-
-    /**
-     * Updates the Code Health Monitor in the Home view (CWF).
-     *
-     * This method retrieves the latest delta analysis results from the
-     * [DeltaCacheService], maps them to [CwfData] using
-     * [CodeHealthMonitorMapper], serializes the data into a JSON string,
-     * and posts it to the [CwfMessageHandler] for rendering in the UI.
-     *
-     * The JSON message is created using [parseMessage], which ensures the
-     * correct serializer is used.
-     */
-    private fun updateMonitor() {
-        val mapper = CodeHealthMonitorMapper.getInstance()
-        val deltaResults = DeltaCacheService.getInstance(project).getAll()
-
-        val dataJson = parseMessage(
-            mapper = { mapper.toCwfData(deltaResults, getActiveApiCalls()) },
-            serializer = CwfData.serializer(HomeData.serializer())
-        )
-
-        updateToolWindowIcon(
-            UpdateToolWindowIconParams(
-                project = project,
-                toolWindowId = "CodeSceneHome", // TODO: update
-                baseIcon = AllIcons.Actions.Lightning, // TODO: update
-                hasNotification = deltaResults.isNotEmpty()
-            )
-        )
-        CwfMessageHandler.getInstance(project).postMessage(View.HOME, dataJson)
     }
 }
