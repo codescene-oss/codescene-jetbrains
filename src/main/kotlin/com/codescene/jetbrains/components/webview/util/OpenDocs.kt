@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
  * @param entryPoint The entry point from which the documentation was opened (for telemetry).
  */
 fun openDocs(docsData: DocsData, project: Project, entryPoint: DocsEntryPoint) {
-    val existingBrowser = WebViewInitializer.getInstance(project).getBrowser(View.DOCS.value)
+    val existingBrowser = WebViewInitializer.getInstance(project).getBrowser(View.DOCS)
 
     if (existingBrowser != null) updateWebView(docsData, existingBrowser, project) else openFile(docsData, project)
 
@@ -56,7 +56,7 @@ private fun updateWebView(docsData: DocsData, browser: JBCefBrowser, project: Pr
         serializer = CwfData.serializer(DocsData.serializer())
     )
 
-    messageHandler.postMessage(View.DOCS.value, dataJson, browser)
+    messageHandler.postMessage(View.DOCS, dataJson, browser)
 }
 
 private fun openFile(docsData: DocsData, project: Project) {

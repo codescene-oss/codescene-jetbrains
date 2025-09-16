@@ -2,7 +2,6 @@ package com.codescene.jetbrains.components.webview
 
 import com.codescene.jetbrains.components.webview.data.*
 import com.codescene.jetbrains.components.webview.util.StyleHelper
-import com.codescene.jetbrains.util.Log
 import com.intellij.ide.ui.LafManager
 import com.intellij.ide.ui.LafManagerListener
 import com.intellij.openapi.application.ApplicationManager
@@ -15,7 +14,7 @@ import kotlinx.serialization.json.Json
 
 @Service(Service.Level.PROJECT)
 class WebViewInitializer : LafManagerListener {
-    private val browsers = mutableMapOf<String, JBCefBrowser>()
+    private val browsers = mutableMapOf<View, JBCefBrowser>()
 
     companion object {
         fun getInstance(project: Project): WebViewInitializer = project.service<WebViewInitializer>()
@@ -26,15 +25,15 @@ class WebViewInitializer : LafManagerListener {
         bus.subscribe(LafManagerListener.TOPIC, this)
     }
 
-    private fun registerBrowser(id: String, browser: JBCefBrowser) {
+    private fun registerBrowser(id: View, browser: JBCefBrowser) {
         browsers[id] = browser
     }
 
-    fun unregisterBrowser(id: String) {
+    fun unregisterBrowser(id: View) {
         browsers.remove(id)
     }
 
-    fun getBrowser(view: String): JBCefBrowser? = browsers[view]
+    fun getBrowser(view: View): JBCefBrowser? = browsers[view]
 
     /**
      * Prepares and modifies the HTML document by embedding the CSS and JavaScript directly into the HTML.
@@ -48,7 +47,7 @@ class WebViewInitializer : LafManagerListener {
      *
      * @return The modified HTML document as a string.
      */
-    fun getInitialScript(view: String, browser: JBCefBrowser, initialData: Any? = null): String {
+    fun getInitialScript(view: View, browser: JBCefBrowser, initialData: Any? = null): String {
         registerBrowser(view, browser)
 
         val css = getFileContent("cs-cwf/assets/index.css")
@@ -134,7 +133,7 @@ class WebViewInitializer : LafManagerListener {
      * - [View.ACE]: Not yet implemented, returns an empty string.
      * - Any other value: Logs a warning and returns an empty JSON object (`{}`).
      */
-    private fun getInitialContext(view: String, initialData: Any? = null): String {
+    private fun getInitialContext(view: View, initialData: Any? = null): String {
         val isDevMode = System.getProperty("cwfIsDevMode")?.toBoolean() ?: false
         val isPro = true // TODO: resolve with auth
 
@@ -144,14 +143,14 @@ class WebViewInitializer : LafManagerListener {
         }
 
         when (view) {
-            View.HOME.value -> {
+            View.HOME -> {
                 val data = buildCwfData(HomeData(), view, isPro, isDevMode)
                 val dataJson = json.encodeToString<CwfData<HomeData>>(data)
 
                 return dataJson
             }
 
-            View.DOCS.value -> {
+            View.DOCS -> {
                 if (initialData !is DocsData) return "{}"
 
                 val data = buildCwfData(initialData, view, isPro, isDevMode)
@@ -160,27 +159,19 @@ class WebViewInitializer : LafManagerListener {
                 return dataJson
             }
 
-            View.ACE.value -> {
+            View.ACE -> {
                 return "" // Not implemented
-            }
-
-            else -> {
-                Log.warn(
-                    "Unknown view. Unable to get initial context for CWF.",
-                    WebViewInitializer::class::simpleName.toString()
-                )
-                return "{}";
             }
         }
     }
 
     private fun <T> buildCwfData(
         data: T,
-        view: String,
+        view: View,
         isPro: Boolean,
         isDevMode: Boolean
     ): CwfData<T> = CwfData(
-        view = view,
+        view = view.value,
         pro = isPro,
         devmode = isDevMode,
         data = data
