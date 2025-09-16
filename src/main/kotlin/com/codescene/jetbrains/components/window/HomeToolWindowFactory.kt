@@ -19,7 +19,7 @@ internal class HomeToolWindowFactory : ToolWindowFactory {
      * @param toolWindow The tool window where the content will be displayed.
      */
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val content = WebViewFactory.createWebViewComponent(project, View.HOME.value)
+        val content = WebViewFactory.createWebViewComponent(project, View.HOME)
 
         toolWindow.contentManager.addContent(content)
     }

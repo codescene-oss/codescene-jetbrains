@@ -23,7 +23,7 @@ internal class CwfDocsFileEditor(
     init {
         val content = WebViewFactory.createWebViewComponent(
             project = project,
-            view = View.DOCS.value,
+            view = View.DOCS,
             initialData = data
         )
         component = content.component
@@ -54,6 +54,6 @@ internal class CwfDocsFileEditor(
     }
 
     override fun dispose() {
-        WebViewInitializer.getInstance(project).unregisterBrowser(View.DOCS.value)
+        WebViewInitializer.getInstance(project).unregisterBrowser(View.DOCS)
     }
 }

@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.components.webview
 
 import com.codescene.jetbrains.UiLabelsBundle
+import com.codescene.jetbrains.components.webview.data.View
 import com.codescene.jetbrains.components.webview.handler.CwfMessageHandler
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBScrollPane
@@ -26,7 +27,7 @@ object WebViewFactory {
      */
     fun createWebViewComponent(
         project: Project,
-        view: String,
+        view: View,
         initialData: Any? = null
     ): Content {
         val contentFactory = ContentFactory.getInstance()

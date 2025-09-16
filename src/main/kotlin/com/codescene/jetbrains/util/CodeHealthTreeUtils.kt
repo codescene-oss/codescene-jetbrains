@@ -25,10 +25,13 @@ fun getHealthFinding(filePath: String, delta: Delta): CodeHealthFinding {
     )
 }
 
-private fun resolveHealthNodeType(oldScore: Double?, newScore: Double?): NodeType =
-    if ((oldScore == null || newScore == null) || (oldScore == newScore)) NodeType.CODE_HEALTH_NEUTRAL
-    else if (oldScore > newScore) NodeType.CODE_HEALTH_DECREASE
+private fun resolveHealthNodeType(oldScore: Double?, newScore: Double?): NodeType {
+    val emptyScores = oldScore == null || newScore == null
+
+    return if (emptyScores || (oldScore == newScore)) NodeType.CODE_HEALTH_NEUTRAL
+    else if (oldScore!! > newScore!!) NodeType.CODE_HEALTH_DECREASE
     else NodeType.CODE_HEALTH_INCREASE
+}
 
 fun getFileFinding(filePath: String, result: ChangeDetail): CodeHealthFinding {
     val positiveChange = isPositiveChange(result.changeType)
