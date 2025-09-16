@@ -16,7 +16,7 @@ class CodeHealthMonitorMapper {
 
     fun toCwfData(
         deltaResults: List<Pair<String, DeltaCacheItem>>,
-        activeJobs: MutableSet<String>,
+        activeJobs: List<String>,
         pro: Boolean = true,
         devmode: Boolean = true
     ): CwfData<HomeData> = CwfData(
@@ -30,7 +30,7 @@ class CodeHealthMonitorMapper {
         )
     )
 
-    private fun getActiveJobs(activeJobs: MutableSet<String>) =
+    private fun getActiveJobs(activeJobs: List<String>) =
         activeJobs.map { job ->
             AnalysisJob(
                 type = DELTA_ANALYSIS_JOB,

@@ -3,6 +3,8 @@ package com.codescene.jetbrains.components.webview.util
 import com.codescene.jetbrains.util.Constants
 
 val docNameMap: Map<String, String> = mapOf(
+    "docs_general_code_health" to Constants.GENERAL_CODE_HEALTH,
+    "docs_code_health_monitor" to Constants.CODE_HEALTH_MONITOR,
     "docs_issues_brain_class" to Constants.BRAIN_CLASS,
     "docs_issues_brain_method" to Constants.BRAIN_METHOD,
     "docs_issues_bumpy_road_ahead" to Constants.BUMPY_ROAD_AHEAD,
