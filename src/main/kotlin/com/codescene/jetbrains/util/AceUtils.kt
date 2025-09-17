@@ -3,8 +3,8 @@ package com.codescene.jetbrains.util
 import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.ace.RefactoringOptions
-import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Review
+import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
@@ -108,7 +108,7 @@ fun handleRefactoringResult(
     else showRefactoringFinishedNotification(params, refactoredFunction)
 }
 
-fun getRefactorableFunction(codeSmell: CodeSmell, refactorableFunctions: List<FnToRefactor>) =
+fun getRefactorableFunction(codeSmell: CodeVisionCodeSmell, refactorableFunctions: List<FnToRefactor>) =
     refactorableFunctions.find { function ->
         function.refactoringTargets.any { target ->
             target.category == codeSmell.category && target.line == codeSmell.highlightRange.startLine
@@ -141,6 +141,8 @@ fun aceStatusDelegate(): ReadWriteProperty<Any?, AceStatus> =
     }
 
 fun refreshAceUi(newValue: AceStatus, scope: CoroutineScope = CoroutineScope(Dispatchers.IO)) = scope.launch {
+    if (!CodeSceneGlobalSettingsStore.getInstance().state.aceEnabled) return@launch
+
     ProjectManager.getInstance().openProjects.forEach { project ->
         val editor = FileEditorManager.getInstance(project).selectedTextEditor
 
@@ -149,7 +151,7 @@ fun refreshAceUi(newValue: AceStatus, scope: CoroutineScope = CoroutineScope(Dis
                 ReviewCacheService
                     .getInstance(project)
                     .get(ReviewCacheQuery(it.document.text, it.virtualFile.path))
-//                    ?.let { cache -> checkContainsRefactorableFunctions(it, cache) }
+                    ?.let { cache -> checkContainsRefactorableFunctions(it, cache) }
             else
                 UIRefreshService.getInstance(project)
                     .refreshUI(it, listOf("ACECodeVisionProvider"))
