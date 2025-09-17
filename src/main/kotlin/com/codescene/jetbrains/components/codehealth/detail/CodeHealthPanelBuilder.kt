@@ -49,7 +49,7 @@ class CodeHealthPanelBuilder(private val project: Project) {
             addCodeHealthHeader(details, constraint)
             if (details.healthData!!.status.isNotEmpty()) addHealthDecline(details, constraint)
             addSlider(details, constraint)
-        } else if (settings.enableAutoRefactor)
+        } else if (settings.aceEnabled && settings.enableAutoRefactor)
             addAutoRefactorButton(details, constraint)
 
         addBody(details, constraint)
@@ -64,8 +64,7 @@ class CodeHealthPanelBuilder(private val project: Project) {
         constraint.ipady = 8
         constraint.insets = JBUI.insets(10, 0)
 
-//      remove ACE from public version
-//        add(getAutoRefactorButton(details), constraint)
+        add(getAutoRefactorButton(details), constraint)
         constraint.ipady = 0
         constraint.insets = JBUI.emptyInsets()
 

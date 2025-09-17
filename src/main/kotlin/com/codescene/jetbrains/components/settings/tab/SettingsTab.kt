@@ -24,11 +24,12 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                     .comment(UiLabelsBundle.message("enableCodeLensesComment"))
             }
 
-//            row {
-//                checkBox(UiLabelsBundle.message("enableAutoRefactor"))
-//                    .bindSelected(settings::enableAutoRefactor)
-//                    .comment(UiLabelsBundle.message("enableAutoRefactorComment"))
-//            }
+            row {
+                checkBox(UiLabelsBundle.message("enableAutoRefactor"))
+                    .bindSelected(settings::enableAutoRefactor)
+                    .comment(UiLabelsBundle.message("enableAutoRefactorComment"))
+                    .visible(settings.aceEnabled)
+            }
 
             row {
                 checkBox(UiLabelsBundle.message("gitignore"))
