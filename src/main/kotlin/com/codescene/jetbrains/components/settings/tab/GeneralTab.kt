@@ -58,28 +58,30 @@ class GeneralTab : Configurable {
     )
 
     override fun createComponent(): JPanel {
+        val settings = CodeSceneGlobalSettingsStore.getInstance().state
+
         return JPanel().apply {
             layout = BorderLayout()
 
-//            add(getAceSection(), BorderLayout.NORTH)
+            if (settings.aceEnabled) add(getAceSection(), BorderLayout.NORTH)
             add(getMoreSection(), BorderLayout.CENTER)
         }
     }
 
-//    private fun getAceSection() = JPanel().apply {
-//        layout = BorderLayout()
-//
-//        border = IdeBorderFactory.createTitledBorder(
-//            UiLabelsBundle.message("status"), true, JBUI.insetsRight(10)
-//        )
-//
-//        add(JLabel(UiLabelsBundle.message("ace")).apply {
-//            icon = CODESCENE_ACE
-//        }, BorderLayout.WEST)
-//
-//        add(statusButton, BorderLayout.EAST)
-//        add(Box.createVerticalStrut(20), BorderLayout.SOUTH)
-//    }
+    private fun getAceSection() = JPanel().apply {
+        layout = BorderLayout()
+
+        border = IdeBorderFactory.createTitledBorder(
+            UiLabelsBundle.message("status"), true, JBUI.insetsRight(10)
+        )
+
+        add(JLabel(UiLabelsBundle.message("ace")).apply {
+            icon = CODESCENE_ACE
+        }, BorderLayout.WEST)
+
+        add(statusButton, BorderLayout.EAST)
+        add(Box.createVerticalStrut(20), BorderLayout.SOUTH)
+    }
 
     private fun getStatusButton(): JButton {
         status = CodeSceneGlobalSettingsStore.getInstance().state.aceStatus
@@ -161,6 +163,7 @@ class GeneralTab : Configurable {
     }
 
     class RoundedBorder(private val radius: Int) : AbstractBorder() {
+        // @codescene(disable:"Excess Number of Function Arguments")
         override fun paintBorder(c: Component?, g: Graphics, x: Int, y: Int, width: Int, height: Int) {
             val g2d = g as Graphics2D
 
@@ -208,7 +211,8 @@ class GeneralTab : Configurable {
                         TelemetryEvents.OPEN_LINK, mutableMapOf<String, Any>(Pair("url", uri))
                     )
                 } catch (e: Exception) {
-                    Log.warn("Unable to open link. Error message: ${e.message}")                }
+                    Log.warn("Unable to open link. Error message: ${e.message}")
+                }
             }
 
             override fun mouseEntered(e: MouseEvent?) {
