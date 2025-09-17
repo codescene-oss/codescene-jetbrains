@@ -21,12 +21,13 @@ data class CodeSceneGlobalSettings(
     @NonNls var serverUrl: String = CODESCENE_SERVER_URL,
 
     var enableCodeLenses: Boolean = true, //TODO: refresh (remove) code vision immediately upon change
-    var enableAutoRefactor: Boolean = false,
+    var enableAutoRefactor: Boolean = true, // User-facing setting
     var aceAcknowledged: Boolean = false,
     var excludeGitignoreFiles: Boolean = true,
     var previewCodeHealthGate: Boolean = false,
     var telemetryConsentGiven: Boolean = false,
-    val codeHealthMonitorEnabled: Boolean = true, //Freemium version
+    val codeHealthMonitorEnabled: Boolean = true, //Freemium version flag
+    val aceEnabled: Boolean = true, //Freemium version flag
     var monitorTreeSortOption: MonitorTreeSortOptions = MonitorTreeSortOptions.SCORE_ASCENDING
 ) {
     var aceStatus: AceStatus by aceStatusDelegate()

@@ -31,6 +31,7 @@ object WebViewFactory {
         initialData: Any? = null
     ): Content {
         val contentFactory = ContentFactory.getInstance()
+        val isDevMode = System.getProperty("cwfIsDevMode")?.toBoolean() ?: false
 
         if (!JBCefApp.isSupported()) {
             return contentFactory.createContent(
@@ -41,7 +42,7 @@ object WebViewFactory {
         }
 
         val jcefBrowser = JBCefBrowser.createBuilder()
-            .setEnableOpenDevToolsMenuItem(true)
+            .setEnableOpenDevToolsMenuItem(isDevMode)
             .build()
 
         val webViewInitializer = WebViewInitializer.getInstance(project)

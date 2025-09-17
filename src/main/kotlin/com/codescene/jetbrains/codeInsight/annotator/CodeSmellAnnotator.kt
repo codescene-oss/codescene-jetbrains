@@ -1,15 +1,14 @@
 package com.codescene.jetbrains.codeInsight.annotator
-//CS-5145 remove ace from public version
+
+import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
+import com.codescene.jetbrains.codeInsight.intentions.AceRefactorAction
 import com.codescene.jetbrains.codeInsight.intentions.ShowProblemIntentionAction
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
 import com.codescene.jetbrains.services.cache.ReviewCacheService
-import com.codescene.jetbrains.util.Log
-import com.codescene.jetbrains.util.formatCodeSmellMessage
-import com.codescene.jetbrains.util.getTextRange
-import com.codescene.jetbrains.util.isFileSupported
+import com.codescene.jetbrains.util.*
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.ExternalAnnotator
@@ -40,7 +39,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
     ) {
         val document = FileDocumentManager.getInstance().getDocument(psiFile.virtualFile) ?: return
         val review = annotationContext.reviewCache
-//        val ace = annotationContext.aceCache
+        val ace = annotationContext.aceCache
 
         if (review != null) {
             Log.info("Annotating code smells for file: ${psiFile.name}")
@@ -51,7 +50,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
                         details = it.details,
                         highlightRange = it.highlightRange,
                         category = it.category
-                    ), document, holder /*, ace*/
+                    ), document, holder, ace
                 )
             }
             review.functionLevelCodeSmells
@@ -66,7 +65,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
                             )
                         }
                 }
-                .forEach { annotateCodeSmell(it, document, holder /*, ace*/) }
+                .forEach { annotateCodeSmell(it, document, holder, ace) }
 
             Log.info("Successfully annotated code smells for file: ${psiFile.name}")
         }
@@ -76,7 +75,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
         codeSmell: CodeVisionCodeSmell,
         document: Document,
         holder: AnnotationHolder,
-//        refactorableFunctions: List<FnToRefactor>
+        refactorableFunctions: List<FnToRefactor> = emptyList()
     ) {
         val settings = CodeSceneGlobalSettingsStore.getInstance().state
         val range = getTextRange(codeSmell.highlightRange.startLine to codeSmell.highlightRange.endLine, document)
@@ -84,15 +83,17 @@ class CodeSmellAnnotator : ExternalAnnotator<
 
         Log.debug("Creating annotation for code smell '${codeSmell.category}' at range: $range")
 
-//        val function =
-//            if (settings.enableAutoRefactor) getRefactorableFunction(codeSmell, refactorableFunctions) else null
+        val function =
+            if (settings.aceEnabled && settings.enableAutoRefactor)
+                getRefactorableFunction(codeSmell, refactorableFunctions)
+            else null
 
         val annotationBuilder = holder.newAnnotation(HighlightSeverity.WARNING, message)
             .range(range)
             .highlightType(ProblemHighlightType.WARNING)
             .withFix(ShowProblemIntentionAction(codeSmell))
 
-//        function?.let { annotationBuilder.withFix(AceRefactorAction(function)) }
+        function?.let { annotationBuilder.withFix(AceRefactorAction(function)) }
 
         annotationBuilder.create()
     }
@@ -116,13 +117,13 @@ class CodeSmellAnnotator : ExternalAnnotator<
         }
 
         val cache = fetchCache(file, content)
-//        val aceCache = fetchAceCache(file.virtualFile.path, content, file.project)
+        val aceCache = fetchAceCache(file.virtualFile.path, content, file.project)
 
-        return AnnotationContext(cache /*, aceCache*/)
+        return AnnotationContext(cache, aceCache)
     }
 
     override fun doAnnotate(collectedInfo: AnnotationContext): AnnotationContext? =
-        collectedInfo.takeIf { it.reviewCache != null /*|| it.aceCache.isNotEmpty()*/ }
+        collectedInfo.takeIf { it.reviewCache != null || it.aceCache.isNotEmpty() }
 
-    class AnnotationContext(val reviewCache: Review? /*, val aceCache: List<FnToRefactor>*/)
+    class AnnotationContext(val reviewCache: Review?, val aceCache: List<FnToRefactor>)
 }

@@ -82,25 +82,25 @@ class AceStatusBarWidget : StatusBarWidget.IconPresentation, StatusBarWidget {
                 // get the specific component (widget)
                 val widgetComponent: JComponent? = e.source as? JComponent
 
-//                widgetComponent?.let { component ->
-//                    val popup = JBPopupFactory.getInstance()
-//                        .createActionGroupPopup(
-//                            ACE_STATUS,
-//                            actionGroup,
-//                            DataManager.getInstance().getDataContext(component),
-//                            JBPopupFactory.ActionSelectionAid.SPEEDSEARCH,
-//                            true
-//                        )
-//
-//                    val popupSize = popup.content.preferredSize
-//                    val locationOnScreen = component.locationOnScreen
-//                    val popupX = locationOnScreen.x + e.x
-//                    val popupY = locationOnScreen.y - popupSize.height
-//
-//                    ApplicationManager.getApplication().invokeLater {
-//                        popup.showInScreenCoordinates(component, Point(popupX, popupY))
-//                    }
-//                }
+                widgetComponent?.let { component ->
+                    val popup = JBPopupFactory.getInstance()
+                        .createActionGroupPopup(
+                            ACE_STATUS,
+                            actionGroup,
+                            DataManager.getInstance().getDataContext(component),
+                            JBPopupFactory.ActionSelectionAid.SPEEDSEARCH,
+                            true
+                        )
+
+                    val popupSize = popup.content.preferredSize
+                    val locationOnScreen = component.locationOnScreen
+                    val popupX = locationOnScreen.x + e.x
+                    val popupY = locationOnScreen.y - popupSize.height
+
+                    ApplicationManager.getApplication().invokeLater {
+                        popup.showInScreenCoordinates(component, Point(popupX, popupY))
+                    }
+                }
             }
         }
     }
@@ -109,7 +109,7 @@ class AceStatusBarWidget : StatusBarWidget.IconPresentation, StatusBarWidget {
 class AceStatusBarWidgetFactory : StatusBarWidgetFactory {
     override fun getId(): String = this::class.simpleName!!
     override fun getDisplayName(): String = ACE_STATUS
-    override fun isAvailable(project: Project): Boolean = true
+    override fun isAvailable(project: Project): Boolean = CodeSceneGlobalSettingsStore.getInstance().state.aceEnabled
     override fun canBeEnabledOn(statusBar: StatusBar): Boolean = true
     override fun createWidget(project: Project): StatusBarWidget = AceStatusBarWidget()
     override fun isEnabledByDefault(): Boolean = true
