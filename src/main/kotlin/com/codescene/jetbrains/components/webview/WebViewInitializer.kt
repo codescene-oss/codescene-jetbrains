@@ -1,6 +1,9 @@
 package com.codescene.jetbrains.components.webview
 
 import com.codescene.jetbrains.components.webview.data.*
+import com.codescene.jetbrains.components.webview.data.message.EditorMessages
+import com.codescene.jetbrains.components.webview.data.view.DocsData
+import com.codescene.jetbrains.components.webview.data.view.HomeData
 import com.codescene.jetbrains.components.webview.util.StyleHelper
 import com.intellij.ide.ui.LafManager
 import com.intellij.ide.ui.LafManagerListener
