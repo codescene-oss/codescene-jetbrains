@@ -3,10 +3,10 @@ package com.codescene.jetbrains.components.webview.util
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.webview.WebViewInitializer
 import com.codescene.jetbrains.components.webview.data.CwfData
-import com.codescene.jetbrains.components.webview.data.DocsData
+import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.data.View
 import com.codescene.jetbrains.components.webview.handler.CwfMessageHandler
-import com.codescene.jetbrains.components.webview.mapper.CodeSceneDocumentationMapper
+import com.codescene.jetbrains.components.webview.mapper.DocumentationMapper
 import com.codescene.jetbrains.fileeditor.CWF_DOCS_DATA_KEY
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
@@ -47,7 +47,7 @@ fun openDocs(docsData: DocsData, project: Project, entryPoint: DocsEntryPoint) {
 }
 
 private fun updateWebView(docsData: DocsData, browser: JBCefBrowser, project: Project) {
-    val mapper = CodeSceneDocumentationMapper.getInstance()
+    val mapper = DocumentationMapper.getInstance()
 
     val messageHandler = CwfMessageHandler.getInstance(project)
 

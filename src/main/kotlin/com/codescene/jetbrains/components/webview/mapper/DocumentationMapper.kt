@@ -1,16 +1,16 @@
 package com.codescene.jetbrains.components.webview.mapper
 
 import com.codescene.jetbrains.components.webview.data.CwfData
-import com.codescene.jetbrains.components.webview.data.DocsData
+import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.data.View
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 
-@Service(Service.Level.APP)
-class CodeSceneDocumentationMapper {
+@Service
+class DocumentationMapper {
     companion object {
-        fun getInstance(): CodeSceneDocumentationMapper =
-            ApplicationManager.getApplication().getService(CodeSceneDocumentationMapper::class.java)
+        fun getInstance(): DocumentationMapper =
+            ApplicationManager.getApplication().getService(DocumentationMapper::class.java)
     }
 
     fun toCwfData(

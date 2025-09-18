@@ -141,10 +141,13 @@
                 implementation="com.codescene.jetbrains.fileeditor.CodeSceneFileEditorProvider"/>
         <fileEditorProvider
                 implementation="com.codescene.jetbrains.fileeditor.CwfDocsFileEditorProvider"/>
-                <statusBarWidgetFactory
-                        implementation="com.codescene.jetbrains.components.statusbar.AceStatusBarWidgetFactory"
-                        id="AceStatusBarWidgetFactory"
-                />
+        <fileEditorProvider
+                implementation="com.codescene.jetbrains.fileeditor.CwfAceFileEditorProvider"/>
+
+        <statusBarWidgetFactory
+                implementation="com.codescene.jetbrains.components.statusbar.AceStatusBarWidgetFactory"
+                id="AceStatusBarWidgetFactory"
+        />
     </extensions>
 
     <projectListeners>

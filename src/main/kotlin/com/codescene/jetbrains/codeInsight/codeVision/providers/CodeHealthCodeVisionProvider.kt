@@ -5,8 +5,8 @@ import com.codescene.data.review.Review
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
-import com.codescene.jetbrains.components.webview.data.DocsData
-import com.codescene.jetbrains.components.webview.data.FileMetaType
+import com.codescene.jetbrains.components.webview.data.view.DocsData
+import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
 import com.codescene.jetbrains.components.webview.util.nameDocMap
 import com.codescene.jetbrains.components.webview.util.openDocs
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint

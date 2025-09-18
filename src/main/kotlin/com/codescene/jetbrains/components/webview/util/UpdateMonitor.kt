@@ -1,7 +1,7 @@
 package com.codescene.jetbrains.components.webview.util
 
 import com.codescene.jetbrains.components.webview.data.CwfData
-import com.codescene.jetbrains.components.webview.data.HomeData
+import com.codescene.jetbrains.components.webview.data.view.HomeData
 import com.codescene.jetbrains.components.webview.data.View
 import com.codescene.jetbrains.components.webview.handler.CwfMessageHandler
 import com.codescene.jetbrains.components.webview.mapper.CodeHealthMonitorMapper

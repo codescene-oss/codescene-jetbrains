@@ -2,6 +2,9 @@ package com.codescene.jetbrains.components.webview.handler
 
 import com.codescene.jetbrains.components.webview.WebViewInitializer
 import com.codescene.jetbrains.components.webview.data.*
+import com.codescene.jetbrains.components.webview.data.message.*
+import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
+import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.util.openDocs
 import com.codescene.jetbrains.components.webview.util.updateMonitor
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService

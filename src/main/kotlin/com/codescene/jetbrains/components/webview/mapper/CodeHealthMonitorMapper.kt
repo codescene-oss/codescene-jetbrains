@@ -1,13 +1,18 @@
 package com.codescene.jetbrains.components.webview.mapper
 
-import com.codescene.jetbrains.components.webview.data.*
+import com.codescene.jetbrains.components.webview.data.CwfData
+import com.codescene.jetbrains.components.webview.data.View
+import com.codescene.jetbrains.components.webview.data.shared.AnalysisJob
+import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
+import com.codescene.jetbrains.components.webview.data.shared.Range
+import com.codescene.jetbrains.components.webview.data.view.*
 import com.codescene.jetbrains.services.cache.DeltaCacheItem
 import com.codescene.jetbrains.util.Constants.DELTA_ANALYSIS_JOB
 import com.codescene.jetbrains.util.Constants.JOB_STATE_RUNNING
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 
-@Service(Service.Level.APP)
+@Service
 class CodeHealthMonitorMapper {
     companion object {
         fun getInstance(): CodeHealthMonitorMapper =

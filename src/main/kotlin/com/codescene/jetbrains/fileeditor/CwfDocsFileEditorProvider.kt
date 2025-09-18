@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.fileeditor
 
-import com.codescene.jetbrains.components.webview.data.DocsData
+import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorPolicy
 import com.intellij.openapi.fileEditor.FileEditorProvider

@@ -1,7 +1,7 @@
 package com.codescene.jetbrains.components.webview.util
 
 import com.codescene.jetbrains.components.webview.data.CwfMessage
-import com.codescene.jetbrains.components.webview.data.LifecycleMessages
+import com.codescene.jetbrains.components.webview.data.message.LifecycleMessages
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 
