@@ -1,4 +1,4 @@
-package com.codescene.jetbrains.components.webview.data
+package com.codescene.jetbrains.components.webview.data.message
 
 enum class LifecycleMessages(val value: String) {
     INIT("init"),
