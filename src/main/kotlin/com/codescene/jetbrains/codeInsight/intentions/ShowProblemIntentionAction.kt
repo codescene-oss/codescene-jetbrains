@@ -1,10 +1,10 @@
 package com.codescene.jetbrains.codeInsight.intentions
 
 import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
-import com.codescene.jetbrains.components.webview.data.DocsData
-import com.codescene.jetbrains.components.webview.data.FileMetaType
-import com.codescene.jetbrains.components.webview.data.Fn
-import com.codescene.jetbrains.components.webview.data.RangeCamelCase
+import com.codescene.jetbrains.components.webview.data.view.DocsData
+import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
+import com.codescene.jetbrains.components.webview.data.shared.Fn
+import com.codescene.jetbrains.components.webview.data.shared.RangeCamelCase
 import com.codescene.jetbrains.components.webview.util.nameDocMap
 import com.codescene.jetbrains.components.webview.util.openDocs
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint

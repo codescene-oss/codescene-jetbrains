@@ -1,5 +1,6 @@
-package com.codescene.jetbrains.components.webview.data
+package com.codescene.jetbrains.components.webview.data.message
 
+import com.codescene.jetbrains.components.webview.data.shared.Fn
 import kotlinx.serialization.Serializable
 
 @Serializable

@@ -1,5 +1,8 @@
-package com.codescene.jetbrains.components.webview.data
+package com.codescene.jetbrains.components.webview.data.view
 
+import com.codescene.jetbrains.components.webview.data.shared.AnalysisJob
+import com.codescene.jetbrains.components.webview.data.shared.AutoRefactorConfig
+import com.codescene.jetbrains.components.webview.data.shared.Range
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -17,13 +20,6 @@ data class HomeData( // Code Health Monitor
 @Serializable
 data class User(
     val name: String
-)
-
-@Serializable
-data class AutoRefactorConfig(
-    val visible: Boolean = false,
-    val disabled: Boolean = true,
-    val activated: Boolean = false
 )
 
 @Serializable
@@ -80,12 +76,4 @@ data class File(
 data class FunctionInfo(
     val name: String?,
     val range: Range?
-)
-
-@Serializable
-data class Range(
-    @SerialName("end-line") val endLine: Int,
-    @SerialName("end-column") val endColumn: Int,
-    @SerialName("start-line") val startLine: Int,
-    @SerialName("start-column") val startColumn: Int,
 )
