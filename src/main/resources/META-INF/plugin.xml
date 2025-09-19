@@ -148,6 +148,8 @@
                 implementation="com.codescene.jetbrains.components.statusbar.AceStatusBarWidgetFactory"
                 id="AceStatusBarWidgetFactory"
         />
+
+        <iconProvider implementation="com.codescene.jetbrains.components.icon.CodeSceneFileIconProvider"/>
     </extensions>
 
     <projectListeners>

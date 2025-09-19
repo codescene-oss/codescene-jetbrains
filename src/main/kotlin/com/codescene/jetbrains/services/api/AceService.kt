@@ -8,6 +8,8 @@ import com.codescene.data.ace.RefactorResponse
 import com.codescene.data.ace.RefactoringOptions
 import com.codescene.data.delta.Delta
 import com.codescene.data.review.Review
+import com.codescene.jetbrains.components.webview.util.AceCwfParams
+import com.codescene.jetbrains.components.webview.util.openAceWindow
 import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.UIRefreshService
@@ -32,6 +34,8 @@ data class RefactoredFunction(
     val fileName: String = "",
     val startLine: Int? = null,
     val endLine: Int? = null,
+    val startColumn: Int? = null,
+    val endColumn: Int? = null,
     var refactoringWindowType: String = ""
 )
 
@@ -136,8 +140,16 @@ class AceService : BaseService(), Disposable {
                 try {
                     handleRefactoring(params, options)
                 } catch (e: Exception) {
-                    //TODO: error notification, handle out of credits case separately
                     Log.warn("Problem occurred during ACE refactoring: ${e.message}")
+
+                    if (params.function != null && params.editor != null)
+                        openAceWindow(
+                            AceCwfParams(
+                                error = true,
+                                function = params.function,
+                                filePath = params.editor.virtualFile.path
+                            ), project
+                        )
                 }
             }
         }
@@ -163,14 +175,13 @@ class AceService : BaseService(), Disposable {
         Log.debug("Refactoring ${function!!.name} took ${elapsedMs}ms.", serviceImplementation)
 
         result?.let {
-            val refactoredFunction = RefactoredFunction(
-                function.name,
-                it,
-                params.editor?.virtualFile?.name ?: "",
-                params.function.range.startLine,
-                params.function.range.endLine
+            val refactoredFunction = AceCwfParams(
+                filePath = params.editor!!.virtualFile.path,
+                function = params.function,
+                refactorResponse = result,
             )
-            handleRefactoringResult(params, refactoredFunction, elapsedMs)
+
+            handleRefactoringResult(refactoredFunction, elapsedMs, params.editor)
         }
     }
 

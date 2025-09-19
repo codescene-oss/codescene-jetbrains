@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.util
 
+import com.codescene.jetbrains.UiLabelsBundle
 import com.intellij.ui.ColorUtil
 import com.intellij.ui.JBColor
 import java.awt.Color
@@ -96,4 +97,8 @@ object Constants {
     const val JOB_STATE_RUNNING = "running"
     const val JOB_STATE_QUEUED = "queued"
 
+    val codeSceneWindowFileNames = listOf(
+        UiLabelsBundle.message("ace"),
+        UiLabelsBundle.message("codeSmellDocs")
+    )
 }

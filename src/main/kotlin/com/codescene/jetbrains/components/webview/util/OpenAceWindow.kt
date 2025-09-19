@@ -1,9 +1,14 @@
 package com.codescene.jetbrains.components.webview.util
 
+import com.codescene.data.ace.FnToRefactor
+import com.codescene.data.ace.RefactorResponse
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.webview.WebViewInitializer
+import com.codescene.jetbrains.components.webview.data.CwfData
 import com.codescene.jetbrains.components.webview.data.View
 import com.codescene.jetbrains.components.webview.data.view.AceData
+import com.codescene.jetbrains.components.webview.handler.CwfMessageHandler
+import com.codescene.jetbrains.components.webview.mapper.AceMapper
 import com.codescene.jetbrains.fileeditor.CWF_ACE_DATA_KEY
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.util.FileUtils
@@ -17,6 +22,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+data class AceCwfParams(
+    val filePath: String,
+    val function: FnToRefactor,
+    val error: Boolean = false,
+    val stale: Boolean = false,
+    val loading: Boolean = false,
+    val refactorResponse: RefactorResponse? = null
+)
+
 /**
  * Opens the CodeScene ACE window in the IDE.
  *
@@ -26,34 +40,39 @@ import kotlinx.coroutines.launch
  *
  * ## Entry points
  * This method is invoked when the user uses CodeScene **ACE** from:
- * - TODO
+ * - ACE code vision,
+ * - Refactoring finished notification,
+ * - Code Health Monitor (TODO),
+ * - Intention action (TODO).
  *
  * @param aceData The ACE data to be displayed in the webview.
  * @param project The current project.
  */
-fun openAceWindow(aceData: AceData, project: Project) {
+fun openAceWindow(params: AceCwfParams, project: Project) {
     val existingBrowser = WebViewInitializer.getInstance(project).getBrowser(View.ACE)
 
-    if (existingBrowser != null) updateWebView(aceData, existingBrowser, project) else openFile(aceData, project)
+    if (existingBrowser != null) updateWebView(params, existingBrowser, project) else openFile(params, project)
 
-    sendTelemetry(aceData)
+    params.refactorResponse?.let { sendTelemetry(params.refactorResponse) }
 }
 
-private fun updateWebView(docsData: AceData, browser: JBCefBrowser, project: Project) {
-//    val mapper = DocumentationMapper.getInstance()
-//
-//    val messageHandler = CwfMessageHandler.getInstance(project)
-//
-//    val dataJson = parseMessage(
-//        mapper = { mapper.toCwfData(docsData) },
-//        serializer = CwfData.serializer(DocsData.serializer())
-//    )
-//
-//    messageHandler.postMessage(View.DOCS, dataJson, browser)
+private fun updateWebView(params: AceCwfParams, browser: JBCefBrowser, project: Project) {
+    val mapper = AceMapper.getInstance()
+    val messageHandler = CwfMessageHandler.getInstance(project)
+
+    val dataJson = parseMessage(
+        mapper = { mapper.toCwfData(params) },
+        serializer = CwfData.serializer(AceData.serializer())
+    )
+
+    messageHandler.postMessage(View.ACE, dataJson, browser)
 }
 
-private fun openFile(aceData: AceData, project: Project) {
+private fun openFile(params: AceCwfParams, project: Project) {
     val fileEditorManager = FileEditorManager.getInstance(project)
+
+    val mapper = AceMapper.getInstance()
+    val aceData = mapper.toCwfData(params).data
 
     val fileName = UiLabelsBundle.message("ace")
     val file = LightVirtualFile(fileName)
@@ -69,12 +88,11 @@ private fun openFile(aceData: AceData, project: Project) {
     }
 }
 
-// TODO
-private fun sendTelemetry(aceData: AceData) {
+private fun sendTelemetry(refactoring: RefactorResponse) {
     TelemetryService.getInstance().logUsage(
-        TelemetryEvents.OPEN_DOCS_PANEL,
-        mutableMapOf<String, Any>(
-//            Pair("category", docNameMap[aceData.docType] ?: "")
+        TelemetryEvents.ACE_REFACTOR_PRESENTED, mutableMapOf(
+            Pair("confidence", refactoring.confidence.level),
+            Pair("isCached", refactoring.metadata.cached ?: false)
         )
     )
 }
