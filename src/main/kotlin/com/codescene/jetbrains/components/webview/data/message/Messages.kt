@@ -13,7 +13,11 @@ enum class LoginMessages(val value: String) {
 
 enum class PanelMessages(val value: String) {
     REQUEST_AND_PRESENT_REFACTORING("request-and-present-refactoring"),
-    OPEN_DOCS_FOR_FUNCTION("open-docs-for-function")
+    OPEN_DOCS_FOR_FUNCTION("open-docs-for-function"),
+    COPY_CODE("copyCode"),
+    SHOW_DIFF("showDiff"),
+    REJECT("reject"),
+    APPLY("apply")
 }
 
 enum class EditorMessages(val value: String) {

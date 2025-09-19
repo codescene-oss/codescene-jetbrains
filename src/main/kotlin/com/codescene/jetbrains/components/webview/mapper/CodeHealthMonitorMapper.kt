@@ -23,10 +23,9 @@ class CodeHealthMonitorMapper {
         deltaResults: List<Pair<String, DeltaCacheItem>>,
         activeJobs: List<String>,
         pro: Boolean = true,
-        devmode: Boolean = true
     ): CwfData<HomeData> = CwfData(
         pro = pro,
-        devmode = devmode,
+        devmode = System.getProperty("cwfIsDevMode")?.toBoolean() ?: false,
         view = View.HOME.value,
         data = HomeData(
             signedIn = true,

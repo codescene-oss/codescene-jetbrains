@@ -1,7 +1,9 @@
 package com.codescene.jetbrains.components.webview
 
-import com.codescene.jetbrains.components.webview.data.*
+import com.codescene.jetbrains.components.webview.data.CwfData
+import com.codescene.jetbrains.components.webview.data.View
 import com.codescene.jetbrains.components.webview.data.message.EditorMessages
+import com.codescene.jetbrains.components.webview.data.view.AceData
 import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.data.view.HomeData
 import com.codescene.jetbrains.components.webview.util.StyleHelper
@@ -163,7 +165,12 @@ class WebViewInitializer : LafManagerListener {
             }
 
             View.ACE -> {
-                return "" // Not implemented
+                if (initialData !is AceData) return "{}"
+
+                val data = buildCwfData(initialData, view, isPro, isDevMode)
+                val dataJson = json.encodeToString<CwfData<AceData>>(data)
+
+                return dataJson
             }
         }
     }

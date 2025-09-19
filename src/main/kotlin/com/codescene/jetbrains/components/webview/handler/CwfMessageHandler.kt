@@ -1,7 +1,9 @@
 package com.codescene.jetbrains.components.webview.handler
 
+import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.webview.WebViewInitializer
-import com.codescene.jetbrains.components.webview.data.*
+import com.codescene.jetbrains.components.webview.data.CwfMessage
+import com.codescene.jetbrains.components.webview.data.View
 import com.codescene.jetbrains.components.webview.data.message.*
 import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
 import com.codescene.jetbrains.components.webview.data.view.DocsData
@@ -11,6 +13,7 @@ import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
 import com.codescene.jetbrains.util.Constants.ALLOWED_DOMAINS
 import com.codescene.jetbrains.util.TelemetryEvents
+import com.codescene.jetbrains.util.closeWindow
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
@@ -82,6 +85,10 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
             EditorMessages.GOTO_FUNCTION_LOCATION.value -> handleGotoFunctionLocation(message, json)
 
             PanelMessages.OPEN_DOCS_FOR_FUNCTION.value -> handleOpenDocs(message, json)
+            PanelMessages.REJECT.value -> handleRefactoringRejection()
+            PanelMessages.COPY_CODE.value -> handleCopy(message)
+            PanelMessages.SHOW_DIFF.value -> handleShowDiff()
+            PanelMessages.APPLY.value -> handleApplyRefactoring()
 
             else -> {
                 println("Unknown message type: ${message.messageType}")
@@ -93,6 +100,31 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         callback?.success("Message processed.")
 
         return true
+    }
+
+    private fun handleShowDiff() {
+        // TODO
+    }
+
+    private fun handleApplyRefactoring() {
+        // TODO
+    }
+
+    private fun handleCopy(message: CwfMessage) {
+        /**
+         *     // get code
+         *     val selection = StringSelection(text)
+         *     CopyPasteManager.getInstance().setContents(selection)
+         */
+    }
+
+    private fun handleRefactoringRejection() {
+        /**
+         * TODO:
+         * TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_REFACTOR_REJECTED)
+         * close ACE window
+         */
+        CoroutineScope(Dispatchers.Main).launch { closeWindow(UiLabelsBundle.message("ace"), project) }
     }
 
     private fun handleInit(message: CwfMessage) {
