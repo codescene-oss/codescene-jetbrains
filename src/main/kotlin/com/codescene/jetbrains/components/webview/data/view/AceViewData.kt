@@ -7,10 +7,10 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AceData(
     val fileData: FileMetaType,
-    val aceResultData: RefactorResponse,
-    @SerialName("error?") val error: Boolean?,
-    @SerialName("isStale?") val isStale: Boolean?,
-    @SerialName("loading?") val loading: Boolean?
+    val aceResultData: RefactorResponse?,
+    val error: Boolean?,
+    val isStale: Boolean?,
+    val loading: Boolean?
 )
 
 @Serializable

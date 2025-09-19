@@ -6,19 +6,19 @@ import com.codescene.data.ace.RefactoringOptions
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
+import com.codescene.jetbrains.components.webview.util.AceCwfParams
+import com.codescene.jetbrains.components.webview.util.openAceWindow
 import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.notifier.AceStatusRefreshNotifier
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.api.AceService
-import com.codescene.jetbrains.services.api.RefactoredFunction
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheQuery
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
 import com.codescene.jetbrains.services.cache.ReviewCacheService
 import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewer
-import com.codescene.jetbrains.services.htmlviewer.AceRefactoringResultViewer
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -54,7 +54,7 @@ fun handleAceEntryPoint(params: RefactoringParams, options: RefactoringOptions? 
     val aceAcknowledgement = AceAcknowledgementViewer.getInstance(project)
     val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
-    if (!settings.enableAutoRefactor) {
+    if (!settings.enableAutoRefactor || !settings.aceEnabled) {
         Log.warn("Cannot use ACE as it is disabled.")
         return
     }
@@ -90,22 +90,11 @@ private suspend fun shouldCheckRefactorableFunctions(editor: Editor): Boolean {
     return isLanguageSupported
 }
 
-fun handleRefactoringResult(
-    params: RefactoringParams, function: RefactoredFunction, requestDuration: Long
-) {
-    val (project, editor, _) = params
-    val refactoredFunction = RefactoredFunction(
-        function.name,
-        function.refactoringResult,
-        params.editor?.virtualFile?.path ?: "",
-        function.startLine,
-        function.endLine,
-        function.refactoringResult.confidence.title
-    )
+fun handleRefactoringResult(params: AceCwfParams, requestDuration: Long, editor: Editor) {
     if (requestDuration < 1500) CoroutineScope(Dispatchers.Main).launch {
-        AceRefactoringResultViewer.getInstance(project).open(editor, refactoredFunction)
+        openAceWindow(params, editor.project!!)
     }
-    else showRefactoringFinishedNotification(params, refactoredFunction)
+    else showRefactoringFinishedNotification(editor, params)
 }
 
 fun getRefactorableFunction(codeSmell: CodeVisionCodeSmell, refactorableFunctions: List<FnToRefactor>) =

@@ -1,9 +1,9 @@
 package com.codescene.jetbrains.util
 
 import com.codescene.jetbrains.UiLabelsBundle
+import com.codescene.jetbrains.components.webview.util.AceCwfParams
+import com.codescene.jetbrains.components.webview.util.openAceWindow
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
-import com.codescene.jetbrains.services.api.RefactoredFunction
-import com.codescene.jetbrains.services.htmlviewer.AceRefactoringResultViewer
 import com.codescene.jetbrains.util.Constants.ACE_NOTIFICATION_GROUP
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.intellij.notification.Notification
@@ -11,6 +11,7 @@ import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 
 data class NotificationParams(
@@ -58,20 +59,17 @@ fun showTelemetryConsentNotification(project: Project?) {
     showNotification(params)
 }
 
-fun showRefactoringFinishedNotification(params: RefactoringParams, function: RefactoredFunction) {
-    val (project, editor, _) = params
+fun showRefactoringFinishedNotification(editor: Editor, params: AceCwfParams) {
+    val project = editor.project!!
 
     val notification = NotificationParams(
         project,
         CODESCENE,
-        "Refactoring is ready for ${function.name}.",
+        "Refactoring is ready for ${params.function.name}.",
         ACE_NOTIFICATION_GROUP,
         listOf(
             UiLabelsBundle.message("viewRefactoringResult") to { _, n ->
-                AceRefactoringResultViewer
-                    .getInstance(project)
-                    .open(editor, function)
-
+                openAceWindow(params, editor.project!!)
                 n.expire()
             },
             UiLabelsBundle.message("dismissRefactoringResult") to { _, n -> n.expire() }

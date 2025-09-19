@@ -2,8 +2,8 @@ package com.codescene.jetbrains.fileeditor
 
 import com.codescene.jetbrains.components.webview.WebViewFactory
 import com.codescene.jetbrains.components.webview.WebViewInitializer
-import com.codescene.jetbrains.components.webview.data.view.AceData
 import com.codescene.jetbrains.components.webview.data.View
+import com.codescene.jetbrains.components.webview.data.view.AceData
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorState
 import com.intellij.openapi.project.Project
@@ -20,7 +20,7 @@ class CwfAceFileEditor(private val project: Project, private val file: VirtualFi
         val content = WebViewFactory.createWebViewComponent(
             project = project,
             view = View.ACE,
-            initialData = null // TODO
+            initialData = data
         )
         component = content.component
     }
