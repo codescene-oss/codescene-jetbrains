@@ -31,7 +31,7 @@ class AceMapper {
             loading = params.loading,
             fileData = getFileMetaType(params.filePath, params.function),
             aceResultData = if (params.refactorResponse != null) RefactorResponse(
-                code = params.function.body,
+                code = params.refactorResponse.code,
                 metadata = Metadata(cached = false),
                 traceId = params.refactorResponse.traceId,
                 confidence = getConfidence(params.refactorResponse),

@@ -33,6 +33,8 @@ object TelemetryEvents {
     const val ACE_REFACTOR_PRESENTED = "refactor/presented"
     const val ACE_REFACTOR_APPLIED = "refactor/applied"
     const val ACE_REFACTOR_REJECTED = "refactor/rejected"
+    const val ACE_DIFF_SHOWN = "refactor/diff_shown"
+    const val ACE_COPY_CODE = "refactor/copy_code"
 
     // not yet implemented
     const val STATS = "stats"

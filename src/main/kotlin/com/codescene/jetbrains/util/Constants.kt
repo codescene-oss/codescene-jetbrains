@@ -44,6 +44,8 @@ object Constants {
     const val DELTA = "delta"
     const val ACE = "ace"
 
+    const val INFO_NOTIFICATION_GROUP = "CodeScene Information"
+
     // ACE constants
     const val ACE_ACKNOWLEDGEMENT_FILE = "ace-info.md"
     const val ACE_STATUS = "CodeScene ACE Status"
