@@ -200,6 +200,8 @@ jobs:
           format: 'HTML'
           args: >
             --failOnCVSS 5
+            --ossIndexUsername ${{ secrets.DEPENDENCY_CHECK_API_USERNAME }}
+            --ossIndexPassword ${{ secrets.DEPENDENCY_CHECK_API_TOKEN }}
 
       # Upload dependency check report
       - name: Upload Test results
