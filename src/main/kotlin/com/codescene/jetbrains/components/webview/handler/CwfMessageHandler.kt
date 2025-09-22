@@ -7,18 +7,19 @@ import com.codescene.jetbrains.components.webview.data.View
 import com.codescene.jetbrains.components.webview.data.message.*
 import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
 import com.codescene.jetbrains.components.webview.data.view.DocsData
+import com.codescene.jetbrains.components.webview.util.getAceUserData
 import com.codescene.jetbrains.components.webview.util.openDocs
 import com.codescene.jetbrains.components.webview.util.updateMonitor
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
+import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.ALLOWED_DOMAINS
-import com.codescene.jetbrains.util.TelemetryEvents
-import com.codescene.jetbrains.util.closeWindow
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
+import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -33,9 +34,12 @@ import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefMessageRouterHandlerAdapter
+import java.awt.datatransfer.StringSelection
 
 @Service(Service.Level.PROJECT)
 class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerAdapter() {
+    private val serviceName = this::class::simpleName.toString()
+
     companion object {
         fun getInstance(project: Project): CwfMessageHandler = project.service<CwfMessageHandler>()
     }
@@ -86,7 +90,7 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
 
             PanelMessages.OPEN_DOCS_FOR_FUNCTION.value -> handleOpenDocs(message, json)
             PanelMessages.REJECT.value -> handleRefactoringRejection()
-            PanelMessages.COPY_CODE.value -> handleCopy(message)
+            PanelMessages.COPY_CODE.value -> handleCopy()
             PanelMessages.SHOW_DIFF.value -> handleShowDiff()
             PanelMessages.APPLY.value -> handleApplyRefactoring()
 
@@ -103,19 +107,44 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
     }
 
     private fun handleShowDiff() {
-        // TODO
+        showAceDiff(project).thenAccept { success ->
+            if (success) {
+                Log.info("Shown diff for file successfully.", serviceName)
+                TelemetryService.getInstance().logUsage(
+                    TelemetryEvents.ACE_DIFF_SHOWN, mutableMapOf(
+                        //Pair("traceId", TODO),
+                        //Pair("skipCache", TODO)
+                    )
+                )
+            } else Log.warn("Unable to show diff for file.", serviceName)
+        }
     }
 
     private fun handleApplyRefactoring() {
         // TODO
     }
 
-    private fun handleCopy(message: CwfMessage) {
-        /**
-         *     // get code
-         *     val selection = StringSelection(text)
-         *     CopyPasteManager.getInstance().setContents(selection)
-         */
+    private fun handleCopy() {
+        val code = getAceUserData(project)
+            ?.aceResultData
+            ?.code
+
+        if (!code.isNullOrEmpty()) {
+            val selection = StringSelection(code)
+            CopyPasteManager.getInstance().setContents(selection)
+
+            Log.info("Copied refactored code to clipboard.", serviceName)
+            showCopiedToClipboardNotification(project)
+
+            TelemetryService.getInstance().logUsage(
+                TelemetryEvents.ACE_COPY_CODE, mutableMapOf(
+                    //Pair("traceId", TODO),
+                    //Pair("skipCache", TODO)
+                )
+            )
+        } else {
+            Log.warn("Unable to copy refactored code to clipboard.", serviceName)
+        }
     }
 
     private fun handleRefactoringRejection() {
