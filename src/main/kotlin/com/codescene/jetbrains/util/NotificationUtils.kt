@@ -6,6 +6,7 @@ import com.codescene.jetbrains.components.webview.util.openAceWindow
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.util.Constants.ACE_NOTIFICATION_GROUP
 import com.codescene.jetbrains.util.Constants.CODESCENE
+import com.codescene.jetbrains.util.Constants.INFO_NOTIFICATION_GROUP
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
@@ -74,6 +75,18 @@ fun showRefactoringFinishedNotification(editor: Editor, params: AceCwfParams) {
             },
             UiLabelsBundle.message("dismissRefactoringResult") to { _, n -> n.expire() }
         ))
+
+    showNotification(notification)
+}
+
+fun showCopiedToClipboardNotification(project: Project) {
+    val notification = NotificationParams(
+        project,
+        CODESCENE,
+        "Code successfully copied to clipboard.",
+        INFO_NOTIFICATION_GROUP,
+        listOf(UiLabelsBundle.message("dismissRefactoringResult") to { _, n -> n.expire() })
+    )
 
     showNotification(notification)
 }
