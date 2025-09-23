@@ -1,4 +1,4 @@
-package com.codescene.jetbrains.fileeditor
+package com.codescene.jetbrains.fileeditor.ace
 
 import com.codescene.jetbrains.components.webview.data.view.AceData
 import com.intellij.openapi.fileEditor.FileEditor
