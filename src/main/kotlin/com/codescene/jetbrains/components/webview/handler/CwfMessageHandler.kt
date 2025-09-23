@@ -7,9 +7,11 @@ import com.codescene.jetbrains.components.webview.data.View
 import com.codescene.jetbrains.components.webview.data.message.*
 import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
 import com.codescene.jetbrains.components.webview.data.view.DocsData
+import com.codescene.jetbrains.components.webview.util.getAceAcknowledgeUserData
 import com.codescene.jetbrains.components.webview.util.getAceUserData
 import com.codescene.jetbrains.components.webview.util.openDocs
 import com.codescene.jetbrains.components.webview.util.updateMonitor
+import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
 import com.codescene.jetbrains.util.*
@@ -88,14 +90,16 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
             EditorMessages.OPEN_SETTINGS.value -> handleOpenSettings()
             EditorMessages.GOTO_FUNCTION_LOCATION.value -> handleGotoFunctionLocation(message, json)
 
-            PanelMessages.OPEN_DOCS_FOR_FUNCTION.value -> handleOpenDocs(message, json)
-            PanelMessages.REJECT.value -> handleRefactoringRejection()
             PanelMessages.COPY_CODE.value -> handleCopy()
             PanelMessages.SHOW_DIFF.value -> handleShowDiff()
             PanelMessages.APPLY.value -> handleApplyRefactoring()
+            PanelMessages.REJECT.value -> handleRefactoringRejection()
+            PanelMessages.ACKNOWLEDGED.value -> handleAceAcknowledged()
+            PanelMessages.OPEN_DOCS_FOR_FUNCTION.value -> handleOpenDocs(message, json)
 
             else -> {
                 println("Unknown message type: ${message.messageType}")
+                Log.warn("Unknown message type: ${message.messageType}", serviceName)
 
                 callback?.failure(0, "Message could not be processed. Unknown message type.")
             }
@@ -104,6 +108,15 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         callback?.success("Message processed.")
 
         return true
+    }
+
+    private fun handleAceAcknowledged() {
+        CodeSceneGlobalSettingsStore.getInstance().state.aceAcknowledged = true
+
+        val data = getAceAcknowledgeUserData(project)
+        CoroutineScope(Dispatchers.Main).launch { closeWindow(UiLabelsBundle.message("aceAcknowledge"), project) }
+
+        data?.fileData?.let { handleAceAcknowledgedFunction(it, project) }
     }
 
     private fun handleShowDiff() {

@@ -9,7 +9,7 @@ import com.codescene.jetbrains.components.webview.data.View
 import com.codescene.jetbrains.components.webview.data.view.AceData
 import com.codescene.jetbrains.components.webview.handler.CwfMessageHandler
 import com.codescene.jetbrains.components.webview.mapper.AceMapper
-import com.codescene.jetbrains.fileeditor.CWF_ACE_DATA_KEY
+import com.codescene.jetbrains.fileeditor.ace.CWF_ACE_DATA_KEY
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.util.FileUtils
 import com.codescene.jetbrains.util.TelemetryEvents
@@ -43,9 +43,10 @@ data class AceCwfParams(
  * - ACE code vision,
  * - Refactoring finished notification,
  * - Code Health Monitor (TODO),
- * - Intention action (TODO).
+ * - Ace acknowledge view (CWF),
+ * - Intention action.
  *
- * @param aceData The ACE data to be displayed in the webview.
+ * @param params The ACE data to be displayed in the webview.
  * @param project The current project.
  */
 fun openAceWindow(params: AceCwfParams, project: Project) {

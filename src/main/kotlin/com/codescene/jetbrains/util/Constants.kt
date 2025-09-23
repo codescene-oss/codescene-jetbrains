@@ -96,6 +96,7 @@ object Constants {
 
     val codeSceneWindowFileNames = listOf(
         UiLabelsBundle.message("ace"),
-        UiLabelsBundle.message("codeSmellDocs")
+        UiLabelsBundle.message("codeSmellDocs"),
+        UiLabelsBundle.message("aceAcknowledge"),
     )
 }

@@ -6,7 +6,10 @@ import com.codescene.data.ace.RefactoringOptions
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
+import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
 import com.codescene.jetbrains.components.webview.util.AceCwfParams
+import com.codescene.jetbrains.components.webview.util.OpenAceAcknowledgementParams
+import com.codescene.jetbrains.components.webview.util.openAceAcknowledgeView
 import com.codescene.jetbrains.components.webview.util.openAceWindow
 import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
@@ -18,7 +21,6 @@ import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheQuery
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
 import com.codescene.jetbrains.services.cache.ReviewCacheService
-import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewer
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -49,9 +51,10 @@ data class RefactoringParams(
 
 fun handleAceEntryPoint(params: RefactoringParams, options: RefactoringOptions? = null) {
     val (project, editor, function) = params
-    function ?: return
 
-    val aceAcknowledgement = AceAcknowledgementViewer.getInstance(project)
+    function ?: return
+    editor ?: return
+
     val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
     if (!settings.enableAutoRefactor || !settings.aceEnabled) {
@@ -62,7 +65,13 @@ fun handleAceEntryPoint(params: RefactoringParams, options: RefactoringOptions? 
     if (settings.aceAcknowledged)
         AceService.getInstance().refactor(params, options)
     else
-        aceAcknowledgement.open(editor, function)
+        openAceAcknowledgeView(
+            OpenAceAcknowledgementParams(
+                project = project,
+                fnToRefactor = function,
+                filePath = editor.virtualFile.path
+            )
+        )
 }
 
 fun fetchAceCache(path: String, content: String, project: Project): List<FnToRefactor> {
@@ -147,5 +156,41 @@ fun refreshAceUi(newValue: AceStatus, scope: CoroutineScope = CoroutineScope(Dis
 
             project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(null)
         }
+    }
+}
+
+/**
+ * Initiates refactoring for a file that was opened earlier but couldn't be processed until ACE was acknowledged.
+ *
+ * This function:
+ * 1. Resolves the file from the local file system.
+ * 2. Reads the file contents under a read action.
+ * 3. Fetches the ACE refactorable functions cache for the file.
+ * 4. Finds the matching function in the cache that corresponds to the acknowledged function.
+ * 5. If found, invokes [handleAceEntryPoint] with the resolved fnToRefactor.
+ */
+fun handleAceAcknowledgedFunction(fileData: FileMetaType, project: Project) {
+    ApplicationManager.getApplication().executeOnPooledThread {
+        val file = LocalFileSystem.getInstance().findFileByPath(fileData.fileName) ?: return@executeOnPooledThread
+
+        val code = ApplicationManager.getApplication().runReadAction<String> {
+            FileDocumentManager.getInstance().getDocument(file)?.text
+        } ?: ""
+        val aceCache = fetchAceCache(fileData.fileName, code, project)
+
+        val refactorableFunction = aceCache.find { cache ->
+            cache.name == fileData.fn?.name &&
+                    cache.range.startLine == fileData.fn?.range?.startLine &&
+                    cache.range.endLine == fileData.fn?.range?.endLine
+        } ?: return@executeOnPooledThread
+
+        handleAceEntryPoint(
+            RefactoringParams(
+                project = project,
+                function = refactorableFunction,
+                source = AceEntryPoint.ACE_ACKNOWLEDGEMENT,
+                editor = getSelectedTextEditor(project, fileData.fileName),
+            )
+        )
     }
 }

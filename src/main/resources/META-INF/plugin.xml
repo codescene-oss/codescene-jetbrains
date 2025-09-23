@@ -141,9 +141,11 @@
         <fileEditorProvider
                 implementation="com.codescene.jetbrains.fileeditor.CodeSceneFileEditorProvider"/>
         <fileEditorProvider
-                implementation="com.codescene.jetbrains.fileeditor.CwfDocsFileEditorProvider"/>
+                implementation="com.codescene.jetbrains.fileeditor.documentation.CwfDocsFileEditorProvider"/>
         <fileEditorProvider
-                implementation="com.codescene.jetbrains.fileeditor.CwfAceFileEditorProvider"/>
+                implementation="com.codescene.jetbrains.fileeditor.ace.CwfAceFileEditorProvider"/>
+        <fileEditorProvider
+                implementation="com.codescene.jetbrains.fileeditor.ace.acknowledge.CwfAceAcknowledgeEditorProvider"/>
 
         <statusBarWidgetFactory
                 implementation="com.codescene.jetbrains.components.statusbar.AceStatusBarWidgetFactory"
