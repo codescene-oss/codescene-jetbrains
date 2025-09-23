@@ -3,6 +3,7 @@ package com.codescene.jetbrains.components.webview
 import com.codescene.jetbrains.components.webview.data.CwfData
 import com.codescene.jetbrains.components.webview.data.View
 import com.codescene.jetbrains.components.webview.data.message.EditorMessages
+import com.codescene.jetbrains.components.webview.data.view.AceAcknowledgeData
 import com.codescene.jetbrains.components.webview.data.view.AceData
 import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.data.view.HomeData
@@ -133,46 +134,42 @@ class WebViewInitializer : LafManagerListener {
      * the payload depends on the requested [view].
      *
      * Currently supported views:
-     * - [View.HOME]: Creates and serializes a [HomeData] instance wrapped in [CwfData].
-     * - [View.DOCS]: Not yet implemented, returns an empty string.
-     * - [View.ACE]: Not yet implemented, returns an empty string.
+     * - [View.HOME]: Creates and serializes a default [HomeData] instance wrapped in [CwfData].
+     * - [View.DOCS]: Creates and serializes a [DocsData] instance wrapped in [CwfData].
+     * - [View.ACE]: Creates and serializes a [AceData] instance wrapped in [CwfData].
+     * - [View.ACE_ACKNOWLEDGE]: Creates and serializes a [AceAcknowledgeData] instance wrapped in [CwfData].
      * - Any other value: Logs a warning and returns an empty JSON object (`{}`).
      */
     private fun getInitialContext(view: View, initialData: Any? = null): String {
-        val isDevMode = System.getProperty("cwfIsDevMode")?.toBoolean() ?: false
         val isPro = true // TODO: resolve with auth
+
+        return when (view) {
+            View.HOME -> encodeCwfDataOrEmpty<HomeData>(HomeData(), view, isPro)
+
+            View.DOCS -> encodeCwfDataOrEmpty<DocsData>(initialData, view, isPro)
+
+            View.ACE -> encodeCwfDataOrEmpty<AceData>(initialData, view, isPro)
+
+            View.ACE_ACKNOWLEDGE -> encodeCwfDataOrEmpty<AceAcknowledgeData>(initialData, view, isPro)
+        }
+    }
+
+    private inline fun <reified T : Any> encodeCwfDataOrEmpty(
+        initialData: Any?,
+        view: View,
+        isPro: Boolean
+    ): String {
+        val isDevMode = System.getProperty("cwfIsDevMode")?.toBoolean() ?: false
 
         val json = Json {
             encodeDefaults = true
             prettyPrint = true
         }
 
-        when (view) {
-            View.HOME -> {
-                val data = buildCwfData(HomeData(), view, isPro, isDevMode)
-                val dataJson = json.encodeToString<CwfData<HomeData>>(data)
+        val typed = initialData as? T ?: return "{}"
+        val data = buildCwfData(typed, view, isPro, isDevMode)
 
-                return dataJson
-            }
-
-            View.DOCS -> {
-                if (initialData !is DocsData) return "{}"
-
-                val data = buildCwfData(initialData, view, isPro, isDevMode)
-                val dataJson = json.encodeToString<CwfData<DocsData>>(data)
-
-                return dataJson
-            }
-
-            View.ACE -> {
-                if (initialData !is AceData) return "{}"
-
-                val data = buildCwfData(initialData, view, isPro, isDevMode)
-                val dataJson = json.encodeToString<CwfData<AceData>>(data)
-
-                return dataJson
-            }
-        }
+        return json.encodeToString<CwfData<T>>(data)
     }
 
     private fun <T> buildCwfData(

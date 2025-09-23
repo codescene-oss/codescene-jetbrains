@@ -1,6 +1,7 @@
-package com.codescene.jetbrains.fileeditor
+package com.codescene.jetbrains.fileeditor.documentation
 
 import com.codescene.jetbrains.components.webview.data.view.DocsData
+import com.codescene.jetbrains.fileeditor.CodeSceneFileEditor
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorPolicy
 import com.intellij.openapi.fileEditor.FileEditorProvider
@@ -9,7 +10,7 @@ import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.LightVirtualFile
 
-val CWF_DOCS_DATA_KEY: Key<DocsData> = Key.create("codescene.docs.data")
+val CWF_DOCS_DATA_KEY: Key<DocsData> = Key.create("codescene.documentation.data")
 
 @Suppress("UnstableApiUsage")
 internal class CwfDocsFileEditorProvider : FileEditorProvider {

@@ -1,9 +1,9 @@
-package com.codescene.jetbrains.fileeditor
+package com.codescene.jetbrains.fileeditor.ace.acknowledge
 
 import com.codescene.jetbrains.components.webview.WebViewFactory
 import com.codescene.jetbrains.components.webview.WebViewInitializer
-import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.data.View
+import com.codescene.jetbrains.components.webview.data.view.AceAcknowledgeData
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorState
 import com.intellij.openapi.project.Project
@@ -12,37 +12,38 @@ import com.intellij.openapi.vfs.VirtualFile
 import java.beans.PropertyChangeListener
 import javax.swing.JComponent
 
-internal class CwfDocsFileEditor(
+class CwfAceAcknowledgeFileEditor(
     private val project: Project,
     private val file: VirtualFile,
-    data: DocsData
-) : UserDataHolderBase(), FileEditor {
+    data: AceAcknowledgeData
+) :
+    UserDataHolderBase(), FileEditor {
     private val component: JComponent
 
     init {
         val content = WebViewFactory.createWebViewComponent(
             project = project,
-            view = View.DOCS,
+            view = View.ACE_ACKNOWLEDGE,
             initialData = data
         )
         component = content.component
     }
 
-    override fun getComponent() = component
+    override fun getComponent(): JComponent = component
 
-    override fun getFile() = file
+    override fun getPreferredFocusedComponent(): JComponent = component
 
-    override fun getPreferredFocusedComponent() = component
-
-    override fun getName(): String = file.nameWithoutExtension
+    override fun getName(): String = file.name
 
     override fun setState(p0: FileEditorState) {
         // No implementation needed
     }
 
+    override fun getFile() = file
+
     override fun isModified() = false
 
-    override fun isValid() = file.isValid
+    override fun isValid(): Boolean = file.isValid
 
     override fun addPropertyChangeListener(p0: PropertyChangeListener) {
         // No implementation needed
@@ -53,6 +54,6 @@ internal class CwfDocsFileEditor(
     }
 
     override fun dispose() {
-        WebViewInitializer.getInstance(project).unregisterBrowser(View.DOCS)
+        WebViewInitializer.getInstance(project).unregisterBrowser(View.ACE_ACKNOWLEDGE)
     }
 }
