@@ -11,16 +11,22 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import java.io.File
 
 fun getSelectedTextEditor(project: Project, filePath: String, source: String = ""): Editor? {
-    val editorManager = FileEditorManager.getInstance(project)
-    val openEditor = editorManager.allEditors.firstOrNull { it.file.path == filePath }
-        ?: editorManager.allEditors.firstOrNull()
+    var result: Editor? = null
 
-    if (editorManager.selectedTextEditor == null && openEditor != null) {
-        Log.debug("Selected editor was null, opening file: ${openEditor.file.path}", source)
-        editorManager.openFile(openEditor.file, true, true)
+    ApplicationManager.getApplication().invokeAndWait {
+        val editorManager = FileEditorManager.getInstance(project)
+        val openEditor = editorManager.allEditors.firstOrNull { it.file.path == filePath }
+            ?: editorManager.allEditors.firstOrNull()
+
+        if (editorManager.selectedTextEditor == null && openEditor != null) {
+            Log.debug("Selected editor was null, opening file: ${openEditor.file.path}", source)
+            editorManager.openFile(openEditor.file, true, true)
+        }
+
+        result = editorManager.selectedTextEditor
     }
 
-    return editorManager.selectedTextEditor
+    return result
 }
 
 fun closeWindow(fileName: String, project: Project) {

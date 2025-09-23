@@ -8,7 +8,8 @@ import kotlinx.serialization.json.JsonElement
 enum class View(val value: String) {
     ACE("ace"),
     HOME("home"),
-    DOCS("docs")
+    DOCS("docs"),
+    ACE_ACKNOWLEDGE("aceAcknowledge")
 }
 
 @Serializable
