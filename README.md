@@ -38,6 +38,12 @@ The plugin is expected to work with Rider, but the level of support has not been
 function as intended, while others could have limitations. If you encounter any issues, please open a support ticket
 [here](https://supporthub.codescene.com/kb-tickets/new).
 
+## Do you want to keep using CodeScene ACE?
+
+CodeScene ACE, our AI-powered refactoring agent, was free during beta but will now be offered as an add-on to 
+the extension. If you’re interested in continuing to use CodeScene ACE or would like to share feedback, 
+[reach out](https://codescene.com/contact-us-about-codescene-ace) to our Sales team.
+
 <!-- Plugin description end -->
 
 ## Table of contents
