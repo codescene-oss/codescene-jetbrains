@@ -134,7 +134,27 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
     }
 
     private fun handleApplyRefactoring() {
-        // TODO
+        val aceContext = getAceUserData(project) ?: return
+
+        TelemetryService.getInstance().logUsage(
+            TelemetryEvents.ACE_REFACTOR_APPLIED, mutableMapOf(
+                Pair("traceId", aceContext.aceResultData?.traceId ?: ""),
+//                Pair("skipCache", TODO)
+            )
+        )
+
+        if (aceContext.fileData.fn?.range != null && !aceContext.aceResultData?.code.isNullOrEmpty())
+            replaceCodeSnippet(
+                ReplaceCodeSnippetArgs(
+                    project = project,
+                    filePath = aceContext.fileData.fileName,
+                    startLine = aceContext.fileData.fn.range.startLine,
+                    endLine = aceContext.fileData.fn.range.endLine,
+                    newContent = aceContext.aceResultData!!.code
+                )
+            )
+
+        CoroutineScope(Dispatchers.Main).launch { closeWindow(UiLabelsBundle.message("ace"), project) }
     }
 
     private fun handleCopy() {
@@ -161,11 +181,13 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
     }
 
     private fun handleRefactoringRejection() {
-        /**
-         * TODO:
-         * TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_REFACTOR_REJECTED)
-         * close ACE window
-         */
+        TelemetryService.getInstance().logUsage(
+            TelemetryEvents.ACE_REFACTOR_REJECTED, mutableMapOf(
+                //Pair("traceId", TODO),
+                //Pair("skipCache", TODO)
+            )
+        )
+
         CoroutineScope(Dispatchers.Main).launch { closeWindow(UiLabelsBundle.message("ace"), project) }
     }
 
