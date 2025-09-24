@@ -66,7 +66,15 @@ private fun updateWebView(params: AceCwfParams, browser: JBCefBrowser, project: 
         serializer = CwfData.serializer(AceData.serializer())
     )
 
+    mapper.toCwfData(params).data?.let { updateUserData(it, project) } // Update CWF editor context
     messageHandler.postMessage(View.ACE, dataJson, browser)
+}
+
+private fun updateUserData(data: AceData, project: Project) {
+    val fileEditor = FileEditorManager.getInstance(project)
+        .allEditors
+        .firstOrNull { it.file.name == UiLabelsBundle.message("ace") }
+    (fileEditor?.file as? LightVirtualFile)?.putUserData(CWF_ACE_DATA_KEY, data)
 }
 
 private fun openFile(params: AceCwfParams, project: Project) {
