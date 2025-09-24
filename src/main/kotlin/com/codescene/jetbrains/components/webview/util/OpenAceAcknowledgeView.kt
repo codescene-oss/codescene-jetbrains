@@ -49,8 +49,7 @@ private fun updateWebView(params: OpenAceAcknowledgementParams, browser: JBCefBr
         serializer = CwfData.serializer(AceAcknowledgeData.serializer())
     )
 
-    mapper.toCwfData(params).data?.let { updateUserData(it, params.project) }
-
+    mapper.toCwfData(params).data?.let { updateUserData(it, params.project) }  // Update CWF editor context
     messageHandler.postMessage(View.ACE_ACKNOWLEDGE, dataJson, browser)
 }
 
