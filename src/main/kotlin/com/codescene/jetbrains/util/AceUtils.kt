@@ -160,7 +160,7 @@ fun refreshAceUi(newValue: AceStatus, scope: CoroutineScope = CoroutineScope(Dis
 }
 
 /**
- * Initiates refactoring for a file that was opened earlier but couldn't be processed until ACE was acknowledged.
+ * Initiates refactoring for a file from CWF.
  *
  * This function:
  * 1. Resolves the file from the local file system.
@@ -169,7 +169,7 @@ fun refreshAceUi(newValue: AceStatus, scope: CoroutineScope = CoroutineScope(Dis
  * 4. Finds the matching function in the cache that corresponds to the acknowledged function.
  * 5. If found, invokes [handleAceEntryPoint] with the resolved fnToRefactor.
  */
-fun handleAceAcknowledgedFunction(fileData: FileMetaType, project: Project) {
+fun handleRefactoringFromCwf(fileData: FileMetaType, project: Project) {
     ApplicationManager.getApplication().executeOnPooledThread {
         val file = LocalFileSystem.getInstance().findFileByPath(fileData.fileName) ?: return@executeOnPooledThread
 
