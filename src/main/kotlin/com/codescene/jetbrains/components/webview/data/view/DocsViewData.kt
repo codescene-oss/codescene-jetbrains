@@ -8,5 +8,5 @@ import kotlinx.serialization.Serializable
 data class DocsData(
     val docType: String, // See: com.codescene.jetbrains.components.webview.util.DocsHelperKt.docNameMap
     val fileData: FileMetaType,
-    val autoRefactor: AutoRefactorConfig = AutoRefactorConfig()
+    val autoRefactor: AutoRefactorConfig = AutoRefactorConfig(visible = false)
 )
