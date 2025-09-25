@@ -3,20 +3,23 @@ package com.codescene.jetbrains.components.webview.mapper
 import com.codescene.jetbrains.components.webview.data.CwfData
 import com.codescene.jetbrains.components.webview.data.View
 import com.codescene.jetbrains.components.webview.data.shared.AnalysisJob
+import com.codescene.jetbrains.components.webview.data.shared.AutoRefactorConfig
 import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
 import com.codescene.jetbrains.components.webview.data.shared.Range
 import com.codescene.jetbrains.components.webview.data.view.*
+import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheQuery
+import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
 import com.codescene.jetbrains.services.cache.DeltaCacheItem
 import com.codescene.jetbrains.util.Constants.DELTA_ANALYSIS_JOB
 import com.codescene.jetbrains.util.Constants.JOB_STATE_RUNNING
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
+import com.intellij.openapi.project.Project
 
-@Service
-class CodeHealthMonitorMapper {
+@Service(Service.Level.PROJECT)
+class CodeHealthMonitorMapper(private val project: Project) {
     companion object {
-        fun getInstance(): CodeHealthMonitorMapper =
-            ApplicationManager.getApplication().getService(CodeHealthMonitorMapper::class.java)
+        fun getInstance(project: Project): CodeHealthMonitorMapper = project.service<CodeHealthMonitorMapper>()
     }
 
     fun toCwfData(
@@ -30,7 +33,8 @@ class CodeHealthMonitorMapper {
         data = HomeData(
             signedIn = true,
             jobs = getActiveJobs(activeJobs),
-            fileDeltaData = getFileDeltaData(deltaResults)
+            fileDeltaData = getFileDeltaData(deltaResults),
+            autoRefactor = AutoRefactorConfig()
         )
     )
 
@@ -46,7 +50,8 @@ class CodeHealthMonitorMapper {
     private fun getFileDeltaData(deltaResults: List<Pair<String, DeltaCacheItem>>) = deltaResults.map { result ->
         val deltaResponse = result.second.deltaApiResponse!!
         val changeDetails = getChangeDetails(deltaResponse.fileLevelFindings)
-        val functionLevelFindings = getFunctionLevelFindings(deltaResponse.functionLevelFindings)
+        val functionLevelFindings =
+            getFunctionLevelFindings(result.first, result.second.currentHash, deltaResponse.functionLevelFindings)
 
         val deltaForFile = DeltaForFile(
             fileLevelFindings = changeDetails,
@@ -70,12 +75,15 @@ class CodeHealthMonitorMapper {
         } ?: emptyList()
 
     private fun getFunctionLevelFindings(
+        filePath: String,
+        contentSha: String,
         functionLevelFindings: List<com.codescene.data.delta.FunctionFinding>?
     ): List<FunctionFinding> {
         if (functionLevelFindings.isNullOrEmpty()) return emptyList()
+        val aceFunctionsCache = AceRefactorableFunctionsCacheService.getInstance(project)
 
         return functionLevelFindings.map { fn ->
-            val range = if (fn.function.range.isPresent) fn.function.range.get() else null
+            val range = fn.function.range.orElse(null)
 
             FunctionFinding(
                 function = FunctionInfo(
@@ -87,7 +95,36 @@ class CodeHealthMonitorMapper {
                         endColumn = range?.endColumn ?: 0
                     )
                 ),
-                changeDetails = getChangeDetails(fn.changeDetails)
+                changeDetails = getChangeDetails(fn.changeDetails),
+                functionToRefactor = getFunctionToRefactor(filePath, contentSha, fn, aceFunctionsCache)
+            )
+        }
+    }
+
+    private fun getFunctionToRefactor(
+        filePath: String,
+        contentSha: String,
+        fn: com.codescene.data.delta.FunctionFinding,
+        cache: AceRefactorableFunctionsCacheService
+    ): FunctionToRefactor? {
+        val range = fn.function.range.orElse(null)
+
+        val fnToRefactor = cache.get(AceRefactorableFunctionCacheQuery(filePath, contentSha)).find {
+            it.name == fn.function.name && it.range.startLine == range?.startLine && it.range.endLine == range?.endLine
+        }
+
+        return fnToRefactor?.let {
+            FunctionToRefactor(
+                body = it.body,
+                name = it.name,
+                fileType = it.fileType,
+                functionType = it.functionType.orElse(""),
+                refactoringTargets = it.refactoringTargets.map { target ->
+                    RefactoringTarget(
+                        line = target.line,
+                        category = target.category
+                    )
+                }
             )
         }
     }

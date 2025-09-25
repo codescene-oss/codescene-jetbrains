@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.services.cache
 
 import com.codescene.data.ace.FnToRefactor
+import com.codescene.jetbrains.util.isSha256Hex
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -36,7 +37,7 @@ class AceRefactorableFunctionsCacheService : CacheService<
 
     override fun get(query: AceRefactorableFunctionCacheQuery): List<FnToRefactor> {
         val (filePath, content) = query
-        val code = DigestUtils.sha256Hex(content)
+        val code = if (isSha256Hex(content)) content else DigestUtils.sha256Hex(content)
 
         cache[filePath]?.let {
             if (it.content == code) return it.result

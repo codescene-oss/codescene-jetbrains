@@ -8,7 +8,6 @@ import com.codescene.jetbrains.components.webview.data.shared.Fn
 import com.codescene.jetbrains.components.webview.data.shared.RangeCamelCase
 import com.codescene.jetbrains.components.webview.data.view.AceAcknowledgeData
 import com.codescene.jetbrains.components.webview.util.OpenAceAcknowledgementParams
-import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 
@@ -35,9 +34,7 @@ class AceAcknowledgementMapper {
                 ),
                 fileName = params.filePath,
             ),
-            autoRefactor = AutoRefactorConfig(
-                activated = CodeSceneGlobalSettingsStore.getInstance().state.aceAcknowledged
-            )
+            autoRefactor = AutoRefactorConfig()
         )
     )
 }

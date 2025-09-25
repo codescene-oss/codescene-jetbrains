@@ -12,7 +12,6 @@ import com.codescene.jetbrains.components.webview.data.shared.RangeCamelCase
 import com.codescene.jetbrains.components.webview.data.view.AceAcknowledgeData
 import com.codescene.jetbrains.components.webview.handler.CwfMessageHandler
 import com.codescene.jetbrains.components.webview.mapper.AceAcknowledgementMapper
-import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.fileeditor.ace.acknowledge.CWF_ACE_ACKNOWLEDGE_DATA_KEY
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.util.FileUtils
@@ -62,9 +61,7 @@ private fun updateUserData(data: AceAcknowledgeData, project: Project) {
 
 private fun openFile(params: OpenAceAcknowledgementParams) {
     val (filePath, project, fnToRefactor) = params
-
     val fileEditorManager = FileEditorManager.getInstance(params.project)
-    val aceAcknowledged = CodeSceneGlobalSettingsStore.getInstance().state.aceAcknowledged
 
     val fileName = UiLabelsBundle.message("aceAcknowledge")
     val file = LightVirtualFile(fileName)
@@ -80,7 +77,7 @@ private fun openFile(params: OpenAceAcknowledgementParams) {
                     )
                 ),
                 fileName = filePath,
-            ), autoRefactor = AutoRefactorConfig(activated = aceAcknowledged)
+            ), autoRefactor = AutoRefactorConfig()
         )
     )
 

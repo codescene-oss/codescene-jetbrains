@@ -1,8 +1,8 @@
 package com.codescene.jetbrains.components.webview.util
 
 import com.codescene.jetbrains.components.webview.data.CwfData
-import com.codescene.jetbrains.components.webview.data.view.HomeData
 import com.codescene.jetbrains.components.webview.data.View
+import com.codescene.jetbrains.components.webview.data.view.HomeData
 import com.codescene.jetbrains.components.webview.handler.CwfMessageHandler
 import com.codescene.jetbrains.components.webview.mapper.CodeHealthMonitorMapper
 import com.codescene.jetbrains.services.api.CodeDeltaService
@@ -24,7 +24,7 @@ import com.intellij.openapi.project.Project
  * correct serializer is used.
  */
 fun updateMonitor(project: Project) {
-    val mapper = CodeHealthMonitorMapper.getInstance()
+    val mapper = CodeHealthMonitorMapper.getInstance(project)
     val deltaResults = DeltaCacheService.getInstance(project).getAll()
     val activeJobs = CodeDeltaService.getInstance(project).activeReviewCalls.map { it.key }
 
