@@ -10,6 +10,7 @@ import com.codescene.data.delta.Delta
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.components.webview.util.AceCwfParams
 import com.codescene.jetbrains.components.webview.util.openAceWindow
+import com.codescene.jetbrains.components.webview.util.updateMonitor
 import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.UIRefreshService
@@ -203,6 +204,8 @@ class AceService : BaseService(), Disposable {
 
                 val uiService = UIRefreshService.getInstance(project)
                 uiService.refreshUI(editor, listOf("ACECodeVisionProvider"))
+
+                updateMonitor(project)
             }
         }
     }

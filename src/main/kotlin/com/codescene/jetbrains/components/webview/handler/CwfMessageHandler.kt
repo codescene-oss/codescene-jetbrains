@@ -96,6 +96,7 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
             PanelMessages.REJECT.value -> handleRefactoringRejection()
             PanelMessages.ACKNOWLEDGED.value -> handleAceAcknowledged()
             PanelMessages.OPEN_DOCS_FOR_FUNCTION.value -> handleOpenDocs(message, json)
+            PanelMessages.REQUEST_AND_PRESENT_REFACTORING.value -> handleRequestAndPresentRefactoring(message, json)
 
             else -> {
                 println("Unknown message type: ${message.messageType}")
@@ -110,13 +111,26 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         return true
     }
 
+    private fun handleRequestAndPresentRefactoring(message: CwfMessage, json: Json) {
+        val requestRefactoringMessage = message.payload?.let {
+            json.decodeFromJsonElement(RequestAndPresentRefactoring.serializer(), it)
+        } ?: return
+
+        handleRefactoringFromCwf(
+            FileMetaType(
+                fn = requestRefactoringMessage.fn,
+                fileName = requestRefactoringMessage.fileName
+            ), project
+        )
+    }
+
     private fun handleAceAcknowledged() {
         CodeSceneGlobalSettingsStore.getInstance().state.aceAcknowledged = true
 
         val data = getAceAcknowledgeUserData(project)
         CoroutineScope(Dispatchers.Main).launch { closeWindow(UiLabelsBundle.message("aceAcknowledge"), project) }
 
-        data?.fileData?.let { handleAceAcknowledgedFunction(it, project) }
+        data?.fileData?.let { handleRefactoringFromCwf(it, project) }
     }
 
     private fun handleShowDiff() {
