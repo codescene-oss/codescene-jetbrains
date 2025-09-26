@@ -10,6 +10,7 @@ import com.codescene.jetbrains.components.webview.data.view.AceData
 import com.codescene.jetbrains.components.webview.handler.CwfMessageHandler
 import com.codescene.jetbrains.components.webview.mapper.AceMapper
 import com.codescene.jetbrains.fileeditor.ace.CWF_ACE_DATA_KEY
+import com.codescene.jetbrains.fileeditor.ace.CwfAceFileEditorProviderData
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.util.FileUtils
 import com.codescene.jetbrains.util.TelemetryEvents
@@ -42,7 +43,7 @@ data class AceCwfParams(
  * This method is invoked when the user uses CodeScene **ACE** from:
  * - ACE code vision,
  * - Refactoring finished notification,
- * - Code Health Monitor (TODO),
+ * - Code Health Monitor,
  * - Ace acknowledge view (CWF),
  * - Intention action.
  *
@@ -66,15 +67,21 @@ private fun updateWebView(params: AceCwfParams, browser: JBCefBrowser, project: 
         serializer = CwfData.serializer(AceData.serializer())
     )
 
-    mapper.toCwfData(params).data?.let { updateUserData(it, project) } // Update CWF editor context
+    // Update CWF editor context
+    mapper.toCwfData(params).data?.let {
+        updateUserData(it, params.function, params.refactorResponse, project)
+    }
     messageHandler.postMessage(View.ACE, dataJson, browser)
 }
 
-private fun updateUserData(data: AceData, project: Project) {
+private fun updateUserData(data: AceData, function: FnToRefactor, refactoring: RefactorResponse?, project: Project) {
     val fileEditor = FileEditorManager.getInstance(project)
         .allEditors
         .firstOrNull { it.file.name == UiLabelsBundle.message("ace") }
-    (fileEditor?.file as? LightVirtualFile)?.putUserData(CWF_ACE_DATA_KEY, data)
+    (fileEditor?.file as? LightVirtualFile)?.putUserData(
+        CWF_ACE_DATA_KEY,
+        CwfAceFileEditorProviderData(data, function, refactoring)
+    )
 }
 
 private fun openFile(params: AceCwfParams, project: Project) {
@@ -85,7 +92,7 @@ private fun openFile(params: AceCwfParams, project: Project) {
 
     val fileName = UiLabelsBundle.message("ace")
     val file = LightVirtualFile(fileName)
-    file.putUserData(CWF_ACE_DATA_KEY, aceData)
+    file.putUserData(CWF_ACE_DATA_KEY, CwfAceFileEditorProviderData(aceData, params.function, params.refactorResponse))
 
     CoroutineScope(Dispatchers.Main).launch {
         val editor = getSelectedTextEditor(project, "", "${this::class.simpleName} - ${project.name}")
