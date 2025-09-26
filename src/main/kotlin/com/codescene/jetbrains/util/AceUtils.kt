@@ -163,7 +163,7 @@ fun refreshAceUi(newValue: AceStatus, scope: CoroutineScope = CoroutineScope(Dis
  * 4. Finds the matching function in the cache that corresponds to the acknowledged function.
  * 5. If found, invokes [handleAceEntryPoint] with the resolved fnToRefactor.
  */
-fun handleRefactoringFromCwf(fileData: FileMetaType, project: Project) {
+fun handleRefactoringFromCwf(fileData: FileMetaType, project: Project, source: AceEntryPoint) {
     ApplicationManager.getApplication().executeOnPooledThread {
         val file = LocalFileSystem.getInstance().findFileByPath(fileData.fileName) ?: return@executeOnPooledThread
 
@@ -172,6 +172,7 @@ fun handleRefactoringFromCwf(fileData: FileMetaType, project: Project) {
         } ?: ""
         val aceCache = fetchAceCache(fileData.fileName, code, project)
 
+        // TODO: get fnToRefactor from userData instead
         val refactorableFunction = aceCache.find { cache ->
             cache.name == fileData.fn?.name &&
                     cache.range.startLine == fileData.fn?.range?.startLine &&
@@ -180,9 +181,9 @@ fun handleRefactoringFromCwf(fileData: FileMetaType, project: Project) {
 
         handleAceEntryPoint(
             RefactoringParams(
+                source = source,
                 project = project,
                 function = refactorableFunction,
-                source = AceEntryPoint.ACE_ACKNOWLEDGEMENT,
                 editor = getSelectedTextEditor(project, fileData.fileName),
             )
         )

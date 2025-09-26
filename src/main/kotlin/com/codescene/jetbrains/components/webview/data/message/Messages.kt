@@ -14,6 +14,7 @@ enum class LoginMessages(val value: String) {
 enum class PanelMessages(val value: String) {
     APPLY("apply"),
     CLOSE("close"),
+    RETRY("retry"),
     REJECT("reject"),
     COPY_CODE("copyCode"),
     SHOW_DIFF("showDiff"),
