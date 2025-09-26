@@ -2,6 +2,7 @@ package com.codescene.jetbrains.components.webview.util
 
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.fileeditor.ace.CWF_ACE_DATA_KEY
+import com.codescene.jetbrains.fileeditor.ace.CwfAceFileEditorProviderData
 import com.codescene.jetbrains.fileeditor.ace.acknowledge.CWF_ACE_ACKNOWLEDGE_DATA_KEY
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
@@ -12,7 +13,7 @@ import com.intellij.openapi.project.Project
  * Looks for an open file whose name matches the ACE tab title and
  * returns the associated [CWF_ACE_DATA_KEY] user data if present.
  */
-fun getAceUserData(project: Project) = FileEditorManager.getInstance(project)
+fun getAceUserData(project: Project): CwfAceFileEditorProviderData? = FileEditorManager.getInstance(project)
     .openFiles
     .find { it.name == UiLabelsBundle.message("ace") }
     ?.getUserData(CWF_ACE_DATA_KEY)

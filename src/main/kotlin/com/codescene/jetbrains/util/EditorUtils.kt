@@ -10,6 +10,9 @@ import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.LocalFileSystem
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 
 fun getSelectedTextEditor(project: Project, filePath: String, source: String = ""): Editor? {
@@ -46,7 +49,8 @@ fun closeWindow(fileName: String, project: Project) {
         }
 
     val (editorWindow, virtualFile) = docFile ?: return
-    editorWindow.closeFile(virtualFile)
+
+    CoroutineScope(Dispatchers.Main).launch { editorWindow.closeFile(virtualFile) }
 }
 
 data class ReplaceCodeSnippetArgs(

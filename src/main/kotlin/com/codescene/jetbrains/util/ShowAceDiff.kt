@@ -100,7 +100,7 @@ private fun getDocumentContext(range: RangeCamelCase, file: VirtualFile) =
 private data class AceContext(val refactoredFilePath: String, val range: RangeCamelCase, val refactoredCode: String)
 
 private fun getAceContext(project: Project): AceContext? =
-    getAceUserData(project)
+    getAceUserData(project)?.aceData
         ?.takeIf { it.fileData.fn?.range != null && it.aceResultData?.code != null }
         ?.let { aceContext ->
             val refactoredFilePath = aceContext.fileData.fileName

@@ -7,20 +7,14 @@ import com.codescene.data.review.Review
 import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
-import com.codescene.jetbrains.components.webview.util.AceCwfParams
-import com.codescene.jetbrains.components.webview.util.OpenAceAcknowledgementParams
-import com.codescene.jetbrains.components.webview.util.openAceAcknowledgeView
-import com.codescene.jetbrains.components.webview.util.openAceWindow
+import com.codescene.jetbrains.components.webview.util.*
 import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.notifier.AceStatusRefreshNotifier
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.api.AceService
-import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheQuery
-import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
-import com.codescene.jetbrains.services.cache.ReviewCacheQuery
-import com.codescene.jetbrains.services.cache.ReviewCacheService
+import com.codescene.jetbrains.services.cache.*
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -192,5 +186,47 @@ fun handleRefactoringFromCwf(fileData: FileMetaType, project: Project) {
                 editor = getSelectedTextEditor(project, fileData.fileName),
             )
         )
+    }
+}
+
+/**
+ * Updates the CWF ACE view for a function if the related file has changed.
+ *
+ * Context:
+ * If the user modifies a file that contains a function to refactor currently displayed in the ACE view,
+ * this method ensures the ACE view stays consistent with the file.
+ *
+ * Behavior:
+ * 1. If the function itself still exists in the updated file:
+ *    - Update the function displayed in the ACE view to reflect the latest range and content in the editor.
+ *    - The view is considered not stale if the function body has not changed.
+ *    - If the body has not changed but the range has, the view will be refreshed with the updated range.
+ * 2. If the function has been deleted or its body has changed:
+ *    - Mark the ACE view as stale so the user knows it’s out of date.
+ *
+ * Limitation:
+ * - When a file contains multiple functions with the same name (e.g. due to method overloading),
+ *   we cannot uniquely identify which function is being tracked. The current logic only compares by name,
+ *   so if ranges or bodies shift, we may incorrectly mark a function as stale or up to date.
+ */
+fun updateCurrentAceView(project: Project, entry: AceRefactorableFunctionCacheEntry) {
+    val currentAceData = getAceUserData(project)
+    if (currentAceData == null || currentAceData.aceData?.fileData?.fileName != entry.filePath) return // Not applicable
+
+    // Find the updated version of the function in the new file state
+    val cwfFunction = entry.result.find { it.name == currentAceData.functionToRefactor.name }
+
+    val isStale = cwfFunction == null || (cwfFunction.body != currentAceData.functionToRefactor.body)
+    val isRangeDifferent = cwfFunction?.range != currentAceData.functionToRefactor.range
+
+    if (isStale || isRangeDifferent) {
+        val params = AceCwfParams(
+            stale = isStale,
+            refactorResponse = currentAceData.refactorResponse,
+            filePath = currentAceData.aceData.fileData.fileName,
+            function = cwfFunction ?: currentAceData.functionToRefactor
+        )
+
+        openAceWindow(params, project)
     }
 }
