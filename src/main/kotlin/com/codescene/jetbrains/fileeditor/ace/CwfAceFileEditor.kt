@@ -3,7 +3,6 @@ package com.codescene.jetbrains.fileeditor.ace
 import com.codescene.jetbrains.components.webview.WebViewFactory
 import com.codescene.jetbrains.components.webview.WebViewInitializer
 import com.codescene.jetbrains.components.webview.data.View
-import com.codescene.jetbrains.components.webview.data.view.AceData
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorState
 import com.intellij.openapi.project.Project
@@ -12,7 +11,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import java.beans.PropertyChangeListener
 import javax.swing.JComponent
 
-class CwfAceFileEditor(private val project: Project, private val file: VirtualFile, data: AceData) :
+class CwfAceFileEditor(private val project: Project, private val file: VirtualFile, data: CwfAceFileEditorProviderData) :
     UserDataHolderBase(), FileEditor {
     private val component: JComponent
 
@@ -20,7 +19,7 @@ class CwfAceFileEditor(private val project: Project, private val file: VirtualFi
         val content = WebViewFactory.createWebViewComponent(
             project = project,
             view = View.ACE,
-            initialData = data
+            initialData = data.aceData
         )
         component = content.component
     }

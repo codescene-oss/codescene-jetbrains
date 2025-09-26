@@ -17,10 +17,7 @@ import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheEntry
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
-import com.codescene.jetbrains.util.Log
-import com.codescene.jetbrains.util.RefactoringParams
-import com.codescene.jetbrains.util.TelemetryEvents
-import com.codescene.jetbrains.util.handleRefactoringResult
+import com.codescene.jetbrains.util.*
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -185,7 +182,9 @@ class AceService : BaseService(), Disposable {
             val result = runWithClassLoaderChange { getFunctions() }
 
             val entry = AceRefactorableFunctionCacheEntry(path, editor.document.text, result)
+
             AceRefactorableFunctionsCacheService.getInstance(project).put(entry)
+            updateCurrentAceView(project, entry)
 
             if (result.isNotEmpty()) {
                 Log.info(
