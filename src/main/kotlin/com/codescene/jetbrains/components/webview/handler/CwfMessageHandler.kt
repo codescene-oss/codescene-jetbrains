@@ -90,6 +90,7 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
             EditorMessages.OPEN_SETTINGS.value -> handleOpenSettings()
             EditorMessages.GOTO_FUNCTION_LOCATION.value -> handleGotoFunctionLocation(message, json)
 
+            PanelMessages.CLOSE.value -> handleClose()
             PanelMessages.COPY_CODE.value -> handleCopy()
             PanelMessages.SHOW_DIFF.value -> handleShowDiff()
             PanelMessages.APPLY.value -> handleApplyRefactoring()
@@ -111,6 +112,17 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         return true
     }
 
+    /**
+     * Currently, we only receive this message from the ACE view if the content is marked as *stale*.
+     * Should this message be sent from any other view, CWF would need to specify which window should be closed
+     * in the payload.
+     *
+     * See: **CS-5323**
+     */
+    private fun handleClose() {
+        closeWindow(UiLabelsBundle.message("ace"), project)
+    }
+
     private fun handleRequestAndPresentRefactoring(message: CwfMessage, json: Json) {
         val requestRefactoringMessage = message.payload?.let {
             json.decodeFromJsonElement(RequestAndPresentRefactoring.serializer(), it)
@@ -128,7 +140,7 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         CodeSceneGlobalSettingsStore.getInstance().state.aceAcknowledged = true
 
         val data = getAceAcknowledgeUserData(project)
-        CoroutineScope(Dispatchers.Main).launch { closeWindow(UiLabelsBundle.message("aceAcknowledge"), project) }
+        closeWindow(UiLabelsBundle.message("aceAcknowledge"), project)
 
         data?.fileData?.let { handleRefactoringFromCwf(it, project) }
     }
@@ -148,7 +160,7 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
     }
 
     private fun handleApplyRefactoring() {
-        val aceContext = getAceUserData(project) ?: return
+        val aceContext = getAceUserData(project)?.aceData ?: return
 
         TelemetryService.getInstance().logUsage(
             TelemetryEvents.ACE_REFACTOR_APPLIED, mutableMapOf(
@@ -168,11 +180,12 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
                 )
             )
 
-        CoroutineScope(Dispatchers.Main).launch { closeWindow(UiLabelsBundle.message("ace"), project) }
+        closeWindow(UiLabelsBundle.message("ace"), project)
     }
 
     private fun handleCopy() {
         val code = getAceUserData(project)
+            ?.aceData
             ?.aceResultData
             ?.code
 
@@ -202,7 +215,7 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
             )
         )
 
-        CoroutineScope(Dispatchers.Main).launch { closeWindow(UiLabelsBundle.message("ace"), project) }
+        closeWindow(UiLabelsBundle.message("ace"), project)
     }
 
     private fun handleInit(message: CwfMessage) {
