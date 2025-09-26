@@ -31,6 +31,7 @@ data class OpenAceAcknowledgementParams(
     val fnToRefactor: FnToRefactor
 )
 
+// TODO: add fnToRefactor to userData
 fun openAceAcknowledgeView(params: OpenAceAcknowledgementParams) {
     val existingBrowser = WebViewInitializer.getInstance(params.project).getBrowser(View.ACE_ACKNOWLEDGE)
 

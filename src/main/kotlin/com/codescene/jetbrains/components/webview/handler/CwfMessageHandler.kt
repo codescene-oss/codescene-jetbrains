@@ -91,6 +91,7 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
             EditorMessages.GOTO_FUNCTION_LOCATION.value -> handleGotoFunctionLocation(message, json)
 
             PanelMessages.CLOSE.value -> handleClose()
+            PanelMessages.RETRY.value -> handleRetry()
             PanelMessages.COPY_CODE.value -> handleCopy()
             PanelMessages.SHOW_DIFF.value -> handleShowDiff()
             PanelMessages.APPLY.value -> handleApplyRefactoring()
@@ -110,6 +111,19 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         callback?.success("Message processed.")
 
         return true
+    }
+
+    private fun handleRetry() {
+        val data = getAceUserData(project)
+
+        data?.aceData?.fileData?.let {
+            handleRefactoringFromCwf(
+                FileMetaType(
+                    fn = data.aceData.fileData.fn,
+                    fileName = data.aceData.fileData.fileName
+                ), project, AceEntryPoint.RETRY
+            )
+        }
     }
 
     /**
@@ -132,7 +146,7 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
             FileMetaType(
                 fn = requestRefactoringMessage.fn,
                 fileName = requestRefactoringMessage.fileName
-            ), project
+            ), project, AceEntryPoint.CODE_HEALTH_DETAILS
         )
     }
 
@@ -142,7 +156,7 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         val data = getAceAcknowledgeUserData(project)
         closeWindow(UiLabelsBundle.message("aceAcknowledge"), project)
 
-        data?.fileData?.let { handleRefactoringFromCwf(it, project) }
+        data?.fileData?.let { handleRefactoringFromCwf(it, project, AceEntryPoint.ACE_ACKNOWLEDGEMENT) }
     }
 
     private fun handleShowDiff() {
