@@ -2,6 +2,8 @@ package com.codescene.jetbrains.config.global
 
 import com.codescene.jetbrains.util.Constants.CODESCENE_SERVER_URL
 import com.codescene.jetbrains.util.aceStatusDelegate
+import com.codescene.jetbrains.util.enableAutoRefactorStatusDelegate
+import com.codescene.jetbrains.util.enableCodeLensesDelegate
 import org.jetbrains.annotations.NonNls
 
 enum class AceStatus(val value: String) {
@@ -20,15 +22,15 @@ enum class MonitorTreeSortOptions {
 data class CodeSceneGlobalSettings(
     @NonNls var serverUrl: String = CODESCENE_SERVER_URL,
 
-    var enableCodeLenses: Boolean = true, //TODO: refresh (remove) code vision immediately upon change
-    var enableAutoRefactor: Boolean = true, // User-facing setting
     var aceAcknowledged: Boolean = false,
     var excludeGitignoreFiles: Boolean = true,
     var previewCodeHealthGate: Boolean = false,
     var telemetryConsentGiven: Boolean = false,
-    val codeHealthMonitorEnabled: Boolean = true, //Freemium version flag
     val aceEnabled: Boolean = true, //Freemium version flag
+    val codeHealthMonitorEnabled: Boolean = true, //Freemium version flag
     var monitorTreeSortOption: MonitorTreeSortOptions = MonitorTreeSortOptions.SCORE_ASCENDING
 ) {
     var aceStatus: AceStatus by aceStatusDelegate()
+    var enableCodeLenses: Boolean by enableCodeLensesDelegate()
+    var enableAutoRefactor: Boolean by enableAutoRefactorStatusDelegate()  // User-facing setting
 }
