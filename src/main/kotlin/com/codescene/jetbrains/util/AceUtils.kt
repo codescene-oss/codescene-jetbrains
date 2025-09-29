@@ -17,8 +17,8 @@ import com.codescene.jetbrains.services.api.AceService
 import com.codescene.jetbrains.services.cache.*
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -132,13 +132,19 @@ fun aceStatusDelegate(): ReadWriteProperty<Any?, AceStatus> =
             .refresh()
     }
 
+fun enableAutoRefactorStatusDelegate(): ReadWriteProperty<Any?, Boolean> =
+    Delegates.observable(true) { _, _, _ ->
+        refreshAceUi(AceStatus.DEACTIVATED)
+    }
+
+
 fun refreshAceUi(newValue: AceStatus, scope: CoroutineScope = CoroutineScope(Dispatchers.IO)) = scope.launch {
     if (!CodeSceneGlobalSettingsStore.getInstance().state.aceEnabled) return@launch
 
     ProjectManager.getInstance().openProjects.forEach { project ->
-        val editor = FileEditorManager.getInstance(project).selectedTextEditor
+        val editors = EditorFactory.getInstance().allEditors.filter { it.project == project }.toList()
 
-        editor?.let {
+        editors.forEach {
             if (newValue == AceStatus.ACTIVATED)
                 ReviewCacheService
                     .getInstance(project)
@@ -147,9 +153,10 @@ fun refreshAceUi(newValue: AceStatus, scope: CoroutineScope = CoroutineScope(Dis
             else
                 UIRefreshService.getInstance(project)
                     .refreshUI(it, listOf("ACECodeVisionProvider"))
-
-            project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(null)
         }
+
+        updateMonitor(project)
+        project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(null) // TODO: remove, old CHM implementation
     }
 }
 
