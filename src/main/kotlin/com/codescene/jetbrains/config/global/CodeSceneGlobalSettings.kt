@@ -10,7 +10,8 @@ enum class AceStatus(val value: String) {
     ACTIVATED("Activated"),
     DEACTIVATED("Deactivated"),
     ERROR("Error"),
-    OUT_OF_CREDITS("Out of credits");
+    OUT_OF_CREDITS("Out of credits"),
+    OFFLINE("Offline");
 }
 
 enum class MonitorTreeSortOptions {

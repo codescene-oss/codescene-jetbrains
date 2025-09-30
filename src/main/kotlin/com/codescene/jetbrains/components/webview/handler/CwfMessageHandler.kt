@@ -208,7 +208,7 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
             CopyPasteManager.getInstance().setContents(selection)
 
             Log.info("Copied refactored code to clipboard.", serviceName)
-            showCopiedToClipboardNotification(project)
+            showInfoNotification(UiLabelsBundle.message("copiedToClipboard"), project)
 
             TelemetryService.getInstance().logUsage(
                 TelemetryEvents.ACE_COPY_CODE, mutableMapOf(

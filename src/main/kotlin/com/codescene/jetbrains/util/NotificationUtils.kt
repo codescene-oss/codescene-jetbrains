@@ -79,11 +79,11 @@ fun showRefactoringFinishedNotification(editor: Editor, params: AceCwfParams) {
     showNotification(notification)
 }
 
-fun showCopiedToClipboardNotification(project: Project) {
+fun showInfoNotification(message: String, project: Project) {
     val notification = NotificationParams(
         project,
         CODESCENE,
-        "Code successfully copied to clipboard.",
+        message,
         INFO_NOTIFICATION_GROUP,
         listOf(UiLabelsBundle.message("dismissRefactoringResult") to { _, n -> n.expire() })
     )
