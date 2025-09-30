@@ -72,7 +72,7 @@ class AceStatusBarWidget : StatusBarWidget.IconPresentation, StatusBarWidget {
                         }
 
                         override fun update(e: AnActionEvent) {
-                            if (value != AceStatus.ERROR.value) {
+                            if (value != AceStatus.ERROR.value && value != AceStatus.OFFLINE.value) {
                                 e.presentation.isEnabled = false
                             }
                         }
