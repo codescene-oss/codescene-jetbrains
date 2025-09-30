@@ -106,13 +106,12 @@ class GeneralTab : Configurable {
     }
 
     private fun colorButton(button: JButton, status: AceStatus) {
-        lateinit var buttonColor: JBColor
-
-        when (status) {
-            AceStatus.ERROR -> buttonColor = RED
-            AceStatus.ACTIVATED -> buttonColor = GREEN
-            AceStatus.DEACTIVATED -> buttonColor = JBColor.GRAY
-            AceStatus.OUT_OF_CREDITS -> buttonColor = JBColor.YELLOW
+        val buttonColor: JBColor = when (status) {
+            AceStatus.ERROR -> RED
+            AceStatus.ACTIVATED -> GREEN
+            AceStatus.DEACTIVATED -> JBColor.GRAY
+            AceStatus.OFFLINE -> JBColor.LIGHT_GRAY
+            AceStatus.OUT_OF_CREDITS -> JBColor.YELLOW
         }
 
         button.foreground = buttonColor
