@@ -156,12 +156,20 @@ fun refreshAceUi(newValue: AceStatus, scope: CoroutineScope = CoroutineScope(Dis
         }
 
         updateMonitor(project)
-        project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(null) // TODO: remove, old CHM implementation
+        project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC)
+            .refresh(null) // TODO: remove, old CHM implementation
     }
 }
 
 /**
  * Initiates refactoring for a file from CWF.
+ *
+ * This function can be called from three views: `home`, `ace`, and `aceAcknowledge`.
+ * The `ace` and `aceAcknowledge` views provide direct access to the `fnToRefactor` instance
+ * through user data (stored on the native side), while the `home` view does not.
+ *
+ * A potential improvement would be to have CWF pass this value directly to the native side,
+ * avoiding the need to look it up in the cache.
  *
  * This function:
  * 1. Resolves the file from the local file system.
@@ -170,30 +178,38 @@ fun refreshAceUi(newValue: AceStatus, scope: CoroutineScope = CoroutineScope(Dis
  * 4. Finds the matching function in the cache that corresponds to the acknowledged function.
  * 5. If found, invokes [handleAceEntryPoint] with the resolved fnToRefactor.
  */
-fun handleRefactoringFromCwf(fileData: FileMetaType, project: Project, source: AceEntryPoint) {
+fun handleRefactoringFromCwf(
+    fileData: FileMetaType,
+    project: Project,
+    source: AceEntryPoint,
+    fnToRefactor: FnToRefactor? = null
+) {
     ApplicationManager.getApplication().executeOnPooledThread {
-        val file = LocalFileSystem.getInstance().findFileByPath(fileData.fileName) ?: return@executeOnPooledThread
-
-        val code = ApplicationManager.getApplication().runReadAction<String> {
-            FileDocumentManager.getInstance().getDocument(file)?.text
-        } ?: ""
-        val aceCache = fetchAceCache(fileData.fileName, code, project)
-
-        // TODO: get fnToRefactor from userData instead
-        val refactorableFunction = aceCache.find { cache ->
-            cache.name == fileData.fn?.name &&
-                    cache.range.startLine == fileData.fn?.range?.startLine &&
-                    cache.range.endLine == fileData.fn?.range?.endLine
-        } ?: return@executeOnPooledThread
+        val function = fnToRefactor ?: getRefactorableFunctionFromCache(fileData, project)
 
         handleAceEntryPoint(
             RefactoringParams(
                 source = source,
                 project = project,
-                function = refactorableFunction,
+                function = function,
                 editor = getSelectedTextEditor(project, fileData.fileName),
             )
         )
+    }
+}
+
+private fun getRefactorableFunctionFromCache(fileData: FileMetaType, project: Project): FnToRefactor? {
+    val file = LocalFileSystem.getInstance().findFileByPath(fileData.fileName) ?: return null
+
+    val code = ApplicationManager.getApplication().runReadAction<String> {
+        FileDocumentManager.getInstance().getDocument(file)?.text
+    } ?: ""
+    val aceCache = fetchAceCache(fileData.fileName, code, project)
+
+    return aceCache.find { cache ->
+        cache.name == fileData.fn?.name &&
+                cache.range.startLine == fileData.fn?.range?.startLine &&
+                cache.range.endLine == fileData.fn?.range?.endLine
     }
 }
 

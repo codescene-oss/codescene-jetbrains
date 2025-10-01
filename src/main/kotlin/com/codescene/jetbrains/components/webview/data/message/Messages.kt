@@ -17,16 +17,16 @@ enum class PanelMessages(val value: String) {
     RETRY("retry"),
     REJECT("reject"),
     COPY_CODE("copyCode"),
-    SHOW_DIFF("showDiff"),
     ACKNOWLEDGED("acknowledged"),
     OPEN_DOCS_FOR_FUNCTION("open-docs-for-function"),
     REQUEST_AND_PRESENT_REFACTORING("request-and-present-refactoring"),
 }
 
 enum class EditorMessages(val value: String) {
-    GOTO_FUNCTION_LOCATION("goto-function-location"),
+    SHOW_DIFF("showDiff"),
+    OPEN_LINK("open-link"), // Custom message appended on script initialization,
     OPEN_SETTINGS("open-settings"),
-    OPEN_LINK("open-link") // Custom message appended on script initialization
+    GOTO_FUNCTION_LOCATION("goto-function-location")
 }
 
 enum class StateChangeMessages(val value: String) {

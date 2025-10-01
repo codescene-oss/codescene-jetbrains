@@ -13,6 +13,7 @@ import com.codescene.jetbrains.components.webview.data.view.AceAcknowledgeData
 import com.codescene.jetbrains.components.webview.handler.CwfMessageHandler
 import com.codescene.jetbrains.components.webview.mapper.AceAcknowledgementMapper
 import com.codescene.jetbrains.fileeditor.ace.acknowledge.CWF_ACE_ACKNOWLEDGE_DATA_KEY
+import com.codescene.jetbrains.fileeditor.ace.acknowledge.CwfAceAcknowledgeEditorProviderData
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.util.FileUtils
 import com.codescene.jetbrains.util.TelemetryEvents
@@ -31,7 +32,6 @@ data class OpenAceAcknowledgementParams(
     val fnToRefactor: FnToRefactor
 )
 
-// TODO: add fnToRefactor to userData
 fun openAceAcknowledgeView(params: OpenAceAcknowledgementParams) {
     val existingBrowser = WebViewInitializer.getInstance(params.project).getBrowser(View.ACE_ACKNOWLEDGE)
 
@@ -49,15 +49,25 @@ private fun updateWebView(params: OpenAceAcknowledgementParams, browser: JBCefBr
         serializer = CwfData.serializer(AceAcknowledgeData.serializer())
     )
 
-    mapper.toCwfData(params).data?.let { updateUserData(it, params.project) }  // Update CWF editor context
+    // Update CWF editor context
+    mapper.toCwfData(params).data?.let {
+        updateUserData(
+            it,
+            params.fnToRefactor,
+            params.project
+        )
+    }
     messageHandler.postMessage(View.ACE_ACKNOWLEDGE, dataJson, browser)
 }
 
-private fun updateUserData(data: AceAcknowledgeData, project: Project) {
+private fun updateUserData(data: AceAcknowledgeData, fnToRefactor: FnToRefactor, project: Project) {
     val fileEditor = FileEditorManager.getInstance(project)
         .allEditors
         .firstOrNull { it.file.name == UiLabelsBundle.message("aceAcknowledge") }
-    (fileEditor?.file as? LightVirtualFile)?.putUserData(CWF_ACE_ACKNOWLEDGE_DATA_KEY, data)
+    (fileEditor?.file as? LightVirtualFile)?.putUserData(
+        CWF_ACE_ACKNOWLEDGE_DATA_KEY,
+        CwfAceAcknowledgeEditorProviderData(fnToRefactor, data)
+    )
 }
 
 private fun openFile(params: OpenAceAcknowledgementParams) {
@@ -67,18 +77,21 @@ private fun openFile(params: OpenAceAcknowledgementParams) {
     val fileName = UiLabelsBundle.message("aceAcknowledge")
     val file = LightVirtualFile(fileName)
     file.putUserData(
-        CWF_ACE_ACKNOWLEDGE_DATA_KEY, AceAcknowledgeData(
-            fileData = FileMetaType(
-                fn = Fn(
-                    name = fnToRefactor.name, range = RangeCamelCase(
-                        endLine = fnToRefactor.range.endLine,
-                        endColumn = fnToRefactor.range.endColumn,
-                        startLine = fnToRefactor.range.startLine,
-                        startColumn = fnToRefactor.range.startColumn
-                    )
-                ),
-                fileName = filePath,
-            ), autoRefactor = AutoRefactorConfig()
+        CWF_ACE_ACKNOWLEDGE_DATA_KEY, CwfAceAcknowledgeEditorProviderData(
+            fnToRefactor,
+            AceAcknowledgeData(
+                fileData = FileMetaType(
+                    fn = Fn(
+                        name = fnToRefactor.name, range = RangeCamelCase(
+                            endLine = fnToRefactor.range.endLine,
+                            endColumn = fnToRefactor.range.endColumn,
+                            startLine = fnToRefactor.range.startLine,
+                            startColumn = fnToRefactor.range.startColumn
+                        )
+                    ),
+                    fileName = filePath,
+                ), autoRefactor = AutoRefactorConfig()
+            )
         )
     )
 

@@ -47,23 +47,14 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
     }
 
     /**
-     * This serves as a base for native message handling in *both* directions.
+     * Handles incoming messages from the webView (CWF) to the native IDE extension.
      *
-     * In this example:
-     * - If the incoming message (request) is "init", the handler executes JavaScript in the browser
-     *   to trace the event and send a "file-tree" `postMessage` back to the webview. This message includes
-     *   an array of file paths that can be opened.
-     * - If the request is "open-file", it logs the event and then opens a specific file in the IDE using
-     *   the native approach.
+     * This serves as the entry point for CWF → native communication.
      *
-     * For sending messages from the native application (JetBrains IDE) to the webview, the JavaScript
-     * `window.postMessage` is used. The `sendToJetBrains` function (on the webview side) triggers native events
-     * to send data and invoke a callback for success or failure.
+     * On the CWF side, the `sendToJetBrains` function is used to trigger these events.
+     * The IDE/native side receives the message, decodes it, and routes it to the proper handler.
      *
-     * Note: For a production-level implementation, consider implementing a `JSON` mapper to properly parse the
-     *       incoming `JSON` data and extract the payload. This basic example uses simple string checks.
-     *
-     * @return True or false, depending on whether the query was handled.
+     * @return True if the message was handled, false otherwise.
      */
     // @codescene(disable:"Excess Number of Function Arguments")
     override fun onQuery(
@@ -86,6 +77,7 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         when (message.messageType) {
             LifecycleMessages.INIT.value -> handleInit(message)
 
+            EditorMessages.SHOW_DIFF.value -> handleShowDiff()
             EditorMessages.OPEN_LINK.value -> handleOpenUrl(message)
             EditorMessages.OPEN_SETTINGS.value -> handleOpenSettings()
             EditorMessages.GOTO_FUNCTION_LOCATION.value -> handleGotoFunctionLocation(message, json)
@@ -93,7 +85,6 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
             PanelMessages.CLOSE.value -> handleClose()
             PanelMessages.RETRY.value -> handleRetry()
             PanelMessages.COPY_CODE.value -> handleCopy()
-            PanelMessages.SHOW_DIFF.value -> handleShowDiff()
             PanelMessages.APPLY.value -> handleApplyRefactoring()
             PanelMessages.REJECT.value -> handleRefactoringRejection()
             PanelMessages.ACKNOWLEDGED.value -> handleAceAcknowledged()
@@ -113,6 +104,39 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         return true
     }
 
+    override fun onQueryCanceled(browser: CefBrowser?, frame: CefFrame?, queryId: Long) {
+        // TODO...
+    }
+
+    /**
+     * Sends a message from the native IDE extension to the webView (CWF).
+     *
+     * This is the counterpart to CWF → native communication, enabling native → CWF messaging.
+     * The message is injected into the WebView’s JavaScript context using `window.postMessage`.
+     *
+     * @param view The target view for which the message should be delivered. If no explicit browser
+     *             instance is provided, the one registered for this view is resolved automatically.
+     * @param message The message payload, represented as a JSON string. This will be passed to
+     *                the CWF via `window.postMessage`.
+     * @param browser Optional explicit `JBCefBrowser` instance. If not provided, the browser
+     *                for the given `view` is looked up via [WebViewInitializer].
+     */
+    fun postMessage(view: View, message: String, browser: JBCefBrowser? = null) {
+        val registeredBrowser = browser ?: WebViewInitializer.getInstance(project).getBrowser(view)
+
+        registeredBrowser?.let {
+            it.cefBrowser.executeJavaScript(
+                "window.postMessage($message);",
+                null,
+                0
+            )
+        }
+    }
+
+    /**
+     * A retry can only be triggered from the `ace` view, since it depends on the
+     * currently loaded ACE user data and its associated file context.
+     */
     private fun handleRetry() {
         val data = getAceUserData(project)
 
@@ -121,7 +145,7 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
                 FileMetaType(
                     fn = data.aceData.fileData.fn,
                     fileName = data.aceData.fileData.fileName
-                ), project, AceEntryPoint.RETRY
+                ), project, AceEntryPoint.RETRY, data.functionToRefactor
             )
         }
     }
@@ -156,7 +180,14 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         val data = getAceAcknowledgeUserData(project)
         closeWindow(UiLabelsBundle.message("aceAcknowledge"), project)
 
-        data?.fileData?.let { handleRefactoringFromCwf(it, project, AceEntryPoint.ACE_ACKNOWLEDGEMENT) }
+        data?.aceAcknowledgeData?.fileData?.let {
+            handleRefactoringFromCwf(
+                it,
+                project,
+                AceEntryPoint.ACE_ACKNOWLEDGEMENT,
+                data.fnToRefactor
+            )
+        }
     }
 
     private fun handleShowDiff() {
@@ -198,10 +229,10 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
     }
 
     private fun handleCopy() {
-        val code = getAceUserData(project)
+        val aceData = getAceUserData(project)
             ?.aceData
             ?.aceResultData
-            ?.code
+        val code = aceData?.code
 
         if (!code.isNullOrEmpty()) {
             val selection = StringSelection(code)
@@ -212,7 +243,7 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
 
             TelemetryService.getInstance().logUsage(
                 TelemetryEvents.ACE_COPY_CODE, mutableMapOf(
-                    //Pair("traceId", TODO),
+                    Pair("traceId", aceData.traceId),
                     //Pair("skipCache", TODO)
                 )
             )
@@ -222,9 +253,13 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
     }
 
     private fun handleRefactoringRejection() {
+        val aceData = getAceUserData(project)
+            ?.aceData
+            ?.aceResultData
+
         TelemetryService.getInstance().logUsage(
             TelemetryEvents.ACE_REFACTOR_REJECTED, mutableMapOf(
-                //Pair("traceId", TODO),
+                Pair("traceId", aceData?.traceId ?: ""),
                 //Pair("skipCache", TODO)
             )
         )
@@ -235,23 +270,6 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
     private fun handleInit(message: CwfMessage) {
         val payload = message.payload
         if (payload.toString() == View.HOME.value) updateMonitor(project)
-    }
-
-    override fun onQueryCanceled(browser: CefBrowser?, frame: CefFrame?, queryId: Long) {
-        // TODO...
-    }
-
-    fun postMessage(view: View, message: String, browser: JBCefBrowser? = null) {
-        val registeredBrowser = browser ?: WebViewInitializer.getInstance(project).getBrowser(view)
-
-        registeredBrowser?.let {
-            it.cefBrowser.executeJavaScript(
-                """
-              console.log("Sending message to webview...");
-              window.postMessage($message);
-            """.trimIndent(), null, 0
-            )
-        }
     }
 
     private fun handleOpenDocs(message: CwfMessage, json: Json) {
