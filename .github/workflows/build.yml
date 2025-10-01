@@ -200,6 +200,8 @@ jobs:
           format: 'HTML'
           args: >
             --failOnCVSS 5
+            --ossIndexUsername ${{ secrets.DEPENDENCY_CHECK_API_USERNAME }}
+            --ossIndexPassword ${{ secrets.DEPENDENCY_CHECK_API_TOKEN }}
 
       # Upload dependency check report
       - name: Upload Test results
@@ -211,7 +213,6 @@ jobs:
 
   delta-analysis:
     name: CodeScene delta analysis
-    if: github.event_name != 'pull_request'
     needs: [ build ]
     runs-on: ubuntu-latest
     steps:
@@ -239,7 +240,7 @@ jobs:
   releaseDraft:
     name: Release draft
     if: github.event_name != 'pull_request'
-    needs: [ build, test, verify, dependency-check ] #delta-analysis
+    needs: [ build, test, verify, dependency-check, delta-analysis ]
     runs-on: ubuntu-latest
     permissions:
       contents: write
