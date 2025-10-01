@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
  * ## Entry points
  * This method is invoked when the user opens CodeScene’s **code smell documentation** from:
  * - The **Code Smell Details panel** in the *Home* tool window
- * - An **Intention Action** on a code smell
+ * - An **Intention Action** on a code smell or in the problems tab
  * - A **Code Vision annotation** on a code smell
  *
  * @param docsData The documentation data to be displayed in the webview.
