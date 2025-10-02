@@ -58,6 +58,10 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation("io.mockk:mockk:${mockkVersion}")
 
+    // Provide a no-op SLF4J binding during tests to avoid "No binding found" errors.
+    // Some libraries (e.g., MockK or IntelliJ SDK components) rely on SLF4J at runtime.
+    testRuntimeOnly("org.slf4j:slf4j-nop:2.0.17")
+
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
         create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"))
@@ -68,7 +72,6 @@ dependencies {
         // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
         plugins(providers.gradleProperty("platformPlugins").map { it.split(',') })
 
-        instrumentationTools()
         pluginVerifier()
         zipSigner()
         testFramework(TestFrameworkType.Platform)
