@@ -58,8 +58,6 @@ class CodeSceneGlobalSettingsStoreTest : BasePlatformTestCase() {
 
     private fun createCustomState(): CodeSceneGlobalSettings = CodeSceneGlobalSettings(
         serverUrl = "https://new-server.com",
-        enableCodeLenses = true,
-        enableAutoRefactor = true,
         excludeGitignoreFiles = false,
         previewCodeHealthGate = true
     )
