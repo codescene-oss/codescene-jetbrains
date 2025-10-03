@@ -94,7 +94,7 @@ private fun getDocumentContext(range: RangeCamelCase, file: VirtualFile) =
         val endOffset = document.getLineEndOffset(range.endLine - 1)
         val text = document.text
 
-        Pair(text, startOffset until endOffset)
+        Pair(text, startOffset..endOffset)
     }
 
 private data class AceContext(val refactoredFilePath: String, val range: RangeCamelCase, val refactoredCode: String)

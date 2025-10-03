@@ -19,6 +19,13 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
     override fun createPanel(): DialogPanel {
         return panel {
             row {
+                checkBox("Ace acknowledged")
+                    .bindSelected(settings::aceAcknowledged)
+                    .comment("For testing purposes. This should only be visible when cwfIsDevMode is enabled.")
+                    .visible(System.getProperty("cwfIsDevMode")?.toBoolean() ?: false)
+            }
+
+            row {
                 checkBox(UiLabelsBundle.message("enableCodeLenses"))
                     .bindSelected(settings::enableCodeLenses)
                     .comment(UiLabelsBundle.message("enableCodeLensesComment"))
