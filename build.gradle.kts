@@ -23,6 +23,8 @@ val codeSceneRepository = providers.gradleProperty("codeSceneRepository").get()
 val flexmarkVersion = providers.gradleProperty("flexmarkVersion").get()
 val reflectionsVersion = providers.gradleProperty("reflectionsVersion").get()
 val mockkVersion = providers.gradleProperty("mockkVersion").get()
+val kotlinxSerializationVersion = providers.gradleProperty("kotlinxSerializationVersion").get()
+val slf4jNopVersion = providers.gradleProperty("slf4jNopVersion").get()
 
 // Set the JVM language level used to build the project.
 kotlin {
@@ -53,14 +55,14 @@ dependencies {
     implementation("org.reflections:reflections:$reflectionsVersion")
     implementation("codescene.extension:api:$codeSceneExtensionAPIVersion")
     implementation("com.vladsch.flexmark:flexmark-all:$flexmarkVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
 
     testImplementation(libs.junit)
     testImplementation("io.mockk:mockk:${mockkVersion}")
 
     // Provide a no-op SLF4J binding during tests to avoid "No binding found" errors.
     // Some libraries (e.g., MockK or IntelliJ SDK components) rely on SLF4J at runtime.
-    testRuntimeOnly("org.slf4j:slf4j-nop:2.0.17")
+    testRuntimeOnly("org.slf4j:slf4j-nop:$slf4jNopVersion")
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {

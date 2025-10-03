@@ -42,7 +42,7 @@ fun test(a: Boolean, b:Boolean) {
 """,
             ),
 
-//            // Case 2: no indentation required
+            // Case 2: no indentation required
             arrayOf(
                 "    ",
 """
@@ -63,7 +63,7 @@ fun test(a: Boolean, b:Boolean) {
 """,
             ),
 
-//            // Case 3: no previous indentation
+            // Case 3: no previous indentation
             arrayOf(
             "    ",
 """
@@ -103,7 +103,7 @@ fun test(a: Boolean, b:Boolean) {
   }
 """,
             ),
-//            // Case 6: target line has 2 spaces, new content has 4 spaces
+            // Case 5: target line has 2 spaces, new content has 4 spaces
             arrayOf(
                 "  ",
 """
@@ -123,7 +123,7 @@ fun test(a: Boolean, b:Boolean) {
   }
 """,
             ),
-//            // Case 7: empty new content
+            // Case 6: empty new content
             arrayOf("    ", "", "")
         )
     }
