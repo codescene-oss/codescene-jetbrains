@@ -4,6 +4,7 @@ import com.codescene.ExtensionAPI
 import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.data.delta.Delta
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
+import com.codescene.jetbrains.components.webview.util.updateMonitor
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.UIRefreshService
@@ -33,11 +34,22 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
         reviewFile(editor) {
             performDeltaAnalysis(editor)
 
-            project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC).refresh(editor.virtualFile)
+            project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC)
+                .refresh(editor.virtualFile) // TODO: remove, old CHM implementation
         }
     }
 
     override fun getActiveApiCalls() = CodeSceneCodeVisionProvider.activeDeltaApiCalls
+
+    override fun removeActiveCall(filePath: String) {
+        super.removeActiveCall(filePath)
+        updateMonitor(project)
+    }
+
+    override fun addActiveCall(filePath: String, job: Job) {
+        super.addActiveCall(filePath, job)
+        updateMonitor(project)
+    }
 
     /**
      * Performs delta analysis by comparing the current editor content against a baseline.
@@ -65,7 +77,7 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
 
         val delta = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview) }
 
-        if (delta?.oldScore?.isEmpty == true) {
+        if (delta?.oldScore?.isEmpty == true && delta?.newScore?.isEmpty == false) {
             return Delta(
                 10.0, delta.newScore.get(), delta.scoreChange, delta.fileLevelFindings, delta.functionLevelFindings
             )

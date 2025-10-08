@@ -8,20 +8,23 @@ import com.codescene.data.ace.RefactorResponse
 import com.codescene.data.ace.RefactoringOptions
 import com.codescene.data.delta.Delta
 import com.codescene.data.review.Review
+import com.codescene.jetbrains.UiLabelsBundle
+import com.codescene.jetbrains.components.webview.util.AceCwfParams
+import com.codescene.jetbrains.components.webview.util.openAceWindow
+import com.codescene.jetbrains.components.webview.util.updateMonitor
 import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheEntry
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
-import com.codescene.jetbrains.util.Log
-import com.codescene.jetbrains.util.RefactoringParams
-import com.codescene.jetbrains.util.TelemetryEvents
-import com.codescene.jetbrains.util.handleRefactoringResult
+import com.codescene.jetbrains.util.*
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.ProjectManager
 import com.intellij.platform.ide.progress.withBackgroundProgress
 import kotlinx.coroutines.*
 
@@ -31,6 +34,8 @@ data class RefactoredFunction(
     val fileName: String = "",
     val startLine: Int? = null,
     val endLine: Int? = null,
+    val startColumn: Int? = null,
+    val endColumn: Int? = null,
     var refactoringWindowType: String = ""
 )
 
@@ -69,11 +74,27 @@ class AceService : BaseService(), Disposable {
                 }
                 Log.info("Preflight info fetched from the server", serviceImplementation)
 
+                val settings = CodeSceneGlobalSettingsStore.getInstance().state
+                handleStatusChange(
+                    settings.aceStatus == AceStatus.OFFLINE,
+                    AceStatus.ACTIVATED,
+                    UiLabelsBundle.message("backOnline")
+                )
             } catch (e: Exception) {
-                if (e.message == "Operation timed out") {
+                val settings = CodeSceneGlobalSettingsStore.getInstance().state
+                val timedOut = e is java.io.IOException && e.message == "Operation timed out"
+                val offline = e is java.net.ConnectException
+
+                if (timedOut || offline) {
                     Log.warn("Preflight info fetching timed out", serviceImplementation)
+                    handleStatusChange(
+                        settings.aceStatus != AceStatus.OFFLINE,
+                        AceStatus.OFFLINE,
+                        UiLabelsBundle.message("offlineMode")
+                    )
                 } else {
-                    Log.warn("Error during preflight info fetching. Error message: ${e.message}", serviceImplementation)                }
+                    Log.warn("Error during preflight info fetching. Error message: ${e.message}", serviceImplementation)
+                }
             }
             if (force) {
                 setAceStatus(preflight)
@@ -132,10 +153,52 @@ class AceService : BaseService(), Disposable {
             withBackgroundProgress(project, "Refactoring ${function.name}...", cancellable = false) {
                 try {
                     handleRefactoring(params, options)
+
+                    handleStatusChange(
+                        CodeSceneGlobalSettingsStore.getInstance().state.aceStatus == AceStatus.OFFLINE,
+                        AceStatus.ACTIVATED,
+                        UiLabelsBundle.message("backOnline")
+                    )
                 } catch (e: Exception) {
-                    //TODO: error notification, handle out of credits case separately
                     Log.warn("Problem occurred during ACE refactoring: ${e.message}")
+
+                    if (e is java.io.IOException && e.message == "Operation timed out")
+                        handleStatusChange(
+                            CodeSceneGlobalSettingsStore.getInstance().state.aceStatus != AceStatus.OFFLINE,
+                            AceStatus.OFFLINE,
+                            UiLabelsBundle.message("offlineMode")
+                        )
+
+                    openAceErrorView(params.editor, params.function, project)
                 }
+            }
+        }
+    }
+
+    private fun openAceErrorView(editor: Editor?, function: FnToRefactor?, project: Project) {
+        if (function != null && editor != null)
+            openAceWindow(
+                AceCwfParams(
+                    error = true,
+                    function = function,
+                    filePath = editor.virtualFile.path
+                ), project
+            )
+    }
+
+    private fun handleStatusChange(
+        shouldNotify: Boolean,
+        newStatus: AceStatus,
+        message: String
+    ) {
+        val settings = CodeSceneGlobalSettingsStore.getInstance().state
+
+        if (shouldNotify) {
+            settings.aceStatus = newStatus
+
+            Log.info(message)
+            ProjectManager.getInstance().openProjects.forEach { project ->
+                showInfoNotification(message, project)
             }
         }
     }
@@ -153,14 +216,13 @@ class AceService : BaseService(), Disposable {
         Log.debug("Refactoring ${function!!.name} took ${durationMillis}ms.", serviceImplementation)
 
         result?.let {
-            val refactoredFunction = RefactoredFunction(
-                function.name,
-                result,
-                params.editor?.virtualFile?.name ?: "",
-                params.function.range.startLine,
-                params.function.range.endLine
+            val refactoredFunction = AceCwfParams(
+                filePath = params.editor!!.virtualFile.path,
+                function = params.function,
+                refactorResponse = result,
             )
-            handleRefactoringResult(params, refactoredFunction, durationMillis)
+
+            handleRefactoringResult(refactoredFunction, durationMillis, params.editor)
         }
     }
 
@@ -172,7 +234,9 @@ class AceService : BaseService(), Disposable {
             val result = runWithClassLoaderChange { getFunctions() }
 
             val entry = AceRefactorableFunctionCacheEntry(path, editor.document.text, result)
+
             AceRefactorableFunctionsCacheService.getInstance(project).put(entry)
+            updateCurrentAceView(project, entry)
 
             if (result.isNotEmpty()) {
                 Log.info(
@@ -182,12 +246,15 @@ class AceService : BaseService(), Disposable {
 
                 val uiService = UIRefreshService.getInstance(project)
                 uiService.refreshUI(editor, listOf("ACECodeVisionProvider"))
+
+                updateMonitor(project)
             }
         }
     }
 
     private fun setAceStatus(preflightInfo: PreflightResponse?) {
-        if (preflightInfo == null) {
+        if (preflightInfo == null && CodeSceneGlobalSettingsStore.getInstance().state.aceStatus == AceStatus.OFFLINE) return
+        else if (preflightInfo == null) {
             CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.ERROR
         } else {
             CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.ACTIVATED

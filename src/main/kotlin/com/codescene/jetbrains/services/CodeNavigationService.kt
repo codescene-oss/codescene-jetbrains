@@ -15,16 +15,11 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.io.File
-import java.lang.RuntimeException
 
 @Service(Service.Level.PROJECT)
-class CodeNavigationService(val project: Project): Disposable {
+class CodeNavigationService(val project: Project) : Disposable {
     private val scope = CoroutineScope(Dispatchers.IO)
 
     companion object {
@@ -53,8 +48,9 @@ class CodeNavigationService(val project: Project): Disposable {
 
     private suspend fun openEditorAndMoveCaret(file: VirtualFile, line: Int) = withContext(Dispatchers.Main) {
         // Only calculate/capture data in runReadAction, NOT open the editor!
+        val focusLine = if (line == 0) 0 else line - 1
         val openFileDescriptor = runReadAction {
-            OpenFileDescriptor(project, file, line - 1, 0)
+            OpenFileDescriptor(project, file, focusLine, 0)
         }
 
         // Open the editor outside runReadAction
@@ -63,7 +59,7 @@ class CodeNavigationService(val project: Project): Disposable {
                 .openTextEditor(openFileDescriptor, true)
         }
         if (editor != null) {
-            moveCaret(editor, line)
+            moveCaret(editor, focusLine)
         }
     }
 
@@ -71,7 +67,7 @@ class CodeNavigationService(val project: Project): Disposable {
         val caretModel = editor.caretModel
 
         runWriteAction {
-            val position = LogicalPosition(line - 1, 0)
+            val position = LogicalPosition(line, 0)
 
             caretModel.moveToLogicalPosition(position)
             editor.scrollingModel.scrollToCaret(ScrollType.CENTER)

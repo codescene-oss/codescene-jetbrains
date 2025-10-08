@@ -8,19 +8,28 @@ import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 
 fun getSelectedTextEditor(project: Project, filePath: String, source: String = ""): Editor? {
-    val editorManager = FileEditorManager.getInstance(project)
-    val openEditor = editorManager.allEditors.firstOrNull { it.file.path == filePath }
-        ?: editorManager.allEditors.firstOrNull()
+    var result: Editor? = null
 
-    if (editorManager.selectedTextEditor == null && openEditor != null) {
-        Log.debug("Selected editor was null, opening file: ${openEditor.file.path}", source)
-        editorManager.openFile(openEditor.file, true, true)
+    ApplicationManager.getApplication().invokeAndWait {
+        val editorManager = FileEditorManager.getInstance(project)
+        val openEditor = editorManager.allEditors.firstOrNull { it.file.path == filePath }
+            ?: editorManager.allEditors.firstOrNull()
+
+        if (editorManager.selectedTextEditor == null && openEditor != null) {
+            Log.debug("Selected editor was null, opening file: ${openEditor.file.path}", source)
+            editorManager.openFile(openEditor.file, true, true)
+        }
+
+        result = editorManager.selectedTextEditor
     }
 
-    return editorManager.selectedTextEditor
+    return result
 }
 
 fun closeWindow(fileName: String, project: Project) {
@@ -38,7 +47,8 @@ fun closeWindow(fileName: String, project: Project) {
         }
 
     val (editorWindow, virtualFile) = docFile ?: return
-    editorWindow.closeFile(virtualFile)
+
+    CoroutineScope(Dispatchers.Main).launch { editorWindow.closeFile(virtualFile) }
 }
 
 data class ReplaceCodeSnippetArgs(
@@ -60,11 +70,16 @@ fun replaceCodeSnippet(args: ReplaceCodeSnippetArgs) {
     ApplicationManager.getApplication().invokeLater {
         val editor = FileEditorManager.getInstance(project).openTextEditor(openFileDescriptor, true)
         editor?.document?.let { document ->
-            val startOffset = document.getLineStartOffset(startLine - 1)
-            val endOffset = document.getLineEndOffset(endLine - 1)
+            val start = maxOf(0, startLine - 1)
+            val end = maxOf(0, endLine - 1)
+
+            val firstLineStartOffset = document.getLineStartOffset(start)
+            val lastLineEndOffset = document.getLineEndOffset(end)
+
+            val content = adjustIndentation(document, start, newContent)
 
             WriteCommandAction.runWriteCommandAction(project) {
-                document.replaceString(startOffset, endOffset, newContent)
+                document.replaceString(firstLineStartOffset, lastLineEndOffset, content)
             }
         }
     }

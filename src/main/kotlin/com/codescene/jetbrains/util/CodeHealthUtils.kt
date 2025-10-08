@@ -3,13 +3,15 @@ package com.codescene.jetbrains.util
 import kotlin.math.abs
 
 data class HealthDetails(
-    val oldScore: Double,
-    val newScore: Double,
+    val oldScore: Double?,
+    val newScore: Double?,
 )
 
 fun round(score: Double): Double = kotlin.math.floor(score * 100.0) / 100.0
 
-fun getChangePercentage(healthDetails: HealthDetails): Double {
+fun getChangePercentage(healthDetails: HealthDetails): Double? {
+    if (healthDetails.newScore == null || healthDetails.oldScore == null) return null
+
     if (healthDetails.oldScore == 0.0) {
         return if (healthDetails.newScore == 0.0) 0.0 else 100.0
     }
@@ -20,20 +22,21 @@ fun getChangePercentage(healthDetails: HealthDetails): Double {
 }
 
 private fun codeImproved(healthDetails: HealthDetails) =
-    if (healthDetails.newScore > healthDetails.oldScore) "+"
+    if (healthDetails.newScore == null || healthDetails.oldScore == null) ""
+    else if (healthDetails.newScore > healthDetails.oldScore) "+"
     else "-"
 
 data class HealthInformation(val change: String, val percentage: String = "")
 
 fun getCodeHealth(healthDetails: HealthDetails): HealthInformation {
-    val newScore = round(healthDetails.newScore)
-    val oldScore = round(healthDetails.oldScore)
+    val newScore = healthDetails.newScore ?: "N/A"
+    val oldScore = healthDetails.oldScore ?: "N/A"
 
     val changePercentage = getChangePercentage(healthDetails)
     val sign = codeImproved(healthDetails)
 
-    return if (newScore != oldScore) HealthInformation(
-        "$oldScore → $newScore",
-        "$sign${changePercentage}%"
-    ) else HealthInformation(newScore.toString())
+    val percentage = if (changePercentage == null || sign.isEmpty()) "" else "$sign${changePercentage}%"
+
+    return if (newScore != oldScore) HealthInformation("$oldScore → $newScore", percentage)
+    else HealthInformation(newScore.toString())
 }

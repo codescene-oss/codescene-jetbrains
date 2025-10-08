@@ -24,12 +24,12 @@ abstract class CodeSceneService : BaseService(), Disposable {
     /**
      * Shared logic for reviewing a file.
      * @param editor The editor instance.
-     * @param timeout The action timeout, defaulted to 15s.
+     * @param timeout The action timeout, defaulted to 60s.
      * @param performAction A lambda containing subclass-specific actions.
      */
     protected fun reviewFile(
         editor: Editor,
-        timeout: Long = 15_000,
+        timeout: Long = 60_000,
         performAction: suspend () -> Unit
     ) {
         val service = getServiceForLogging(editor)
@@ -39,7 +39,7 @@ abstract class CodeSceneService : BaseService(), Disposable {
         activeReviewCalls[filePath]?.cancel()
 
         val progressMessage = getProgressMessage(fileName)
-        activeReviewCalls[filePath] = scope.launch {
+        val job = scope.launch {
             withTimeout(timeout) {
                 withBackgroundProgress(editor.project!!, progressMessage, cancellable = false) {
                     try {
@@ -61,14 +61,24 @@ abstract class CodeSceneService : BaseService(), Disposable {
                     } catch (e: Exception) {
                         handleError(editor, FailureType.FAILED, e.message)
                     } finally {
-                        activeReviewCalls.remove(filePath)
+                        removeActiveCall(filePath)
                     }
                 }
             }
         }
+
+        addActiveCall(filePath, job)
     }
 
     protected abstract fun getActiveApiCalls(): MutableSet<String>
+
+    protected open fun addActiveCall(filePath: String, job: Job) {
+        activeReviewCalls[filePath] = job
+    }
+
+    protected open fun removeActiveCall(filePath: String) {
+        activeReviewCalls.remove(filePath)
+    }
 
     fun cancelFileReview(filePath: String, calls: MutableSet<String>) {
         activeReviewCalls[filePath]?.let { job ->

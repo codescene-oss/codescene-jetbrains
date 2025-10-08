@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.util
 
+import com.codescene.jetbrains.UiLabelsBundle
 import com.intellij.ui.ColorUtil
 import com.intellij.ui.JBColor
 import java.awt.Color
@@ -38,6 +39,8 @@ object Constants {
     const val CODE_HEALTH_MONITOR = "Code Health Monitor"
     const val TELEMETRY_EDITOR_TYPE = "intellij"
 
+    const val INFO_NOTIFICATION_GROUP = "CodeScene Information"
+
     // ACE constants
     const val ACE_ACKNOWLEDGEMENT_FILE = "ace-info.md"
     const val ACE_STATUS = "CodeScene ACE Status"
@@ -75,4 +78,25 @@ object Constants {
     const val POTENTIALLY_LOW_COHESION = "Potentially Low Cohesion"
     const val PRIMITIVE_OBSESSION = "Primitive Obsession"
     const val STRING_HEAVY_FUNCTION_ARGUMENTS = "String Heavy Function Arguments"
+
+    // CWF
+    const val IDE_TYPE = "JetBrains"
+    val ALLOWED_DOMAINS = listOf(
+        "https://refactoring.com",
+        "https://en.wikipedia.org",
+        "https://codescene.io",
+        "https://codescene.com",
+        "https://blog.ploeh.dk/2018/08/27/on-constructor-over-injection/",
+        "https://supporthub.codescene.com"
+    )
+    const val DELTA_ANALYSIS_JOB = "deltaAnalysis"
+    const val AUTO_REFACTOR_JOB = "autoRefactor"
+    const val JOB_STATE_RUNNING = "running"
+    const val JOB_STATE_QUEUED = "queued"
+
+    val codeSceneWindowFileNames = listOf(
+        UiLabelsBundle.message("ace"),
+        UiLabelsBundle.message("codeSmellDocs"),
+        UiLabelsBundle.message("aceAcknowledge"),
+    )
 }
