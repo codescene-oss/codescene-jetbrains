@@ -195,7 +195,7 @@ tasks.register("fetchDocs") {
     val user = "empear-analytics"
     val repo = "codescene-ide-protocol"
     val token = if (System.getenv("CI") == "true")
-        System.getenv("CODESCENE_IDE_DOCS_TOKEN")
+        System.getenv("CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN")
     else
         System.getenv("GH_PACKAGE_TOKEN")
 
