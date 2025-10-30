@@ -4,10 +4,13 @@ import com.codescene.ExtensionAPI
 import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.services.UIRefreshService
+import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.cache.ReviewCacheEntry
 import com.codescene.jetbrains.services.cache.ReviewCacheService
+import com.codescene.jetbrains.util.Constants.REVIEW
 import com.codescene.jetbrains.util.Log
-import com.codescene.jetbrains.util.checkContainsRefactorableFunctions
+import com.codescene.jetbrains.util.TelemetryEvents
+import com.codescene.jetbrains.util.getTelemetryInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
@@ -42,7 +45,20 @@ class CodeReviewService(private val project: Project) : CodeSceneService() {
         val code = editor.document.text
 
         val params = ReviewParams(path, code)
-        val result = runWithClassLoaderChange { ExtensionAPI.review(params) } ?: return
+        val (result, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.review(params) }
+
+        val telemetryInfo = getTelemetryInfo(file)
+        TelemetryService.getInstance().logUsage(
+            TelemetryEvents.ANALYSIS_PERFORMANCE,
+            mutableMapOf(
+                Pair("type", REVIEW),
+                Pair("elapsedMs", elapsedMs),
+                Pair("loc", telemetryInfo.loc),
+                Pair("language", telemetryInfo.language),
+            )
+        )
+
+        result ?: return
 
         val entry = ReviewCacheEntry(fileContents = code, filePath = path, response = result)
         ReviewCacheService.getInstance(project).put(entry)

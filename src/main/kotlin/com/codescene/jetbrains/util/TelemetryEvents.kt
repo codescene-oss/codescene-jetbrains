@@ -25,6 +25,7 @@ object TelemetryEvents {
     const val DETAILS_FUNCTION_DESELECTED = "code_health_details/function_deselected"
 
     const val REVIEW_OR_DELTA_TIMEOUT = "review_or_delta_timeout"
+    const val ANALYSIS_PERFORMANCE = "analysis/performance"
 
     const val ACE_INFO_PRESENTED = "ace_info/presented"
     const val ACE_INFO_ACKNOWLEDGED = "ace_info/acknowledged"

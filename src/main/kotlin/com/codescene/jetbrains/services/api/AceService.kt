@@ -14,6 +14,7 @@ import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheEntry
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
+import com.codescene.jetbrains.util.Constants.ACE
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.RefactoringParams
 import com.codescene.jetbrains.util.TelemetryEvents
@@ -64,16 +65,18 @@ class AceService : BaseService(), Disposable {
         return withContext(dispatcher) {
             var preflight: PreflightResponse? = null
             try {
-                preflight = runWithClassLoaderChange {
+                val (result, elapsedMs) = runWithClassLoaderChange {
                     ExtensionAPI.preflight(force)
                 }
-                Log.info("Preflight info fetched from the server", serviceImplementation)
+                preflight = result
 
+                Log.info("Preflight info fetched from the server", serviceImplementation)
             } catch (e: Exception) {
                 if (e.message == "Operation timed out") {
                     Log.warn("Preflight info fetching timed out", serviceImplementation)
                 } else {
-                    Log.warn("Error during preflight info fetching. Error message: ${e.message}", serviceImplementation)                }
+                    Log.warn("Error during preflight info fetching. Error message: ${e.message}", serviceImplementation)
+                }
             }
             if (force) {
                 setAceStatus(preflight)
@@ -142,25 +145,32 @@ class AceService : BaseService(), Disposable {
 
     private fun handleRefactoring(params: RefactoringParams, options: RefactoringOptions? = null) {
         val function = params.function
-        val startTime = System.nanoTime()
 
-        val result = runWithClassLoaderChange {
+        val (result, elapsedMs) = runWithClassLoaderChange {
             if (options == null) ExtensionAPI.refactor(function)
             else ExtensionAPI.refactor(function, options)
         }
 
-        val durationMillis = (System.nanoTime() - startTime) / 1_000_000
-        Log.debug("Refactoring ${function!!.name} took ${durationMillis}ms.", serviceImplementation)
+        TelemetryService.getInstance().logUsage(
+            TelemetryEvents.ANALYSIS_PERFORMANCE,
+            mutableMapOf(
+                Pair("type", ACE),
+                Pair("elapsedMs", elapsedMs),
+                Pair("loc", params.function?.body?.lines()?.size ?: 0),
+                Pair("language", params.editor?.virtualFile?.extension ?: ""),
+            )
+        )
+        Log.debug("Refactoring ${function!!.name} took ${elapsedMs}ms.", serviceImplementation)
 
         result?.let {
             val refactoredFunction = RefactoredFunction(
                 function.name,
-                result,
+                it,
                 params.editor?.virtualFile?.name ?: "",
                 params.function.range.startLine,
                 params.function.range.endLine
             )
-            handleRefactoringResult(params, refactoredFunction, durationMillis)
+            handleRefactoringResult(params, refactoredFunction, elapsedMs)
         }
     }
 
@@ -169,7 +179,7 @@ class AceService : BaseService(), Disposable {
         val path = editor.virtualFile.path
 
         scope.launch {
-            val result = runWithClassLoaderChange { getFunctions() }
+            val (result, elapsedMs) = runWithClassLoaderChange { getFunctions() }
 
             val entry = AceRefactorableFunctionCacheEntry(path, editor.document.text, result)
             AceRefactorableFunctionsCacheService.getInstance(project).put(entry)

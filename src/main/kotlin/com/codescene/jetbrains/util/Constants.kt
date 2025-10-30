@@ -36,7 +36,12 @@ object Constants {
 
     const val GENERAL_CODE_HEALTH = "General Code Health"
     const val CODE_HEALTH_MONITOR = "Code Health Monitor"
-    const val TELEMETRY_EDITOR_TYPE = "intellij"
+    const val TELEMETRY_EDITOR_TYPE = "jetbrains"
+
+    // CodeScene actions
+    const val REVIEW = "review"
+    const val DELTA = "delta"
+    const val ACE = "ace"
 
     // ACE constants
     const val ACE_ACKNOWLEDGEMENT_FILE = "ace-info.md"
