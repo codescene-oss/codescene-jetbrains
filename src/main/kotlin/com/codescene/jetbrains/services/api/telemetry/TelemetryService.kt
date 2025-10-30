@@ -9,6 +9,7 @@ import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Log
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.extensions.PluginId
@@ -30,10 +31,14 @@ class TelemetryService : BaseService(), Disposable {
         if (!isTelemetryEnabled) return
 
         val extendedName = "${Constants.TELEMETRY_EDITOR_TYPE}/$eventName"
-        // TODO: Get user ID of logged in user when authentication is implemented
-        val userId = ""
-        val telemetryEvent =
-            TelemetryEvent(extendedName, userId, Constants.TELEMETRY_EDITOR_TYPE, getPluginVersion(), false)
+
+        val telemetryEvent = TelemetryEvent(
+            extendedName,
+            "", // TODO: Get user ID of logged in user when authentication is implemented
+            getIdeInfo(),
+            getPluginVersion(),
+            false // TODO: determine by isDevMode
+        )
 
         telemetryEvent.setAdditionalProperty("device-id", DeviceIdStore.get())
         eventData.forEach { telemetryEvent.setAdditionalProperty(it.key, it.value) }
@@ -44,10 +49,17 @@ class TelemetryService : BaseService(), Disposable {
                     ExtensionAPI.sendTelemetry(telemetryEvent)
                 }
                 Log.debug("Telemetry event logged: ${telemetryEvent.eventName}")
-            } catch  (e: Exception) {
+            } catch (e: Exception) {
                 Log.debug("Error during telemetry event $extendedName sending. Error message: ${e.message}")
             }
         }
+    }
+
+    private fun getIdeInfo(): String {
+        val appInfo = ApplicationInfo.getInstance()
+        val productName = appInfo.versionName
+
+        return productName.lowercase().split(" ").joinToString(separator = "_")
     }
 
     private fun getPluginVersion(): String =

@@ -2,6 +2,8 @@ package com.codescene.jetbrains.services.api
 
 import com.codescene.jetbrains.util.Log
 
+data class TimedResult<T>(val result: T, val elapsedMs: Long)
+
 open class BaseService() {
 
     private val serviceImplementation = this::class.java.simpleName
@@ -13,7 +15,7 @@ open class BaseService() {
      * - Clojure dependencies failing due to incompatible URLConnection handling
      *   (e.g., ZipResourceFile$MyURLConnection vs JarURLConnection).
      */
-    protected fun <T> runWithClassLoaderChange(action: () -> T): T {
+    protected fun <T> runWithClassLoaderChange(action: () -> T): TimedResult<T> {
         val originalClassLoader = Thread.currentThread().contextClassLoader
         val classLoader = this@BaseService.javaClass.classLoader
         Thread.currentThread().contextClassLoader = classLoader
@@ -28,7 +30,7 @@ open class BaseService() {
             val elapsedTime = System.currentTimeMillis() - startTime
 
             Log.info("Received response from CodeScene API in ${elapsedTime}ms", serviceImplementation)
-            result
+            TimedResult(result, elapsedTime)
         } catch (e: Exception) {
             Log.debug("Exception during CodeScene API operation. Error message: ${e.message}", serviceImplementation)
             throw (e)

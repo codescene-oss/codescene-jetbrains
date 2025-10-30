@@ -7,10 +7,14 @@ import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvide
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.UIRefreshService
+import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.cache.DeltaCacheEntry
 import com.codescene.jetbrains.services.cache.DeltaCacheService
 import com.codescene.jetbrains.util.Constants.CODESCENE
+import com.codescene.jetbrains.util.Constants.DELTA
 import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.TelemetryEvents
+import com.codescene.jetbrains.util.getTelemetryInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
@@ -63,15 +67,26 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
         val oldReview = ReviewParams(path, oldCode)
         val newReview = ReviewParams(path, editor.document.text)
 
-        val delta = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview) }
+        val (result, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview) }
 
-        if (delta?.oldScore?.isEmpty == true) {
+        val telemetryInfo = getTelemetryInfo(editor.virtualFile)
+        TelemetryService.getInstance().logUsage(
+            TelemetryEvents.ANALYSIS_PERFORMANCE,
+            mutableMapOf(
+                Pair("type", DELTA),
+                Pair("elapsedMs", elapsedMs),
+                Pair("loc", telemetryInfo.loc),
+                Pair("language", telemetryInfo.language),
+            )
+        )
+
+        if (result?.oldScore?.isEmpty == true) {
             return Delta(
-                10.0, delta.newScore.get(), delta.scoreChange, delta.fileLevelFindings, delta.functionLevelFindings
+                10.0, result.newScore.get(), result.scoreChange, result.fileLevelFindings, result.functionLevelFindings
             )
         }
 
-        return delta
+        return result
     }
 
     private suspend fun handleDeltaResponse(editor: Editor, delta: Delta?, oldCode: String) {

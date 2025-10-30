@@ -11,7 +11,8 @@ object DeviceIdStore : BaseService() {
         deviceId?.let { return it }
 
         deviceId = try {
-            runWithClassLoaderChange { DevToolsAPI.deviceId() }
+            val (result, elapsedMs) = runWithClassLoaderChange { DevToolsAPI.deviceId() }
+            result
         } catch (e: Exception) {
             Log.warn("Failed to fetch device ID. Error message: ${e.message}")
             ""
