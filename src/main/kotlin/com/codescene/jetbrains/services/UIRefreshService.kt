@@ -5,13 +5,12 @@ import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
 import com.intellij.codeInsight.codeVision.CodeVisionHost
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
-import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.findPsiFile
-import com.intellij.psi.PsiFile
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -62,12 +61,14 @@ class UIRefreshService(private val project: Project) {
     }
 
 
-    suspend fun refreshAnnotations(editor: Editor, dispatcher: CoroutineDispatcher = Dispatchers.Main) =
-        withContext(dispatcher) {
-            val psiFile = ReadAction.compute<PsiFile, RuntimeException> { editor.virtualFile.findPsiFile(project) }
+    suspend fun refreshAnnotations(editor: Editor) =
+        withContext(Dispatchers.IO) {
+            val psiFile = runReadAction { editor.virtualFile.findPsiFile(project) } ?: return@withContext
 
             Log.info("Refreshing external annotations in file: ${psiFile.name}")
 
-            DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
+            withContext(Dispatchers.Main) {
+                DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
+            }
         }
 }
