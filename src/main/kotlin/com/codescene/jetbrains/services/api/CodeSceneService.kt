@@ -24,12 +24,12 @@ abstract class CodeSceneService : BaseService(), Disposable {
     /**
      * Shared logic for reviewing a file.
      * @param editor The editor instance.
-     * @param timeout The action timeout, defaulted to 15s.
+     * @param timeout The action timeout, defaulted to 60s.
      * @param performAction A lambda containing subclass-specific actions.
      */
     protected fun reviewFile(
         editor: Editor,
-        timeout: Long = 15_000,
+        timeout: Long = 60_000,
         performAction: suspend () -> Unit
     ) {
         val service = getServiceForLogging(editor)
