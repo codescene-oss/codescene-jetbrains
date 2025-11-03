@@ -144,11 +144,11 @@ fun refreshAceUi(newValue: AceStatus, scope: CoroutineScope = CoroutineScope(Dis
     ProjectManager.getInstance().openProjects.forEach { project ->
         val editors = EditorFactory.getInstance().allEditors.filter { it.project == project }.toList()
 
-        editors.forEach {
+        editors.forEach editorLoop@{
             if (newValue == AceStatus.ACTIVATED)
                 ReviewCacheService
                     .getInstance(project)
-                    .get(ReviewCacheQuery(it.document.text, it.virtualFile.path))
+                    .get(ReviewCacheQuery(it.document.text, it.virtualFile?.path ?: ""))
                     ?.let { cache -> checkContainsRefactorableFunctions(it, cache) }
             else
                 UIRefreshService.getInstance(project)
