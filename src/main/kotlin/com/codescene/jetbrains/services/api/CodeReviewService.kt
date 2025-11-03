@@ -11,6 +11,7 @@ import com.codescene.jetbrains.services.cache.ReviewCacheService
 import com.codescene.jetbrains.util.Constants.REVIEW
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.TelemetryEvents
+import com.codescene.jetbrains.util.checkContainsRefactorableFunctions
 import com.codescene.jetbrains.util.getTelemetryInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
