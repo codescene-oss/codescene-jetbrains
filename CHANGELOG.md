@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.4.1] - 2025-11-03
+- **Fixed**
+  - Bump Extension API version 1.0-2935bd0
+  - Ensure finding PSI file happens on the BG thread under read action
+- **Changed**
+  - Increase analysis timeout to 60s (previously 15s)
+- **Added**
+  - Telemetry event for analysis performance
+
 ### [0.4.0] - 2025-10-14
 - **Changed**
   - Add the Code Health Monitor to Freemium
