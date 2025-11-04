@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.config.global
 
 import com.codescene.jetbrains.util.Constants.CODESCENE_SERVER_URL
+import com.codescene.jetbrains.util.aceAuthTokenDelegate
 import com.codescene.jetbrains.util.aceStatusDelegate
 import com.codescene.jetbrains.util.enableAutoRefactorStatusDelegate
 import com.codescene.jetbrains.util.enableCodeLensesDelegate
@@ -34,4 +35,5 @@ data class CodeSceneGlobalSettings(
     var aceStatus: AceStatus by aceStatusDelegate()
     var enableCodeLenses: Boolean by enableCodeLensesDelegate()
     var enableAutoRefactor: Boolean by enableAutoRefactorStatusDelegate()  // User-facing setting
+    var aceAuthToken: String by aceAuthTokenDelegate()
 }

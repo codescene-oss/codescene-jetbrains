@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 data class AceCwfParams(
     val filePath: String,
     val function: FnToRefactor,
-    val error: Boolean = false,
+    val error: String? = null,
     val stale: Boolean = false,
     val loading: Boolean = false,
     val refactorResponse: RefactorResponse? = null

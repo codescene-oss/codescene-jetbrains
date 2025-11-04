@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.fileeditor
 
-import com.codescene.data.ace.RefactoringOptions
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.CodeNavigationService
 import com.codescene.jetbrains.services.api.AceService
@@ -18,7 +17,10 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JBCefJSQuery
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.handler.CefLoadHandlerAdapter
@@ -149,7 +151,8 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
                             }
                         }
                     } catch (e: Exception) {
-                        Log.debug("Unable to open uri in external browser. Error message: ${e.message}")                    }
+                        Log.debug("Unable to open uri in external browser. Error message: ${e.message}")
+                    }
                 }
                 return false
             }
@@ -215,14 +218,17 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
 //                TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_REFACTOR_R)
 
                 val function = AceService.getInstance().lastFunctionToRefactor
-                val options = RefactoringOptions()
-                options.setSkipCache(true)
                 closeWindowScope.launch {
                     val editor = getSelectedTextEditor(project, "")
 
                     handleAceEntryPoint(
-                        RefactoringParams(project, editor, function, AceEntryPoint.CODE_VISION),
-                        options)
+                        RefactoringParams(
+                            project,
+                            editor, function,
+                            AceEntryPoint.CODE_VISION,
+                            true
+                        )
+                    )
                     closeWindow(fileName, project)
                 }
             }
