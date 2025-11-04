@@ -5,7 +5,9 @@ import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.api.AceService
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
+import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.bindSelected
+import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,23 +21,9 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
     override fun createPanel(): DialogPanel {
         return panel {
             row {
-                checkBox("Ace acknowledged")
-                    .bindSelected(settings::aceAcknowledged)
-                    .comment("For testing purposes. This should only be visible when cwfIsDevMode is enabled.")
-                    .visible(System.getProperty("cwfIsDevMode")?.toBoolean() ?: false)
-            }
-
-            row {
                 checkBox(UiLabelsBundle.message("enableCodeLenses"))
                     .bindSelected(settings::enableCodeLenses)
                     .comment(UiLabelsBundle.message("enableCodeLensesComment"))
-            }
-
-            row {
-                checkBox(UiLabelsBundle.message("enableAutoRefactor"))
-                    .bindSelected(settings::enableAutoRefactor)
-                    .comment(UiLabelsBundle.message("enableAutoRefactorComment"))
-                    .visible(settings.aceEnabled)
             }
 
             row {
@@ -44,18 +32,38 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                     .comment(UiLabelsBundle.message("gitignoreComment"))
             }
 
-//        panel {
-//            groupRowsRange(UiLabelsBundle.message("server")) {
-//                row(UiLabelsBundle.message("serverUrl")) {
-//                    textField()
-//                        .align(Align.FILL)
-//                        .enabled(false) //TODO: Enable when functionality is implemented
-//                        .resizableColumn()
-//                        .comment(EXAMPLE_SERVER_URL)
-//                        .bindText(settings::serverUrl)
-//                }
-//            }
-//        }
+            groupRowsRange(UiLabelsBundle.message("ace")) {
+                row {
+                    checkBox("Ace acknowledged")
+                        .bindSelected(settings::aceAcknowledged)
+                        .comment("For testing purposes. This should only be visible when cwfIsDevMode is enabled.")
+                        .visible(System.getProperty("cwfIsDevMode")?.toBoolean() ?: false)
+                }
+
+                row {
+                    checkBox(UiLabelsBundle.message("enableAutoRefactor"))
+                        .bindSelected(settings::enableAutoRefactor)
+                        .comment(UiLabelsBundle.message("enableAutoRefactorComment"))
+                        .visible(settings.aceEnabled)
+                }
+
+                row(UiLabelsBundle.message("aceAuthToken")) {
+                    textField()
+                        .align(Align.FILL)
+                        .resizableColumn()
+                        .comment(UiLabelsBundle.message("aceAuthTokenComment"))
+                        .bindText(settings::aceAuthToken)
+                }
+            }
+
+            groupRowsRange(UiLabelsBundle.message("cloudConnection")) { //TODO: verify naming of this section, currently just a placeholder
+                row(UiLabelsBundle.message("serverUrl")) {
+                    textField()
+                        .align(Align.FILL)
+                        .resizableColumn()
+                        .bindText(settings::serverUrl)
+                }
+            }.visible(false)
         }
     }
 

@@ -21,11 +21,6 @@ import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheServi
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.ACE
 import com.intellij.openapi.Disposable
-import com.codescene.jetbrains.util.Log
-import com.codescene.jetbrains.util.RefactoringParams
-import com.codescene.jetbrains.util.TelemetryEvents
-import com.codescene.jetbrains.util.handleRefactoringResult
-import com.codescene.jetbrains.util.*
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
@@ -177,17 +172,20 @@ class AceService : BaseService(), Disposable {
                             UiLabelsBundle.message("offlineMode")
                         )
 
-                    openAceErrorView(params.editor, params.function, project)
+                    openAceErrorView(params.editor, params.function, project, e)
                 }
             }
         }
     }
 
-    private fun openAceErrorView(editor: Editor?, function: FnToRefactor?, project: Project) {
+    private fun openAceErrorView(editor: Editor?, function: FnToRefactor?, project: Project, e: Exception) {
+        var errorType = "generic"
+        if (e.message?.contains("401") == true) errorType = "auth"
+
         if (function != null && editor != null)
             openAceWindow(
                 AceCwfParams(
-                    error = true,
+                    error = errorType,
                     function = function,
                     filePath = editor.virtualFile.path
                 ), project
