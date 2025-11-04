@@ -83,10 +83,11 @@ class CodeSmellAnnotator : ExternalAnnotator<
 
         Log.debug("Creating annotation for code smell '${codeSmell.category}' at range: $range")
 
-        val function =
-            if (settings.aceEnabled && settings.enableAutoRefactor)
-                getRefactorableFunction(codeSmell, refactorableFunctions)
-            else null
+        val aceAvailable =
+            settings.aceEnabled && settings.enableAutoRefactor && settings.aceAuthToken.trim().isNotEmpty()
+        val function = if (aceAvailable)
+            getRefactorableFunction(codeSmell, refactorableFunctions)
+        else null
 
         val annotationBuilder = holder.newAnnotation(HighlightSeverity.WARNING, message)
             .range(range)
