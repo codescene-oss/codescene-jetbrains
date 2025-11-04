@@ -40,11 +40,12 @@ data class RefactoringParams(
     val project: Project,
     val editor: Editor?,
     val function: FnToRefactor?,
-    val source: AceEntryPoint
+    val source: AceEntryPoint,
+    val skipCache: Boolean = false
 )
 
-fun handleAceEntryPoint(params: RefactoringParams, options: RefactoringOptions? = null) {
-    val (project, editor, function) = params
+fun handleAceEntryPoint(params: RefactoringParams) {
+    val (project, editor, function, _, skipCache) = params
 
     function ?: return
     editor ?: return
@@ -56,9 +57,13 @@ fun handleAceEntryPoint(params: RefactoringParams, options: RefactoringOptions? 
         return
     }
 
-    if (settings.aceAcknowledged)
+    if (settings.aceAcknowledged) {
+        val options = RefactoringOptions().apply {
+            setToken(CodeSceneGlobalSettingsStore.getInstance().state.aceAuthToken)
+            setSkipCache(skipCache)
+        }
         AceService.getInstance().refactor(params, options)
-    else
+    } else
         openAceAcknowledgeView(
             OpenAceAcknowledgementParams(
                 project = project,
@@ -137,6 +142,11 @@ fun enableAutoRefactorStatusDelegate(): ReadWriteProperty<Any?, Boolean> =
         refreshAceUi(AceStatus.DEACTIVATED)
     }
 
+fun aceAuthTokenDelegate(): ReadWriteProperty<Any?, String> =
+    Delegates.observable("") { _, _, _ ->
+        // TODO: immediately refresh ACE UI with appropriate "Signed Out" state
+        refreshAceUi(AceStatus.DEACTIVATED)
+    }
 
 fun refreshAceUi(newValue: AceStatus, scope: CoroutineScope = CoroutineScope(Dispatchers.IO)) = scope.launch {
     if (!CodeSceneGlobalSettingsStore.getInstance().state.aceEnabled) return@launch

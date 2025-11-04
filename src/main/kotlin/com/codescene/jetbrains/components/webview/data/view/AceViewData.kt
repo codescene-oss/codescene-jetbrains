@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 data class AceData(
     val fileData: FileMetaType,
     val aceResultData: RefactorResponse?,
-    val error: Boolean?,
+    val error: String? = null,
     val isStale: Boolean?,
     val loading: Boolean?
 )

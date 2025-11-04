@@ -28,7 +28,10 @@ class AceCodeVisionProvider : CodeVisionProvider<Unit> {
 
     override fun computeCodeVision(editor: Editor, uiData: Unit): CodeVisionState {
         val settings = CodeSceneGlobalSettingsStore.getInstance().state
-        if (editor.project == null || !settings.enableAutoRefactor) return CodeVisionState.READY_EMPTY
+
+        val disabled =
+            editor.project == null || !settings.enableAutoRefactor || settings.aceAuthToken.trim().isEmpty()
+        if (disabled) return CodeVisionState.READY_EMPTY
 
         val aceResults = fetchAceCache(editor.virtualFile.path, editor.document.text, editor.project!!)
         val lenses = getLens(editor, aceResults)
