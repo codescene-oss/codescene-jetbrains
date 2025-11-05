@@ -1,11 +1,9 @@
 import groovy.json.JsonSlurper
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
-import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
-import org.jetbrains.intellij.platform.gradle.models.ProductRelease
 import java.net.HttpURLConnection
-import java.net.URL
+import java.net.URI
 import java.util.zip.ZipInputStream
 
 plugins {
@@ -135,12 +133,10 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-            select {
-                types = listOf(IntelliJPlatformType.IntellijIdea)
-                channels = listOf(ProductRelease.Channel.RELEASE)
-                sinceBuild = "233.*"
-                untilBuild = "253.*"
-            }
+            // Use: ./gradlew printProductsReleases to find and target specific releases in verifyPlugin.
+            create("IC", "2023.3.8") { useInstaller = true }
+            create("IC", "2024.1.7") { useInstaller = true }
+            create("IC", "2025.2.4") { useInstaller = true }
         }
     }
 }
@@ -216,7 +212,8 @@ tasks.register("fetchDocs") {
         val apiUrl = "https://api.github.com/repos/$user/$repo/releases"
 
         val releasesJson = run {
-            val connection = URL(apiUrl).openConnection() as HttpURLConnection
+            val url = URI.create(apiUrl).toURL()
+            val connection = url.openConnection() as HttpURLConnection
             connection.setRequestProperty("Authorization", "token $token")
             connection.inputStream.reader().readText()
         }
@@ -243,7 +240,8 @@ tasks.register("fetchCwf") {
         val apiUrl = "https://api.github.com/repos/$user/$repo/releases"
 
         val releasesJson = run {
-            val connection = URL(apiUrl).openConnection() as HttpURLConnection
+            val url = URI.create(apiUrl).toURL()
+            val connection = url.openConnection() as HttpURLConnection
             connection.setRequestProperty("Authorization", "token $token")
             connection.inputStream.reader().readText()
         }
@@ -288,7 +286,8 @@ fun saveAsset(tag: String, assetUrl: String, token: String, assetType: String = 
         logger.debug("Created asset folder: ${assetFolder.absolutePath}")
     }
 
-    val assets = URL(assetUrl).openConnection().apply {
+    val url = URI.create(assetUrl).toURL()
+    val assets = url.openConnection().apply {
         setRequestProperty("Authorization", "token $token")
         setRequestProperty("Accept", "application/octet-stream")
         connect()
