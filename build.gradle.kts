@@ -1,9 +1,7 @@
 import groovy.json.JsonSlurper
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
-import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
-import org.jetbrains.intellij.platform.gradle.models.ProductRelease
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.zip.ZipInputStream
@@ -135,12 +133,10 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-            select {
-                types = listOf(IntelliJPlatformType.IntellijIdea)
-                channels = listOf(ProductRelease.Channel.RELEASE)
-                sinceBuild = "233.*"
-                untilBuild = "253.*"
-            }
+            // Use: ./gradlew printProductsReleases
+            create("IC", "2023.3.8") { useInstaller = true }
+            create("IC", "2024.1.7") { useInstaller = true }
+            create("IC", "2025.2.4") { useInstaller = true }
         }
     }
 }
