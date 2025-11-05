@@ -85,10 +85,9 @@ class AceService : BaseService(), Disposable {
                 )
             } catch (e: Exception) {
                 val settings = CodeSceneGlobalSettingsStore.getInstance().state
-                val timedOut = e is java.io.IOException && e.message == "Operation timed out"
                 val offline = e is java.net.ConnectException
 
-                if (timedOut || offline) {
+                if (offline) {
                     Log.warn("Preflight info fetching timed out", serviceImplementation)
                     handleStatusChange(
                         settings.aceStatus != AceStatus.OFFLINE,
@@ -165,7 +164,7 @@ class AceService : BaseService(), Disposable {
                 } catch (e: Exception) {
                     Log.warn("Problem occurred during ACE refactoring: ${e.message}")
 
-                    if (e is java.io.IOException && e.message == "Operation timed out")
+                    if (e is java.net.http.HttpTimeoutException)
                         handleStatusChange(
                             CodeSceneGlobalSettingsStore.getInstance().state.aceStatus != AceStatus.OFFLINE,
                             AceStatus.OFFLINE,
