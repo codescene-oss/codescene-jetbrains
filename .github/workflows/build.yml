@@ -161,15 +161,23 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       # Cache Plugin Verifier IDEs
-#      - name: Setup Plugin Verifier IDEs Cache temporarily disable cache
-#        uses: actions/cache@v4
-#        with:
-#          path: ${{ needs.build.outputs.pluginVerifierHomeDir }}/ides
-#          key: plugin-verifier-${{ hashFiles('build/listProductsReleases.txt') }}
+      - name: Setup Plugin Verifier IDEs Cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ needs.build.outputs.pluginVerifierHomeDir }}/ides
+          key: plugin-verifier-${{ hashFiles('build/listProductsReleases.txt') }}
 
       # Run Verify Plugin task and IntelliJ Plugin Verifier tool
       - name: Run Plugin Verification tasks
-        run: ./gradlew verifyPlugin -Dplugin.verifier.home.dir=${{ needs.build.outputs.pluginVerifierHomeDir }}
+        run: |
+          set -x
+          ./gradlew --stacktrace --info --no-daemon --console=plain verifyPlugin \
+            -Dplugin.verifier.home.dir=${{ needs.build.outputs.pluginVerifierHomeDir }} \
+            -Dorg.gradle.logging.level=debug \
+            -Dplugin.verifier.download.ide.files=true \
+            -Dorg.gradle.internal.http.socketTimeout=120000 \
+            -Dorg.gradle.internal.http.connectionTimeout=120000
+        timeout-minutes: 25
 
       # Collect Plugin Verifier Result
       - name: Collect Plugin Verifier Result
