@@ -133,10 +133,11 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-            // Use: ./gradlew printProductsReleases
-            create("IC", "2023.3.8") { useInstaller = true }
-            create("IC", "2024.1.7") { useInstaller = true }
-            create("IC", "2025.2.4") { useInstaller = true }
+            recommended()
+            // Alternative, use: ./gradlew printProductsReleases to find and target specific releases in verifyPlugin.
+            // create("IC", "2023.3.8") { useInstaller = true }
+            // create("IC", "2024.1.7") { useInstaller = true }
+            // create("IC", "2025.2.4") { useInstaller = true }
         }
     }
 }
