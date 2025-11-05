@@ -27,7 +27,7 @@ env:
   GH_USERNAME: ${{ secrets.GH_USERNAME }}
   GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
   CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN: ${{ secrets.CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN }}
-  
+
 jobs:
 
   # Prepare environment and build the plugin
@@ -169,14 +169,7 @@ jobs:
 
       # Run Verify Plugin task and IntelliJ Plugin Verifier tool
       - name: Run Plugin Verification tasks
-        run: |
-          set -x
-          ./gradlew --stacktrace --info --no-daemon --console=plain verifyPlugin \
-            -Dplugin.verifier.home.dir=${{ needs.build.outputs.pluginVerifierHomeDir }} \
-            -Dorg.gradle.logging.level=debug \
-            -Dplugin.verifier.download.ide.files=true \
-            -Dorg.gradle.internal.http.socketTimeout=120000 \
-            -Dorg.gradle.internal.http.connectionTimeout=120000
+        run: ./gradlew verifyPlugin -Dplugin.verifier.home.dir=${{ needs.build.outputs.pluginVerifierHomeDir }}
         timeout-minutes: 25
 
       # Collect Plugin Verifier Result
