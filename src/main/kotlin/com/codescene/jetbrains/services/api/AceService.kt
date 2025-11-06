@@ -80,7 +80,7 @@ class AceService : BaseService(), Disposable {
                 val settings = CodeSceneGlobalSettingsStore.getInstance().state
                 handleStatusChange(
                     settings.aceStatus == AceStatus.OFFLINE,
-                    AceStatus.ACTIVATED,
+                    getActivatedAceStatus(),
                     UiLabelsBundle.message("backOnline")
                 )
             } catch (e: Exception) {
@@ -140,7 +140,10 @@ class AceService : BaseService(), Disposable {
     fun refactor(params: RefactoringParams, options: RefactoringOptions? = null) {
         val (project, _, function, source) = params
         lastFunctionToRefactor = function
-        Log.debug("Initiating refactor for function ${function!!.name}...", serviceImplementation)
+        Log.debug(
+            "Initiating refactor for function ${function!!.name}, with refactoring targets: ${function.refactoringTargets}...",
+            serviceImplementation
+        )
 
         TelemetryService.getInstance().logUsage(
             TelemetryEvents.ACE_REFACTOR_REQUESTED,
@@ -158,7 +161,7 @@ class AceService : BaseService(), Disposable {
 
                     handleStatusChange(
                         CodeSceneGlobalSettingsStore.getInstance().state.aceStatus == AceStatus.OFFLINE,
-                        AceStatus.ACTIVATED,
+                        getActivatedAceStatus(),
                         UiLabelsBundle.message("backOnline")
                     )
                 } catch (e: Exception) {
@@ -265,12 +268,20 @@ class AceService : BaseService(), Disposable {
     }
 
     private fun setAceStatus(preflightInfo: PreflightResponse?) {
-        if (preflightInfo == null && CodeSceneGlobalSettingsStore.getInstance().state.aceStatus == AceStatus.OFFLINE) return
-        else if (preflightInfo == null) {
-            CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.ERROR
+        val settings = CodeSceneGlobalSettingsStore.getInstance().state
+        if (preflightInfo == null && settings.aceStatus == AceStatus.OFFLINE) return
+
+        if (preflightInfo == null) {
+            settings.aceStatus = AceStatus.ERROR
         } else {
-            CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.ACTIVATED
+            settings.aceStatus = getActivatedAceStatus()
         }
+    }
+
+    private fun getActivatedAceStatus(): AceStatus {
+        val settings = CodeSceneGlobalSettingsStore.getInstance().state
+
+        return if (settings.aceAuthToken.trim().isEmpty()) AceStatus.SIGNED_OUT else AceStatus.SIGNED_IN
     }
 
     override fun dispose() {

@@ -8,7 +8,8 @@ import com.codescene.jetbrains.util.enableCodeLensesDelegate
 import org.jetbrains.annotations.NonNls
 
 enum class AceStatus(val value: String) {
-    ACTIVATED("Activated"),
+    SIGNED_IN("Signed In"),
+    SIGNED_OUT("Signed Out"),
     DEACTIVATED("Deactivated"),
     ERROR("Error"),
     OUT_OF_CREDITS("Out of credits"),
