@@ -4,6 +4,7 @@ import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.ace.RefactoringOptions
 import com.codescene.data.review.Review
+import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
@@ -265,4 +266,66 @@ fun updateCurrentAceView(project: Project, entry: AceRefactorableFunctionCacheEn
 
         openAceWindow(params, project)
     }
+}
+
+/**
+ * Updates ACE status if it has changed and optionally notifies user of new status.
+ */
+fun handleAceStatusChange(newStatus: AceStatus) {
+    val oldStatus = CodeSceneGlobalSettingsStore.getInstance().state.aceStatus
+    if (oldStatus == newStatus) return
+
+    setAceStatus(newStatus)
+
+    val message = when (newStatus) {
+        AceStatus.ERROR -> UiLabelsBundle.message("aceError")
+        AceStatus.OFFLINE -> UiLabelsBundle.message("offlineMode")
+        AceStatus.DEACTIVATED -> ""
+        AceStatus.OUT_OF_CREDITS -> UiLabelsBundle.message("aceOutOfCredits")
+        AceStatus.SIGNED_IN, AceStatus.SIGNED_OUT -> if (oldStatus == AceStatus.OFFLINE) UiLabelsBundle.message("backOnline") else ""
+    }
+
+    if (message.isNotEmpty()) notifyOfStatusChange(message)
+}
+
+/**
+ * Change the ACE status only from 1 place.
+ */
+private fun setAceStatus(newStatus: AceStatus) {
+    CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = newStatus
+}
+
+/**
+ * If ACE is ACTIVATED (not disabled in settings or in an error state), the user can be SIGNED_IN or SIGNED_OUT.
+ * Right now, this depends on the presence of an ACE auth token.
+ */
+fun getActivatedAceStatus(): AceStatus {
+    val settings = CodeSceneGlobalSettingsStore.getInstance().state
+    return if (settings.aceAuthToken.trim().isEmpty()) AceStatus.SIGNED_OUT else AceStatus.SIGNED_IN
+}
+
+fun notifyOfStatusChange(
+    message: String
+) {
+    Log.info(message)
+    ProjectManager.getInstance().openProjects.forEach { project ->
+        showInfoNotification(message, project)
+    }
+}
+
+/**
+ * Depending on the error type, we show a custom error view in CWF.
+ */
+fun openAceErrorView(editor: Editor?, function: FnToRefactor?, project: Project, e: Exception) {
+    var errorType = "generic"
+    if (e.message?.contains("401") == true) errorType = "auth"
+
+    if (function != null && editor != null)
+        openAceWindow(
+            AceCwfParams(
+                error = errorType,
+                function = function,
+                filePath = editor.virtualFile.path
+            ), project
+        )
 }
