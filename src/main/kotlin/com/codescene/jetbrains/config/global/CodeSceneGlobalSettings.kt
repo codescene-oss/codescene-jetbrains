@@ -12,7 +12,7 @@ enum class AceStatus(val value: String) {
     SIGNED_OUT("Signed Out"),
     DEACTIVATED("Deactivated"),
     ERROR("Error"),
-    OUT_OF_CREDITS("Out of credits"),
+    OUT_OF_CREDITS("Out of credits"), // We are not detecting this error at the moment.
     OFFLINE("Offline");
 }
 
@@ -29,8 +29,8 @@ data class CodeSceneGlobalSettings(
     var excludeGitignoreFiles: Boolean = true,
     var previewCodeHealthGate: Boolean = false,
     var telemetryConsentGiven: Boolean = false,
-    val aceEnabled: Boolean = true, //Freemium version flag
-    val codeHealthMonitorEnabled: Boolean = true, //Freemium version flag
+    val aceEnabled: Boolean = true, //Freemium version flag TODO: move somewhere else
+    val codeHealthMonitorEnabled: Boolean = true, //Freemium version flag TODO: move somewhere else
     var monitorTreeSortOption: MonitorTreeSortOptions = MonitorTreeSortOptions.SCORE_ASCENDING
 ) {
     var aceStatus: AceStatus by aceStatusDelegate()

@@ -42,67 +42,46 @@ data class RefactoredFunction(
 
 @Service
 class AceService : BaseService(), Disposable {
+    // TODO: remove as it is not needed in CWF anymore
     var lastFunctionToRefactor: FnToRefactor? = null
         private set
 
-    private val scope = CoroutineScope(Dispatchers.IO)
-    private val dispatcher = Dispatchers.IO
-
     private val refactoringScope = CoroutineScope(Dispatchers.IO)
+    private val refactorableFunctionsScope = CoroutineScope(Dispatchers.IO)
     private val serviceImplementation: String = this::class.java.simpleName
 
     companion object {
         fun getInstance(): AceService = service<AceService>()
     }
 
-    suspend fun runPreflight(force: Boolean = false): PreflightResponse? {
-        return if (CodeSceneGlobalSettingsStore.getInstance().state.enableAutoRefactor) {
+    suspend fun runPreflight(force: Boolean = false) =
+        if (CodeSceneGlobalSettingsStore.getInstance().state.enableAutoRefactor) {
             getPreflight(force)
         } else {
             CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.DEACTIVATED
             null
         }
-    }
 
     private suspend fun getPreflight(force: Boolean): PreflightResponse? {
         Log.debug("Getting ACE preflight data from server...", serviceImplementation)
 
-        return withContext(dispatcher) {
-            var preflight: PreflightResponse? = null
+        return withContext(Dispatchers.IO) {
             try {
-                val (result, elapsedMs) = runWithClassLoaderChange {
-                    ExtensionAPI.preflight(force)
-                }
-                preflight = result
-
-                Log.info("Preflight info fetched from the server", serviceImplementation)
-
-                val settings = CodeSceneGlobalSettingsStore.getInstance().state
-                handleStatusChange(
-                    settings.aceStatus == AceStatus.OFFLINE,
-                    getActivatedAceStatus(),
-                    UiLabelsBundle.message("backOnline")
+                val (result, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.preflight(force) }
+                Log.info(
+                    "Preflight info fetched from the server in ${elapsedMs}ms. Cache bypassed: $force",
+                    serviceImplementation
                 )
+
+                if (force) handleAceStatusChange(getActivatedAceStatus())
+                result
             } catch (e: Exception) {
-                val settings = CodeSceneGlobalSettingsStore.getInstance().state
-                val offline = e is java.net.ConnectException
+                val newStatus = if (e is java.net.ConnectException) AceStatus.OFFLINE else AceStatus.ERROR
+                handleAceStatusChange(newStatus)
 
-                if (offline) {
-                    Log.warn("Preflight info fetching timed out", serviceImplementation)
-                    handleStatusChange(
-                        settings.aceStatus != AceStatus.OFFLINE,
-                        AceStatus.OFFLINE,
-                        UiLabelsBundle.message("offlineMode")
-                    )
-                } else {
-                    Log.warn("Error during preflight info fetching. Error message: ${e.message}", serviceImplementation)
-                }
+                Log.error("Error during preflight info fetching. Error message: ${e.message}", serviceImplementation)
+                null
             }
-            if (force) {
-                setAceStatus(preflight)
-            }
-
-            preflight
         }
     }
 
@@ -159,54 +138,14 @@ class AceService : BaseService(), Disposable {
                 try {
                     handleRefactoring(params, options)
 
-                    handleStatusChange(
-                        CodeSceneGlobalSettingsStore.getInstance().state.aceStatus == AceStatus.OFFLINE,
-                        getActivatedAceStatus(),
-                        UiLabelsBundle.message("backOnline")
-                    )
+                    handleAceStatusChange(getActivatedAceStatus())
                 } catch (e: Exception) {
+                    val newStatus = if (e is java.net.http.HttpTimeoutException) AceStatus.OFFLINE else AceStatus.ERROR
+
                     Log.warn("Problem occurred during ACE refactoring: ${e.message}")
-
-                    if (e is java.net.http.HttpTimeoutException)
-                        handleStatusChange(
-                            CodeSceneGlobalSettingsStore.getInstance().state.aceStatus != AceStatus.OFFLINE,
-                            AceStatus.OFFLINE,
-                            UiLabelsBundle.message("offlineMode")
-                        )
-
+                    handleAceStatusChange(newStatus)
                     openAceErrorView(params.editor, params.function, project, e)
                 }
-            }
-        }
-    }
-
-    private fun openAceErrorView(editor: Editor?, function: FnToRefactor?, project: Project, e: Exception) {
-        var errorType = "generic"
-        if (e.message?.contains("401") == true) errorType = "auth"
-
-        if (function != null && editor != null)
-            openAceWindow(
-                AceCwfParams(
-                    error = errorType,
-                    function = function,
-                    filePath = editor.virtualFile.path
-                ), project
-            )
-    }
-
-    private fun handleStatusChange(
-        shouldNotify: Boolean,
-        newStatus: AceStatus,
-        message: String
-    ) {
-        val settings = CodeSceneGlobalSettingsStore.getInstance().state
-
-        if (shouldNotify) {
-            settings.aceStatus = newStatus
-
-            Log.info(message)
-            ProjectManager.getInstance().openProjects.forEach { project ->
-                showInfoNotification(message, project)
             }
         }
     }
@@ -245,7 +184,7 @@ class AceService : BaseService(), Disposable {
         val project = editor.project!!
         val path = editor.virtualFile.path
 
-        scope.launch {
+        refactorableFunctionsScope.launch {
             val (result, elapsedMs) = runWithClassLoaderChange { getFunctions() }
 
             val entry = AceRefactorableFunctionCacheEntry(path, editor.document.text, result)
@@ -255,7 +194,7 @@ class AceService : BaseService(), Disposable {
 
             if (result.isNotEmpty()) {
                 Log.info(
-                    "Found ${result.size} refactorable function(s) in $path",
+                    "Found ${result.size} refactorable function(s) in file '$path' in ${elapsedMs}ms.",
                     "${serviceImplementation} - ${project.name}"
                 )
 
@@ -267,25 +206,8 @@ class AceService : BaseService(), Disposable {
         }
     }
 
-    private fun setAceStatus(preflightInfo: PreflightResponse?) {
-        val settings = CodeSceneGlobalSettingsStore.getInstance().state
-        if (preflightInfo == null && settings.aceStatus == AceStatus.OFFLINE) return
-
-        if (preflightInfo == null) {
-            settings.aceStatus = AceStatus.ERROR
-        } else {
-            settings.aceStatus = getActivatedAceStatus()
-        }
-    }
-
-    private fun getActivatedAceStatus(): AceStatus {
-        val settings = CodeSceneGlobalSettingsStore.getInstance().state
-
-        return if (settings.aceAuthToken.trim().isEmpty()) AceStatus.SIGNED_OUT else AceStatus.SIGNED_IN
-    }
-
     override fun dispose() {
-        scope.cancel()
+        refactorableFunctionsScope.cancel()
         refactoringScope.cancel()
     }
 }
