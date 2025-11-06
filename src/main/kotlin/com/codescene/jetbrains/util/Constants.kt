@@ -20,6 +20,7 @@ object Constants {
     const val CODE_HEALTH_URL = "${DOCUMENTATION_URL}guides/technical/code-health.html"
     const val TERMS_AND_CONDITIONS_URL = "$CODESCENE_URL/policies"
     const val CONTACT_URL = "$CODESCENE_URL/company/contact-us"
+    const val CONTACT_US_ABOUT_ACE_URL = "${CODESCENE_URL}/contact-us-about-codescene-ace"
     const val FREE_TRIAL_URL = "$CODESCENE_URL/product/free-trial?trial-experiment-variant=free_trial_landing_page_with_form"
     const val SUPPORT_URL = "https://supporthub.codescene.com/kb-tickets/new"
     const val AI_PRINCIPLES_URL = "$CODESCENE_URL/product/ace/principles"
@@ -104,4 +105,11 @@ object Constants {
         UiLabelsBundle.message("codeSmellDocs"),
         UiLabelsBundle.message("aceAcknowledge"),
     )
+
+    // ACE Status Bar Widget
+    const val SIGNED_IN = "CodeScene ACE is active"
+    const val SIGNED_OUT = "Configure ACE auth token in extension settings"
+    const val DEACTIVATED = "Enable ACE in the extension settings"
+    const val OUT_OF_CREDITS = "Out of ACE credits"
+    const val RETRY = "Retry ACE activation"
 }

@@ -130,7 +130,7 @@ fun getRefactorableFunction(finding: CodeHealthFinding, project: Project): FnToR
 
 fun aceStatusDelegate(): ReadWriteProperty<Any?, AceStatus> =
     Delegates.observable(AceStatus.DEACTIVATED) { _, _, newValue ->
-        refreshAceUi(newValue)
+        refreshAceUi(newValue == AceStatus.SIGNED_IN)
 
         ApplicationManager.getApplication().messageBus
             .syncPublisher(AceStatusRefreshNotifier.TOPIC)
@@ -139,23 +139,25 @@ fun aceStatusDelegate(): ReadWriteProperty<Any?, AceStatus> =
 
 fun enableAutoRefactorStatusDelegate(): ReadWriteProperty<Any?, Boolean> =
     Delegates.observable(true) { _, _, _ ->
-        refreshAceUi(AceStatus.DEACTIVATED)
+        refreshAceUi()
     }
 
 fun aceAuthTokenDelegate(): ReadWriteProperty<Any?, String> =
     Delegates.observable("") { _, _, _ ->
-        // TODO: immediately refresh ACE UI with appropriate "Signed Out" state
-        refreshAceUi(AceStatus.DEACTIVATED)
+        refreshAceUi()
     }
 
-fun refreshAceUi(newValue: AceStatus, scope: CoroutineScope = CoroutineScope(Dispatchers.IO)) = scope.launch {
+fun refreshAceUi(
+    refreshFnsToRefactorCache: Boolean = false,
+    scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+) = scope.launch {
     if (!CodeSceneGlobalSettingsStore.getInstance().state.aceEnabled) return@launch
 
     ProjectManager.getInstance().openProjects.forEach { project ->
         val editors = EditorFactory.getInstance().allEditors.filter { it.project == project }.toList()
 
         editors.forEach editorLoop@{
-            if (newValue == AceStatus.ACTIVATED)
+            if (refreshFnsToRefactorCache)
                 ReviewCacheService
                     .getInstance(project)
                     .get(ReviewCacheQuery(it.document.text, it.virtualFile?.path ?: ""))
