@@ -8,9 +8,7 @@ import com.codescene.data.ace.RefactorResponse
 import com.codescene.data.ace.RefactoringOptions
 import com.codescene.data.delta.Delta
 import com.codescene.data.review.Review
-import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.webview.util.AceCwfParams
-import com.codescene.jetbrains.components.webview.util.openAceWindow
 import com.codescene.jetbrains.components.webview.util.updateMonitor
 import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
@@ -24,8 +22,6 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.ProjectManager
 import com.intellij.platform.ide.progress.withBackgroundProgress
 import kotlinx.coroutines.*
 
@@ -202,6 +198,8 @@ class AceService : BaseService(), Disposable {
                 uiService.refreshUI(editor, listOf("ACECodeVisionProvider"))
 
                 updateMonitor(project)
+            } else {
+                Log.info("No refactorable functions have been found for file $path.")
             }
         }
     }
