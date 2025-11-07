@@ -2,6 +2,7 @@ package com.codescene.jetbrains.codeInsight.codeVision.providers
 
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
+import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.util.*
 import com.intellij.codeInsight.codeVision.*
@@ -20,7 +21,7 @@ class AceCodeVisionProvider : CodeVisionProvider<Unit> {
 
     override val relativeOrderings: List<CodeVisionRelativeOrdering> = emptyList()
 
-    override fun isAvailableFor(project: Project) = CodeSceneGlobalSettingsStore.getInstance().state.enableAutoRefactor
+    override fun isAvailableFor(project: Project) = true
 
     override fun precomputeOnUiThread(editor: Editor) {
         // Precomputations on the UI thread are unnecessary in this context, so this is left intentionally empty.
@@ -29,9 +30,12 @@ class AceCodeVisionProvider : CodeVisionProvider<Unit> {
     override fun computeCodeVision(editor: Editor, uiData: Unit): CodeVisionState {
         val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
-        val disabled =
-            editor.project == null || !settings.enableAutoRefactor || settings.aceAuthToken.trim().isEmpty()
-        if (disabled) return CodeVisionState.READY_EMPTY
+        val disabled = editor.project == null || !settings.enableAutoRefactor ||
+                settings.aceAuthToken.trim().isEmpty() || settings.aceStatus == AceStatus.DEACTIVATED
+        if (disabled) {
+            Log.info("Rendering empty code vision providers for file '${editor.virtualFile?.name}'.")
+            return CodeVisionState.READY_EMPTY
+        }
 
         val aceResults = fetchAceCache(editor.virtualFile.path, editor.document.text, editor.project!!)
         val lenses = getLens(editor, aceResults)
