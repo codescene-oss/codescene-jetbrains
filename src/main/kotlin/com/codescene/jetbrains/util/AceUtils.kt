@@ -26,6 +26,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 import kotlin.properties.Delegates
 import kotlin.properties.ReadWriteProperty
 
@@ -131,7 +132,7 @@ fun getRefactorableFunction(finding: CodeHealthFinding, project: Project): FnToR
 
 fun aceStatusDelegate(): ReadWriteProperty<Any?, AceStatus> =
     Delegates.observable(AceStatus.DEACTIVATED) { _, _, newValue ->
-        refreshAceUi(newValue == AceStatus.SIGNED_IN)
+        refreshAceUi(newValue != AceStatus.DEACTIVATED)
 
         ApplicationManager.getApplication().messageBus
             .syncPublisher(AceStatusRefreshNotifier.TOPIC)
@@ -139,38 +140,86 @@ fun aceStatusDelegate(): ReadWriteProperty<Any?, AceStatus> =
     }
 
 fun enableAutoRefactorStatusDelegate(): ReadWriteProperty<Any?, Boolean> =
-    Delegates.observable(true) { _, _, _ ->
-        refreshAceUi()
+    Delegates.observable(true) { _, _, newValue ->
+        refreshAceUi(newValue)
     }
 
 fun aceAuthTokenDelegate(): ReadWriteProperty<Any?, String> =
     Delegates.observable("") { _, _, _ ->
-        refreshAceUi()
+        refreshAceUi(true)
     }
 
+private val aceUiRefreshLock = Mutex()
+
+/**
+ * Refreshes the ACE UI across all open projects (IDE instances).
+ *
+ * This function runs asynchronously on a background [CoroutineScope] (default: [Dispatchers.IO]).
+ * It ensures that the refresh operation is executed only once at a time, even if multiple
+ * components attempt to trigger it concurrently.
+ *
+ * The locking mechanism is implemented using [aceUiRefreshLock], preventing redundant or overlapping
+ * refreshes that could otherwise lead to inconsistent UI states or unnecessary work.
+ *
+ * ### Behavior
+ * 1. If ACE is globally disabled in [CodeSceneGlobalSettingsStore], the function exits early.
+ * 2. Attempts to acquire a global lock. If another refresh is already in progress,
+ *    this invocation logs the attempt and exits without doing anything.
+ * 3. Iterates over all open projects from [ProjectManager].
+ * 4. For each project:
+ *    - Collects all valid editors belonging to the project.
+ *    - Triggers either a cache-based or direct UI refresh depending on [refreshFnsToRefactorCache].
+ *    - Updates the Code Health Monitor and notifies listeners via [ToolWindowRefreshNotifier].
+ * 5. Releases the lock and logs completion or errors.
+ */
 fun refreshAceUi(
-    refreshFnsToRefactorCache: Boolean = false,
+    aceEnabled: Boolean,
     scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) = scope.launch {
-    if (!CodeSceneGlobalSettingsStore.getInstance().state.aceEnabled) return@launch
+    if (!aceUiRefreshLock.tryLock()) {
+        Log.info("ACE UI refresh already running — skipping refresh.")
+        return@launch
+    }
 
-    ProjectManager.getInstance().openProjects.forEach { project ->
-        val editors = EditorFactory.getInstance().allEditors.filter { it.project == project }.toList()
+    try {
+        Log.info("Starting ACE UI refresh...")
 
-        editors.forEach editorLoop@{
-            if (refreshFnsToRefactorCache)
-                ReviewCacheService
-                    .getInstance(project)
-                    .get(ReviewCacheQuery(it.document.text, it.virtualFile?.path ?: ""))
-                    ?.let { cache -> checkContainsRefactorableFunctions(it, cache) }
-            else
-                UIRefreshService.getInstance(project)
-                    .refreshUI(it, listOf("ACECodeVisionProvider"))
+        ProjectManager.getInstance().openProjects.forEach { project ->
+            Log.info("Refreshing ACE UI for project '${project.name}'...")
+
+            val editors = EditorFactory.getInstance().allEditors
+                .filter { it.project == project && it.virtualFile?.isValid == true }
+                .toList()
+
+            refreshUiPerEditor(project, aceEnabled, editors)
+            updateMonitor(project)
+            project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC)
+                .refresh(null) // TODO: remove old CHM implementation
         }
 
-        updateMonitor(project)
-        project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC)
-            .refresh(null) // TODO: remove, old CHM implementation
+        Log.info("ACE UI refresh completed.")
+    } catch (e: Exception) {
+        Log.warn("ACE UI refresh failed: ${e.message}")
+    } finally {
+        aceUiRefreshLock.unlock()
+    }
+}
+
+private suspend fun refreshUiPerEditor(project: Project, aceEnabled: Boolean, editors: List<Editor>) {
+    editors.forEach editorLoop@{
+        val filePath = it.virtualFile?.path ?: return@editorLoop
+
+        if (!aceEnabled) {
+            Log.info("ACE has been disabled. Clearing ACE code vision for ${it.virtualFile?.name} in project ${project.name}")
+            UIRefreshService.getInstance(project)
+                .refreshUI(it, listOf("ACECodeVisionProvider"))
+            return@editorLoop
+        }
+
+        ReviewCacheService
+            .getInstance(project)
+            .get(ReviewCacheQuery(it.document.text, filePath))
+            ?.let { cache -> checkContainsRefactorableFunctions(it, cache) }
     }
 }
 
