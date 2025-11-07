@@ -1,17 +1,16 @@
 import groovy.json.JsonSlurper
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
-import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
-import org.jetbrains.intellij.platform.gradle.models.ProductRelease
 import java.net.HttpURLConnection
-import java.net.URL
+import java.net.URI
 import java.util.zip.ZipInputStream
 
 plugins {
     alias(libs.plugins.kotlin) // Kotlin support
     alias(libs.plugins.intelliJPlatform) // IntelliJ Platform Gradle Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
+    kotlin("plugin.serialization") version "2.2.0"
 }
 
 group = providers.gradleProperty("pluginGroup").get()
@@ -22,6 +21,8 @@ val codeSceneRepository = providers.gradleProperty("codeSceneRepository").get()
 val flexmarkVersion = providers.gradleProperty("flexmarkVersion").get()
 val reflectionsVersion = providers.gradleProperty("reflectionsVersion").get()
 val mockkVersion = providers.gradleProperty("mockkVersion").get()
+val kotlinxSerializationVersion = providers.gradleProperty("kotlinxSerializationVersion").get()
+val slf4jNopVersion = providers.gradleProperty("slf4jNopVersion").get()
 
 // Set the JVM language level used to build the project.
 kotlin {
@@ -52,9 +53,14 @@ dependencies {
     implementation("org.reflections:reflections:$reflectionsVersion")
     implementation("codescene.extension:api:$codeSceneExtensionAPIVersion")
     implementation("com.vladsch.flexmark:flexmark-all:$flexmarkVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
 
     testImplementation(libs.junit)
     testImplementation("io.mockk:mockk:${mockkVersion}")
+
+    // Provide a no-op SLF4J binding during tests to avoid "No binding found" errors.
+    // Some libraries (e.g., MockK or IntelliJ SDK components) rely on SLF4J at runtime.
+    testRuntimeOnly("org.slf4j:slf4j-nop:$slf4jNopVersion")
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
@@ -66,7 +72,6 @@ dependencies {
         // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
         plugins(providers.gradleProperty("platformPlugins").map { it.split(',') })
 
-        instrumentationTools()
         pluginVerifier()
         zipSigner()
         testFramework(TestFrameworkType.Platform)
@@ -128,12 +133,10 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-            select {
-                types = listOf(IntelliJPlatformType.IntellijIdea)
-                channels = listOf(ProductRelease.Channel.RELEASE)
-                sinceBuild = "233.*"
-                untilBuild = "253.*"
-            }
+            // Use: ./gradlew printProductsReleases to find and target specific releases in verifyPlugin.
+            create("IC", "2023.3.8") { useInstaller = true }
+            create("IC", "2024.1.7") { useInstaller = true }
+            create("IC", "2025.2.4") { useInstaller = true }
         }
     }
 }
@@ -155,6 +158,9 @@ tasks {
 
     runIde {
         classpath += sourceSets["main"].runtimeClasspath
+
+        val devMode = project.findProperty("cwfIsDevMode")?.toString()?.toBoolean() ?: false
+        systemProperty("cwfIsDevMode", devMode)
     }
 
     register<JavaExec>("run") {
@@ -163,6 +169,7 @@ tasks {
     }
 
     buildPlugin {
+        dependsOn("fetchCwf")
         dependsOn("fetchDocs")
     }
 }
@@ -189,9 +196,11 @@ intellijPlatformTesting {
 }
 
 tasks.register("fetchDocs") {
-    group = "documentation"
+    group = "codescene assets"
     description = "Get the docs asset from the latest GitHub release."
 
+    val assetName = "docs"
+    val assetType = assetName
     val user = "empear-analytics"
     val repo = "codescene-ide-protocol"
     val token = if (System.getenv("CI") == "true")
@@ -203,63 +212,96 @@ tasks.register("fetchDocs") {
         val apiUrl = "https://api.github.com/repos/$user/$repo/releases"
 
         val releasesJson = run {
-            val connection = URL(apiUrl).openConnection() as HttpURLConnection
+            val url = URI.create(apiUrl).toURL()
+            val connection = url.openConnection() as HttpURLConnection
             connection.setRequestProperty("Authorization", "token $token")
             connection.inputStream.reader().readText()
         }
 
-        val (tag, assetUrl) = parseResponse(releasesJson)
-        saveDocs(tag, assetUrl, token)
+        val (tag, assetUrl) = parseResponse(releasesJson, assetName)
+        saveAsset(tag, assetUrl, token, assetType)
+    }
+}
+
+tasks.register("fetchCwf") {
+    group = "codescene assets"
+    description = "Get the CWF (webview) asset from the latest GitHub release."
+
+    val assetName = "cs-webview"
+    val assetType = "cs-cwf"
+    val user = "empear-analytics"
+    val repo = "cs-webview"
+    val token = if (System.getenv("CI") == "true")
+        System.getenv("CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN")
+    else
+        System.getenv("GH_PACKAGE_TOKEN")
+
+    doLast {
+        val apiUrl = "https://api.github.com/repos/$user/$repo/releases"
+
+        val releasesJson = run {
+            val url = URI.create(apiUrl).toURL()
+            val connection = url.openConnection() as HttpURLConnection
+            connection.setRequestProperty("Authorization", "token $token")
+            connection.inputStream.reader().readText()
+        }
+
+        val (tag, assetUrl) = parseResponse(releasesJson, assetName)
+        saveAsset(tag, assetUrl, token, assetType)
     }
 }
 
 @Suppress("UNCHECKED_CAST")
-fun parseResponse(json: String): Pair<String, String> {
+fun parseResponse(json: String, assetName: String): Pair<String, String> {
     val releases = JsonSlurper().parseText(json) as List<Map<String, Any>>
     val release = releases.find { it["prerelease"] == false && it["draft"] == false }
         ?: throw GradleException("No suitable release found.")
     val tag = release["tag_name"] as String
 
     val assets = release["assets"] as List<Map<String, Any>>
-    val docsAsset = assets.find { (it["name"] as String) == "docs.zip" }
+
+    val latest = if (assetName == "docs") "${assetName}.zip" else "${assetName}-${tag}.zip"
+    val docsAsset = assets.find { (it["name"] as String) == latest }
         ?: throw GradleException("No docs found in the latest release.")
+
     val assetUrl = docsAsset["url"] as String
 
-    logger.trace("Found docs for release $tag")
+    logger.trace("Found $assetName for release: $tag")
 
     return tag to assetUrl
 }
 
-fun saveDocs(tag: String, assetUrl: String, token: String) {
-    logger.lifecycle("Downloading assets for release: $tag")
+fun saveAsset(tag: String, assetUrl: String, token: String, assetType: String = "") {
+    logger.lifecycle("Downloading '$assetType' assets for release: $tag")
 
     val resources = File("src/main/resources")
-    val docsFolder = File(resources, "docs")
-    val outputFile = File(docsFolder, "$tag.zip")
+    val assetFolder = File(resources, assetType)
+    val outputFile = File(assetFolder, "$tag.zip")
 
-    if (docsFolder.exists()) {
-        docsFolder.listFiles()?.forEach { it.deleteRecursively() }
-        logger.debug("Deleted old documentation files: ${docsFolder.absolutePath}")
+    if (assetFolder.exists()) {
+        assetFolder.listFiles()?.forEach { it.deleteRecursively() }
+        logger.debug("Deleted old asset files: ${assetFolder.absolutePath}")
     } else {
-        docsFolder.mkdirs()
-        logger.debug("Created docs folder: ${docsFolder.absolutePath}")
+        assetFolder.mkdirs()
+        logger.debug("Created asset folder: ${assetFolder.absolutePath}")
     }
 
-    val docs = URL(assetUrl).openConnection().apply {
+    val url = URI.create(assetUrl).toURL()
+    val assets = url.openConnection().apply {
         setRequestProperty("Authorization", "token $token")
         setRequestProperty("Accept", "application/octet-stream")
         connect()
     }
 
     outputFile.outputStream().use {
-        docs.inputStream.use { input ->
+        assets.inputStream.use { input ->
             input.copyTo(it)
         }
     }
 
     logger.lifecycle("Download completed: ${outputFile.absolutePath}")
 
-    unzip(outputFile, resources)
+    unzip(outputFile, assetFolder)
 }
 
 fun unzip(zipFile: File, outputDir: File) {
@@ -268,8 +310,16 @@ fun unzip(zipFile: File, outputDir: File) {
     ZipInputStream(zipFile.inputStream()).use { zis ->
         var entry = zis.nextEntry
 
+        val topLevel = entry?.name?.split("/")?.firstOrNull() ?: ""
+
         while (entry != null) {
-            val outFile = File(outputDir, entry.name)
+            // Remove top-level folder if it's redundant (like "docs/")
+            val relativePath = if (topLevel.contains("docs") && entry.name.startsWith("$topLevel/"))
+                entry.name.removePrefix("$topLevel/")
+            else
+                entry.name
+
+            val outFile = File(outputDir, relativePath)
 
             if (entry.isDirectory) {
                 outFile.mkdirs()

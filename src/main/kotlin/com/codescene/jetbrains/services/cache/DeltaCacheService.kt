@@ -66,4 +66,10 @@ class DeltaCacheService : CacheService<DeltaCacheQuery, DeltaCacheEntry, DeltaCa
 
         cache[filePath] = DeltaCacheItem(headHash, currentContentHash, deltaApiResponse)
     }
+
+    override fun getAll(): List<Pair<String, DeltaCacheItem>> {
+        return cache.entries
+            .map { it.key to it.value }
+            .filter { it.second.deltaApiResponse != null }
+    }
 }

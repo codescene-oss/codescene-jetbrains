@@ -1,7 +1,5 @@
 package com.codescene.jetbrains.services
 
-import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
-import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
 import com.intellij.codeInsight.codeVision.CodeVisionHost
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
@@ -42,20 +40,12 @@ class UIRefreshService(private val project: Project) {
         providers: List<String>,
         dispatcher: CoroutineDispatcher = Dispatchers.Main
     ) = withContext(dispatcher) {
-        val settings = CodeSceneGlobalSettingsStore.getInstance().state
-
-        if (!settings.enableCodeLenses) {
-            Log.debug("Code vision disabled in $CODESCENE settings. Skipping refresh...")
-
-            return@withContext
-        }
-
         val invalidateSignal = CodeVisionHost.LensInvalidateSignal(
             editor,
             providerIds = providers
         )
 
-        Log.info("Refreshing code lens display for file ${editor.virtualFile.name} with provider IDs: ${invalidateSignal.providerIds}")
+        Log.info("Refreshing code lens display for file ${editor.virtualFile?.name} with provider IDs: ${invalidateSignal.providerIds}")
 
         codeVisionHost.invalidateProvider(invalidateSignal)
     }

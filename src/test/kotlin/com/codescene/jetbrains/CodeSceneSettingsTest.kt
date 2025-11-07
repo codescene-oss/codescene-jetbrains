@@ -51,16 +51,13 @@ class CodeSceneGlobalSettingsStoreTest : BasePlatformTestCase() {
     private fun assertDefaultState(state: CodeSceneGlobalSettings) {
         assertEquals(defaultServerUrl, state.serverUrl)
         assertTrue(state.enableCodeLenses)
-//        CS-5145 remove ACE from public version
-//        assertTrue(state.enableAutoRefactor)
+        assertTrue(state.enableAutoRefactor)
         assertTrue(state.excludeGitignoreFiles)
         assertFalse(state.previewCodeHealthGate)
     }
 
     private fun createCustomState(): CodeSceneGlobalSettings = CodeSceneGlobalSettings(
         serverUrl = "https://new-server.com",
-        enableCodeLenses = true,
-        enableAutoRefactor = true,
         excludeGitignoreFiles = false,
         previewCodeHealthGate = true
     )
