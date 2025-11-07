@@ -229,8 +229,6 @@ class GeneralTab : Configurable {
         ApplicationManager.getApplication().messageBus.connect()
             .subscribe(AceStatusRefreshNotifier.TOPIC, object : AceStatusRefreshNotifier {
                 override fun refresh() {
-                    Log.debug("Refreshing ACE status in Settings General tab...")
-
                     refreshStatusButton()
                 }
             })
