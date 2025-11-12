@@ -30,19 +30,6 @@
                 text="CodeScene: Code Health Monitoring Help"
                 icon="com.codescene.jetbrains.CodeSceneIcons.HELP"
                 class="com.codescene.jetbrains.actions.ShowDocumentationAction"/>
-
-        <group id="CodeSceneToolWindowSortGroup">
-            <group id="CodeHealthMonitorSortGroupActions" icon="AllIcons.ObjectBrowser.SortByType" popup="true"
-                   text="Sort Files By...">
-                <separator text="Sort By"/>
-                <action id="SortByScoreChangeAscending"
-                        class="com.codescene.jetbrains.actions.CodeHealthMonitorSortGroupActions$SortByScoreChangeAscending"/>
-                <action id="SortByScoreChangeDescending"
-                        class="com.codescene.jetbrains.actions.CodeHealthMonitorSortGroupActions$SortByScoreChangeDescending"/>
-                <action id="SortByFileName"
-                        class="com.codescene.jetbrains.actions.CodeHealthMonitorSortGroupActions$SortByFileName"/>
-            </group>
-        </group>
     </actions>
 
     <extensions defaultExtensionNs="com.intellij">
@@ -60,11 +47,6 @@
                 parentId="tools"
                 displayName="CodeScene"
                 instance="com.codescene.jetbrains.components.settings.CodeSceneSettings"/>
-
-        <toolWindow
-                id="CodeScene"
-                icon="com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW"
-                factoryClass="com.codescene.jetbrains.components.window.CodeSceneToolWindowFactory"/>
 
         <toolWindow
                 id="CodeSceneHome"
