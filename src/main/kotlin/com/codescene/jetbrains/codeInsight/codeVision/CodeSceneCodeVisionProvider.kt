@@ -4,10 +4,10 @@ import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Range
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL
-import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
 import com.codescene.jetbrains.components.webview.data.shared.Fn
 import com.codescene.jetbrains.components.webview.data.shared.RangeCamelCase
+import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.util.nameDocMap
 import com.codescene.jetbrains.components.webview.util.openDocs
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
@@ -17,6 +17,7 @@ import com.codescene.jetbrains.services.cache.ReviewCacheQuery
 import com.codescene.jetbrains.services.cache.ReviewCacheService
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
 import com.codescene.jetbrains.util.getCachedDelta
+import com.codescene.jetbrains.util.getCodeSmell
 import com.codescene.jetbrains.util.getTextRange
 import com.codescene.jetbrains.util.isFileSupported
 import com.intellij.codeInsight.codeVision.*
@@ -26,11 +27,17 @@ import com.intellij.openapi.util.TextRange
 import org.reflections.Reflections
 import java.util.concurrent.ConcurrentHashMap
 
+data class FunctionInfo(
+    val name: String,
+    val range: Range,
+)
+
 data class CodeVisionCodeSmell(
     val details: String,
     val category: String,
     val highlightRange: Range,
-    val functionName: String? = null
+    val functionName: String? = null,
+    val functionInfo: FunctionInfo? = null
 )
 
 @Suppress("UnstableApiUsage")
@@ -165,10 +172,10 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
                     .filterByCategory(categoryToFilter)
                     .map { smell ->
                         CodeVisionCodeSmell(
-                            functionName = function.function,
                             details = smell.details,
                             category = smell.category,
-                            highlightRange = smell.highlightRange
+                            highlightRange = smell.highlightRange,
+                            functionInfo = FunctionInfo(name = function.function, range = function.range)
                         )
                     }
             } ?: emptyList()
@@ -186,24 +193,25 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
     open fun handleLensClick(editor: Editor, codeSmell: CodeVisionCodeSmell) {
         val project = editor.project ?: return
+        val smell = getCodeSmell(codeSmell)
 
         val docsData = DocsData(
             docType = nameDocMap[codeSmell.category] ?: "",
             fileData = FileMetaType(
                 fileName = editor.virtualFile.path,
                 fn = Fn(
-                    name = codeSmell.functionName ?: "",
+                    name = codeSmell.functionInfo?.name ?: "",
                     range = RangeCamelCase(
-                        endLine = codeSmell.highlightRange.endLine,
-                        startLine = codeSmell.highlightRange.startLine,
-                        endColumn = codeSmell.highlightRange.endColumn,
-                        startColumn = codeSmell.highlightRange.startColumn
+                        endLine = codeSmell.functionInfo?.range?.endLine ?: 0,
+                        startLine = codeSmell.functionInfo?.range?.startLine ?: 0,
+                        endColumn = codeSmell.functionInfo?.range?.endColumn ?: 0,
+                        startColumn = codeSmell.functionInfo?.range?.startColumn ?: 0,
                     )
                 )
             )
         )
 
-        openDocs(docsData, project, DocsEntryPoint.CODE_VISION)
+        openDocs(docsData, project, DocsEntryPoint.CODE_VISION, smell)
     }
 
     private fun markApiCallInProgress(filePath: String, apiCalls: MutableSet<String>) {

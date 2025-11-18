@@ -49,8 +49,8 @@
                 instance="com.codescene.jetbrains.components.settings.CodeSceneSettings"/>
 
         <toolWindow
-                id="CodeSceneHome"
-                icon="AllIcons.Actions.Lightning"
+                id="CodeScene"
+                icon="com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW"
                 factoryClass="com.codescene.jetbrains.components.window.HomeToolWindowFactory"/>
 
         <!-- An empty language attribute applies to all languages -->

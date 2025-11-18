@@ -3,6 +3,7 @@ package com.codescene.jetbrains.codeInsight.annotator
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
+import com.codescene.jetbrains.codeInsight.codeVision.FunctionInfo
 import com.codescene.jetbrains.codeInsight.intentions.AceRefactorAction
 import com.codescene.jetbrains.codeInsight.intentions.ShowProblemIntentionAction
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
@@ -61,7 +62,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
                                 details = codeSmell.details,
                                 category = codeSmell.category,
                                 highlightRange = codeSmell.highlightRange,
-                                functionName = functionSmell.function
+                                functionInfo = FunctionInfo(name = functionSmell.function, range = functionSmell.range)
                             )
                         }
                 }

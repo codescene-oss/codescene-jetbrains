@@ -5,8 +5,8 @@ import com.codescene.data.review.Review
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
-import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
+import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.util.nameDocMap
 import com.codescene.jetbrains.components.webview.util.openDocs
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
@@ -14,6 +14,7 @@ import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
 import com.codescene.jetbrains.util.HealthDetails
 import com.codescene.jetbrains.util.getCachedDelta
 import com.codescene.jetbrains.util.getCodeHealth
+import com.codescene.jetbrains.util.getCodeSmell
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.openapi.editor.Editor
@@ -45,8 +46,8 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
 
         return when {
             deltaResult != null && hasChanged -> {
-                val oldReviewScore = deltaResult.oldScore.orElse(null)
-                val newReviewScore = deltaResult.newScore.orElse(null)
+                val oldReviewScore = deltaResult.oldScore
+                val newReviewScore = deltaResult.newScore
 
                 getCodeHealth(HealthDetails(oldReviewScore, newReviewScore)).change
             }
@@ -72,7 +73,8 @@ class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
                 fileData = FileMetaType(fileName = editor.virtualFile.path)
             )
 
-            openDocs(docsData, it, DocsEntryPoint.CODE_VISION)
+            val smell = getCodeSmell(codeSmell)
+            openDocs(docsData, it, DocsEntryPoint.CODE_VISION, smell)
         }
     }
 }

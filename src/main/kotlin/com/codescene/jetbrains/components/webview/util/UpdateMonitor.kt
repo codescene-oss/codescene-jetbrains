@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.components.webview.util
 
+import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW
 import com.codescene.jetbrains.components.webview.data.CwfData
 import com.codescene.jetbrains.components.webview.data.View
 import com.codescene.jetbrains.components.webview.data.view.HomeData
@@ -7,10 +8,10 @@ import com.codescene.jetbrains.components.webview.handler.CwfMessageHandler
 import com.codescene.jetbrains.components.webview.mapper.CodeHealthMonitorMapper
 import com.codescene.jetbrains.services.api.CodeDeltaService
 import com.codescene.jetbrains.services.cache.DeltaCacheService
+import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.UpdateToolWindowIconParams
 import com.codescene.jetbrains.util.updateToolWindowIcon
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
 
 /**
@@ -39,9 +40,9 @@ fun updateMonitor(project: Project) {
     updateToolWindowIcon(
         UpdateToolWindowIconParams(
             project = project,
-            toolWindowId = "CodeSceneHome", // TODO: update
-            baseIcon = AllIcons.Actions.Lightning, // TODO: update
-            hasNotification = deltaResults.isNotEmpty()
+            toolWindowId = CODESCENE,
+            hasNotification = deltaResults.isNotEmpty(),
+            baseIcon = CODESCENE_TW
         )
     )
     CwfMessageHandler.getInstance(project).postMessage(View.HOME, dataJson)
