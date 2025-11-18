@@ -1,5 +1,7 @@
 package com.codescene.jetbrains.util
 
+import com.codescene.data.review.CodeSmell
+import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.intellij.openapi.application.runReadAction
@@ -177,3 +179,7 @@ private fun nextCharacterNotBacktick(string: String, indexOfTick: Int): Boolean 
 private fun previousCharacterNotBacktick(string: String, indexOfTick: Int): Boolean {
     return indexOfTick == 0 || string[indexOfTick - 1] != '`'
 }
+
+fun getCodeSmell(nativeCodeSmell: CodeVisionCodeSmell) = CodeSmell(
+    nativeCodeSmell.category, nativeCodeSmell.highlightRange, nativeCodeSmell.details
+)

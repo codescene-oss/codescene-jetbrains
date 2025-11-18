@@ -44,8 +44,8 @@ internal class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
 
         return when {
             deltaResult != null && hasChanged -> {
-                val oldReviewScore = deltaResult.oldScore.orElse(null)
-                val newReviewScore = deltaResult.newScore.orElse(null)
+                val oldReviewScore = deltaResult.oldScore
+                val newReviewScore = deltaResult.newScore
 
                 getCodeHealth(HealthDetails(oldReviewScore, newReviewScore)).change
             }

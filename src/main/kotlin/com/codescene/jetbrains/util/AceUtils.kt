@@ -3,10 +3,10 @@ package com.codescene.jetbrains.util
 import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.ace.RefactoringOptions
+import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
-import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
 import com.codescene.jetbrains.components.webview.util.*
 import com.codescene.jetbrains.config.global.AceStatus
@@ -96,7 +96,7 @@ fun fetchAceCache(path: String, content: String, project: Project): List<FnToRef
 
 suspend fun checkContainsRefactorableFunctions(editor: Editor, result: Review) {
     if (shouldCheckRefactorableFunctions(editor)) {
-        val aceParams = CodeParams(editor.document.text, editor.virtualFile.extension)
+        val aceParams = CodeParams(editor.document.text, editor.virtualFile.path)
         AceService.getInstance().getRefactorableFunctions(aceParams, result, editor)
     }
 }
@@ -150,22 +150,6 @@ fun getRefactorableFunction(codeSmell: CodeVisionCodeSmell, refactorableFunction
             target.category == codeSmell.category && target.line == codeSmell.highlightRange.startLine
         }
     }
-
-fun getRefactorableFunction(finding: CodeHealthFinding, project: Project): FnToRefactor? {
-    val file = LocalFileSystem.getInstance().findFileByPath(finding.filePath)
-
-    val documentText = if (file != null) {
-        ApplicationManager.getApplication().runReadAction<String> {
-            FileDocumentManager.getInstance().getDocument(file)?.text
-        }
-    } else {
-        null
-    }
-
-    val aceEntry = fetchAceCache(finding.filePath, documentText ?: "", project)
-
-    return aceEntry.find { it.name == finding.displayName && it.range.startLine == finding.focusLine }
-}
 
 fun aceStatusDelegate(): ReadWriteProperty<Any?, AceStatus> =
     Delegates.observable(AceStatus.DEACTIVATED) { _, _, newValue ->
@@ -298,7 +282,19 @@ fun handleRefactoringFromCwf(
     }
 }
 
-private fun getRefactorableFunctionFromCache(fileData: FileMetaType, project: Project): FnToRefactor? {
+fun getRefactorableFunctionByCodeSmell(path: String, codeSmell: CodeSmell?): FnToRefactor? {
+    if (codeSmell == null) return null
+    val file = LocalFileSystem.getInstance().findFileByPath(path) ?: return null
+
+    val code = ApplicationManager.getApplication().runReadAction<String> {
+        FileDocumentManager.getInstance().getDocument(file)?.text
+    } ?: ""
+    val fnToRefactor = AceService.getInstance().getRefactorableFunction(CodeParams(code, path), codeSmell)
+
+    return fnToRefactor
+}
+
+fun getRefactorableFunctionFromCache(fileData: FileMetaType, project: Project): FnToRefactor? {
     val file = LocalFileSystem.getInstance().findFileByPath(fileData.fileName) ?: return null
 
     val code = ApplicationManager.getApplication().runReadAction<String> {

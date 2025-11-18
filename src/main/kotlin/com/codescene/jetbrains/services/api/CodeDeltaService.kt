@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.services.api
 
 import com.codescene.ExtensionAPI
+import com.codescene.ExtensionAPI.CacheParams
 import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.data.delta.Delta
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
@@ -16,6 +17,7 @@ import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Constants.DELTA
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.TelemetryEvents
+import com.codescene.jetbrains.util.addRefactorableFunctionsToDeltaResult
 import com.codescene.jetbrains.util.getTelemetryInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -80,8 +82,9 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
 
         val oldReview = ReviewParams(path, oldCode)
         val newReview = ReviewParams(path, editor.document.text)
+        val cacheParams = CacheParams(".caches") // TODO: CS-5683
 
-        val (result, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview) }
+        val (result, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview, cacheParams) }
 
         val telemetryInfo = getTelemetryInfo(editor.virtualFile)
         TelemetryService.getInstance().logUsage(
@@ -116,7 +119,8 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
             UIRefreshService.getInstance(project).refreshCodeVision(editor, listOf("CodeHealthCodeVisionProvider"))
         }
 
-        val cacheEntry = DeltaCacheEntry(path, oldCode, currentCode, delta)
+        val nativeDelta = addRefactorableFunctionsToDeltaResult(path, currentCode, delta, editor)
+        val cacheEntry = DeltaCacheEntry(path, oldCode, currentCode, nativeDelta)
         cacheService.put(cacheEntry)
     }
 }

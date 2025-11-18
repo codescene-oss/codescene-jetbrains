@@ -8,6 +8,8 @@ import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
 import com.codescene.jetbrains.components.webview.data.shared.Range
 import com.codescene.jetbrains.components.webview.data.view.*
 import com.codescene.jetbrains.flag.RuntimeFlags
+import com.codescene.jetbrains.services.api.deltamodels.DeltaChangeDetail
+import com.codescene.jetbrains.services.api.deltamodels.DeltaFunctionFinding
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheQuery
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
 import com.codescene.jetbrains.services.cache.DeltaCacheItem
@@ -49,7 +51,7 @@ class CodeHealthMonitorMapper(private val project: Project) {
         }
 
     private fun getFileDeltaData(deltaResults: List<Pair<String, DeltaCacheItem>>) = deltaResults.map { result ->
-        val deltaResponse = result.second.deltaApiResponse!!
+        val deltaResponse = result.second.nativeDelta!!
         val changeDetails = getChangeDetails(deltaResponse.fileLevelFindings)
         val functionLevelFindings =
             getFunctionLevelFindings(result.first, result.second.currentHash, deltaResponse.functionLevelFindings)
@@ -57,38 +59,38 @@ class CodeHealthMonitorMapper(private val project: Project) {
         val deltaForFile = DeltaForFile(
             fileLevelFindings = changeDetails,
             functionLevelFindings = functionLevelFindings,
-            scoreChange = deltaResponse.scoreChange?.toDouble() ?: 0.0,
-            newScore = deltaResponse.newScore.orElse(null),
-            oldScore = deltaResponse.oldScore.orElse(null)
+            scoreChange = deltaResponse.scoreChange ?: 0.0,
+            newScore = deltaResponse.newScore,
+            oldScore = deltaResponse.oldScore
         )
 
         FileDeltaData(file = File(fileName = result.first), delta = deltaForFile)
     }
 
-    private fun getChangeDetails(changeDetails: List<com.codescene.data.delta.ChangeDetail>?) =
+    private fun getChangeDetails(changeDetails: List<DeltaChangeDetail>?) =
         changeDetails?.map { finding ->
             ChangeDetail(
                 category = finding.category,
                 description = finding.description,
                 changeType = finding.changeType.value(),
-                line = if (finding.line.isPresent) finding.line.get() else 0
+                line = finding.line ?: 0
             )
         } ?: emptyList()
 
     private fun getFunctionLevelFindings(
         filePath: String,
         contentSha: String,
-        functionLevelFindings: List<com.codescene.data.delta.FunctionFinding>?
+        functionLevelFindings: List<DeltaFunctionFinding>?
     ): List<FunctionFinding> {
         if (functionLevelFindings.isNullOrEmpty()) return emptyList()
         val aceFunctionsCache = AceRefactorableFunctionsCacheService.getInstance(project)
 
         return functionLevelFindings.map { fn ->
-            val range = fn.function.range.orElse(null)
+            val range = fn.function?.range
 
             FunctionFinding(
                 function = FunctionInfo(
-                    name = fn.function.name,
+                    name = fn.function?.name,
                     range = Range(
                         startLine = range?.startLine ?: 0,
                         startColumn = range?.startColumn ?: 0,
@@ -105,13 +107,13 @@ class CodeHealthMonitorMapper(private val project: Project) {
     private fun getFunctionToRefactor(
         filePath: String,
         contentSha: String,
-        fn: com.codescene.data.delta.FunctionFinding,
+        fn: DeltaFunctionFinding,
         cache: AceRefactorableFunctionsCacheService
     ): FunctionToRefactor? {
-        val range = fn.function.range.orElse(null)
+        val range = fn.function?.range
 
         val fnToRefactor = cache.get(AceRefactorableFunctionCacheQuery(filePath, contentSha)).find {
-            it.name == fn.function.name && it.range.startLine == range?.startLine && it.range.endLine == range?.endLine
+            it.name == fn.function?.name && it.range.startLine == range?.startLine && it.range.endLine == range?.endLine
         }
 
         return fnToRefactor?.let {

@@ -4,7 +4,7 @@ import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Range
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL
- import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.api.CodeDeltaService
 import com.codescene.jetbrains.services.api.CodeReviewService
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
@@ -21,11 +21,17 @@ import com.intellij.openapi.util.TextRange
 import org.reflections.Reflections
 import java.util.concurrent.ConcurrentHashMap
 
+data class FunctionInfo(
+    val name: String,
+    val range: Range,
+)
+
 data class CodeVisionCodeSmell(
     val details: String,
     val category: String,
     val highlightRange: Range,
-    val functionName: String? = null
+    val functionName: String? = null,
+    val functionInfo: FunctionInfo? = null
 )
 
 @Suppress("UnstableApiUsage")
@@ -160,10 +166,10 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
                     .filterByCategory(categoryToFilter)
                     .map { smell ->
                         CodeVisionCodeSmell(
-                            functionName = function.function,
                             details = smell.details,
                             category = smell.category,
-                            highlightRange = smell.highlightRange
+                            highlightRange = smell.highlightRange,
+                            functionInfo = FunctionInfo(name = function.function, range = function.range)
                         )
                     }
             } ?: emptyList()

@@ -1,12 +1,14 @@
 package com.codescene.jetbrains.services.api
 
 import com.codescene.ExtensionAPI
+import com.codescene.ExtensionAPI.CacheParams
 import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.ace.PreflightResponse
 import com.codescene.data.ace.RefactorResponse
 import com.codescene.data.ace.RefactoringOptions
 import com.codescene.data.delta.Delta
+import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.components.webview.util.AceCwfParams
 import com.codescene.jetbrains.components.webview.util.updateMonitor
@@ -89,19 +91,61 @@ class AceService : BaseService(), Disposable {
         }
     }
 
+    private fun <T> getFnToRefactor(filePath: String, getFunctions: () -> T): T? {
+        try {
+            val (result, elapsedMs) = runWithClassLoaderChange {
+                getFunctions()
+            }
+            Log.info("Got refactorable functions for file $filePath in ${elapsedMs}ms.")
+
+            return result
+        } catch (e: Exception) {
+            Log.error("Unable to get refactorable functions from delta result for file: $filePath: ${e.message}")
+            return null
+        }
+    }
+
     /**
      * Retrieves refactorable functions based on the Delta result.
      *
      * The Delta review focuses only on newly introduced code smells, meaning it may return
      * fewer refactorable functions compared to a full review.
      */
-    fun getRefactorableFunctions(params: CodeParams, delta: Delta, editor: Editor) {
+    fun getRefactorableFunctions(params: CodeParams, delta: Delta, editor: Editor): List<FnToRefactor> {
         Log.debug(
             "Getting refactorable functions for ${editor.virtualFile.path} based on Delta review...",
             serviceImplementation
         )
+        val cacheParams = CacheParams(".caches") // TODO: CS-5683
 
-        refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, delta) }
+        val result = getFnToRefactor<List<FnToRefactor>>(editor.virtualFile.path) {
+            ExtensionAPI.fnToRefactor(params, cacheParams, delta)
+        } ?: emptyList()
+
+        Log.info("Found ${result.size} refactorable functions in delta result for file ${params.fileName}.")
+        return result
+    }
+
+    /**
+     * Retrieves a refactorable function based on a code smell.
+     *
+     * If found, the FnToRefactor focuses only on the passed code smell w.r.t. refactoring targets.
+     */
+    fun getRefactorableFunction(codeParams: CodeParams, codeSmell: CodeSmell): FnToRefactor? {
+        Log.debug(
+            "Getting refactorable functions for ${codeParams.fileName} for code smell '${codeSmell.category}'...",
+            serviceImplementation
+        )
+        val cacheParams = CacheParams(".caches") // TODO: CS-5683
+
+        val result = getFnToRefactor<FnToRefactor?>(codeParams.fileName) {
+            ExtensionAPI.fnToRefactor(
+                codeParams,
+                cacheParams,
+                codeSmell
+            )
+        }
+        return result
     }
 
     /**
@@ -117,7 +161,8 @@ class AceService : BaseService(), Disposable {
             serviceImplementation
         )
 
-        refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, codeSmells) }
+        val cacheParams = CacheParams(".caches") // TODO: CS-5683
+        refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, cacheParams, codeSmells) }
     }
 
     fun refactor(params: RefactoringParams, options: RefactoringOptions? = null) {
