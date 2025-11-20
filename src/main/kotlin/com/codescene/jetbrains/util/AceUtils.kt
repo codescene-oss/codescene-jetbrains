@@ -248,7 +248,7 @@ private suspend fun refreshUiPerEditor(project: Project, aceEnabled: Boolean, ed
 /**
  * Initiates refactoring for a file from CWF.
  *
- * This function can be called from three views: `home`, `ace`, and `aceAcknowledge`.
+ * This function can be called from the following views: `home`, `ace`, `docs`, and `aceAcknowledge`.
  * The `ace` and `aceAcknowledge` views provide direct access to the `fnToRefactor` instance
  * through user data (stored on the native side), while the `home` view does not.
  *

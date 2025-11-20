@@ -203,6 +203,7 @@ class AceService : BaseService(), Disposable {
 
     private fun handleRefactoring(params: RefactoringParams, options: RefactoringOptions? = null) {
         val function = params.function
+        Log.info("Refactoring triggered for function ${params.function?.name ?: ""} and refactoring targets: ${params.function?.refactoringTargets?.map { it.category } ?: emptyList()}")
 
         val (result, elapsedMs) = runWithClassLoaderChange {
             if (options == null) ExtensionAPI.refactor(function)
