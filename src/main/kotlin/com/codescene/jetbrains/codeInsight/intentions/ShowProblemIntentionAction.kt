@@ -31,7 +31,7 @@ class ShowProblemIntentionAction(private val codeSmell: CodeVisionCodeSmell) : I
             val docsData = DocsData(
                 docType = nameDocMap[codeSmell.category] ?: "",
                 fileData = FileMetaType(
-                    fileName = editor.virtualFile.name,
+                    fileName = editor.virtualFile.path,
                     fn = Fn(
                         name = codeSmell.functionInfo?.name ?: "",
                         range = RangeCamelCase(

@@ -19,7 +19,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.psi.PsiFile
 import org.jetbrains.annotations.NotNull
 
-class CodeSmellAnnotator : ExternalAnnotator<
+internal class CodeSmellAnnotator : ExternalAnnotator<
         CodeSmellAnnotator.AnnotationContext, CodeSmellAnnotator.AnnotationContext
         >() {
     override fun apply(
