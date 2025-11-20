@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.services.cache
 
-import com.codescene.data.delta.Delta
+import com.codescene.jetbrains.services.api.deltamodels.NativeDelta
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -9,14 +9,14 @@ import org.apache.commons.codec.digest.DigestUtils
 data class DeltaCacheItem(
     val headHash: String,
     val currentHash: String,
-    val deltaApiResponse: Delta?,
+    val nativeDelta: NativeDelta?,
 )
 
 data class DeltaCacheEntry(
     val filePath: String,
     val headContent: String,
     val currentFileContent: String,
-    val deltaApiResponse: Delta?,
+    val deltaApiResponse: NativeDelta?,
 )
 
 data class DeltaCacheQuery(
@@ -26,7 +26,7 @@ data class DeltaCacheQuery(
 )
 
 @Service(Service.Level.PROJECT)
-class DeltaCacheService : CacheService<DeltaCacheQuery, DeltaCacheEntry, DeltaCacheItem, Pair<Boolean, Delta?>>() {
+class DeltaCacheService : CacheService<DeltaCacheQuery, DeltaCacheEntry, DeltaCacheItem, Pair<Boolean, NativeDelta?>>() {
     companion object {
         fun getInstance(project: Project): DeltaCacheService = project.service<DeltaCacheService>()
     }
@@ -43,14 +43,14 @@ class DeltaCacheService : CacheService<DeltaCacheQuery, DeltaCacheEntry, DeltaCa
      * @return A `Pair` where the first value (`Boolean`) indicates whether the result was found in cache,
      *         and the second value (`Delta?`) is the cached API response (which may be `null`).
      */
-    override fun get(query: DeltaCacheQuery): Pair<Boolean, Delta?> {
+    override fun get(query: DeltaCacheQuery): Pair<Boolean, NativeDelta?> {
         val (filePath, headCommitContent, currentFileContent) = query
 
         val oldHash = DigestUtils.sha256Hex(headCommitContent)
         val newHash = DigestUtils.sha256Hex(currentFileContent)
 
         val entry = cache[filePath]
-        val apiResponse = entry?.deltaApiResponse
+        val apiResponse = entry?.nativeDelta
 
         val contentsMatch = entry?.headHash == oldHash && entry?.currentHash == newHash
         val isCacheHitOrNotStale = cache.containsKey(filePath) && contentsMatch
@@ -70,6 +70,6 @@ class DeltaCacheService : CacheService<DeltaCacheQuery, DeltaCacheEntry, DeltaCa
     override fun getAll(): List<Pair<String, DeltaCacheItem>> {
         return cache.entries
             .map { it.key to it.value }
-            .filter { it.second.deltaApiResponse != null }
+            .filter { it.second.nativeDelta != null }
     }
 }

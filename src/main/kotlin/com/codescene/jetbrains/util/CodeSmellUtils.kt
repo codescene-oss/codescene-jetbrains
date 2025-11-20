@@ -1,5 +1,7 @@
 package com.codescene.jetbrains.util
 
+import com.codescene.data.review.CodeSmell
+import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.intellij.openapi.application.runReadAction
@@ -30,17 +32,19 @@ private val supportedLanguages = mapOf(
     "tgr" to "apex",
     "trigger" to "apex",
     "c" to "c",
+    "h" to "c",
+    "hh" to "c",
+    "hxx" to "c",
     "clj" to "clojure",
     "cljc" to "clojure",
     "cljs" to "clojure",
     "cc" to "cpp",
     "cpp" to "cpp",
     "cxx" to "cpp",
-    "h" to "cpp",
-    "hh" to "cpp",
     "hpp" to "cpp",
-    "hxx" to "cpp",
     "ipp" to "cpp",
+    "pcc" to "cpp",
+    "c++" to "cpp",
     "m" to "objective-c",
     "mm" to listOf("objective-c", "objective-cpp"),
     "cs" to "csharp",
@@ -175,3 +179,7 @@ private fun nextCharacterNotBacktick(string: String, indexOfTick: Int): Boolean 
 private fun previousCharacterNotBacktick(string: String, indexOfTick: Int): Boolean {
     return indexOfTick == 0 || string[indexOfTick - 1] != '`'
 }
+
+fun getCodeSmell(nativeCodeSmell: CodeVisionCodeSmell) = CodeSmell(
+    nativeCodeSmell.category, nativeCodeSmell.highlightRange, nativeCodeSmell.details
+)

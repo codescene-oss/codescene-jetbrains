@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.services.api
 
 import com.codescene.ExtensionAPI
+import com.codescene.ExtensionAPI.CacheParams
 import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
@@ -47,7 +48,8 @@ class CodeReviewService(private val project: Project) : CodeSceneService() {
         val code = editor.document.text
 
         val params = ReviewParams(path, code)
-        val (result, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.review(params) }
+        val cacheParams = CacheParams(".caches") // TODO: CS-5683
+        val (result, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.review(params, cacheParams) }
 
         val telemetryInfo = getTelemetryInfo(file)
         TelemetryService.getInstance().logUsage(

@@ -1,14 +1,15 @@
 package com.codescene.jetbrains.codeInsight.intentions
 
 import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
-import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
 import com.codescene.jetbrains.components.webview.data.shared.Fn
 import com.codescene.jetbrains.components.webview.data.shared.RangeCamelCase
+import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.util.nameDocMap
 import com.codescene.jetbrains.components.webview.util.openDocs
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
 import com.codescene.jetbrains.util.Constants.CODESCENE
+import com.codescene.jetbrains.util.getCodeSmell
 import com.intellij.codeInsight.intention.IntentionAction
 import com.intellij.codeInsight.intention.LowPriorityAction
 import com.intellij.codeInsight.intention.PriorityAction
@@ -30,20 +31,21 @@ class ShowProblemIntentionAction(private val codeSmell: CodeVisionCodeSmell) : I
             val docsData = DocsData(
                 docType = nameDocMap[codeSmell.category] ?: "",
                 fileData = FileMetaType(
-                    fileName = editor.virtualFile.name,
+                    fileName = editor.virtualFile.path,
                     fn = Fn(
-                        name = codeSmell.functionName ?: "",
+                        name = codeSmell.functionInfo?.name ?: "",
                         range = RangeCamelCase(
-                            endLine = codeSmell.highlightRange.endLine,
-                            startLine = codeSmell.highlightRange.startLine,
-                            endColumn = codeSmell.highlightRange.endColumn,
-                            startColumn = codeSmell.highlightRange.startColumn
+                            endLine = codeSmell.functionInfo?.range?.endLine ?: 0,
+                            startLine = codeSmell.functionInfo?.range?.startLine ?: 0,
+                            endColumn = codeSmell.functionInfo?.range?.endColumn ?: 0,
+                            startColumn = codeSmell.functionInfo?.range?.startColumn ?: 0,
                         )
                     )
                 )
             )
 
-            openDocs(docsData, project, DocsEntryPoint.INTENTION_ACTION)
+            val smell = getCodeSmell(codeSmell)
+            openDocs(docsData, project, DocsEntryPoint.INTENTION_ACTION, smell)
         }
     }
 

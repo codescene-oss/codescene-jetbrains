@@ -1,18 +1,20 @@
 package com.codescene.jetbrains.components.webview.util
 
+import com.codescene.data.ace.FnToRefactor
+import com.codescene.data.review.CodeSmell
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.webview.WebViewInitializer
 import com.codescene.jetbrains.components.webview.data.CwfData
 import com.codescene.jetbrains.components.webview.data.View
+import com.codescene.jetbrains.components.webview.data.shared.AutoRefactorConfig
 import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.handler.CwfMessageHandler
 import com.codescene.jetbrains.components.webview.mapper.DocumentationMapper
 import com.codescene.jetbrains.fileeditor.documentation.CWF_DOCS_DATA_KEY
+import com.codescene.jetbrains.fileeditor.documentation.CwfDocsFileEditorProviderData
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
-import com.codescene.jetbrains.util.FileUtils
-import com.codescene.jetbrains.util.TelemetryEvents
-import com.codescene.jetbrains.util.getSelectedTextEditor
+import com.codescene.jetbrains.util.*
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.testFramework.LightVirtualFile
@@ -38,15 +40,34 @@ import kotlinx.coroutines.launch
  * @param project The current project.
  * @param entryPoint The entry point from which the documentation was opened (for telemetry).
  */
-fun openDocs(docsData: DocsData, project: Project, entryPoint: DocsEntryPoint) {
+fun openDocs(docsData: DocsData, project: Project, entryPoint: DocsEntryPoint, codeSmell: CodeSmell? = null) {
     val existingBrowser = WebViewInitializer.getInstance(project).getBrowser(View.DOCS)
+    val fnToRefactor = if (codeSmell != null) getRefactorableFunctionByCodeSmell(
+        docsData.fileData.fileName,
+        codeSmell
+    ) else {
+        val category = docNameMap[docsData.docType]
+        val fn = getRefactorableFunctionFromCache(docsData.fileData, project)
 
-    if (existingBrowser != null) updateWebView(docsData, existingBrowser, project) else openFile(docsData, project)
+        if (fn?.refactoringTargets?.any { it.category == category } == true) fn else null // Make sure code smell is refactorable
+    }
+
+
+    // Override disabled status based on presence of fnToRefactor
+    val data = docsData.copy(
+        autoRefactor = AutoRefactorConfig(disabled = fnToRefactor == null)
+    )
+
+    if (existingBrowser != null) updateWebView(data, existingBrowser, fnToRefactor, project) else openFile(
+        data,
+        fnToRefactor,
+        project
+    )
 
     sendTelemetry(docsData, entryPoint)
 }
 
-private fun updateWebView(docsData: DocsData, browser: JBCefBrowser, project: Project) {
+private fun updateWebView(docsData: DocsData, browser: JBCefBrowser, fnToRefactor: FnToRefactor?, project: Project) {
     val mapper = DocumentationMapper.getInstance()
 
     val messageHandler = CwfMessageHandler.getInstance(project)
@@ -56,15 +77,16 @@ private fun updateWebView(docsData: DocsData, browser: JBCefBrowser, project: Pr
         serializer = CwfData.serializer(DocsData.serializer())
     )
 
+    updateUserData(docsData, fnToRefactor, project)
     messageHandler.postMessage(View.DOCS, dataJson, browser)
 }
 
-private fun openFile(docsData: DocsData, project: Project) {
+private fun openFile(docsData: DocsData, fnToRefactor: FnToRefactor?, project: Project) {
     val fileEditorManager = FileEditorManager.getInstance(project)
 
     val fileName = UiLabelsBundle.message("codeSmellDocs")
     val file = LightVirtualFile(fileName)
-    file.putUserData(CWF_DOCS_DATA_KEY, docsData)
+    file.putUserData(CWF_DOCS_DATA_KEY, CwfDocsFileEditorProviderData(docsData, fnToRefactor))
 
     CoroutineScope(Dispatchers.Main).launch {
         val editor = getSelectedTextEditor(project, "", "${this::class.simpleName} - ${project.name}")
@@ -74,6 +96,16 @@ private fun openFile(docsData: DocsData, project: Project) {
         else
             FileUtils.openDocumentationWithoutActiveEditor(file, fileEditorManager)
     }
+}
+
+private fun updateUserData(data: DocsData, function: FnToRefactor?, project: Project) {
+    val fileEditor = FileEditorManager.getInstance(project)
+        .allEditors
+        .firstOrNull { it.file.name == UiLabelsBundle.message("codeSmellDocs") }
+    (fileEditor?.file as? LightVirtualFile)?.putUserData(
+        CWF_DOCS_DATA_KEY,
+        CwfDocsFileEditorProviderData(data, function)
+    )
 }
 
 private fun sendTelemetry(docsData: DocsData, entryPoint: DocsEntryPoint) {

@@ -48,7 +48,7 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                 }
 
                 row(UiLabelsBundle.message("aceAuthToken")) {
-                    textField()
+                    passwordField()
                         .align(Align.FILL)
                         .resizableColumn()
                         .comment(UiLabelsBundle.message("aceAuthTokenComment"))
