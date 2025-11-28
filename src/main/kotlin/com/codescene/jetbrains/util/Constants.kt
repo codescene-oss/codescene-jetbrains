@@ -112,4 +112,8 @@ object Constants {
     const val DEACTIVATED = "Enable ACE in the extension settings"
     const val OUT_OF_CREDITS = "Out of ACE credits"
     const val RETRY = "Retry ACE activation"
+
+    // Feature flags
+    const val CWF_FLAG = "feature.cwf"
+    const val ACE_FLAG = "feature.ace"
 }
