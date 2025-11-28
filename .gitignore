@@ -7,3 +7,4 @@ build
 docs
 .kotlin
 cs-cwf
+local-flags.properties
