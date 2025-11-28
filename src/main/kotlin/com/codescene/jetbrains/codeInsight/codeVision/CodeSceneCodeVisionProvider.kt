@@ -4,24 +4,15 @@ import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Range
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL
-import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
-import com.codescene.jetbrains.components.webview.data.shared.Fn
-import com.codescene.jetbrains.components.webview.data.shared.RangeCamelCase
-import com.codescene.jetbrains.components.webview.data.view.DocsData
-import com.codescene.jetbrains.components.webview.util.nameDocMap
-import com.codescene.jetbrains.components.webview.util.openDocs
-import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
-import com.codescene.jetbrains.featureflag.FeatureFlagManager
+ import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.api.CodeDeltaService
 import com.codescene.jetbrains.services.api.CodeReviewService
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
 import com.codescene.jetbrains.services.cache.ReviewCacheService
-import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
-import com.codescene.jetbrains.services.htmlviewer.DocumentationParams
-import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.getCachedDelta
 import com.codescene.jetbrains.util.getTextRange
+import com.codescene.jetbrains.util.handleOpenDocs
 import com.codescene.jetbrains.util.isFileSupported
 import com.intellij.codeInsight.codeVision.*
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
@@ -189,46 +180,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         )
 
     open fun handleLensClick(editor: Editor, codeSmell: CodeVisionCodeSmell) {
-        val cwfEnabled = FeatureFlagManager.isEnabled(Constants.CWF_FLAG)
-
-        if (cwfEnabled) handleOpenCwfDocs(editor, codeSmell) else handleOpenNativeDocs(editor, codeSmell)
-    }
-
-    private fun handleOpenNativeDocs(editor: Editor, codeSmell: CodeVisionCodeSmell) {
-        val project = editor.project ?: return
-        val docViewer = CodeSceneDocumentationViewer.getInstance(project)
-
-        docViewer.open(
-            editor,
-            DocumentationParams(
-                codeSmell.category,
-                editor.virtualFile.name,
-                editor.virtualFile.path,
-                codeSmell.highlightRange.startLine,
-                DocsEntryPoint.CODE_VISION
-            )
-        )
-    }
-
-    private fun handleOpenCwfDocs(editor: Editor, codeSmell: CodeVisionCodeSmell) {
-        val project = editor.project ?: return
-        val docsData = DocsData(
-            docType = nameDocMap[codeSmell.category] ?: "",
-            fileData = FileMetaType(
-                fileName = editor.virtualFile.path,
-                fn = Fn(
-                    name = codeSmell.functionName ?: "",
-                    range = RangeCamelCase(
-                        endLine = codeSmell.highlightRange.endLine,
-                        startLine = codeSmell.highlightRange.startLine,
-                        endColumn = codeSmell.highlightRange.endColumn,
-                        startColumn = codeSmell.highlightRange.startColumn
-                    )
-                )
-            )
-        )
-
-        openDocs(docsData, project, DocsEntryPoint.CODE_VISION)
+        handleOpenDocs(editor, codeSmell, DocsEntryPoint.CODE_VISION)
     }
 
     private fun markApiCallInProgress(filePath: String, apiCalls: MutableSet<String>) {
