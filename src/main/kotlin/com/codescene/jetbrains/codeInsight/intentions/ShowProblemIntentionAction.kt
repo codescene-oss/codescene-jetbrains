@@ -1,14 +1,9 @@
 package com.codescene.jetbrains.codeInsight.intentions
 
 import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
-import com.codescene.jetbrains.components.webview.data.view.DocsData
-import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
-import com.codescene.jetbrains.components.webview.data.shared.Fn
-import com.codescene.jetbrains.components.webview.data.shared.RangeCamelCase
-import com.codescene.jetbrains.components.webview.util.nameDocMap
-import com.codescene.jetbrains.components.webview.util.openDocs
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
 import com.codescene.jetbrains.util.Constants.CODESCENE
+import com.codescene.jetbrains.util.handleOpenDocs
 import com.intellij.codeInsight.intention.IntentionAction
 import com.intellij.codeInsight.intention.LowPriorityAction
 import com.intellij.codeInsight.intention.PriorityAction
@@ -26,25 +21,7 @@ class ShowProblemIntentionAction(private val codeSmell: CodeVisionCodeSmell) : I
     override fun isAvailable(project: Project, editor: Editor?, file: PsiFile): Boolean = true
 
     override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {
-        editor?.let {
-            val docsData = DocsData(
-                docType = nameDocMap[codeSmell.category] ?: "",
-                fileData = FileMetaType(
-                    fileName = editor.virtualFile.name,
-                    fn = Fn(
-                        name = codeSmell.functionName ?: "",
-                        range = RangeCamelCase(
-                            endLine = codeSmell.highlightRange.endLine,
-                            startLine = codeSmell.highlightRange.startLine,
-                            endColumn = codeSmell.highlightRange.endColumn,
-                            startColumn = codeSmell.highlightRange.startColumn
-                        )
-                    )
-                )
-            )
-
-            openDocs(docsData, project, DocsEntryPoint.INTENTION_ACTION)
-        }
+        handleOpenDocs(editor, codeSmell, DocsEntryPoint.INTENTION_ACTION)
     }
 
     override fun startInWriteAction(): Boolean = false
