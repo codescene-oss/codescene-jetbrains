@@ -7,6 +7,7 @@ import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewer
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.ACE_ACKNOWLEDGEMENT
+import com.codescene.jetbrains.util.Constants.ACE_REFACTORING_SUGGESTION
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorState
@@ -239,21 +240,19 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
                 val end = json.get("endLine") as Int
                 val path = json.get("filePath") as String
                 val code = json.get("code") as String
-                val fileName = json.get("windowTitle") as String
 
                 //TODO: add isCached and traceId to metadata for telemetry
                 TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_REFACTOR_APPLIED)
                 replaceCodeSnippet(ReplaceCodeSnippetArgs(project, path, start, end, code))
-                acceptRefactorScope.launch { closeWindow(fileName, project) }
+                acceptRefactorScope.launch { closeWindow(ACE_REFACTORING_SUGGESTION, project) }
             }
 
             "ace-reject-refactor" -> {
                 val rejectRefactorScope = CoroutineScope(Dispatchers.Main)
-                val fileName = json.get("windowTitle") as String
 
                 //TODO: add isCached and traceId to metadata for telemetry
                 TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_REFACTOR_REJECTED)
-                rejectRefactorScope.launch { closeWindow(fileName, project) }
+                rejectRefactorScope.launch { closeWindow(ACE_REFACTORING_SUGGESTION, project) }
             }
         }
     }

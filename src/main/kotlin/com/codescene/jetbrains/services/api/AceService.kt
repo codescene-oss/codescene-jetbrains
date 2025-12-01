@@ -12,6 +12,7 @@ import com.codescene.jetbrains.components.webview.util.AceCwfParams
 import com.codescene.jetbrains.components.webview.util.updateMonitor
 import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheEntry
@@ -140,7 +141,9 @@ class AceService : BaseService(), Disposable {
 
                     Log.warn("Problem occurred during ACE refactoring: ${e.message}")
                     handleAceStatusChange(newStatus)
-                    openAceErrorView(params.editor, params.function, project, e)
+
+                    if (RuntimeFlags.cwfFeature) openAceErrorView(params.editor, params.function, project, e)
+                    else showErrorNotification(project, "Refactoring failed for function '${params.function?.name}'.")
                 }
             }
         }

@@ -2,10 +2,10 @@ package com.codescene.jetbrains.util
 
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.webview.util.AceCwfParams
-import com.codescene.jetbrains.components.webview.util.openAceWindow
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.util.Constants.ACE_NOTIFICATION_GROUP
 import com.codescene.jetbrains.util.Constants.CODESCENE
+import com.codescene.jetbrains.util.Constants.ERROR_NOTIFICATION_GROUP
 import com.codescene.jetbrains.util.Constants.INFO_NOTIFICATION_GROUP
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationGroupManager
@@ -70,7 +70,7 @@ fun showRefactoringFinishedNotification(editor: Editor, params: AceCwfParams) {
         ACE_NOTIFICATION_GROUP,
         listOf(
             UiLabelsBundle.message("viewRefactoringResult") to { _, n ->
-                openAceWindow(params, editor.project!!)
+                handleOpenAceWindow(params, editor)
                 n.expire()
             },
             UiLabelsBundle.message("dismissRefactoringResult") to { _, n -> n.expire() }
@@ -89,4 +89,11 @@ fun showInfoNotification(message: String, project: Project) {
     )
 
     showNotification(notification)
+}
+
+fun showErrorNotification(project: Project, message: String) {
+    NotificationGroupManager.getInstance()
+        .getNotificationGroup(ERROR_NOTIFICATION_GROUP)
+        .createNotification(message, NotificationType.ERROR)
+        .notify(project)
 }

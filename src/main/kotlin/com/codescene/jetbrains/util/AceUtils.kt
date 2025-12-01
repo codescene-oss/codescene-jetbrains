@@ -11,11 +11,15 @@ import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
 import com.codescene.jetbrains.components.webview.util.*
 import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.notifier.AceStatusRefreshNotifier
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.api.AceService
+import com.codescene.jetbrains.services.api.RefactoredFunction
 import com.codescene.jetbrains.services.cache.*
+import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewer
+import com.codescene.jetbrains.services.htmlviewer.AceRefactoringResultViewer
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
@@ -66,13 +70,20 @@ fun handleAceEntryPoint(params: RefactoringParams) {
         }
         AceService.getInstance().refactor(params, options)
     } else
+        handleOpenAceAcknowledgement(editor, function)
+}
+
+fun handleOpenAceAcknowledgement(editor: Editor, function: FnToRefactor) {
+    if (RuntimeFlags.cwfFeature)
         openAceAcknowledgeView(
             OpenAceAcknowledgementParams(
-                project = project,
+                project = editor.project!!,
                 fnToRefactor = function,
                 filePath = editor.virtualFile.path
             )
         )
+    else
+        AceAcknowledgementViewer.getInstance(editor.project!!).open(editor, function)
 }
 
 fun fetchAceCache(path: String, content: String, project: Project): List<FnToRefactor> {
@@ -101,10 +112,36 @@ private suspend fun shouldCheckRefactorableFunctions(editor: Editor): Boolean {
 }
 
 fun handleRefactoringResult(params: AceCwfParams, requestDuration: Long, editor: Editor) {
-    if (requestDuration < 1500) CoroutineScope(Dispatchers.Main).launch {
-        openAceWindow(params, editor.project!!)
-    }
+    if (requestDuration < 1500) handleOpenAceWindow(params, editor)
     else showRefactoringFinishedNotification(editor, params)
+}
+
+/**
+ * Based on whether CWF is enabled, open an appropriate ACE refactoring result view.
+ */
+fun handleOpenAceWindow(params: AceCwfParams, editor: Editor) {
+    if (RuntimeFlags.cwfFeature) {
+        CoroutineScope(Dispatchers.Main).launch {
+            openAceWindow(params, editor.project!!)
+        }
+    } else {
+        val project = editor.project ?: return
+        val result = params.refactorResponse ?: return
+        val function = params.function
+        val refactoredFunction = RefactoredFunction(
+            function.name,
+            result,
+            editor.virtualFile?.path ?: "",
+            function.range.startLine,
+            function.range.endLine,
+            function.range.startColumn,
+            function.range.endColumn
+        )
+
+        CoroutineScope(Dispatchers.Main).launch {
+            AceRefactoringResultViewer.getInstance(project).open(editor, refactoredFunction)
+        }
+    }
 }
 
 fun getRefactorableFunction(codeSmell: CodeVisionCodeSmell, refactorableFunctions: List<FnToRefactor>) =
@@ -192,9 +229,10 @@ fun refreshAceUi(
                 .toList()
 
             refreshUiPerEditor(project, aceEnabled, editors)
-            updateMonitor(project)
-            project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC)
-                .refresh(null) // TODO: remove old CHM implementation
+
+            if (RuntimeFlags.cwfFeature) updateMonitor(project)
+            else project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC)
+                .refresh(null)
         }
 
         Log.info("ACE UI refresh completed.")
@@ -296,6 +334,8 @@ private fun getRefactorableFunctionFromCache(fileData: FileMetaType, project: Pr
  *   so if ranges or bodies shift, we may incorrectly mark a function as stale or up to date.
  */
 fun updateCurrentAceView(project: Project, entry: AceRefactorableFunctionCacheEntry) {
+    if (!RuntimeFlags.cwfFeature) return
+
     val currentAceData = getAceUserData(project)
     if (currentAceData == null || currentAceData.aceData?.fileData?.fileName != entry.filePath) return // Not applicable
 
