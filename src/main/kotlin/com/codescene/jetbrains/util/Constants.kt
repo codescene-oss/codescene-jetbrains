@@ -114,6 +114,6 @@ object Constants {
     const val RETRY = "Retry ACE activation"
 
     // Feature flags
-    const val CWF_FLAG = "feature.cwf"
-    const val ACE_FLAG = "feature.ace"
+    const val CWF_FLAG = "FEATURE_CWF"
+    const val ACE_FLAG = "FEATURE_ACE"
 }
