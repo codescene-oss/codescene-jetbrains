@@ -12,6 +12,15 @@ import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
 import com.codescene.jetbrains.services.htmlviewer.DocumentationParams
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.project.Project
+
+fun handleOpenGeneralDocs(project: Project, source: String, docsEntryPoint: DocsEntryPoint) {
+    if (RuntimeFlags.cwfFeature) {
+        val doc = nameDocMap[source] ?: return
+        handleOpenGeneralCwfDocs(project, doc, docsEntryPoint)
+    } else
+        handleOpenGeneralNativeDocs(project, source)
+}
 
 fun handleOpenDocs(editor: Editor?, codeSmell: CodeVisionCodeSmell, source: DocsEntryPoint) {
     editor?.let {
@@ -57,4 +66,21 @@ fun handleOpenNativeDocs(editor: Editor, codeSmell: CodeVisionCodeSmell, source:
             source
         )
     )
+}
+
+fun handleOpenGeneralCwfDocs(project: Project, docType: String, entryPoint: DocsEntryPoint) {
+    val docsData = DocsData(
+        docType = docType,
+        fileData = FileMetaType(fileName = "")
+    )
+
+    openDocs(docsData, project, entryPoint)
+}
+
+fun handleOpenGeneralNativeDocs(project: Project, source: String) {
+    val docViewer = CodeSceneDocumentationViewer.getInstance(project)
+    val editor = getSelectedTextEditor(project, "")
+
+    val params = DocumentationParams(heading = source)
+    docViewer.open(editor, params)
 }

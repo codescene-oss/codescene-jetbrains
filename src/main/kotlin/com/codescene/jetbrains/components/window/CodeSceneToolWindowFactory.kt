@@ -7,6 +7,7 @@ import com.codescene.jetbrains.actions.ShowSettingsAction
 import com.codescene.jetbrains.components.codehealth.detail.CodeHealthDetailsPanel
 import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPanel
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
+import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.codescene.jetbrains.util.Log
@@ -99,7 +100,7 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
             })
     }
 
-    override fun shouldBeAvailable(project: Project) = true
+    override fun shouldBeAvailable(project: Project) = !RuntimeFlags.cwfFeature
 
     private fun getTitleActions(): List<AnAction> {
         val actionManager = ActionManager.getInstance()
