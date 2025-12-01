@@ -9,6 +9,7 @@ import com.codescene.jetbrains.components.webview.data.shared.Fn
 import com.codescene.jetbrains.components.webview.data.shared.RangeCamelCase
 import com.codescene.jetbrains.components.webview.data.view.*
 import com.codescene.jetbrains.components.webview.util.AceCwfParams
+import com.codescene.jetbrains.flag.RuntimeFlags
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 
@@ -23,7 +24,7 @@ class AceMapper {
         pro: Boolean = true,
     ): CwfData<AceData> = CwfData(
         pro = pro,
-        devmode = System.getProperty("cwfIsDevMode")?.toBoolean() ?: false,
+        devmode = RuntimeFlags.isDevMode,
         view = View.ACE.value,
         data = AceData(
             error = params.error,

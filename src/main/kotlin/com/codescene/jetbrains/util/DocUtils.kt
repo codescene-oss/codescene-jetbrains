@@ -7,7 +7,7 @@ import com.codescene.jetbrains.components.webview.data.shared.RangeCamelCase
 import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.util.nameDocMap
 import com.codescene.jetbrains.components.webview.util.openDocs
-import com.codescene.jetbrains.featureflag.FeatureFlagManager
+import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
 import com.codescene.jetbrains.services.htmlviewer.DocumentationParams
@@ -15,7 +15,7 @@ import com.intellij.openapi.editor.Editor
 
 fun handleOpenDocs(editor: Editor?, codeSmell: CodeVisionCodeSmell, source: DocsEntryPoint) {
     editor?.let {
-        if (FeatureFlagManager.isEnabled(Constants.CWF_FLAG))
+        if (RuntimeFlags.cwfFeature)
             handleOpenCwfDocs(editor, codeSmell, source)
         else
             handleOpenNativeDocs(editor, codeSmell, source)

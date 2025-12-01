@@ -3,6 +3,7 @@ package com.codescene.jetbrains.components.webview.mapper
 import com.codescene.jetbrains.components.webview.data.CwfData
 import com.codescene.jetbrains.components.webview.data.View
 import com.codescene.jetbrains.components.webview.data.view.DocsData
+import com.codescene.jetbrains.flag.RuntimeFlags
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 
@@ -18,7 +19,7 @@ class DocumentationMapper {
         pro: Boolean = true,
     ): CwfData<DocsData> = CwfData(
         pro = pro,
-        devmode =  System.getProperty("cwfIsDevMode")?.toBoolean() ?: false,
+        devmode = RuntimeFlags.isDevMode,
         view = View.DOCS.value,
         data = docsData
     )

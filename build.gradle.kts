@@ -161,7 +161,10 @@ tasks {
 
         val devMode = (project.properties["cwfIsDevMode"]?.toString()?.toBoolean()
             ?: (System.getenv("CI") != "true"))
+        val featureCwf = project.properties["FEATURE_CWF"]?.toString()?.toBoolean() ?: false
+
         systemProperty("cwfIsDevMode", devMode)
+        systemProperty("FEATURE_CWF", featureCwf)
     }
 
     register<JavaExec>("run") {
