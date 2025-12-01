@@ -32,6 +32,8 @@ class CodeHealthPanelBuilder(private val project: Project) {
 
     fun getPanel(details: CodeHealthDetails) = JPanel().apply {
         val settings = CodeSceneGlobalSettingsStore.getInstance().state
+        val aceAvailable =
+            settings.aceEnabled && settings.enableAutoRefactor && settings.aceAuthToken.trim().isNotEmpty()
         Log.debug("Rendering panel for $details...", service)
 
         val isCodeHealth = details.type == CodeHealthDetailsType.HEALTH
@@ -49,7 +51,7 @@ class CodeHealthPanelBuilder(private val project: Project) {
             addCodeHealthHeader(details, constraint)
             if (details.healthData!!.status.isNotEmpty()) addHealthDecline(details, constraint)
             addSlider(details, constraint)
-        } else if (settings.aceEnabled && settings.enableAutoRefactor)
+        } else if (aceAvailable)
             addAutoRefactorButton(details, constraint)
 
         addBody(details, constraint)
