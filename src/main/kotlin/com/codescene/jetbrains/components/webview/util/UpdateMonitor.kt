@@ -6,6 +6,7 @@ import com.codescene.jetbrains.components.webview.data.View
 import com.codescene.jetbrains.components.webview.data.view.HomeData
 import com.codescene.jetbrains.components.webview.handler.CwfMessageHandler
 import com.codescene.jetbrains.components.webview.mapper.CodeHealthMonitorMapper
+import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.services.api.CodeDeltaService
 import com.codescene.jetbrains.services.cache.DeltaCacheService
 import com.codescene.jetbrains.util.Log
@@ -25,6 +26,8 @@ import com.intellij.openapi.project.Project
  * correct serializer is used.
  */
 fun updateMonitor(project: Project) {
+    if (!RuntimeFlags.cwfFeature) return
+
     Log.info("Updating monitor for project '${project.name}'...")
 
     val mapper = CodeHealthMonitorMapper.getInstance(project)

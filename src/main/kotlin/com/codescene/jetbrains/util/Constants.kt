@@ -46,6 +46,7 @@ object Constants {
     const val ACE = "ace"
 
     const val INFO_NOTIFICATION_GROUP = "CodeScene Information"
+    const val ERROR_NOTIFICATION_GROUP = "CodeScene Error"
 
     // ACE constants
     const val ACE_ACKNOWLEDGEMENT_FILE = "ace-info.md"
