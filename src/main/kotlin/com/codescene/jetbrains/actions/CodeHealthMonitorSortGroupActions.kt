@@ -4,6 +4,7 @@ import com.codescene.jetbrains.CodeSceneIcons
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.config.global.MonitorTreeSortOptions
+import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionUpdateThread
@@ -28,7 +29,7 @@ abstract class SortByMonitorOption(
     override fun update(event: AnActionEvent) {
         super.update(event)
         val presentation = event.presentation
-        presentation.isEnabledAndVisible = CodeSceneGlobalSettingsStore.getInstance().state.codeHealthMonitorEnabled
+        presentation.isEnabledAndVisible = CodeSceneGlobalSettingsStore.getInstance().state.codeHealthMonitorEnabled && !RuntimeFlags.cwfFeature
     }
 
     override fun getActionUpdateThread() = ActionUpdateThread.BGT

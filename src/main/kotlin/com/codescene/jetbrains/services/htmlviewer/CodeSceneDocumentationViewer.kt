@@ -13,6 +13,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.testFramework.LightVirtualFile
 
 enum class DocsEntryPoint(val value: String) {
+    ACTION("action"),
     CODE_VISION("codelens (review)"),
     INTENTION_ACTION("diagnostic-item"),
     CODE_HEALTH_DETAILS("code-health-details")

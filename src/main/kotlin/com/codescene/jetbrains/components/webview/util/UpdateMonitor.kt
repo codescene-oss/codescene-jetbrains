@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.components.webview.util
 
+import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW
 import com.codescene.jetbrains.components.webview.data.CwfData
 import com.codescene.jetbrains.components.webview.data.View
 import com.codescene.jetbrains.components.webview.data.view.HomeData
@@ -10,7 +11,6 @@ import com.codescene.jetbrains.services.cache.DeltaCacheService
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.UpdateToolWindowIconParams
 import com.codescene.jetbrains.util.updateToolWindowIcon
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
 
 /**
@@ -39,8 +39,8 @@ fun updateMonitor(project: Project) {
     updateToolWindowIcon(
         UpdateToolWindowIconParams(
             project = project,
-            toolWindowId = "CodeSceneHome", // TODO: update
-            baseIcon = AllIcons.Actions.Lightning, // TODO: update
+            baseIcon = CODESCENE_TW,
+            toolWindowId = "CodeSceneCwf", // TODO: change to "CodeScene" after making CWF publicly available.
             hasNotification = deltaResults.isNotEmpty()
         )
     )
