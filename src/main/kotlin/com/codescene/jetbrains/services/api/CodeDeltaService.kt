@@ -5,16 +5,18 @@ import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.data.delta.Delta
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.components.webview.util.updateMonitor
+import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.cache.DeltaCacheEntry
 import com.codescene.jetbrains.services.cache.DeltaCacheService
-import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.CODESCENE
-import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.Constants.DELTA
+import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.TelemetryEvents
+import com.codescene.jetbrains.util.getTelemetryInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
@@ -37,8 +39,9 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
         reviewFile(editor) {
             performDeltaAnalysis(editor)
 
-            project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC)
-                .refresh(editor.virtualFile) // TODO: remove, old CHM implementation
+            if (!RuntimeFlags.cwfFeature)
+                project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC)
+                    .refresh(editor.virtualFile) // TODO: remove, old CHM implementation
         }
     }
 
