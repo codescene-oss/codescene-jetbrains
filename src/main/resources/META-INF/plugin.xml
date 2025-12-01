@@ -66,9 +66,10 @@
                 icon="com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW"
                 factoryClass="com.codescene.jetbrains.components.window.CodeSceneToolWindowFactory"/>
 
+        <!-- TODO: replace CodeSceneCwf with CodeScene once CWF is rolled out publicly.-->
         <toolWindow
-                id="CodeSceneHome"
-                icon="AllIcons.Actions.Lightning"
+                id="CodeSceneCwf"
+                icon="com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW"
                 factoryClass="com.codescene.jetbrains.components.window.HomeToolWindowFactory"/>
 
         <!-- An empty language attribute applies to all languages -->
