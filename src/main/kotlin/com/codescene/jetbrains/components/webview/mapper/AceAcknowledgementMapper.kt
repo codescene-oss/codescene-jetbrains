@@ -8,6 +8,7 @@ import com.codescene.jetbrains.components.webview.data.shared.Fn
 import com.codescene.jetbrains.components.webview.data.shared.RangeCamelCase
 import com.codescene.jetbrains.components.webview.data.view.AceAcknowledgeData
 import com.codescene.jetbrains.components.webview.util.OpenAceAcknowledgementParams
+import com.codescene.jetbrains.flag.RuntimeFlags
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 
@@ -20,7 +21,7 @@ class AceAcknowledgementMapper {
 
     fun toCwfData(params: OpenAceAcknowledgementParams, pro: Boolean = false): CwfData<AceAcknowledgeData> = CwfData(
         pro = pro,
-        devmode = System.getProperty("cwfIsDevMode")?.toBoolean() ?: false,
+        devmode = RuntimeFlags.isDevMode,
         view = View.ACE_ACKNOWLEDGE.value,
         data = AceAcknowledgeData(
             fileData = FileMetaType(
