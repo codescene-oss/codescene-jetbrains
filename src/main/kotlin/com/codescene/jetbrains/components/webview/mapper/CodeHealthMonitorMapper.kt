@@ -7,6 +7,7 @@ import com.codescene.jetbrains.components.webview.data.shared.AutoRefactorConfig
 import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
 import com.codescene.jetbrains.components.webview.data.shared.Range
 import com.codescene.jetbrains.components.webview.data.view.*
+import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheQuery
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
 import com.codescene.jetbrains.services.cache.DeltaCacheItem
@@ -28,7 +29,7 @@ class CodeHealthMonitorMapper(private val project: Project) {
         pro: Boolean = true,
     ): CwfData<HomeData> = CwfData(
         pro = pro,
-        devmode = System.getProperty("cwfIsDevMode")?.toBoolean() ?: false,
+        devmode = RuntimeFlags.isDevMode,
         view = View.HOME.value,
         data = HomeData(
             signedIn = true,

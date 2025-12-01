@@ -10,13 +10,16 @@ import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
 import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.util.nameDocMap
 import com.codescene.jetbrains.components.webview.util.openDocs
-import com.codescene.jetbrains.featureflag.FeatureFlagManager
+import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
 import com.codescene.jetbrains.services.htmlviewer.DocumentationParams
-import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
+import com.codescene.jetbrains.util.HealthDetails
+import com.codescene.jetbrains.util.getCachedDelta
+import com.codescene.jetbrains.util.getCodeHealth
+import com.codescene.jetbrains.util.selectNode
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.openapi.editor.Editor
@@ -72,7 +75,7 @@ internal class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
 
     override fun handleLensClick(editor: Editor, codeSmell: CodeVisionCodeSmell) {
         editor.project?.let {
-            if (FeatureFlagManager.isEnabled(Constants.CWF_FLAG))
+            if (RuntimeFlags.cwfFeature)
                 handleOpenCwfDocs(editor)
             else
                 handleOpenNativeDocs(editor)

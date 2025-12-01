@@ -8,6 +8,7 @@ import com.codescene.jetbrains.components.webview.data.view.AceData
 import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.data.view.HomeData
 import com.codescene.jetbrains.components.webview.util.StyleHelper
+import com.codescene.jetbrains.flag.RuntimeFlags
 import com.intellij.ide.ui.LafManager
 import com.intellij.ide.ui.LafManagerListener
 import com.intellij.openapi.application.ApplicationManager
@@ -159,7 +160,7 @@ class WebViewInitializer : LafManagerListener {
         view: View,
         isPro: Boolean
     ): String {
-        val isDevMode = System.getProperty("cwfIsDevMode")?.toBoolean() ?: false
+        val isDevMode = RuntimeFlags.isDevMode
 
         val json = Json {
             encodeDefaults = true

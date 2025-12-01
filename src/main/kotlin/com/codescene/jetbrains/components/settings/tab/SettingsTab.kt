@@ -2,6 +2,7 @@ package com.codescene.jetbrains.components.settings.tab
 
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.services.api.AceService
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
@@ -37,7 +38,7 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                     checkBox("Ace acknowledged")
                         .bindSelected(settings::aceAcknowledged)
                         .comment("For testing purposes. This should only be visible when cwfIsDevMode is enabled.")
-                        .visible(System.getProperty("cwfIsDevMode")?.toBoolean() ?: false)
+                        .visible(RuntimeFlags.isDevMode)
                 }
 
                 row {
