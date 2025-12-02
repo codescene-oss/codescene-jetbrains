@@ -156,7 +156,7 @@ The generated file is packaged inside the plugin. At runtime, the plugin reads t
 To test feature flags locally using the JetBrains Gradle plugin, pass the flags when launching the sandboxed IDE:
 
 ```bash
-./gradlew runIde -PFEATURE_CWF=true -PcwfIsDevMode=true
+./gradlew runIde -PFEATURE_CWF=true -PFEATURE_CWF_DEVMODE=true
 ```
 
 ### Using feature flags when building the plugin (buildPlugin)
@@ -164,7 +164,7 @@ To test feature flags locally using the JetBrains Gradle plugin, pass the flags 
 Feature flags can also be set during the plugin build so that the resulting plugin artifact contains the desired configuration. For example:
 
 ```bash
-./gradlew buildPlugin -PFEATURE_CWF=true -PcwfIsDevMode=false
+./gradlew buildPlugin -PFEATURE_CWF=true -PFEATURE_CWF_DEVMODE=false
 ```
 
 If a property is not provided, it defaults to false.
