@@ -159,8 +159,7 @@ tasks {
     runIde {
         classpath += sourceSets["main"].runtimeClasspath
 
-        val devMode = (project.properties["FEATURE_CWF_DEVMODE"]?.toString()?.toBoolean()
-            ?: (System.getenv("CI") != "true"))
+        val devMode = project.properties["FEATURE_CWF_DEVMODE"]?.toString()?.toBoolean() ?: false
         val featureCwf = project.properties["FEATURE_CWF"]?.toString()?.toBoolean() ?: false
 
         systemProperty("FEATURE_CWF_DEVMODE", devMode)

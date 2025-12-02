@@ -134,6 +134,47 @@ To fetch the latest CWF necessary for **local** development, run the following c
 
 **Note:** Access to the CWF repository requires appropriate permissions.
 
+## Feature Flags
+
+This plugin supports simple feature flags that can be controlled at build time or when running the plugin in the IDE sandbox. 
+Feature flags allow you to enable or disable experimental functionality without modifying the source code.
+
+### How feature flags work
+
+Feature flags are defined in `src/main/resources/feature-flags.properties` using placeholders, for example:
+
+```
+feature.cwf=${FEATURE_CWF}
+```
+
+During the build, Gradle replaces these placeholders with actual values. This is done in the `processResources` task.
+
+The generated file is packaged inside the plugin. At runtime, the plugin reads these values using the `RuntimeFlags` object.
+
+### Using feature flags during development (runIde)
+
+To test feature flags locally using the JetBrains Gradle plugin, pass the flags when launching the sandboxed IDE:
+
+```bash
+./gradlew runIde -PFEATURE_CWF=true -PcwfIsDevMode=true
+```
+
+### Using feature flags when building the plugin (buildPlugin)
+
+Feature flags can also be set during the plugin build so that the resulting plugin artifact contains the desired configuration. For example:
+
+```bash
+./gradlew buildPlugin -PFEATURE_CWF=true -PcwfIsDevMode=false
+```
+
+If a property is not provided, it defaults to false.
+
+| Flag name           | Description                                                                        |
+|---------------------|------------------------------------------------------------------------------------|
+| FEATURE_CWF         | Enables the new UI (Centralized Webiews Framework).                                |
+| FEATURE_CWF_DEVMODE | Allows easier debugging of CWF payloads, enables opening devtools in the webviews. |
+
+
 ## Project structure
 
 The CodeScene project has the following content structure:
