@@ -77,7 +77,7 @@ jobs:
 
       # Build plugin
       - name: Build plugin
-        run: ./gradlew buildPlugin
+        run: ./gradlew buildPlugin -PFEATURE_CWF=${{ secrets.FEATURE_CWF }}
 
       # Prepare plugin archive content for creating artifact
       - name: Prepare Plugin Artifact
