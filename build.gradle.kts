@@ -205,7 +205,7 @@ tasks.processResources {
     filesMatching("feature-flags.properties") {
         expand(
             "FEATURE_CWF" to (project.properties["FEATURE_CWF"] ?: "false"),
-            "cwfIsDevMode" to (project.properties["FEATURE_CWF_DEVMODE"] ?: "false")
+            "FEATURE_CWF_DEVMODE" to (project.properties["FEATURE_CWF_DEVMODE"] ?: "false")
         )
     }
 }
