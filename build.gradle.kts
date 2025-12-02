@@ -159,11 +159,11 @@ tasks {
     runIde {
         classpath += sourceSets["main"].runtimeClasspath
 
-        val devMode = (project.properties["cwfIsDevMode"]?.toString()?.toBoolean()
+        val devMode = (project.properties["FEATURE_CWF_DEVMODE"]?.toString()?.toBoolean()
             ?: (System.getenv("CI") != "true"))
         val featureCwf = project.properties["FEATURE_CWF"]?.toString()?.toBoolean() ?: false
 
-        systemProperty("cwfIsDevMode", devMode)
+        systemProperty("FEATURE_CWF_DEVMODE", devMode)
         systemProperty("FEATURE_CWF", featureCwf)
     }
 
@@ -196,6 +196,17 @@ intellijPlatformTesting {
                 robotServerPlugin()
             }
         }
+    }
+}
+
+// Replace placeholders in feature-flags.properties with actual Gradle properties
+// so that the plugin can read configured flags at runtime.
+tasks.processResources {
+    filesMatching("feature-flags.properties") {
+        expand(
+            "FEATURE_CWF" to (project.properties["FEATURE_CWF"] ?: "false"),
+            "cwfIsDevMode" to (project.properties["FEATURE_CWF_DEVMODE"] ?: "false")
+        )
     }
 }
 

@@ -37,7 +37,7 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                 row {
                     checkBox("Ace acknowledged")
                         .bindSelected(settings::aceAcknowledged)
-                        .comment("For testing purposes. This should only be visible when cwfIsDevMode is enabled.")
+                        .comment("For testing purposes. This should only be visible when FEATURE_CWF_DEVMODE is enabled.")
                         .visible(RuntimeFlags.isDevMode)
                 }
 
