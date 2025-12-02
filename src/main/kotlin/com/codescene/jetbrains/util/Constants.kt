@@ -116,5 +116,6 @@ object Constants {
 
     // Feature flags
     const val CWF_FLAG = "FEATURE_CWF"
+    const val CWF_DEVMODE_FLAG = "FEATURE_CWF_DEVMODE"
     const val ACE_FLAG = "FEATURE_ACE"
 }
