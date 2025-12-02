@@ -174,6 +174,7 @@ tasks {
     buildPlugin {
         dependsOn("fetchCwf")
         dependsOn("fetchDocs")
+        dependsOn("processResources")
     }
 }
 
@@ -201,10 +202,26 @@ intellijPlatformTesting {
 // Replace placeholders in feature-flags.properties with actual Gradle properties
 // so that the plugin can read configured flags at runtime.
 tasks.processResources {
+    // Only use properties if explicitly set via -P flag, default to "false" otherwise
+    val cwfProperty = project.findProperty("FEATURE_CWF")
+    val cwfDevmodeProperty = project.findProperty("FEATURE_CWF_DEVMODE")
+
+    // Include properties as inputs so cache is invalidated when they change
+    inputs.property("FEATURE_CWF", cwfProperty ?: "false")
+    inputs.property("FEATURE_CWF_DEVMODE", cwfDevmodeProperty ?: "false")
+    
     filesMatching("feature-flags.properties") {
+        val featureCwf = cwfProperty?.let { cwf ->
+            cwf.toString().takeIf { it.isNotBlank() } ?: "false"
+        } ?: "false"
+
+        val featureCwfDevMode = cwfDevmodeProperty?.let { devMode ->
+            devMode.toString().takeIf { it.isNotBlank() } ?: "false"
+        } ?: "false"
+
         expand(
-            "FEATURE_CWF" to (project.properties["FEATURE_CWF"] ?: "false"),
-            "FEATURE_CWF_DEVMODE" to (project.properties["FEATURE_CWF_DEVMODE"] ?: "false")
+            "FEATURE_CWF" to featureCwf,
+            "FEATURE_CWF_DEVMODE" to featureCwfDevMode
         )
     }
 }
