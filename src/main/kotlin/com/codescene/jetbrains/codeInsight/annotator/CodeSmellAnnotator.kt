@@ -6,6 +6,7 @@ import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
 import com.codescene.jetbrains.codeInsight.intentions.AceRefactorAction
 import com.codescene.jetbrains.codeInsight.intentions.ShowProblemIntentionAction
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
 import com.codescene.jetbrains.services.cache.ReviewCacheService
 import com.codescene.jetbrains.util.*
@@ -84,7 +85,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
         Log.debug("Creating annotation for code smell '${codeSmell.category}' at range: $range")
 
         val aceAvailable =
-            settings.aceEnabled && settings.enableAutoRefactor && settings.aceAuthToken.trim().isNotEmpty()
+            RuntimeFlags.aceFeature && settings.enableAutoRefactor && settings.aceAuthToken.trim().isNotEmpty()
         val function = if (aceAvailable)
             getRefactorableFunction(codeSmell, refactorableFunctions)
         else null
