@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.actions
 
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
@@ -16,6 +17,7 @@ class CollapseAllAction : AnAction() {
     override fun update(e: AnActionEvent) {
         super.update(e)
         val presentation = e.presentation
-        presentation.isEnabled = CodeSceneGlobalSettingsStore.getInstance().state.codeHealthMonitorEnabled
+        presentation.isEnabled =
+            CodeSceneGlobalSettingsStore.getInstance().state.codeHealthMonitorEnabled && !RuntimeFlags.cwfFeature
     }
 }
