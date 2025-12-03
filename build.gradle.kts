@@ -161,9 +161,11 @@ tasks {
 
         val devMode = project.properties["FEATURE_CWF_DEVMODE"]?.toString()?.toBoolean() ?: false
         val featureCwf = project.properties["FEATURE_CWF"]?.toString()?.toBoolean() ?: false
+        val featureACE = project.properties["FEATURE_ACE"]?.toString()?.toBoolean() ?: false
 
         systemProperty("FEATURE_CWF_DEVMODE", devMode)
         systemProperty("FEATURE_CWF", featureCwf)
+        systemProperty("FEATURE_ACE", featureACE)
     }
 
     register<JavaExec>("run") {
@@ -203,10 +205,12 @@ intellijPlatformTesting {
 // so that the plugin can read configured flags at runtime.
 tasks.processResources {
     // Only use properties if explicitly set via -P flag, default to "false" otherwise
+    val aceProperty = project.findProperty("FEATURE_ACE")
     val cwfProperty = project.findProperty("FEATURE_CWF")
     val cwfDevmodeProperty = project.findProperty("FEATURE_CWF_DEVMODE")
 
     // Include properties as inputs so cache is invalidated when they change
+    inputs.property("FEATURE_ACE", aceProperty ?: "false")
     inputs.property("FEATURE_CWF", cwfProperty ?: "false")
     inputs.property("FEATURE_CWF_DEVMODE", cwfDevmodeProperty ?: "false")
     
@@ -219,7 +223,12 @@ tasks.processResources {
             devMode.toString().takeIf { it.isNotBlank() } ?: "false"
         } ?: "false"
 
+        val featureAce = aceProperty?.let { ace ->
+            ace.toString().takeIf { it.isNotBlank() } ?: "false"
+        } ?: "false"
+
         expand(
+            "FEATURE_ACE" to featureAce,
             "FEATURE_CWF" to featureCwf,
             "FEATURE_CWF_DEVMODE" to featureCwfDevMode
         )
