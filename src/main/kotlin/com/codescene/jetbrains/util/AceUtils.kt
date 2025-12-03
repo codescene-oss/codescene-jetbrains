@@ -51,14 +51,14 @@ data class RefactoringParams(
 )
 
 fun handleAceEntryPoint(params: RefactoringParams) {
-    val (project, editor, function, _, skipCache) = params
+    val (_, editor, function, _, skipCache) = params
 
     function ?: return
     editor ?: return
 
     val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
-    if (!settings.enableAutoRefactor || !settings.aceEnabled) {
+    if (!settings.enableAutoRefactor || !RuntimeFlags.aceFeature) {
         Log.warn("Cannot use ACE as it is disabled.")
         return
     }
