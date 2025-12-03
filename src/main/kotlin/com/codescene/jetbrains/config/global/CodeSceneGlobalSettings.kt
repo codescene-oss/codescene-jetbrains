@@ -29,8 +29,7 @@ data class CodeSceneGlobalSettings(
     var excludeGitignoreFiles: Boolean = true,
     var previewCodeHealthGate: Boolean = false,
     var telemetryConsentGiven: Boolean = false,
-    val aceEnabled: Boolean = true, //Freemium version flag TODO: move somewhere else
-    val codeHealthMonitorEnabled: Boolean = true, //Freemium version flag TODO: move somewhere else
+    val codeHealthMonitorEnabled: Boolean = true, //This is a freemium flag for the Code Health Monitor. If a proper CHM feature flag becomes necessary, use the same approach as ACE and CWF. If not, //TODO delete this after the integration with core is complete.
     var monitorTreeSortOption: MonitorTreeSortOptions = MonitorTreeSortOptions.SCORE_ASCENDING
 ) {
     var aceStatus: AceStatus by aceStatusDelegate()
