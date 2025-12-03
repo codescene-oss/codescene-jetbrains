@@ -4,6 +4,7 @@ import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_ACE
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.notifier.AceStatusRefreshNotifier
 import com.codescene.jetbrains.services.api.AceService
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
@@ -58,12 +59,10 @@ class GeneralTab : Configurable {
     )
 
     override fun createComponent(): JPanel {
-        val settings = CodeSceneGlobalSettingsStore.getInstance().state
-
         return JPanel().apply {
             layout = BorderLayout()
 
-            if (settings.aceEnabled) add(getAceSection(), BorderLayout.NORTH)
+            if (RuntimeFlags.aceFeature) add(getAceSection(), BorderLayout.NORTH)
             add(getMoreSection(), BorderLayout.CENTER)
         }
     }

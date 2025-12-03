@@ -6,6 +6,7 @@
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$" />
       <option name="externalSystemIdString" value="GRADLE" />
+      <option name="scriptParameters" value="-PFEATURE_CWF=true -PFEATURE_CWF_DEVMODE=true -PFEATURE_ACE=false" />
       <option name="taskDescriptions">
         <list />
       </option>

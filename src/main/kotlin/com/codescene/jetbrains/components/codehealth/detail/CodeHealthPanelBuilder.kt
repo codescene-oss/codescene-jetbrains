@@ -7,6 +7,7 @@ import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.detail.slider.CustomSlider
 import com.codescene.jetbrains.components.layout.ResponsiveLayout
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_URL
 import com.intellij.ide.ui.laf.darcula.ui.OnboardingDialogButtons
@@ -33,7 +34,7 @@ class CodeHealthPanelBuilder(private val project: Project) {
     fun getPanel(details: CodeHealthDetails) = JPanel().apply {
         val settings = CodeSceneGlobalSettingsStore.getInstance().state
         val aceAvailable =
-            settings.aceEnabled && settings.enableAutoRefactor && settings.aceAuthToken.trim().isNotEmpty()
+            RuntimeFlags.aceFeature && settings.enableAutoRefactor && settings.aceAuthToken.trim().isNotEmpty()
         Log.debug("Rendering panel for $details...", service)
 
         val isCodeHealth = details.type == CodeHealthDetailsType.HEALTH
