@@ -45,7 +45,6 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                     checkBox(UiLabelsBundle.message("enableAutoRefactor"))
                         .bindSelected(settings::enableAutoRefactor)
                         .comment(UiLabelsBundle.message("enableAutoRefactorComment"))
-                        .visible(settings.aceEnabled)
                 }
 
                 row(UiLabelsBundle.message("aceAuthToken")) {
@@ -55,7 +54,7 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                         .comment(UiLabelsBundle.message("aceAuthTokenComment"))
                         .bindText(settings::aceAuthToken)
                 }
-            }
+            }.visible(RuntimeFlags.aceFeature)
 
             groupRowsRange(UiLabelsBundle.message("cloudConnection")) { //TODO: verify naming of this section, currently just a placeholder
                 row(UiLabelsBundle.message("serverUrl")) {
