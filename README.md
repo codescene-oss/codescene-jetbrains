@@ -124,7 +124,7 @@ To fetch the latest documentation for local development, run the following comma
 
 ## Webview Framework (CWF) management
 
-The Common Webviews Framework (CWF) used by the extension, which provides shared webview components across all supported IDEs, is maintained in a private repository.
+The Centralized Webviews Framework (CWF) used by the extension, which provides shared webview components across all supported IDEs, is maintained in a private repository.
 
 To fetch the latest CWF necessary for **local** development, run the following command:
 
