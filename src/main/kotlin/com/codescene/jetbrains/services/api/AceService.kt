@@ -52,7 +52,7 @@ class AceService : BaseService(), Disposable {
     }
 
     suspend fun runPreflight(force: Boolean = false) =
-        if (CodeSceneGlobalSettingsStore.getInstance().state.enableAutoRefactor) {
+        if (RuntimeFlags.aceFeature && CodeSceneGlobalSettingsStore.getInstance().state.enableAutoRefactor) {
             getPreflight(force)
         } else {
             CodeSceneGlobalSettingsStore.getInstance().state.aceStatus = AceStatus.DEACTIVATED
@@ -73,10 +73,17 @@ class AceService : BaseService(), Disposable {
                 if (force) handleAceStatusChange(getActivatedAceStatus())
                 result
             } catch (e: Exception) {
-                val newStatus = if (e is java.net.ConnectException) AceStatus.OFFLINE else AceStatus.ERROR
+                val newStatus = when {
+                    e is java.net.ConnectException || e is java.net.http.HttpTimeoutException -> AceStatus.OFFLINE
+                    else -> AceStatus.ERROR
+                }
                 handleAceStatusChange(newStatus)
 
-                Log.error("Error during preflight info fetching. Error message: ${e.message}", serviceImplementation)
+                if (newStatus == AceStatus.OFFLINE) {
+                    Log.warn("Preflight request timed out or connection failed. Error message: ${e.message}", serviceImplementation)
+                } else {
+                    Log.error("Error during preflight info fetching. Error message: ${e.message}", serviceImplementation)
+                }
                 null
             }
         }
