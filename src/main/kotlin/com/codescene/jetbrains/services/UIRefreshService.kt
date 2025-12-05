@@ -3,6 +3,7 @@ package com.codescene.jetbrains.services
 import com.codescene.jetbrains.util.Log
 import com.intellij.codeInsight.codeVision.CodeVisionHost
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
+import com.intellij.openapi.application.WriteIntentReadAction
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -50,15 +51,20 @@ class UIRefreshService(private val project: Project) {
         codeVisionHost.invalidateProvider(invalidateSignal)
     }
 
-
-    suspend fun refreshAnnotations(editor: Editor) =
+    suspend fun refreshAnnotations(editor: Editor): Unit? =
         withContext(Dispatchers.IO) {
             val psiFile = runReadAction { editor.virtualFile.findPsiFile(project) } ?: return@withContext
 
             Log.info("Refreshing external annotations in file: ${psiFile.name}")
 
             withContext(Dispatchers.Main) {
-                DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
+                try {
+                    WriteIntentReadAction.compute<Unit, RuntimeException> {
+                        DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
+                    }
+                } catch (e: Exception) {
+                    Log.warn("Failed to refresh annotations for file: ${psiFile.name}. Error: ${e.message}")
+                }
             }
         }
 }

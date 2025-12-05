@@ -322,11 +322,11 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         val column = message.fn?.range?.startColumn ?: 0
 
         ApplicationManager.getApplication().executeOnPooledThread {
-            val file = LocalFileSystem.getInstance().findFileByPath(filePath)
-            file?.let {
-                ApplicationManager.getApplication().invokeLater {
-                    OpenFileDescriptor(project, file, line, column).navigate(true)
-                }
+            val file = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return@executeOnPooledThread
+            val descriptor = OpenFileDescriptor(project, file, line, column)
+
+            ApplicationManager.getApplication().invokeLater {
+                descriptor.navigate(true)
             }
         }
     }
