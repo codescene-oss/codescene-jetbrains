@@ -6,7 +6,6 @@ import com.codescene.data.ace.RefactoringOptions
 import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.UiLabelsBundle
-import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
 import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
 import com.codescene.jetbrains.components.webview.util.*
 import com.codescene.jetbrains.config.global.AceStatus
@@ -144,10 +143,10 @@ fun handleOpenAceWindow(params: AceCwfParams, editor: Editor) {
     }
 }
 
-fun getRefactorableFunction(codeSmell: CodeVisionCodeSmell, refactorableFunctions: List<FnToRefactor>) =
+fun getRefactorableFunction(category: String, startLine: Int, refactorableFunctions: List<FnToRefactor>) =
     refactorableFunctions.find { function ->
         function.refactoringTargets.any { target ->
-            target.category == codeSmell.category && target.line == codeSmell.highlightRange.startLine
+            target.category == category && target.line == startLine
         }
     }
 

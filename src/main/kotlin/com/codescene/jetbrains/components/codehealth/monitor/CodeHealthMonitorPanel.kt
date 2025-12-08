@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.components.codehealth.monitor
 
-import com.codescene.data.delta.Delta
 import com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.FreemiumPlaceholder
@@ -8,6 +7,7 @@ import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthTree
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.GitService
+import com.codescene.jetbrains.services.api.deltamodels.NativeDelta
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
@@ -57,7 +57,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
             }
         }
     }
-    val healthMonitoringResults: ConcurrentHashMap<String, Delta> = ConcurrentHashMap()
+    val healthMonitoringResults: ConcurrentHashMap<String, NativeDelta> = ConcurrentHashMap()
 
     companion object {
         fun getInstance(project: Project): CodeHealthMonitorPanel = project.service<CodeHealthMonitorPanel>()
@@ -181,7 +181,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
        TODO: provide additional data nRefactorableFunctions to add and update telemetry events,
         when refactoring logic available
     */
-    private fun updateAndSendTelemetry(path: String, cachedDelta: Delta) {
+    private fun updateAndSendTelemetry(path: String, cachedDelta: NativeDelta) {
         val numberOfIssues = cachedDelta.fileLevelFindings.size + cachedDelta.functionLevelFindings.size
 
         val telemetryEvent = if (healthMonitoringResults[path] != null)
@@ -191,7 +191,7 @@ class CodeHealthMonitorPanel(private val project: Project) {
 
         TelemetryService.getInstance().logUsage(
             telemetryEvent, mutableMapOf<String, Any>(
-                Pair("scoreChange", cachedDelta.scoreChange),
+                Pair("scoreChange", cachedDelta.scoreChange ?: 0),
                 Pair("nIssues", numberOfIssues)
             )
         )

@@ -1,19 +1,18 @@
 package com.codescene.jetbrains.util
 
-import com.codescene.data.delta.ChangeDetail
-import com.codescene.data.delta.Delta
-import com.codescene.data.delta.Function
-import com.codescene.data.delta.Range
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.components.codehealth.monitor.tree.NodeType
+import com.codescene.jetbrains.services.api.deltamodels.DeltaChangeDetail
+import com.codescene.jetbrains.services.api.deltamodels.DeltaFunction
+import com.codescene.jetbrains.services.api.deltamodels.NativeDelta
 import com.intellij.openapi.util.text.StringUtil.pluralize
 import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
 
-fun getHealthFinding(filePath: String, delta: Delta): CodeHealthFinding {
-    val oldScore = delta.oldScore.orElse(null)
-    val newScore = delta.newScore.orElse(null)
+fun getHealthFinding(filePath: String, delta: NativeDelta): CodeHealthFinding {
+    val oldScore = delta.oldScore
+    val newScore = delta.newScore
     val healthDetails = HealthDetails(oldScore, newScore)
     val (change, percentage) = getCodeHealth(healthDetails)
 
@@ -33,7 +32,7 @@ private fun resolveHealthNodeType(oldScore: Double?, newScore: Double?): NodeTyp
     else NodeType.CODE_HEALTH_INCREASE
 }
 
-fun getFileFinding(filePath: String, result: ChangeDetail): CodeHealthFinding {
+fun getFileFinding(filePath: String, result: DeltaChangeDetail): CodeHealthFinding {
     val positiveChange = isPositiveChange(result.changeType)
 
     return CodeHealthFinding(
@@ -44,17 +43,17 @@ fun getFileFinding(filePath: String, result: ChangeDetail): CodeHealthFinding {
     )
 }
 
-fun getFunctionFinding(filePath: String, function: Function, details: List<ChangeDetail>) = CodeHealthFinding(
+fun getFunctionFinding(filePath: String, function: DeltaFunction?, details: List<DeltaChangeDetail>) = CodeHealthFinding(
     tooltip = getFunctionDeltaTooltip(function, details),
     filePath,
-    displayName = function.name,
-    focusLine = function.range?.orElse(Range(1, 1, 1, 1))?.startLine,
+    displayName = function?.name ?: "",
+    focusLine = function?.range?.startLine ?: 0,
     nodeType = NodeType.FUNCTION_FINDING,
     functionFindingIssues = details.size
 )
 
-fun getRootNode(filePath: String, delta: Delta): CodeHealthFinding {
-    val (_, percentage) = getCodeHealth(HealthDetails(delta.oldScore.orElse(null), delta.newScore.orElse(null)))
+fun getRootNode(filePath: String, delta: NativeDelta): CodeHealthFinding {
+    val (_, percentage) = getCodeHealth(HealthDetails(delta.oldScore, delta.newScore))
 
     val count = delta.functionLevelFindings.flatMap { it.changeDetails }.count { canBeImproved(it.changeType) } +
             delta.fileLevelFindings.count { canBeImproved(it.changeType) }

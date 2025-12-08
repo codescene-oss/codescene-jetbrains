@@ -29,8 +29,8 @@ data class DeltaFunctionFinding(
 )
 
 data class NativeDelta(
-    val oldScore: Double?,
-    val newScore: Double?,
+    val oldScore: Double,
+    val newScore: Double,
     val scoreChange: Double?,
     val fileLevelFindings: List<DeltaChangeDetail>,
     val functionLevelFindings: List<DeltaFunctionFinding>

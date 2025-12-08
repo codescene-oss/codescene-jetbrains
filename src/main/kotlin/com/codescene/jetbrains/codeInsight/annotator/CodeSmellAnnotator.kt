@@ -88,7 +88,7 @@ internal class CodeSmellAnnotator : ExternalAnnotator<
         val aceAvailable =
             RuntimeFlags.aceFeature && settings.enableAutoRefactor && settings.aceAuthToken.trim().isNotEmpty()
         val function = if (aceAvailable)
-            getRefactorableFunction(codeSmell, refactorableFunctions)
+            getRefactorableFunction(codeSmell.category, codeSmell.highlightRange.startLine, refactorableFunctions)
         else null
 
         val annotationBuilder = holder.newAnnotation(HighlightSeverity.WARNING, message)

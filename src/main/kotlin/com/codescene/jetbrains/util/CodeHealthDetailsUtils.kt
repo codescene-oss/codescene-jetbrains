@@ -2,7 +2,6 @@ package com.codescene.jetbrains.util
 
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.delta.ChangeDetail
-import com.codescene.data.delta.Delta
 import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Range
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH_DECREASE
@@ -13,6 +12,9 @@ import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL_FOUND
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.components.codehealth.monitor.tree.NodeType
+import com.codescene.jetbrains.services.api.deltamodels.DeltaChangeDetail
+import com.codescene.jetbrains.services.api.deltamodels.NativeDelta
+import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
 import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
 import com.codescene.jetbrains.services.htmlviewer.DocumentationParams
@@ -116,11 +118,11 @@ private fun <T> extractUsingRegex(input: String, regex: Regex, extractor: (Match
     else null
 }
 
-private fun resolveStatus(delta: Delta, type: NodeType, percentage: String) =
+private fun resolveStatus(delta: NativeDelta, type: NodeType, percentage: String) =
     when (type) {
         NodeType.CODE_HEALTH_NEUTRAL -> ""
-        NodeType.CODE_HEALTH_INCREASE -> if (delta.newScore.isPresent) "Increased to ${round(delta.newScore.get())} $percentage" else ""
-        NodeType.CODE_HEALTH_DECREASE -> if (delta.oldScore.isPresent) "Declined from ${round(delta.oldScore.get())} $percentage" else ""
+        NodeType.CODE_HEALTH_INCREASE -> "Increased to ${round(delta.newScore)} $percentage"
+        NodeType.CODE_HEALTH_DECREASE -> "Declined from ${round(delta.oldScore)} $percentage"
 
         else -> throw IllegalArgumentException("Unexpected node type: $type")
     }
@@ -156,10 +158,10 @@ private fun resolveCodeHealthHeader(type: NodeType, newScore: Double?, oldScore:
 private fun getHealthFinding(
     file: Pair<String, String>?,
     finding: CodeHealthFinding,
-    delta: Delta
+    delta: NativeDelta
 ): CodeHealthDetails {
-    val oldScore = delta.oldScore.orElse(null)
-    val newScore = delta.newScore.orElse(null)
+    val oldScore = delta.oldScore
+    val newScore = delta.newScore
 
     val healthHeader = resolveCodeHealthHeader(finding.nodeType, newScore, oldScore)
 
@@ -170,7 +172,7 @@ private fun getHealthFinding(
         healthData = HealthData(
             healthHeader.subText,
             resolveStatus(delta, finding.nodeType, percentage = finding.additionalText),
-            if (delta.newScore.isPresent) round(delta.newScore.get()).toString() else "N/A"
+            round(delta.newScore).toString()
         ),
         body = listOf(
             Paragraph(
@@ -189,15 +191,15 @@ fun isPositiveChange(changeType: ChangeDetail.ChangeType) =
 fun canBeImproved(changeType: ChangeDetail.ChangeType) =
     changeType == ChangeDetail.ChangeType.DEGRADED || changeType == ChangeDetail.ChangeType.INTRODUCED || changeType == ChangeDetail.ChangeType.IMPROVED
 
-private fun getFunctionFindingBody(changeDetails: List<ChangeDetail>?, finding: CodeHealthFinding) =
+private fun getFunctionFindingBody(changeDetails: List<DeltaChangeDetail>?, finding: CodeHealthFinding) =
     changeDetails?.map { it ->
         val change = it.changeType.value().replaceFirstChar { it.uppercaseChar() }
         val body = it.description.replace(finding.displayName, "<code>${finding.displayName}</code>")
 
         val range = if (it.line != null) Range(
-            it.line.get(),
+            it.line,
             0,
-            it.line.get(),
+            it.line,
             0
         ) else null
         val codeSmell = CodeSmell(it.category, range, it.description)
@@ -221,18 +223,22 @@ fun isMatchingFinding(displayName: String, focusLine: Int?, finding: CodeHealthF
 private fun getFunctionFinding(
     file: Pair<String, String>?,
     finding: CodeHealthFinding,
-    delta: Delta,
+    delta: NativeDelta,
     project: Project
 ): CodeHealthDetails {
     val changeDetails = delta.functionLevelFindings
         .find {
             isMatchingFinding(
-                it.function.name,
-                it.function.range?.orElse(com.codescene.data.delta.Range(1, 1, 1, 1))?.startLine,
+                it.function?.name ?: "",
+                it.function?.range?.startLine,
                 finding
             )
         }?.changeDetails
-    val labelAndIcon = if (changeDetails?.count { !isPositiveChange(it.changeType) } ?: 0 >= 1)
+    val refactorableFunctions = AceRefactorableFunctionsCacheService.getInstance(project)
+        .getAll()
+        .find { it.first == finding.filePath }
+        ?.second?.result ?: emptyList()
+    val labelAndIcon = if ((changeDetails?.count { !isPositiveChange(it.changeType) } ?: 0) >= 1)
         "Improvement opportunity" to AllIcons.Nodes.WarningIntroduction
     else
         "Issue(s) fixed" to CODE_SMELL_FIXED
@@ -248,7 +254,9 @@ private fun getFunctionFinding(
         ),
         body = getFunctionFindingBody(changeDetails, finding),
         type = CodeHealthDetailsType.FUNCTION,
-        refactorableFunction = getRefactorableFunction(finding, project)
+        refactorableFunction = getRefactorableFunction(
+            finding.displayName, finding.focusLine ?: 0, refactorableFunctions
+        )
     )
 }
 
@@ -278,7 +286,7 @@ private fun getFileFinding(
     )
 }
 
-fun getHealthFinding(delta: Delta, finding: CodeHealthFinding, project: Project): CodeHealthDetails? {
+fun getHealthFinding(delta: NativeDelta, finding: CodeHealthFinding, project: Project): CodeHealthDetails? {
     val file = extractUsingRegex(finding.filePath, Regex(".*/([^/]+)\\.([^.]+)$")) { (fileName, extension) ->
         fileName to extension
     }

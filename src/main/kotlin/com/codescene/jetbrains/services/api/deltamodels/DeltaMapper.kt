@@ -7,8 +7,8 @@ import com.codescene.data.delta.Function
 object DeltaMapper {
     fun fromOriginal(original: Delta, refactorableFunctions: List<FnToRefactor>): NativeDelta {
         return NativeDelta(
-            oldScore = original.oldScore.orElse(null),
-            newScore = original.newScore.orElse(null),
+            oldScore = original.oldScore.orElse(0.0),
+            newScore = original.newScore.orElse(0.0),
             scoreChange = original.scoreChange,
             fileLevelFindings = original.fileLevelFindings.map { it.toMyChangeDetail() },
             functionLevelFindings = original.functionLevelFindings.map { it.toMyFunctionFinding(refactorableFunctions) }

@@ -40,7 +40,7 @@ import kotlinx.coroutines.launch
  * @param project The current project.
  * @param entryPoint The entry point from which the documentation was opened (for telemetry).
  */
-fun openDocs(docsData: DocsData, project: Project, entryPoint: DocsEntryPoint, codeSmell: CodeSmell? = null) {
+fun openDocs(docsData: DocsData, project: Project, entryPoint: DocsEntryPoint? = null, codeSmell: CodeSmell? = null) {
     val existingBrowser = WebViewInitializer.getInstance(project).getBrowser(View.DOCS)
     val fnToRefactor = if (codeSmell != null) getRefactorableFunctionByCodeSmell(
         docsData.fileData.fileName,
@@ -51,7 +51,6 @@ fun openDocs(docsData: DocsData, project: Project, entryPoint: DocsEntryPoint, c
 
         if (fn?.refactoringTargets?.any { it.category == category } == true) fn else null // Make sure code smell is refactorable
     }
-
 
     // Override disabled status based on presence of fnToRefactor
     val data = docsData.copy(
@@ -64,7 +63,7 @@ fun openDocs(docsData: DocsData, project: Project, entryPoint: DocsEntryPoint, c
         project
     )
 
-    sendTelemetry(docsData, entryPoint)
+    entryPoint?.let { sendTelemetry(docsData, it) }
 }
 
 private fun updateWebView(docsData: DocsData, browser: JBCefBrowser, fnToRefactor: FnToRefactor?, project: Project) {
