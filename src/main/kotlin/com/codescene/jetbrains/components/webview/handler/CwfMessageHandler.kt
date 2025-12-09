@@ -6,6 +6,7 @@ import com.codescene.jetbrains.components.webview.data.CwfMessage
 import com.codescene.jetbrains.components.webview.data.View
 import com.codescene.jetbrains.components.webview.data.message.*
 import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
+import com.codescene.jetbrains.components.webview.data.shared.TelemetrySource
 import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.util.getAceAcknowledgeUserData
 import com.codescene.jetbrains.components.webview.util.getAceUserData
@@ -82,11 +83,11 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
             EditorMessages.OPEN_SETTINGS.value -> handleOpenSettings()
             EditorMessages.GOTO_FUNCTION_LOCATION.value -> handleGotoFunctionLocation(message, json)
 
-            PanelMessages.CLOSE.value -> handleClose()
+            PanelMessages.CLOSE.value -> handleClose(message, json)
             PanelMessages.RETRY.value -> handleRetry()
-            PanelMessages.COPY_CODE.value -> handleCopy()
-            PanelMessages.APPLY.value -> handleApplyRefactoring()
-            PanelMessages.REJECT.value -> handleRefactoringRejection()
+            PanelMessages.COPY_CODE.value -> handleCopy(message, json)
+            PanelMessages.APPLY.value -> handleApplyRefactoring(message, json)
+            PanelMessages.REJECT.value -> handleRefactoringRejection(message, json)
             PanelMessages.ACKNOWLEDGED.value -> handleAceAcknowledged()
             PanelMessages.OPEN_DOCS_FOR_FUNCTION.value -> handleOpenDocs(message, json)
             PanelMessages.REQUEST_AND_PRESENT_REFACTORING.value -> handleRequestAndPresentRefactoring(message, json)
@@ -150,15 +151,12 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         }
     }
 
-    /**
-     * Currently, we only receive this message from the ACE view if the content is marked as *stale*.
-     * Should this message be sent from any other view, CWF would need to specify which window should be closed
-     * in the payload.
-     *
-     * See: **CS-5323**
-     */
-    private fun handleClose() {
-        closeWindow(UiLabelsBundle.message("ace"), project)
+    private fun handleClose(message: CwfMessage, json: Json) {
+        val closeMessage = message.payload?.let {
+            json.decodeFromJsonElement(Close.serializer(), it)
+        } ?: return
+
+        if (closeMessage.view == TelemetrySource.Ace) closeWindow(UiLabelsBundle.message("ace"), project)
     }
 
     private fun handleRequestAndPresentRefactoring(message: CwfMessage, json: Json) {
@@ -204,38 +202,39 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         }
     }
 
-    private fun handleApplyRefactoring() {
-        val aceContext = getAceUserData(project)?.aceData ?: return
+    private fun handleApplyRefactoring(message: CwfMessage, json: Json) {
+        val applyRefactoringMessage = message.payload?.let {
+            json.decodeFromJsonElement(Apply.serializer(), it)
+        } ?: return
 
         TelemetryService.getInstance().logUsage(
             TelemetryEvents.ACE_REFACTOR_APPLIED, mutableMapOf(
-                Pair("traceId", aceContext.aceResultData?.traceId ?: ""),
-//                Pair("skipCache", TODO)
+                // TODO: Pair("traceId", applyRefactoringMessage.traceId),
+                // TODO: Pair("skipCache", applyRefactoringMessage.skipCache)
             )
         )
 
-        if (aceContext.fileData.fn?.range != null && !aceContext.aceResultData?.code.isNullOrEmpty())
+        if (applyRefactoringMessage.fn.range != null && applyRefactoringMessage.code.isNotEmpty())
             replaceCodeSnippet(
                 ReplaceCodeSnippetArgs(
                     project = project,
-                    filePath = aceContext.fileData.fileName,
-                    startLine = aceContext.fileData.fn.range.startLine,
-                    endLine = aceContext.fileData.fn.range.endLine,
-                    newContent = aceContext.aceResultData!!.code
+                    newContent = applyRefactoringMessage.code,
+                    filePath = applyRefactoringMessage.filePath,
+                    endLine = applyRefactoringMessage.fn.range.endLine,
+                    startLine = applyRefactoringMessage.fn.range.startLine,
                 )
             )
 
         closeWindow(UiLabelsBundle.message("ace"), project)
     }
 
-    private fun handleCopy() {
-        val aceData = getAceUserData(project)
-            ?.aceData
-            ?.aceResultData
-        val code = aceData?.code
+    private fun handleCopy(message: CwfMessage, json: Json) {
+        val copyCodeMessage = message.payload?.let {
+            json.decodeFromJsonElement(CopyCode.serializer(), it)
+        } ?: return
 
-        if (!code.isNullOrEmpty()) {
-            val selection = StringSelection(code)
+        if (copyCodeMessage.code.isNotEmpty()) {
+            val selection = StringSelection(copyCodeMessage.code)
             CopyPasteManager.getInstance().setContents(selection)
 
             Log.info("Copied refactored code to clipboard.", serviceName)
@@ -243,8 +242,8 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
 
             TelemetryService.getInstance().logUsage(
                 TelemetryEvents.ACE_COPY_CODE, mutableMapOf(
-                    Pair("traceId", aceData.traceId),
-                    //Pair("skipCache", TODO)
+                    // TODO: Pair("traceId", copyCodeMessage.traceId),
+                    // TODO: Pair("skipCache", copyCodeMessage.skipCache)
                 )
             )
         } else {
@@ -252,15 +251,15 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         }
     }
 
-    private fun handleRefactoringRejection() {
-        val aceData = getAceUserData(project)
-            ?.aceData
-            ?.aceResultData
+    private fun handleRefactoringRejection(message: CwfMessage, json: Json) {
+        val rejectRefactoringMessage = message.payload?.let {
+            json.decodeFromJsonElement(Reject.serializer(), it)
+        } ?: return
 
         TelemetryService.getInstance().logUsage(
             TelemetryEvents.ACE_REFACTOR_REJECTED, mutableMapOf(
-                Pair("traceId", aceData?.traceId ?: ""),
-                //Pair("skipCache", TODO)
+                // TODO: Pair("traceId", rejectRefactoringMessage.traceId),
+                // TODO: Pair("skipCache", rejectRefactoringMessage.skipCache)
             )
         )
 

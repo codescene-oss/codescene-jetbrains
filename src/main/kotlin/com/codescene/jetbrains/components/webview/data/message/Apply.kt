@@ -6,10 +6,10 @@ import com.codescene.jetbrains.components.webview.data.shared.TelemetrySource
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class RequestAndPresentRefactoring(
-    val fileName: String,
-    val filePath: String,
+data class Apply(
     val fn: Fn,
-    val source: TelemetrySource,
-    val range: RangeCamelCase
+    val code: String,
+    val filePath: String,
+    val range: RangeCamelCase,
+    val source: TelemetrySource
 )

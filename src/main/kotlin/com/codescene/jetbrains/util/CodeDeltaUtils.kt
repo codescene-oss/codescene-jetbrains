@@ -4,6 +4,7 @@ import com.codescene.ExtensionAPI
 import com.codescene.data.delta.Delta
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.config.global.MonitorTreeSortOptions
+import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.services.GitService
 import com.codescene.jetbrains.services.api.AceService
 import com.codescene.jetbrains.services.api.deltamodels.DeltaChangeDetail
@@ -50,9 +51,12 @@ fun addRefactorableFunctionsToDeltaResult(
     delta: Delta?,
     editor: Editor
 ): NativeDelta? {
-    delta ?: return null // TODO: see if ACE is enabled before
-    val refactorableFunctions = AceService.getInstance()
-        .getRefactorableFunctions(ExtensionAPI.CodeParams(currentCode, path), delta, editor)
+    delta ?: return null
+    val refactorableFunctions =
+        if (RuntimeFlags.aceFeature && CodeSceneGlobalSettingsStore.getInstance().state.enableAutoRefactor)
+            AceService.getInstance()
+                .getRefactorableFunctions(ExtensionAPI.CodeParams(currentCode, path), delta, editor)
+        else emptyList()
 
     return DeltaMapper.fromOriginal(delta, refactorableFunctions)
 }
