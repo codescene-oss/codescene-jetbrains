@@ -7,6 +7,7 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 class CollapseAllAction : AnAction() {
     override fun actionPerformed(event: AnActionEvent) {
         event.project?.messageBus?.syncPublisher(ToolWindowRefreshNotifier.TOPIC)?.refresh(null, true)

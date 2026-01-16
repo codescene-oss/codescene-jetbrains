@@ -7,6 +7,7 @@ data class HealthDetails(
     val newScore: Double?,
 )
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 fun round(score: Double): Double = kotlin.math.floor(score * 100.0) / 100.0
 
 fun getChangePercentage(healthDetails: HealthDetails): Double? {

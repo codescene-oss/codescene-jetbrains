@@ -12,6 +12,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.ToggleAction
 import javax.swing.Icon
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 abstract class SortByMonitorOption(
     label: String,
     description: String,

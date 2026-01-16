@@ -23,6 +23,7 @@ import java.awt.event.MouseEvent
 import java.net.URI
 import javax.swing.*
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 @Service(Service.Level.PROJECT)
 class CodeHealthPanelBuilder(private val project: Project) {
     private val service = "Code Health Panel Builder - ${project.name}"

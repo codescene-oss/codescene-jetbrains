@@ -11,6 +11,8 @@ import com.vladsch.flexmark.html.HtmlRenderer
 import com.vladsch.flexmark.parser.Parser
 import com.vladsch.flexmark.util.ast.Node
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out (whole file)
+
 val threeBackticks = MarkdownCodeDelimiter.MULTI_LINE.value
 val oneBacktick = MarkdownCodeDelimiter.SINGLE_LINE.value
 

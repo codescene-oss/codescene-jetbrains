@@ -9,6 +9,7 @@ import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeCellRenderer
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
     private val additionalLabel = JLabel().apply {
         foreground = JBColor.GRAY

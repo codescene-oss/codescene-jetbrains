@@ -31,6 +31,8 @@ import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.Icon
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out (whole file)
+
 data class SubHeader(
     val fileIcon: Icon,
     val fileName: String,

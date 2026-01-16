@@ -8,6 +8,7 @@ import com.codescene.jetbrains.util.TransformMarkdownParams
 import com.codescene.jetbrains.util.getLanguageByExtension
 import com.intellij.util.PathUtil.getFileExtension
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 class AceRefactoringHtmlContentBuilder : HtmlContentBuilder() {
     private var aceButtons = """
                 |<div class="ace-buttons-container">

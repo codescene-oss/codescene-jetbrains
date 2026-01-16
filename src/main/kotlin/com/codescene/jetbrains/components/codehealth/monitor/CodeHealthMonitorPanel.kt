@@ -39,6 +39,7 @@ import javax.swing.BoxLayout
 import javax.swing.JComponent
 import javax.swing.JTextArea
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 @Service(Service.Level.PROJECT)
 class CodeHealthMonitorPanel(private val project: Project) {
     private var refreshJob: Job? = null

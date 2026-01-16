@@ -5,6 +5,7 @@ import javax.swing.event.TreeExpansionEvent
 import javax.swing.event.TreeExpansionListener
 import javax.swing.tree.DefaultMutableTreeNode
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 class CustomTreeExpansionListener(private val collapsedPaths: MutableSet<String>) : TreeExpansionListener {
     override fun treeExpanded(event: TreeExpansionEvent) {
         handleTreeExpansion(event, false)

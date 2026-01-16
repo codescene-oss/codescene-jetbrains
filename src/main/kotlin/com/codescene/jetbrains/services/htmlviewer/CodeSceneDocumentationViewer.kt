@@ -27,6 +27,7 @@ data class DocumentationParams(
     val docsEntryPoint: DocsEntryPoint? = null,
 )
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 @Service(Service.Level.PROJECT)
 class CodeSceneDocumentationViewer(private val project: Project) : HtmlViewer<DocumentationParams>(project) {
     companion object {

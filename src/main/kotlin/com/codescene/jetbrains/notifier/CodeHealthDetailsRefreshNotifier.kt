@@ -6,6 +6,7 @@ import com.intellij.util.messages.Topic
 
 const val CODE_HEALTH_DETAILS_NOTIFIER = "Refresh $CODESCENE Code Health Details"
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 interface CodeHealthDetailsRefreshNotifier {
     fun refresh(finding: CodeHealthFinding?)
 

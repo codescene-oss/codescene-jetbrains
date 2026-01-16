@@ -11,6 +11,8 @@ import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out (whole file)
+
 fun getHealthFinding(filePath: String, delta: Delta): CodeHealthFinding {
     val oldScore = delta.oldScore.orElse(null)
     val newScore = delta.newScore.orElse(null)

@@ -34,6 +34,7 @@ import java.beans.PropertyChangeSupport
 import java.net.URI
 import javax.swing.JComponent
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) : FileEditor {
 
     companion object {

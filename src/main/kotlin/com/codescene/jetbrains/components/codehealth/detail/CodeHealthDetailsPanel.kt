@@ -26,6 +26,7 @@ import javax.swing.BoxLayout
 import javax.swing.JPanel
 import javax.swing.JTextArea
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 @Service(Service.Level.PROJECT)
 class CodeHealthDetailsPanel(private val project: Project) {
     private var details: CodeHealthDetails? = null

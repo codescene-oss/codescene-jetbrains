@@ -24,6 +24,7 @@ import com.intellij.openapi.wm.ex.ToolWindowManagerListener
 import com.intellij.ui.OnePixelSplitter
 import com.intellij.ui.content.ContentFactory
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 class CodeSceneToolWindowFactory : ToolWindowFactory {
     private lateinit var splitPane: OnePixelSplitter
 

@@ -15,6 +15,7 @@ import java.net.URI
 import javax.swing.*
 import javax.swing.event.HyperlinkEvent
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 class FreemiumPlaceholder {
     fun getComponent() = JPanel().apply {
         isOpaque = false

@@ -7,6 +7,7 @@ import com.codescene.jetbrains.util.TransformMarkdownParams
 import com.intellij.ui.jcef.JBCefScrollbarsHelper
 import java.util.stream.Collectors
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 abstract class HtmlContentBuilder {
     protected var title: String = ""
     protected var focusLine: String = ""

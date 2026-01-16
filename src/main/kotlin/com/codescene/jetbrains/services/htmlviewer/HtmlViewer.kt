@@ -11,6 +11,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.LightVirtualFile
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 abstract class HtmlViewer<T>(private val project: Project) : LafManagerListener {
     private var data: T? = null
     private var editor: Editor? = null
