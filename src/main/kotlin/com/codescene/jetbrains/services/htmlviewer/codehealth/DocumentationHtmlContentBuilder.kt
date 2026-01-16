@@ -6,6 +6,7 @@ import com.codescene.jetbrains.services.api.RefactoredFunction
 import com.codescene.jetbrains.util.TransformMarkdownParams
 import com.codescene.jetbrains.util.transformMarkdownToHtml
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 class DocumentationHtmlContentBuilder: HtmlContentBuilder() {
 
     override fun content(params: TransformMarkdownParams?) = apply {

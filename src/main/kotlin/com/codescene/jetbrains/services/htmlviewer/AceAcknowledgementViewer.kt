@@ -11,6 +11,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.testFramework.LightVirtualFile
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 @Service(Service.Level.PROJECT)
 class AceAcknowledgementViewer(private val project: Project) : HtmlViewer<FnToRefactor>(project) {
     var functionToRefactor: FnToRefactor? = null

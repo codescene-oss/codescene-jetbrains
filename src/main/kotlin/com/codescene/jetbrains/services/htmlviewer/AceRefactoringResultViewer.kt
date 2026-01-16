@@ -13,6 +13,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.testFramework.LightVirtualFile
 import java.io.File
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 @Service(Service.Level.PROJECT)
 class AceRefactoringResultViewer(private val project: Project) : HtmlViewer<RefactoredFunction>(project) {
     var refactoredFunction: RefactoredFunction? = null

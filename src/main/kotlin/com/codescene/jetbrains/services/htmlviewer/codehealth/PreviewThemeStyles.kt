@@ -6,6 +6,7 @@ import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import java.awt.Color
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 object PreviewThemeStyles {
 
     fun createStylesheet(): String {

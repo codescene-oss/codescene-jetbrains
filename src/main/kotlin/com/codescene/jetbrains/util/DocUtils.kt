@@ -52,6 +52,7 @@ fun handleOpenCwfDocs(editor: Editor, codeSmell: CodeVisionCodeSmell, source: Do
     openDocs(docsData, project, source)
 }
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 fun handleOpenNativeDocs(editor: Editor, codeSmell: CodeVisionCodeSmell, source: DocsEntryPoint) {
     val project = editor.project ?: return
     val docViewer = CodeSceneDocumentationViewer.getInstance(project)
@@ -77,6 +78,7 @@ fun handleOpenGeneralCwfDocs(project: Project, docType: String, entryPoint: Docs
     openDocs(docsData, project, entryPoint)
 }
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 fun handleOpenGeneralNativeDocs(project: Project, source: String) {
     val docViewer = CodeSceneDocumentationViewer.getInstance(project)
     val editor = getSelectedTextEditor(project, "")

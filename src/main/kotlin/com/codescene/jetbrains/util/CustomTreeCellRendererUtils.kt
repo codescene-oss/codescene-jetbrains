@@ -14,6 +14,8 @@ import com.intellij.openapi.fileTypes.FileTypeManager
 import java.io.File
 import javax.swing.Icon
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out (whole file)
+
 fun getTooltip(node: CodeHealthFinding) =
     node.tooltip.ifEmpty {
         when (node.nodeType) {

@@ -12,6 +12,7 @@ import javax.swing.JSlider
 import javax.swing.plaf.basic.BasicSliderUI
 import kotlin.math.roundToInt
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 class CustomSlider(value: String) : JSlider() {
     init {
         isOpaque = false

@@ -95,6 +95,7 @@ class FileEventProcessor(
         deltaCache.updateKey(oldPath, newPath)
         reviewCache.updateKey(oldPath, newPath)
 
+        // TODO: CS-6198
         project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC)
             .invalidateAndRefresh(oldPath, file)
     }

@@ -18,6 +18,7 @@ import com.intellij.psi.search.GlobalSearchScope
 import kotlinx.coroutines.*
 import java.io.File
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 @Service(Service.Level.PROJECT)
 class CodeNavigationService(val project: Project) : Disposable {
     private val scope = CoroutineScope(Dispatchers.IO)

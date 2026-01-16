@@ -12,6 +12,7 @@ import com.intellij.openapi.project.ProjectManager
 import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.codeStyle.CodeStyleManager
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 object CodeHighlighter {
     /**
      * Method used to highlight code for different languages and replace non-highlighted code with highlighted one.

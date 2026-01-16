@@ -13,6 +13,7 @@ import com.intellij.openapi.util.text.StringUtil.pluralize
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out. Remove tests as well.
 private fun MutableList<String>.countFixesAndDegradations(details: List<ChangeDetail>) {
     val fixesAndDegradations = details.groupingBy { isPositiveChange(it.changeType) }.eachCount()
 
@@ -20,6 +21,7 @@ private fun MutableList<String>.countFixesAndDegradations(details: List<ChangeDe
     fixesAndDegradations[false]?.let { add("$it ${pluralize("issue", it)} degrading code health") }
 }
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 fun getFunctionDeltaTooltip(function: Function, details: List<ChangeDetail>): String {
     val tooltip = mutableListOf("Function \"${function.name}\"")
 
@@ -39,6 +41,7 @@ fun getCachedDelta(editor: Editor): Pair<Boolean, Delta?> {
         .get(cacheQuery)
 }
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 fun sortDeltaFindings(
     map: ConcurrentHashMap<String, Delta>
 ): List<Map.Entry<String, Delta>> {
@@ -52,6 +55,7 @@ fun sortDeltaFindings(
     }
 }
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 private fun safeScoreDelta(newScore: Optional<Double>, oldScore: Optional<Double>): Double {
     val old = oldScore.orElse(null)
     val new = newScore.orElse(null)
@@ -59,6 +63,7 @@ private fun safeScoreDelta(newScore: Optional<Double>, oldScore: Optional<Double
     return if (old != null && new != null) old - new else Double.NEGATIVE_INFINITY
 }
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 fun extractFileName(input: String): String? {
     val regex = """<html>([^<]+)<span""".toRegex()
 

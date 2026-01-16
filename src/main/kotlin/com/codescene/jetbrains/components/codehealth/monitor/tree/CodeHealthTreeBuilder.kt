@@ -44,6 +44,7 @@ data class CodeHealthFinding(
     val numberOfImprovableFunctions: Int = 0
 )
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 @Service(Service.Level.PROJECT)
 class CodeHealthTreeBuilder(private val project: Project) {
     private var suppressFocusOnLine: Boolean = false

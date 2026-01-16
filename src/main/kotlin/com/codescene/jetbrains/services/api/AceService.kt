@@ -39,6 +39,7 @@ data class RefactoredFunction(
 
 @Service
 class AceService : BaseService(), Disposable {
+    // TODO[CWF-DELETE]: Remove once CWF is fully rolled out
     // TODO: remove as it is not needed in CWF anymore
     var lastFunctionToRefactor: FnToRefactor? = null
         private set

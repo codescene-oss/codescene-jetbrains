@@ -5,6 +5,7 @@ import java.awt.Container
 import java.awt.Dimension
 import java.awt.LayoutManager
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 class ResponsiveLayout(private val padding: Int = 10) : LayoutManager {
     override fun addLayoutComponent(name: String?, comp: Component?) {}
     override fun removeLayoutComponent(comp: Component?) {}

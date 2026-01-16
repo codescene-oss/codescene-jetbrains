@@ -17,6 +17,7 @@ data class CharactersBackticksData (
     val indexOfTick: Int
 )
 
+// Good to know: The idea was to move this to a centralized location for all IDEs.
 private val supportedLanguages = mapOf(
     "js" to "javascript",
     "mjs" to "javascript",
@@ -80,6 +81,7 @@ private fun isExcludedByGitignore(file: VirtualFile, ignoredFiles: List<String>)
 
 private fun inSupportedLanguages(extension: String) = supportedLanguages.containsKey(extension)
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 fun getLanguageByExtension(extension: String): String {
     return (if (supportedLanguages[extension] is List<*>) {
         (supportedLanguages[extension] as List<*>).first()
@@ -116,6 +118,7 @@ fun getTextRange(
 fun formatCodeSmellMessage(category: String, details: String): String =
     if (details.isNotEmpty()) "$category ($details)" else category
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 fun categoryToFileName(category: String): String {
     return category.trim().replace(" ", "-").replace(",", "").toLowerCasePreservingASCIIRules()
 }
@@ -160,18 +163,22 @@ val codeSmellNames = listOf(
 // this list needs to match documentation files for code smells, code health, code health monitor and ACE
 val acceptedFileNames = aceDocs + codeSmellNames + generalDocs
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 fun Color.webRgba(alpha: Double = this.alpha.toDouble()): String {
     return "rgba($red, $green, $blue, $alpha)"
 }
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 fun surroundingCharactersNotBackticks(data: CharactersBackticksData): Boolean {
     return nextCharacterNotBacktick(data.inputString, data.indexOfTick) && previousCharacterNotBacktick(data.inputString, data.indexOfTick)
 }
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 private fun nextCharacterNotBacktick(string: String, indexOfTick: Int): Boolean {
     return indexOfTick + 1 >= string.length || string[indexOfTick + 1] != '`'
 }
 
+// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 private fun previousCharacterNotBacktick(string: String, indexOfTick: Int): Boolean {
     return indexOfTick == 0 || string[indexOfTick - 1] != '`'
 }
