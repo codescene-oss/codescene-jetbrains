@@ -211,36 +211,12 @@ jobs:
           name: Dependency check report
           path: ${{github.workspace}}/reports/dependency-check-report.html
 
-  delta-analysis:
-    name: CodeScene delta analysis
-    needs: [ build ]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Fetch Sources
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install cs tool
-        run: curl https://downloads.codescene.io/enterprise/cli/install-codescene-cli.sh | bash -s -- -y
-
-      - name: Run delta analysis
-        run: cs delta --git-hook ${{ github.event.before }} ${{ github.event.after }}
-        env:
-          CS_ONPREM_API_URL: ${{ secrets.CS_ONPREM_API_URL }}
-          CS_ACCESS_TOKEN: ${{ secrets.CS_ACCESS_TOKEN }}
-  #      - name: Notify on slack if failure on master
-  #        uses: ./.github/actions/notify-slack
-  #        if: failure() && github.ref == 'refs/heads/master'
-  #        with:
-  #          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
-
   # Prepare a draft release for GitHub Releases page for the manual verification
   # If accepted and published, release workflow would be triggered
   releaseDraft:
     name: Release draft
     if: github.event_name != 'pull_request'
-    needs: [ build, test, verify, dependency-check, delta-analysis ]
+    needs: [ build, test, verify, dependency-check]
     runs-on: ubuntu-latest
     permissions:
       contents: write
