@@ -1,0 +1,15 @@
+reviews:
+  in_progress_fortune: false
+  poem: false
+  high_level_summary: false 
+  sequence_diagrams: false
+  auto_review:
+    ignore_usernames: ["vemv", "vemvcs"]
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+  pre_merge_checks:
+    docstrings:
+      mode: off
