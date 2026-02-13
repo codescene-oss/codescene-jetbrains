@@ -7,3 +7,13 @@ build
 docs
 .kotlin
 cs-cwf
+.cache
+.build-timestamp
+build.log
+format.log
+format-check.log
+delta.log
+test.log
+test-mine.log
+.clj-kondo
+.calva
