@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.kotlin) // Kotlin support
     alias(libs.plugins.intelliJPlatform) // IntelliJ Platform Gradle Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
+    alias(libs.plugins.ktlint)
     kotlin("plugin.serialization") version "2.2.0"
 }
 
@@ -139,6 +140,15 @@ intellijPlatform {
             create("IC", "2025.2.4") { useInstaller = true }
         }
     }
+}
+
+val ktlintFailOnError = providers.gradleProperty("ktlintFailOnError")
+    .map(String::toBoolean)
+    .orElse(false)
+
+ktlint {
+    // Keep default warning-only behavior unless explicitly overridden via -PktlintFailOnError=true.
+    ignoreFailures.set(ktlintFailOnError.map { failOnError -> !failOnError })
 }
 
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
