@@ -18,7 +18,7 @@
 
 (defn print-output [stdout stderr]
   (when (seq stdout) (print stdout))
-  (when (seq stderr) (print stderr))
+  (when (seq stderr) (binding [*out* *err*] (print stderr) (flush)))
   (flush))
 
 (defn read-cached-result [{:keys [stdout-file stderr-file exitcode-file]}]
@@ -55,8 +55,10 @@
   (spit (str exitcode-file) (str exit)))
 
 (defn run-cached [cache-key command cache-dir]
-  (let [{:keys [stdout-file] :as files} (cache-files cache-key command cache-dir)]
-    (if (fs/exists? (str stdout-file))
+  (let [{:keys [stdout-file exitcode-file] :as files} (cache-files cache-key command cache-dir)
+        cache-hit (and (fs/exists? (str stdout-file))
+                       (fs/exists? (str exitcode-file)))]
+    (if cache-hit
       (read-cached-result files)
       (let [result (execute-command command)]
         (write-cached-result files result)

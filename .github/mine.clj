@@ -4,11 +4,14 @@
 (defn- parse-status-line [line]
   (if (< (count line) 4)
     nil
-    (let [s (subs line 3)
-          path (clojure.string/trim s)]
-      (if (re-find #" -> " path)
-        (last (clojure.string/split path #" -> "))
-        path))))
+    (let [prefix (subs line 0 2)]
+      (if (re-find #"D" prefix)
+        nil
+        (let [s (subs line 3)
+              path (clojure.string/trim s)]
+          (if (re-find #" -> " path)
+            (last (clojure.string/split path #" -> "))
+            path))))))
 
 (defn- changed-files []
   (let [result (shell {:out :string :err :string :continue true}

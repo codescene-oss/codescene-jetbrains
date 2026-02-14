@@ -30,6 +30,8 @@
            (filter seq)))))
 
 (defn check-file [f accum]
+  (when (fs/exists? reports-dir)
+    (fs/delete-tree reports-dir))
   (let [p (shell {:out :string :err :string :continue true}
                  gradlew "ktlintCheck" (str "-PinternalKtlintGitFilter=" f)
                  "-PktlintFailOnError=true"

@@ -96,7 +96,7 @@ The Makefile provides development targets for build, test, format, and CodeScene
 | `make build`             | Build the plugin                                         |
 | `make test`              | Run all tests (cached)                                   |
 | `make test-mine`         | Run tests for changed Kotlin files only (cached)         |
-| `make format`            | Format changed Kotlin files (cached)                     |
+| `make format-mine`       | Format changed Kotlin files (cached)                     |
 | `make format-all`        | Format all Kotlin files with ktlint (cached)             |
 | `make format-check`      | Check format of all Kotlin files (cached)                |
 | `make format-check-mine` | Check format of changed files only                       |

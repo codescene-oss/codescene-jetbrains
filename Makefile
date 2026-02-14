@@ -11,14 +11,8 @@ CACHE_KEY = $(eval CACHE_KEY := $$(call get_cache_key))$(CACHE_KEY)
 check-bb:
 	@$(BB) --version
 
-KT_FILES := $(wildcard src/main/kotlin/*/*.kt) \
-            $(wildcard src/main/kotlin/*/*/*.kt) \
-            $(wildcard src/main/kotlin/*/*/*/*.kt) \
-            $(wildcard src/main/kotlin/*/*/*/*/*.kt) \
-            $(wildcard src/main/kotlin/*/*/*/*/*.kt) \
-            $(wildcard src/test/kotlin/*/*.kt) \
-            $(wildcard src/test/kotlin/*/*/*.kt) \
-            $(wildcard src/test/kotlin/*/*/*/*.kt)
+KT_FILES := $(wildcard src/main/kotlin/**/*.kt) \
+            $(wildcard src/test/kotlin/**/*.kt)
 GRADLE_FILES := $(wildcard build.gradle.kts) $(wildcard settings.gradle.kts) $(wildcard gradle.properties) $(wildcard gradle/libs.versions.toml)
 
 .build-timestamp: check-bb $(KT_FILES) $(GRADLE_FILES)
