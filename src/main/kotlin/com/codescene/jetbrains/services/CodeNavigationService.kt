@@ -1,7 +1,7 @@
 package com.codescene.jetbrains.services
 
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.WriteIntentReadAction
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.components.Service
@@ -57,11 +57,14 @@ class CodeNavigationService(val project: Project): Disposable {
             OpenFileDescriptor(project, file, line - 1, 0)
         }
 
-        // Open the editor outside runReadAction
-        val editor = WriteIntentReadAction.compute<Editor?, RuntimeException> {
-            FileEditorManager.getInstance(project)
-                .openTextEditor(openFileDescriptor, true)
-        }
+        val editor =
+            ApplicationManager
+                .getApplication()
+                .runWriteAction<Editor?, RuntimeException> {
+                    FileEditorManager
+                        .getInstance(project)
+                        .openTextEditor(openFileDescriptor, true)
+                }
         if (editor != null) {
             moveCaret(editor, line)
         }
