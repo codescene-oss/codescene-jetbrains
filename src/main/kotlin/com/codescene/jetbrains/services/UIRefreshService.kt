@@ -3,7 +3,7 @@ package com.codescene.jetbrains.services
 import com.codescene.jetbrains.util.Log
 import com.intellij.codeInsight.codeVision.CodeVisionHost
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
-import com.intellij.openapi.application.WriteIntentReadAction
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -59,8 +59,10 @@ class UIRefreshService(private val project: Project) {
 
             withContext(Dispatchers.Main) {
                 try {
-                    WriteIntentReadAction.compute<Unit, RuntimeException> {
-                        DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
+                    ApplicationManager.getApplication()
+                        .runWriteAction<Unit, RuntimeException> {
+                            DaemonCodeAnalyzer.getInstance(project)
+                                .restart(psiFile)
                     }
                 } catch (e: Exception) {
                     Log.warn("Failed to refresh annotations for file: ${psiFile.name}. Error: ${e.message}")
