@@ -179,17 +179,26 @@ jobs:
           REPORT_DIR="${{ github.workspace }}/build/reports/pluginVerifier"
           if [ -d "$REPORT_DIR" ]; then
             echo "## Plugin Verifier Results" >> $GITHUB_STEP_SUMMARY
-            find "$REPORT_DIR" -name '*.txt' | sort | while read -r file; do
-              echo "::group::$(basename "$file")"
-              cat "$file"
+            for version_dir in "$REPORT_DIR"/*/; do
+              [ -d "$version_dir" ] || continue
+              version=$(basename "$version_dir")
+              echo "::group::$version"
+              echo "=== $version ==="
+              echo "### $version" >> $GITHUB_STEP_SUMMARY
+              find "$version_dir" -maxdepth 1 -name '*.txt' | sort | while read -r file; do
+                fname=$(basename "$file")
+                echo "--- $fname ---"
+                cat "$file"
+                echo ""
+                echo "<details><summary>$fname</summary>" >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
+                cat "$file" >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
+                echo "</details>" >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+              done
               echo "::endgroup::"
-              echo "<details><summary>$(basename "$file")</summary>" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-              cat "$file" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-              echo "</details>" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
             done
           else
             echo "::warning::Plugin Verifier report directory not found"
