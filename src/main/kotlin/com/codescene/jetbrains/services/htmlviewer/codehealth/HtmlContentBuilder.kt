@@ -16,37 +16,47 @@ abstract class HtmlContentBuilder {
     protected var reasons: String = ""
     protected var code: String = ""
     protected var webViewData: String = ""
-    protected var customStyle = StringBuilder(
-        """
+    protected var customStyle =
+        StringBuilder(
+            """
         |${JBCefScrollbarsHelper.buildScrollbarsStyle().trim()}
         |${PreviewThemeStyles.createStylesheet().trim()}
-    """.trimMargin().trim()
-    )
+            """.trimMargin().trim(),
+        )
 
-    fun withWebViewData(html: String) = apply {
-        this.webViewData += "\n$html"
-    }
+    fun withWebViewData(html: String) =
+        apply {
+            this.webViewData += "\n$html"
+        }
 
-    fun usingStyleSheet(stylePath: String) = apply {
-        val classLoader = this@HtmlContentBuilder.javaClass.classLoader
-        val style = classLoader
-            .getResourceAsStream(stylePath)
-            ?.bufferedReader()
-            ?.lines()
-            ?.filter { line -> line.trim().isNotEmpty() }
-            ?.collect(Collectors.joining("\n"))
+    fun usingStyleSheet(stylePath: String) =
+        apply {
+            val classLoader = this@HtmlContentBuilder.javaClass.classLoader
+            val style =
+                classLoader
+                    .getResourceAsStream(stylePath)
+                    ?.bufferedReader()
+                    ?.lines()
+                    ?.filter { line -> line.trim().isNotEmpty() }
+                    ?.collect(Collectors.joining("\n"))
 
-        this.customStyle.append(style)
-    }
+            this.customStyle.append(style)
+        }
 
-    fun title(title: String, logoPath: String = "") = apply {
-        val logo = if (logoPath.isNotEmpty())
-            this@HtmlContentBuilder.javaClass.classLoader
-                .getResourceAsStream(logoPath)
-                ?.bufferedReader()
-                ?.readText()
-                ?: ""
-        else ""
+    fun title(
+        title: String,
+        logoPath: String = "",
+    ) = apply {
+        val logo =
+            if (logoPath.isNotEmpty()) {
+                this@HtmlContentBuilder.javaClass.classLoader
+                    .getResourceAsStream(logoPath)
+                    ?.bufferedReader()
+                    ?.readText()
+                    ?: ""
+            } else {
+                ""
+            }
 
         if (logo.isEmpty()) {
             this.title =
@@ -66,7 +76,10 @@ abstract class HtmlContentBuilder {
         }
     }
 
-    fun functionLocation(fileName: String, focusLine: Int) = apply {
+    fun functionLocation(
+        fileName: String,
+        focusLine: Int,
+    ) = apply {
         this.focusLine =
             """
         |<div class="documentation-header">
@@ -76,13 +89,16 @@ abstract class HtmlContentBuilder {
         |</span>
         |</p>
         |</div>
-        """.trimMargin().trim()
+            """.trimMargin().trim()
     }
 
     abstract fun build(): String
+
     abstract fun summary(confidence: Confidence): HtmlContentBuilder
+
     abstract fun reasons(refactoringResult: RefactorResponse): HtmlContentBuilder
+
     abstract fun code(refactoredFunction: RefactoredFunction): HtmlContentBuilder
+
     abstract fun content(params: TransformMarkdownParams?): HtmlContentBuilder
 }
-

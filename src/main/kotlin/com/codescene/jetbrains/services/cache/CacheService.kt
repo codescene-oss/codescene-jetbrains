@@ -23,7 +23,10 @@ abstract class CacheService<Q, E, V, R> {
         }
     }
 
-    fun updateKey(oldKey: String, newKey: String) {
+    fun updateKey(
+        oldKey: String,
+        newKey: String,
+    ) {
         val entry = cache[oldKey]
 
         if (entry != null) {

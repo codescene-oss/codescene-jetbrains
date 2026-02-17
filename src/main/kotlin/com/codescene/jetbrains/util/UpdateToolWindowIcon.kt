@@ -17,21 +17,21 @@ data class UpdateToolWindowIconParams(
     val badgeY: Int = 10,
     val toolWindowId: String,
     val hasNotification: Boolean,
-    val badgeColor: Color = JBUI.CurrentTheme.IconBadge.INFORMATION
+    val badgeColor: Color = JBUI.CurrentTheme.IconBadge.INFORMATION,
 )
 
-fun updateToolWindowIcon(
-    params: UpdateToolWindowIconParams
-) {
+fun updateToolWindowIcon(params: UpdateToolWindowIconParams) {
     val (baseIcon, project, badgeX, badgeY, toolWindowId, hasNotification, badgeColor) = params
 
     val toolWindowManager = ToolWindowManager.getInstance(project)
     val toolWindow = toolWindowManager.getToolWindow(toolWindowId) ?: return
 
-    val icon = if (hasNotification)
-        ExecutionUtil.getIndicator(baseIcon, badgeX, badgeY, badgeColor)
-    else
-        baseIcon
+    val icon =
+        if (hasNotification) {
+            ExecutionUtil.getIndicator(baseIcon, badgeX, badgeY, badgeColor)
+        } else {
+            baseIcon
+        }
 
     CoroutineScope(Dispatchers.Main).launch {
         toolWindow.setIcon(icon)

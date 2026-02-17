@@ -22,17 +22,21 @@ abstract class HtmlViewer<T>(private val project: Project) : LafManagerListener 
         bus.subscribe(LafManagerListener.TOPIC, this)
     }
 
-    fun open(editor: Editor?, params: T) {
+    fun open(
+        editor: Editor?,
+        params: T,
+    ) {
         data = params
         this.editor = editor
 
         val document = prepareFile(params)
         val fileEditorManager = FileEditorManager.getInstance(project)
 
-        if (editor != null)
+        if (editor != null) {
             splitWindow(document, fileEditorManager)
-        else
+        } else {
             openDocumentationWithoutActiveEditor(document, fileEditorManager)
+        }
 
         sendTelemetry(params)
     }
@@ -47,12 +51,16 @@ abstract class HtmlViewer<T>(private val project: Project) : LafManagerListener 
      *
      * @param file The [VirtualFile] to be opened in a right-split editor.
      */
-    private fun splitWindow(file: LightVirtualFile, fileEditorManager: FileEditorManager) {
+    private fun splitWindow(
+        file: LightVirtualFile,
+        fileEditorManager: FileEditorManager,
+    ) {
         val editorManagerEx = FileEditorManagerEx.getInstanceEx(project)
-        val docWindow = editorManagerEx.windows
-            .firstOrNull { editorWindow ->
-                editorWindow.fileList.any { acceptedFileNames.contains(it.nameWithoutExtension) }
-            }
+        val docWindow =
+            editorManagerEx.windows
+                .firstOrNull { editorWindow ->
+                    editorWindow.fileList.any { acceptedFileNames.contains(it.nameWithoutExtension) }
+                }
 
         editorManagerEx.splitters.openInRightSplit(file, false)
 
@@ -68,19 +76,25 @@ abstract class HtmlViewer<T>(private val project: Project) : LafManagerListener 
      *
      * @param file The [VirtualFile] to be opened in a right-split editor.
      */
-    private fun openDocumentationWithoutActiveEditor(file: LightVirtualFile, fileEditorManager: FileEditorManager) {
+    private fun openDocumentationWithoutActiveEditor(
+        file: LightVirtualFile,
+        fileEditorManager: FileEditorManager,
+    ) {
         fileEditorManager.openFiles
             .filterIsInstance<LightVirtualFile>()
             .filter { shouldCloseFile(it, file) }
             .forEach { fileEditorManager.closeFile(it) }
 
         val docNotOpen = fileEditorManager.openFiles.none { it.name == file.name }
-        if (docNotOpen)
+        if (docNotOpen) {
             fileEditorManager.openFile(file, false, true)
+        }
     }
 
-    private fun shouldCloseFile(existing: LightVirtualFile, new: LightVirtualFile) =
-        existing != new && acceptedFileNames.contains(existing.nameWithoutExtension)
+    private fun shouldCloseFile(
+        existing: LightVirtualFile,
+        new: LightVirtualFile,
+    ) = existing != new && acceptedFileNames.contains(existing.nameWithoutExtension)
 
     override fun lookAndFeelChanged(p0: LafManager) {
         data?.let { open(editor, data!!) }

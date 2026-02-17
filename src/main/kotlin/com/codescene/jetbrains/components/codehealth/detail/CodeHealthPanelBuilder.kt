@@ -43,43 +43,50 @@ import javax.swing.JSeparator
 
 // TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 @Service(Service.Level.PROJECT)
-class CodeHealthPanelBuilder(private val project: Project) {
+class CodeHealthPanelBuilder(
+    private val project: Project,
+) {
     private val service = "Code Health Panel Builder - ${project.name}"
 
     companion object {
         fun getInstance(project: Project): CodeHealthPanelBuilder = project.service<CodeHealthPanelBuilder>()
     }
 
-    fun getPanel(details: CodeHealthDetails) = JPanel().apply {
-        val settings = CodeSceneGlobalSettingsStore.getInstance().state
-        val aceAvailable =
-            RuntimeFlags.aceFeature && settings.enableAutoRefactor && settings.aceAuthToken.trim().isNotEmpty()
-        Log.debug("Rendering panel for $details...", service)
+    fun getPanel(details: CodeHealthDetails) =
+        JPanel().apply {
+            val settings = CodeSceneGlobalSettingsStore.getInstance().state
+            val aceAvailable =
+                RuntimeFlags.aceFeature && settings.enableAutoRefactor && settings.aceAuthToken.trim().isNotEmpty()
+            Log.debug("Rendering panel for $details...", service)
 
-        val isCodeHealth = details.type == CodeHealthDetailsType.HEALTH
+            val isCodeHealth = details.type == CodeHealthDetailsType.HEALTH
 
-        layout = GridBagLayout()
-        border = JBUI.Borders.empty(0, 10, 10, 10)
+            layout = GridBagLayout()
+            border = JBUI.Borders.empty(0, 10, 10, 10)
 
-        val constraint = getGridBagConstraints()
-        addHeader(details, constraint)
-        addSubHeader(details, constraint)
+            val constraint = getGridBagConstraints()
+            addHeader(details, constraint)
+            addSubHeader(details, constraint)
 
-        addSeparator(constraint)
+            addSeparator(constraint)
 
-        if (isCodeHealth) {
-            addCodeHealthHeader(details, constraint)
-            if (details.healthData!!.status.isNotEmpty()) addHealthDecline(details, constraint)
-            addSlider(details, constraint)
-        } else if (aceAvailable)
-            addAutoRefactorButton(details, constraint)
+            if (isCodeHealth) {
+                addCodeHealthHeader(details, constraint)
+                if (details.healthData!!.status.isNotEmpty()) addHealthDecline(details, constraint)
+                addSlider(details, constraint)
+            } else if (aceAvailable) {
+                addAutoRefactorButton(details, constraint)
+            }
 
-        addBody(details, constraint)
+            addBody(details, constraint)
 
-        if (isCodeHealth) addLink(constraint)
-    }
+            if (isCodeHealth) addLink(constraint)
+        }
 
-    private fun JPanel.addAutoRefactorButton(details: CodeHealthDetails, constraint: GridBagConstraints) {
+    private fun JPanel.addAutoRefactorButton(
+        details: CodeHealthDetails,
+        constraint: GridBagConstraints,
+    ) {
         ++constraint.gridy
         constraint.gridx = 0
         constraint.gridwidth = 3
@@ -89,33 +96,37 @@ class CodeHealthPanelBuilder(private val project: Project) {
         add(getAutoRefactorButton(details), constraint)
         constraint.ipady = 0
         constraint.insets = JBUI.emptyInsets()
-
     }
 
-    private fun getAutoRefactorButton(details: CodeHealthDetails) = OnboardingDialogButtons
-        .createButton(UiLabelsBundle.message("autoRefactor"), CODESCENE_ACE) {
-            val selectedEditor = getSelectedTextEditor(
-                project,
-                details.filePath,
-                "${this::class.simpleName} - ${project.name}"
-            )
-            handleAceEntryPoint(
-                RefactoringParams(
-                    project,
-                    selectedEditor,
-                    details.refactorableFunction,
-                    AceEntryPoint.CODE_HEALTH_DETAILS
+    private fun getAutoRefactorButton(details: CodeHealthDetails) =
+        OnboardingDialogButtons
+            .createButton(UiLabelsBundle.message("autoRefactor"), CODESCENE_ACE) {
+                val selectedEditor =
+                    getSelectedTextEditor(
+                        project,
+                        details.filePath,
+                        "${this::class.simpleName} - ${project.name}",
+                    )
+                handleAceEntryPoint(
+                    RefactoringParams(
+                        project,
+                        selectedEditor,
+                        details.refactorableFunction,
+                        AceEntryPoint.CODE_HEALTH_DETAILS,
+                    ),
                 )
-            )
-        }.also {
-            if (details.refactorableFunction == null) {
-                it.icon = ACE_DISABLED
-                it.isEnabled = false
-                it.toolTipText = UiLabelsBundle.message("refactoringUnavailable")
+            }.also {
+                if (details.refactorableFunction == null) {
+                    it.icon = ACE_DISABLED
+                    it.isEnabled = false
+                    it.toolTipText = UiLabelsBundle.message("refactoringUnavailable")
+                }
             }
-        }
 
-    private fun JPanel.addHeader(details: CodeHealthDetails, constraint: GridBagConstraints) {
+    private fun JPanel.addHeader(
+        details: CodeHealthDetails,
+        constraint: GridBagConstraints,
+    ) {
         ++constraint.gridy
         constraint.gridx = 0
         constraint.gridwidth = 3
@@ -123,7 +134,10 @@ class CodeHealthPanelBuilder(private val project: Project) {
         add(JLabel("<html><h2>${details.header}</h2></html>"), constraint)
     }
 
-    private fun JPanel.addSubHeader(details: CodeHealthDetails, constraint: GridBagConstraints) {
+    private fun JPanel.addSubHeader(
+        details: CodeHealthDetails,
+        constraint: GridBagConstraints,
+    ) {
         ++constraint.gridy
         constraint.gridx = 0
         constraint.gridwidth = 3
@@ -131,17 +145,17 @@ class CodeHealthPanelBuilder(private val project: Project) {
         constraint.weightx = 1.0
         constraint.ipady = 15
 
-        val subHeaderPanel = JPanel(ResponsiveLayout()).apply {
-            add(JLabel(details.subHeader.fileName).apply { icon = details.subHeader.fileIcon })
-            add(JLabel(details.subHeader.status).apply { icon = details.subHeader.statusIcon })
-        }
+        val subHeaderPanel =
+            JPanel(ResponsiveLayout()).apply {
+                add(JLabel(details.subHeader.fileName).apply { icon = details.subHeader.fileIcon })
+                add(JLabel(details.subHeader.status).apply { icon = details.subHeader.statusIcon })
+            }
 
         add(subHeaderPanel, constraint)
 
         constraint.ipady = 0
         constraint.weightx = 0.0
     }
-
 
     private fun JPanel.addSeparator(constraint: GridBagConstraints) {
         ++constraint.gridy
@@ -153,37 +167,51 @@ class CodeHealthPanelBuilder(private val project: Project) {
         constraint.ipady = 0
     }
 
-    private fun JPanel.addCodeHealthHeader(details: CodeHealthDetails, constraint: GridBagConstraints) {
+    private fun JPanel.addCodeHealthHeader(
+        details: CodeHealthDetails,
+        constraint: GridBagConstraints,
+    ) {
         val score = details.healthData!!.score
         ++constraint.gridy
         constraint.gridx = 0
 
         val badgeDetails = resolveHealthBadge(score)
 
-        add(JPanel().apply {
-            layout = BoxLayout(this, BoxLayout.X_AXIS)
+        add(
+            JPanel().apply {
+                layout = BoxLayout(this, BoxLayout.X_AXIS)
 
-            constraint.insets = JBUI.insetsTop(16)
+                constraint.insets = JBUI.insetsTop(16)
 
-            add(JLabel(score.toString()).apply {
-                font = Font("Arial", Font.BOLD, 24)
-            }, constraint)
+                add(
+                    JLabel(score).apply {
+                        font = Font("Arial", Font.BOLD, 24)
+                    },
+                    constraint,
+                )
 
-            add(Box.createHorizontalStrut(8), constraint)
+                add(Box.createHorizontalStrut(8), constraint)
 
-            add(JButton(badgeDetails.first).apply {
-                foreground = badgeDetails.second
-                isContentAreaFilled = false
-                isFocusPainted = false
-                border = RoundedLineBorder(badgeDetails.second, 12)
-                isOpaque = false
-            })
-        }, constraint)
+                add(
+                    JButton(badgeDetails.first).apply {
+                        foreground = badgeDetails.second
+                        isContentAreaFilled = false
+                        isFocusPainted = false
+                        border = RoundedLineBorder(badgeDetails.second, 12)
+                        isOpaque = false
+                    },
+                )
+            },
+            constraint,
+        )
 
         constraint.insets = JBUI.emptyInsets()
     }
 
-    private fun JPanel.addSlider(details: CodeHealthDetails, constraint: GridBagConstraints) {
+    private fun JPanel.addSlider(
+        details: CodeHealthDetails,
+        constraint: GridBagConstraints,
+    ) {
         ++constraint.gridy
         constraint.gridx = 0
         constraint.ipady = 30
@@ -195,13 +223,20 @@ class CodeHealthPanelBuilder(private val project: Project) {
         constraint.weightx = 0.0
     }
 
-    private fun splitString(input: String, delimiter: String, limit: Int = 2): Pair<String, String> {
+    private fun splitString(
+        input: String,
+        delimiter: String,
+        limit: Int = 2,
+    ): Pair<String, String> {
         val parts = input.split(delimiter, limit = limit)
 
         return Pair(parts[0], parts[1])
     }
 
-    private fun JPanel.addBody(details: CodeHealthDetails, constraint: GridBagConstraints) {
+    private fun JPanel.addBody(
+        details: CodeHealthDetails,
+        constraint: GridBagConstraints,
+    ) {
         ++constraint.gridy
 
         details.body.forEach { item ->
@@ -209,13 +244,16 @@ class CodeHealthPanelBuilder(private val project: Project) {
             constraint.gridx = 0
             constraint.gridwidth = 3
 
-            if (details.type == CodeHealthDetailsType.FUNCTION && item.codeSmell != null) addFunctionTitle(
-                item,
-                details.filePath,
-                item.codeSmell,
-                constraint
-            )
-            else addTitle(item, constraint)
+            if (details.type == CodeHealthDetailsType.FUNCTION && item.codeSmell != null) {
+                addFunctionTitle(
+                    item,
+                    details.filePath,
+                    item.codeSmell,
+                    constraint,
+                )
+            } else {
+                addTitle(item, constraint)
+            }
 
             constraint.ipady = 0
             ++constraint.gridy
@@ -228,14 +266,20 @@ class CodeHealthPanelBuilder(private val project: Project) {
         }
     }
 
-    private fun JPanel.addHealthDecline(details: CodeHealthDetails, constraint: GridBagConstraints) {
+    private fun JPanel.addHealthDecline(
+        details: CodeHealthDetails,
+        constraint: GridBagConstraints,
+    ) {
         ++constraint.gridy
         constraint.gridx = 0
 
         constraint.insets = JBUI.insetsTop(8)
-        add(JLabel(details.healthData!!.status).apply {
-            foreground = JBColor.GRAY
-        }, constraint)
+        add(
+            JLabel(details.healthData!!.status).apply {
+                foreground = JBColor.GRAY
+            },
+            constraint,
+        )
 
         constraint.insets = JBUI.emptyInsets()
     }
@@ -244,40 +288,51 @@ class CodeHealthPanelBuilder(private val project: Project) {
         item: Paragraph,
         filePath: String,
         codeSmell: CodeSmell,
-        constraint: GridBagConstraints
+        constraint: GridBagConstraints,
     ) {
-        add(JPanel().apply {
-            layout = BoxLayout(this, BoxLayout.X_AXIS)
-            border = JBUI.Borders.empty()
+        add(
+            JPanel().apply {
+                layout = BoxLayout(this, BoxLayout.X_AXIS)
+                border = JBUI.Borders.empty()
 
-            val (first, second) = splitString(item.heading, " ")
-            val firstLabel = JLabel(first).apply {
-                font = Font("Arial", Font.BOLD, JBUI.Fonts.label().size)
-                icon = item.icon
-            }
+                val (first, second) = splitString(item.heading, " ")
+                val firstLabel =
+                    JLabel(first).apply {
+                        font = Font("Arial", Font.BOLD, JBUI.Fonts.label().size)
+                        icon = item.icon
+                    }
 
-            add(firstLabel)
+                add(firstLabel)
 
-            add(Box.createHorizontalStrut(7))
+                add(Box.createHorizontalStrut(7))
 
-            val secondLabel = JLabel(second).apply {
-                font = Font("Arial", Font.BOLD, JBUI.Fonts.label().size)
-                foreground = JBUI.CurrentTheme.Link.FOCUSED_BORDER_COLOR
+                val secondLabel =
+                    JLabel(second).apply {
+                        font = Font("Arial", Font.BOLD, JBUI.Fonts.label().size)
+                        foreground = JBUI.CurrentTheme.Link.FOCUSED_BORDER_COLOR
 
-                addMouseListener(getMouseAdapter(project, codeSmell, filePath))
-            }
+                        addMouseListener(getMouseAdapter(project, codeSmell, filePath))
+                    }
 
-            add(secondLabel)
-        }, constraint)
+                add(secondLabel)
+            },
+            constraint,
+        )
     }
 
-    private fun JPanel.addTitle(item: Paragraph, constraint: GridBagConstraints) {
+    private fun JPanel.addTitle(
+        item: Paragraph,
+        constraint: GridBagConstraints,
+    ) {
         constraint.insets = JBUI.insetsTop(15)
 
-        add(JLabel(item.heading).apply {
-            icon = item.icon
-            font = Font("Arial", Font.BOLD, JBUI.Fonts.label().size)
-        }, constraint)
+        add(
+            JLabel(item.heading).apply {
+                icon = item.icon
+                font = Font("Arial", Font.BOLD, JBUI.Fonts.label().size)
+            },
+            constraint,
+        )
 
         constraint.insets = JBUI.emptyInsets()
     }
@@ -293,19 +348,22 @@ class CodeHealthPanelBuilder(private val project: Project) {
                 cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
             }
 
-        linkLabel.addMouseListener(object : MouseAdapter() {
-            override fun mouseClicked(e: MouseEvent?) {
-                Desktop.getDesktop().browse(URI.create(CODE_HEALTH_URL))
-            }
-        })
+        linkLabel.addMouseListener(
+            object : MouseAdapter() {
+                override fun mouseClicked(e: MouseEvent?) {
+                    Desktop.getDesktop().browse(URI.create(CODE_HEALTH_URL))
+                }
+            },
+        )
 
         add(linkLabel, constraint)
     }
 
-    private fun getGridBagConstraints() = GridBagConstraints().apply {
-        fill = GridBagConstraints.HORIZONTAL
-        insets = JBUI.emptyInsets()
-        weightx = 0.0
-        weighty = 0.0
-    }
+    private fun getGridBagConstraints() =
+        GridBagConstraints().apply {
+            fill = GridBagConstraints.HORIZONTAL
+            insets = JBUI.emptyInsets()
+            weightx = 0.0
+            weighty = 0.0
+        }
 }

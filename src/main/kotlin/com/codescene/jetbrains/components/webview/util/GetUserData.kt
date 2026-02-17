@@ -21,11 +21,12 @@ import com.intellij.openapi.util.Key
 private fun <T> getUserDataForTab(
     project: Project,
     tabTitle: String,
-    key: Key<T>
-): T? = FileEditorManager.getInstance(project)
-    .openFiles
-    .find { it.name == tabTitle }
-    ?.getUserData(key)
+    key: Key<T>,
+): T? =
+    FileEditorManager.getInstance(project)
+        .openFiles
+        .find { it.name == tabTitle }
+        ?.getUserData(key)
 
 /**
  * Retrieves the ACE user data stored in the custom ACE editor tab.

@@ -16,7 +16,9 @@ import kotlinx.coroutines.withContext
 import org.jetbrains.annotations.NotNull
 
 @Service(Service.Level.PROJECT)
-class UIRefreshService(private val project: Project) {
+class UIRefreshService(
+    private val project: Project,
+) {
     private val codeVisionHost = project.service<CodeVisionHost>()
 
     companion object {
@@ -26,27 +28,30 @@ class UIRefreshService(private val project: Project) {
     suspend fun refreshUI(
         @NotNull editor: Editor,
         providers: List<String>,
-        dispatcher: CoroutineDispatcher = Dispatchers.Main
-    ) =
-        withContext(dispatcher) {
-            refreshCodeVision(editor, providers)
+        dispatcher: CoroutineDispatcher = Dispatchers.Main,
+    ) = withContext(dispatcher) {
+        refreshCodeVision(editor, providers)
 
-            refreshAnnotations(editor)
+        refreshAnnotations(editor)
 
-            Log.debug("UI refresh complete for file: ${editor.virtualFile.name}")
-        }
+        Log.debug("UI refresh complete for file: ${editor.virtualFile.name}")
+    }
 
     suspend fun refreshCodeVision(
         editor: Editor,
         providers: List<String>,
-        dispatcher: CoroutineDispatcher = Dispatchers.Main
+        dispatcher: CoroutineDispatcher = Dispatchers.Main,
     ) = withContext(dispatcher) {
-        val invalidateSignal = CodeVisionHost.LensInvalidateSignal(
-            editor,
-            providerIds = providers
-        )
+        val invalidateSignal =
+            CodeVisionHost.LensInvalidateSignal(
+                editor,
+                providerIds = providers,
+            )
 
-        Log.info("Refreshing code lens display for file ${editor.virtualFile?.name} with provider IDs: ${invalidateSignal.providerIds}")
+        Log.info(
+            "Refreshing code lens display for file ${editor.virtualFile?.name} " +
+                "with provider IDs: ${invalidateSignal.providerIds}",
+        )
 
         codeVisionHost.invalidateProvider(invalidateSignal)
     }
@@ -59,11 +64,13 @@ class UIRefreshService(private val project: Project) {
 
             withContext(Dispatchers.Main) {
                 try {
-                    ApplicationManager.getApplication()
+                    ApplicationManager
+                        .getApplication()
                         .runWriteAction<Unit, RuntimeException> {
-                            DaemonCodeAnalyzer.getInstance(project)
+                            DaemonCodeAnalyzer
+                                .getInstance(project)
                                 .restart(psiFile)
-                    }
+                        }
                 } catch (e: Exception) {
                     Log.warn("Failed to refresh annotations for file: ${psiFile.name}. Error: ${e.message}")
                 }

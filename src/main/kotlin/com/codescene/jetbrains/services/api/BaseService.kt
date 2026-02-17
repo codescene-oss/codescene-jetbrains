@@ -5,7 +5,6 @@ import com.codescene.jetbrains.util.Log
 data class TimedResult<T>(val result: T, val elapsedMs: Long)
 
 open class BaseService() {
-
     private val serviceImplementation = this::class.java.simpleName
 
     /**

@@ -5,8 +5,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.util.PathUtil.getFileExtension
 
 @Service
-class StatsCollectorService(): BaseService() {
-
+class StatsCollectorService() : BaseService() {
     val stats: Stats = Stats()
 
     // TODO: Uncomment this code when review stats would be needed and use this service to record review stats data
@@ -14,7 +13,10 @@ class StatsCollectorService(): BaseService() {
 //        fun getInstance(): StatsCollectorService = service<StatsCollectorService>()
 //    }
 
-    fun recordAnalysis(fileName: String, time: Double) {
+    fun recordAnalysis(
+        fileName: String,
+        time: Double,
+    ) {
         // Skip record if time is negative or zero. Must be some kind of error.
         if (time <= 0) return
 
@@ -34,8 +36,8 @@ class StatsCollectorService(): BaseService() {
                         runs = 1,
                         sum = time,
                         avgTime = time,
-                        maxTime = time
-                    )
+                        maxTime = time,
+                    ),
                 )
             }
         }
@@ -44,11 +46,10 @@ class StatsCollectorService(): BaseService() {
     fun clear() {
         stats.analysis.clear()
     }
-
 }
 
 data class Stats(
-    val analysis: MutableList<AnalysisStats> = mutableListOf<AnalysisStats>()
+    val analysis: MutableList<AnalysisStats> = mutableListOf<AnalysisStats>(),
 )
 
 data class AnalysisStats(
@@ -56,5 +57,5 @@ data class AnalysisStats(
     var runs: Int,
     var sum: Double,
     var avgTime: Double,
-    var maxTime: Double
+    var maxTime: Double,
 )

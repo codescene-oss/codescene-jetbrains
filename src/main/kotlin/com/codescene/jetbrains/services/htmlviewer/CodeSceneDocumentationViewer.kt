@@ -18,11 +18,13 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.testFramework.LightVirtualFile
 
-enum class DocsEntryPoint(val value: String) {
+enum class DocsEntryPoint(
+    val value: String,
+) {
     ACTION("action"),
     CODE_VISION("codelens (review)"),
     INTENTION_ACTION("diagnostic-item"),
-    CODE_HEALTH_DETAILS("code-health-details")
+    CODE_HEALTH_DETAILS("code-health-details"),
 }
 
 data class DocumentationParams(
@@ -35,7 +37,9 @@ data class DocumentationParams(
 
 // TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 @Service(Service.Level.PROJECT)
-class CodeSceneDocumentationViewer(private val project: Project) : HtmlViewer<DocumentationParams>(project) {
+class CodeSceneDocumentationViewer(
+    private val project: Project,
+) : HtmlViewer<DocumentationParams>(project) {
     companion object {
         fun getInstance(project: Project) = project.service<CodeSceneDocumentationViewer>()
     }
@@ -47,25 +51,30 @@ class CodeSceneDocumentationViewer(private val project: Project) : HtmlViewer<Do
         val builder = DocumentationHtmlContentBuilder()
         val contentParams = TransformMarkdownParams(getContent(heading), heading, isGeneralDocumentation)
 
-        val scriptTag = """
+        val scriptTag =
+            """
             <script id="function-data" type="application/json">
               {
                  "fileName": "$filePath",
                  "focusLine": $focusLine
               }
             </script>
-        """.trimIndent()
+            """.trimIndent()
 
-        if (!isGeneralDocumentation) builder
-            .title(heading)
-            .functionLocation(fileName, focusLine ?: 1)
-            .withWebViewData(scriptTag)
-        else builder.title(heading, Constants.LOGO_PATH)
+        if (!isGeneralDocumentation) {
+            builder
+                .title(heading)
+                .functionLocation(fileName, focusLine ?: 1)
+                .withWebViewData(scriptTag)
+        } else {
+            builder.title(heading, Constants.LOGO_PATH)
+        }
 
-        val fileContent = builder
-            .usingStyleSheet(Constants.STYLE_BASE_PATH + "code-smell.css")
-            .content(contentParams)
-            .build()
+        val fileContent =
+            builder
+                .usingStyleSheet(Constants.STYLE_BASE_PATH + "code-smell.css")
+                .content(contentParams)
+                .build()
 
         return createTempFile(CreateTempFileParams("$heading.md", fileContent, project))
     }
@@ -76,8 +85,8 @@ class CodeSceneDocumentationViewer(private val project: Project) : HtmlViewer<Do
                 TelemetryEvents.OPEN_DOCS_PANEL,
                 mutableMapOf<String, Any>(
                     Pair("source", params.docsEntryPoint),
-                    Pair("category", params.heading)
-                )
+                    Pair("category", params.heading),
+                ),
             )
         }
     }
@@ -88,14 +97,16 @@ class CodeSceneDocumentationViewer(private val project: Project) : HtmlViewer<Do
          *  baseline and new docs version is released,
          *  then, delete local code-health-monitor doc file.
          */
-        val prefix = when (heading) {
-            CODE_HEALTH_MONITOR -> ""
-            GENERAL_CODE_HEALTH -> DOCUMENTATION_BASE_PATH
-            else -> ISSUES_PATH
-        }
+        val prefix =
+            when (heading) {
+                CODE_HEALTH_MONITOR -> ""
+                GENERAL_CODE_HEALTH -> DOCUMENTATION_BASE_PATH
+                else -> ISSUES_PATH
+            }
         val filePath = "${prefix}${categoryToFileName(heading)}.md"
 
-        return this@CodeSceneDocumentationViewer.javaClass.classLoader
+        return this@CodeSceneDocumentationViewer
+            .javaClass.classLoader
             .getResourceAsStream(filePath)
             ?.bufferedReader()
             ?.readText()

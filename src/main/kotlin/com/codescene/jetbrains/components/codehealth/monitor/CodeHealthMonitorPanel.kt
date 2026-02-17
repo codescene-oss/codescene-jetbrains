@@ -48,20 +48,21 @@ import kotlinx.coroutines.withContext
 class CodeHealthMonitorPanel(private val project: Project) {
     private var refreshJob: Job? = null
     private val service = "Code Health Monitor - ${project.name}"
-    var contentPanel = JBPanel<JBPanel<*>>().apply {
-        border = null
-        layout = BoxLayout(this, BoxLayout.Y_AXIS)
+    var contentPanel =
+        JBPanel<JBPanel<*>>().apply {
+            border = null
+            layout = BoxLayout(this, BoxLayout.Y_AXIS)
 
-        addHierarchyListener { event ->
-            // Check if the SHOWING_CHANGED bit is affected
-            if (event.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
-                TelemetryService.getInstance().logUsage(
-                    TelemetryEvents.MONITOR_VISIBILITY,
-                    mutableMapOf<String, Any>(Pair("visible", this.isShowing))
-                )
+            addHierarchyListener { event ->
+                // Check if the SHOWING_CHANGED bit is affected
+                if (event.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
+                    TelemetryService.getInstance().logUsage(
+                        TelemetryEvents.MONITOR_VISIBILITY,
+                        mutableMapOf<String, Any>(Pair("visible", this.isShowing)),
+                    )
+                }
             }
         }
-    }
     val healthMonitoringResults: ConcurrentHashMap<String, Delta> = ConcurrentHashMap()
 
     companion object {
@@ -81,17 +82,22 @@ class CodeHealthMonitorPanel(private val project: Project) {
     private fun JBPanel<JBPanel<*>>.renderContent(shouldCollapseTree: Boolean) {
         val monitorEnabled = CodeSceneGlobalSettingsStore.getInstance().state.codeHealthMonitorEnabled
 
-        val message = if (monitorEnabled)
-            "Rendering content with results: $healthMonitoringResults"
-        else "Code Health monitoring is not available in the freemium version. Rendering CTA placeholder..."
+        val message =
+            if (monitorEnabled) {
+                "Rendering content with results: $healthMonitoringResults"
+            } else {
+                "Code Health monitoring is not available in the freemium version. Rendering CTA placeholder..."
+            }
         Log.debug(message, service)
 
-        if (!monitorEnabled) renderFreemiumPlaceholder()
-        else if (healthMonitoringResults.isEmpty()) {
+        if (!monitorEnabled) {
+            renderFreemiumPlaceholder()
+        } else if (healthMonitoringResults.isEmpty()) {
             addPlaceholderText()
             project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(null)
-        } else
+        } else {
             renderFileTree(shouldCollapseTree)
+        }
     }
 
     private fun JBPanel<JBPanel<*>>.renderFreemiumPlaceholder() {
@@ -109,8 +115,9 @@ class CodeHealthMonitorPanel(private val project: Project) {
         Log.debug("Rendering code health information file tree for: $files.", service)
 
         // Sort the tree according to the selected sorting option before creating it
-        val fileTree = CodeHealthTreeBuilder.getInstance(project)
-            .createTree(sortDeltaFindings(healthMonitoringResults), shouldCollapseTree)
+        val fileTree =
+            CodeHealthTreeBuilder.getInstance(project)
+                .createTree(sortDeltaFindings(healthMonitoringResults), shouldCollapseTree)
 
         layout = BorderLayout()
 
@@ -124,81 +131,92 @@ class CodeHealthMonitorPanel(private val project: Project) {
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
         border = JBUI.Borders.empty(10)
 
-        val textArea = JTextArea(message).apply {
-            isEditable = false
-            isOpaque = false
-            lineWrap = true
-            wrapStyleWord = true
-            preferredSize = Dimension(300, 100)
-            foreground = JBColor.GRAY
-            alignmentX = Component.CENTER_ALIGNMENT
-            font = UIUtil.getFont(UIUtil.FontSize.NORMAL, Font.getFont("Arial"))
-        }
+        val textArea =
+            JTextArea(message).apply {
+                isEditable = false
+                isOpaque = false
+                lineWrap = true
+                wrapStyleWord = true
+                preferredSize = Dimension(300, 100)
+                foreground = JBColor.GRAY
+                alignmentX = Component.CENTER_ALIGNMENT
+                font = UIUtil.getFont(UIUtil.FontSize.NORMAL, Font.getFont("Arial"))
+            }
 
         add(textArea)
     }
 
     private fun syncCache(file: VirtualFile) {
         val path = file.path
-        val code = runReadAction { file.findDocument()?.text }
-            ?: run {
-                Log.warn(
-                    "Could not find document for file ${file.path}. Skipping code health monitor refresh.",
-                    service
-                )
-                return
-            }
+        val code =
+            runReadAction { file.findDocument()?.text }
+                ?: run {
+                    Log.warn(
+                        "Could not find document for file ${file.path}. Skipping code health monitor refresh.",
+                        service,
+                    )
+                    return
+                }
 
         val headCommit = GitService.getInstance(project).getBranchCreationCommitCode(file)
 
-        val cachedDelta = DeltaCacheService.getInstance(project)
-            .get(DeltaCacheQuery(path, headCommit, code))
+        val cachedDelta =
+            DeltaCacheService.getInstance(project)
+                .get(DeltaCacheQuery(path, headCommit, code))
 
         Log.debug("Cached delta: $cachedDelta", service)
 
-        if (cachedDelta.second != null)
+        if (cachedDelta.second != null) {
             updateAndSendTelemetry(path, cachedDelta.second!!)
-        else
+        } else {
             healthMonitoringResults.remove(path)?.let {
                 TelemetryService.getInstance().logUsage(TelemetryEvents.MONITOR_FILE_REMOVED)
             }
+        }
     }
 
     fun refreshContent(
         file: VirtualFile?,
         shouldCollapseTree: Boolean = false,
-        scope: CoroutineScope = CoroutineScope(Dispatchers.Main)
+        scope: CoroutineScope = CoroutineScope(Dispatchers.Main),
     ) {
         refreshJob?.cancel()
 
-        refreshJob = scope.launch {
-            if (file != null) withContext(Dispatchers.IO) { syncCache(file) }
+        refreshJob =
+            scope.launch {
+                if (file != null) withContext(Dispatchers.IO) { syncCache(file) }
 
-            Log.debug("Refreshing content for $healthMonitoringResults", service)
+                Log.debug("Refreshing content for $healthMonitoringResults", service)
 
-            updatePanel(shouldCollapseTree)
+                updatePanel(shouldCollapseTree)
 
-            updateToolWindowIcon()
-        }
+                updateToolWindowIcon()
+            }
     }
 
     /*
        TODO: provide additional data nRefactorableFunctions to add and update telemetry events,
         when refactoring logic available
-    */
-    private fun updateAndSendTelemetry(path: String, cachedDelta: Delta) {
+     */
+    private fun updateAndSendTelemetry(
+        path: String,
+        cachedDelta: Delta,
+    ) {
         val numberOfIssues = cachedDelta.fileLevelFindings.size + cachedDelta.functionLevelFindings.size
 
-        val telemetryEvent = if (healthMonitoringResults[path] != null)
-            TelemetryEvents.MONITOR_FILE_UPDATED
-        else
-            TelemetryEvents.MONITOR_FILE_ADDED
+        val telemetryEvent =
+            if (healthMonitoringResults[path] != null) {
+                TelemetryEvents.MONITOR_FILE_UPDATED
+            } else {
+                TelemetryEvents.MONITOR_FILE_ADDED
+            }
 
         TelemetryService.getInstance().logUsage(
-            telemetryEvent, mutableMapOf<String, Any>(
+            telemetryEvent,
+            mutableMapOf<String, Any>(
                 Pair("scoreChange", cachedDelta.scoreChange),
-                Pair("nIssues", numberOfIssues)
-            )
+                Pair("nIssues", numberOfIssues),
+            ),
         )
 
         healthMonitoringResults[path] = cachedDelta
@@ -218,16 +236,21 @@ class CodeHealthMonitorPanel(private val project: Project) {
         if (toolWindow != null) {
             val originalIcon = CODESCENE_TW
 
-            val notificationIcon = if (healthMonitoringResults.isNotEmpty())
-                ExecutionUtil.getIndicator(originalIcon, 10, 10, JBUI.CurrentTheme.IconBadge.INFORMATION)
-            else
-                originalIcon
+            val notificationIcon =
+                if (healthMonitoringResults.isNotEmpty()) {
+                    ExecutionUtil.getIndicator(originalIcon, 10, 10, JBUI.CurrentTheme.IconBadge.INFORMATION)
+                } else {
+                    originalIcon
+                }
 
             toolWindow.setIcon(notificationIcon)
         }
     }
 
-    fun invalidateAndRefreshContent(fileToInvalidate: String, file: VirtualFile? = null) {
+    fun invalidateAndRefreshContent(
+        fileToInvalidate: String,
+        file: VirtualFile? = null,
+    ) {
         healthMonitoringResults.remove(fileToInvalidate)
 
         refreshContent(file)

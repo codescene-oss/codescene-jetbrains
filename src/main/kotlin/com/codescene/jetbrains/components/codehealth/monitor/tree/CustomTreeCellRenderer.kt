@@ -11,10 +11,11 @@ import javax.swing.tree.DefaultTreeCellRenderer
 
 // TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
-    private val additionalLabel = JLabel().apply {
-        foreground = JBColor.GRAY
-        isVisible = false
-    }
+    private val additionalLabel =
+        JLabel().apply {
+            foreground = JBColor.GRAY
+            isVisible = false
+        }
 
     override fun getTreeCellRendererComponent(
         tree: JTree,
@@ -23,7 +24,7 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
         expanded: Boolean,
         leaf: Boolean,
         row: Int,
-        hasFocus: Boolean
+        hasFocus: Boolean,
     ): JComponent {
         val component =
             super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus) as JComponent
@@ -44,8 +45,9 @@ class CustomTreeCellRenderer : DefaultTreeCellRenderer() {
                 if (collapsedParent && userObject.numberOfImprovableFunctions != 0) {
                     additionalLabel.text = userObject.numberOfImprovableFunctions.toString()
                     additionalLabel.isVisible = true
-                } else
+                } else {
                     additionalLabel.isVisible = false
+                }
             }
         }
 

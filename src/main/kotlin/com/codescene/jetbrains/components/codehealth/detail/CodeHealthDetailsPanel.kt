@@ -30,33 +30,38 @@ import javax.swing.JTextArea
 @Service(Service.Level.PROJECT)
 class CodeHealthDetailsPanel(private val project: Project) {
     private var details: CodeHealthDetails? = null
-    private var contentPanel = JBPanel<JBPanel<*>>().apply {
-        layout = BorderLayout()
-        addPlaceholder()
+    private var contentPanel =
+        JBPanel<JBPanel<*>>().apply {
+            layout = BorderLayout()
+            addPlaceholder()
 
-        addHierarchyListener { event ->
-            // Check if the SHOWING_CHANGED bit is affected
-            if (event.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
-                TelemetryService.getInstance().logUsage(
-                    TelemetryEvents.DETAILS_VISIBILITY,
-                    mutableMapOf<String, Any>(Pair("visible", this.isShowing)))
+            addHierarchyListener { event ->
+                // Check if the SHOWING_CHANGED bit is affected
+                if (event.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
+                    TelemetryService.getInstance().logUsage(
+                        TelemetryEvents.DETAILS_VISIBILITY,
+                        mutableMapOf<String, Any>(Pair("visible", this.isShowing)),
+                    )
+                }
             }
         }
-    }
     private val service = "Code Health Details - ${project.name}"
 
     companion object {
         fun getInstance(project: Project): CodeHealthDetailsPanel = project.service<CodeHealthDetailsPanel>()
     }
 
-    fun getContent() = JBScrollPane(JPanel().apply {
-        layout = BorderLayout()
-        add(contentPanel)
-    }).apply {
-        border = JBUI.Borders.empty()
-        verticalScrollBarPolicy = JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
-        horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_NEVER
-    }
+    fun getContent() =
+        JBScrollPane(
+            JPanel().apply {
+                layout = BorderLayout()
+                add(contentPanel)
+            },
+        ).apply {
+            border = JBUI.Borders.empty()
+            verticalScrollBarPolicy = JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
+            horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+        }
 
     private fun JPanel.renderContent() {
         Log.debug("Rendering content...", service)
@@ -64,43 +69,49 @@ class CodeHealthDetailsPanel(private val project: Project) {
         val panelBuilder = CodeHealthPanelBuilder.getInstance(project)
         layout = BorderLayout()
 
-        if (details == null) addPlaceholder()
-        else add(panelBuilder.getPanel(details!!), BorderLayout.NORTH)
+        if (details == null) {
+            addPlaceholder()
+        } else {
+            add(panelBuilder.getPanel(details!!), BorderLayout.NORTH)
+        }
     }
 
     private fun JPanel.addPlaceholder() {
         val message = UiLabelsBundle.message("selectAFunction")
         Log.debug("No finding found, rendering placeholder...", service)
 
-        val panel = JPanel().apply {
-            layout = BoxLayout(this, BoxLayout.Y_AXIS)
-            border = JBUI.Borders.empty(10)
+        val panel =
+            JPanel().apply {
+                layout = BoxLayout(this, BoxLayout.Y_AXIS)
+                border = JBUI.Borders.empty(10)
 
-            val textArea = JTextArea(message).apply {
-                isEditable = false
-                isOpaque = false
-                lineWrap = true
-                wrapStyleWord = true
-                maximumSize = Dimension(550, 25)
-                foreground = JBColor.GRAY
-                alignmentX = Component.CENTER_ALIGNMENT
-                font = UIUtil.getFont(UIUtil.FontSize.NORMAL, Font.getFont("Arial"))
+                val textArea =
+                    JTextArea(message).apply {
+                        isEditable = false
+                        isOpaque = false
+                        lineWrap = true
+                        wrapStyleWord = true
+                        maximumSize = Dimension(550, 25)
+                        foreground = JBColor.GRAY
+                        alignmentX = Component.CENTER_ALIGNMENT
+                        font = UIUtil.getFont(UIUtil.FontSize.NORMAL, Font.getFont("Arial"))
+                    }
+
+                add(Box.createVerticalGlue())
+                add(textArea)
+                add(Box.createVerticalGlue())
             }
-
-            add(Box.createVerticalGlue())
-            add(textArea)
-            add(Box.createVerticalGlue())
-        }
 
         add(panel, BorderLayout.CENTER)
     }
 
     fun refreshContent(finding: CodeHealthFinding?) {
-        details = finding?.let {
-            CodeHealthMonitorPanel.getInstance(project).healthMonitoringResults[it.filePath]?.let { delta ->
-                getHealthFinding(delta, it, project)
+        details =
+            finding?.let {
+                CodeHealthMonitorPanel.getInstance(project).healthMonitoringResults[it.filePath]?.let { delta ->
+                    getHealthFinding(delta, it, project)
+                }
             }
-        }
 
         contentPanel.removeAll()
         contentPanel.renderContent()

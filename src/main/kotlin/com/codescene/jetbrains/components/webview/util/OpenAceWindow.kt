@@ -29,7 +29,7 @@ data class AceCwfParams(
     val error: String? = null,
     val stale: Boolean = false,
     val loading: Boolean = false,
-    val refactorResponse: RefactorResponse? = null
+    val refactorResponse: RefactorResponse? = null,
 )
 
 /**
@@ -50,7 +50,10 @@ data class AceCwfParams(
  * @param params The ACE data to be displayed in the webview.
  * @param project The current project.
  */
-fun openAceWindow(params: AceCwfParams, project: Project) {
+fun openAceWindow(
+    params: AceCwfParams,
+    project: Project,
+) {
     val existingBrowser = WebViewInitializer.getInstance(project).getBrowser(View.ACE)
 
     if (existingBrowser != null) updateWebView(params, existingBrowser, project) else openFile(params, project)
@@ -58,14 +61,19 @@ fun openAceWindow(params: AceCwfParams, project: Project) {
     params.refactorResponse?.let { sendTelemetry(params.refactorResponse) }
 }
 
-private fun updateWebView(params: AceCwfParams, browser: JBCefBrowser, project: Project) {
+private fun updateWebView(
+    params: AceCwfParams,
+    browser: JBCefBrowser,
+    project: Project,
+) {
     val mapper = AceMapper.getInstance()
     val messageHandler = CwfMessageHandler.getInstance(project)
 
-    val dataJson = parseMessage(
-        mapper = { mapper.toCwfData(params) },
-        serializer = CwfData.serializer(AceData.serializer())
-    )
+    val dataJson =
+        parseMessage(
+            mapper = { mapper.toCwfData(params) },
+            serializer = CwfData.serializer(AceData.serializer()),
+        )
 
     // Update CWF editor context
     mapper.toCwfData(params).data?.let {
@@ -74,17 +82,26 @@ private fun updateWebView(params: AceCwfParams, browser: JBCefBrowser, project: 
     messageHandler.postMessage(View.ACE, dataJson, browser)
 }
 
-private fun updateUserData(data: AceData, function: FnToRefactor, refactoring: RefactorResponse?, project: Project) {
-    val fileEditor = FileEditorManager.getInstance(project)
-        .allEditors
-        .firstOrNull { it.file.name == UiLabelsBundle.message("ace") }
+private fun updateUserData(
+    data: AceData,
+    function: FnToRefactor,
+    refactoring: RefactorResponse?,
+    project: Project,
+) {
+    val fileEditor =
+        FileEditorManager.getInstance(project)
+            .allEditors
+            .firstOrNull { it.file.name == UiLabelsBundle.message("ace") }
     (fileEditor?.file as? LightVirtualFile)?.putUserData(
         CWF_ACE_DATA_KEY,
-        CwfAceFileEditorProviderData(data, function, refactoring)
+        CwfAceFileEditorProviderData(data, function, refactoring),
     )
 }
 
-private fun openFile(params: AceCwfParams, project: Project) {
+private fun openFile(
+    params: AceCwfParams,
+    project: Project,
+) {
     val fileEditorManager = FileEditorManager.getInstance(project)
 
     val mapper = AceMapper.getInstance()
@@ -97,18 +114,20 @@ private fun openFile(params: AceCwfParams, project: Project) {
     CoroutineScope(Dispatchers.Main).launch {
         val editor = getSelectedTextEditor(project, "", "${this::class.simpleName} - ${project.name}")
 
-        if (editor != null)
+        if (editor != null) {
             FileUtils.splitWindow(file, fileEditorManager, project)
-        else
+        } else {
             FileUtils.openDocumentationWithoutActiveEditor(file, fileEditorManager)
+        }
     }
 }
 
 private fun sendTelemetry(refactoring: RefactorResponse) {
     TelemetryService.getInstance().logUsage(
-        TelemetryEvents.ACE_REFACTOR_PRESENTED, mutableMapOf(
+        TelemetryEvents.ACE_REFACTOR_PRESENTED,
+        mutableMapOf(
             Pair("confidence", refactoring.confidence.level),
-            Pair("isCached", refactoring.metadata.cached ?: false)
-        )
+            Pair("isCached", refactoring.metadata.cached ?: false),
+        ),
     )
 }

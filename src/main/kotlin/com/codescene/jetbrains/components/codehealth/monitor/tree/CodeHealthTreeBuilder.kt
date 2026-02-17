@@ -38,7 +38,7 @@ enum class NodeType {
     CODE_HEALTH_NEUTRAL,
     FILE_FINDING,
     FILE_FINDING_FIXED,
-    FUNCTION_FINDING
+    FUNCTION_FINDING,
 }
 
 data class CodeHealthFinding(
@@ -49,7 +49,7 @@ data class CodeHealthFinding(
     val nodeType: NodeType,
     val additionalText: String = "",
     val functionFindingIssues: Int = 1,
-    val numberOfImprovableFunctions: Int = 0
+    val numberOfImprovableFunctions: Int = 0,
 )
 
 // TODO[CWF-DELETE]: Remove once CWF is fully rolled out
@@ -67,7 +67,7 @@ class CodeHealthTreeBuilder(private val project: Project) {
 
     fun createTree(
         results: List<Map.Entry<String, Delta>>,
-        shouldCollapseTree: Boolean
+        shouldCollapseTree: Boolean,
     ): Tree {
         val root = DefaultMutableTreeNode()
         results.map { buildNode(it.key, it.value) }.forEach { root.add(it) }
@@ -77,20 +77,26 @@ class CodeHealthTreeBuilder(private val project: Project) {
         return getTree(root, shouldCollapseTree)
     }
 
-    private fun getTree(root: DefaultMutableTreeNode, shouldCollapseTree: Boolean): Tree {
-        val tree = Tree(DefaultTreeModel(root)).apply {
-            isRootVisible = false
-            isFocusable = false
-            alignmentX = Component.LEFT_ALIGNMENT
-            cellRenderer = CustomTreeCellRenderer()
-            minimumSize = Dimension(200, 80)
+    private fun getTree(
+        root: DefaultMutableTreeNode,
+        shouldCollapseTree: Boolean,
+    ): Tree {
+        val tree =
+            Tree(DefaultTreeModel(root)).apply {
+                isRootVisible = false
+                isFocusable = false
+                alignmentX = Component.LEFT_ALIGNMENT
+                cellRenderer = CustomTreeCellRenderer()
+                minimumSize = Dimension(200, 80)
 
-            addTreeSelectionListener(::handleTreeSelectionEvent)
-            addMouseMotionListener(TreeMouseMotionAdapter(this))
-            addTreeExpansionListener(CustomTreeExpansionListener(collapsedPaths))
-        }
+                addTreeSelectionListener(::handleTreeSelectionEvent)
+                addMouseMotionListener(TreeMouseMotionAdapter(this))
+                addTreeExpansionListener(CustomTreeExpansionListener(collapsedPaths))
+            }
 
-        if (!shouldCollapseTree) expandNodes(tree) else {
+        if (!shouldCollapseTree) {
+            expandNodes(tree)
+        } else {
             deselectNodeAndCodeHealthFinding()
             TreeUtil.collapseAll(tree, -1)
         }
@@ -134,8 +140,9 @@ class CodeHealthTreeBuilder(private val project: Project) {
                 suppressFocusOnLine = true
                 tree.selectionModel.selectionPath = TreePath(selectedChild.path)
                 suppressFocusOnLine = false
-            } else
+            } else {
                 deselectNodeAndCodeHealthFinding()
+            }
         }
 
     private fun deselectNodeAndCodeHealthFinding() {
@@ -152,8 +159,9 @@ class CodeHealthTreeBuilder(private val project: Project) {
             Log.debug("Selected node with finding $finding", service)
             handleSelectionTelemetry(finding)
 
-            if (!suppressFocusOnLine && finding.focusLine != null)
+            if (!suppressFocusOnLine && finding.focusLine != null) {
                 navigationService.focusOnLine(finding.filePath, finding.focusLine)
+            }
 
             project.messageBus.syncPublisher(CodeHealthDetailsRefreshNotifier.TOPIC).refresh(finding)
             selectedNode = targetNode.userObject as CodeHealthFinding
@@ -180,7 +188,7 @@ class CodeHealthTreeBuilder(private val project: Project) {
             // TODO: provide additional data isRefactoringSupported when refactoring logic available
             TelemetryService.getInstance().logUsage(
                 TelemetryEvents.DETAILS_FUNCTION_SELECTED,
-                mutableMapOf<String, Any>(Pair("nIssues", finding.functionFindingIssues))
+                mutableMapOf<String, Any>(Pair("nIssues", finding.functionFindingIssues)),
             )
             codeHealthSelected = false
         }
@@ -192,7 +200,10 @@ class CodeHealthTreeBuilder(private val project: Project) {
     private fun shouldSelectHealthNode(finding: CodeHealthFinding): Boolean =
         isHealthNode(finding.nodeType) && !codeHealthSelected
 
-    private fun buildNode(filePath: String, delta: Delta): MutableTreeNode {
+    private fun buildNode(
+        filePath: String,
+        delta: Delta,
+    ): MutableTreeNode {
         val root = getRootNode(filePath, delta)
 
         return DefaultMutableTreeNode(root).apply {
@@ -202,23 +213,30 @@ class CodeHealthTreeBuilder(private val project: Project) {
         }
     }
 
-    private fun DefaultMutableTreeNode.addCodeHealthLeaf(filePath: String, delta: Delta) {
+    private fun DefaultMutableTreeNode.addCodeHealthLeaf(
+        filePath: String,
+        delta: Delta,
+    ) {
         val health = getHealthFinding(filePath, delta)
 
         add(DefaultMutableTreeNode(health))
     }
 
-    private fun DefaultMutableTreeNode.addFileLeaves(filePath: String, delta: Delta) =
-        delta.fileLevelFindings.forEach {
-            val finding = getFileFinding(filePath, it)
+    private fun DefaultMutableTreeNode.addFileLeaves(
+        filePath: String,
+        delta: Delta,
+    ) = delta.fileLevelFindings.forEach {
+        val finding = getFileFinding(filePath, it)
 
-            add(DefaultMutableTreeNode(finding))
-        }
+        add(DefaultMutableTreeNode(finding))
+    }
 
-    private fun DefaultMutableTreeNode.addFunctionLeaves(filePath: String, delta: Delta) =
-        delta.functionLevelFindings.forEach {
-            val finding = getFunctionFinding(filePath, it.function, it.changeDetails)
+    private fun DefaultMutableTreeNode.addFunctionLeaves(
+        filePath: String,
+        delta: Delta,
+    ) = delta.functionLevelFindings.forEach {
+        val finding = getFunctionFinding(filePath, it.function, it.changeDetails)
 
-            add(DefaultMutableTreeNode(finding))
-        }
+        add(DefaultMutableTreeNode(finding))
+    }
 }

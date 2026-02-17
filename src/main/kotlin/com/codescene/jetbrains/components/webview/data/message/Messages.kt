@@ -2,13 +2,13 @@ package com.codescene.jetbrains.components.webview.data.message
 
 enum class LifecycleMessages(val value: String) {
     INIT("init"),
-    UPDATE_RENDERER("update-renderer")
+    UPDATE_RENDERER("update-renderer"),
 }
 
 enum class LoginMessages(val value: String) {
     OPEN_LOGIN("open-login"),
     OPEN_HOME("open-home"),
-    INIT_LOGIN("init-login")
+    INIT_LOGIN("init-login"),
 }
 
 enum class PanelMessages(val value: String) {
@@ -26,9 +26,9 @@ enum class EditorMessages(val value: String) {
     SHOW_DIFF("showDiff"),
     OPEN_LINK("open-link"), // Custom message appended on script initialization,
     OPEN_SETTINGS("open-settings"),
-    GOTO_FUNCTION_LOCATION("goto-function-location")
+    GOTO_FUNCTION_LOCATION("goto-function-location"),
 }
 
 enum class StateChangeMessages(val value: String) {
-    COMMIT_BASELINE("commitBaseline")
+    COMMIT_BASELINE("commitBaseline"),
 }

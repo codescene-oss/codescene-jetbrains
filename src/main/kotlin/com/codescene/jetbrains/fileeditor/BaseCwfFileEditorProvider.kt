@@ -15,15 +15,20 @@ import com.intellij.testFramework.LightVirtualFile
  */
 @Suppress("UnstableApiUsage")
 abstract class BaseCwfFileEditorProvider<T>(
-    private val dataKey: Key<T>
+    private val dataKey: Key<T>,
 ) : FileEditorProvider {
+    override fun accept(
+        project: Project,
+        file: VirtualFile,
+    ): Boolean = file is LightVirtualFile && file.getUserData(dataKey) != null
 
-    override fun accept(project: Project, file: VirtualFile): Boolean =
-        file is LightVirtualFile && file.getUserData(dataKey) != null
-
-    override fun createEditor(project: Project, file: VirtualFile): FileEditor {
-        val data = file.getUserData(dataKey)
-            ?: error("CwfData<$dataKey> is required to open this editor.")
+    override fun createEditor(
+        project: Project,
+        file: VirtualFile,
+    ): FileEditor {
+        val data =
+            file.getUserData(dataKey)
+                ?: error("CwfData<$dataKey> is required to open this editor.")
 
         return createEditorInstance(project, file, data)
     }
@@ -40,6 +45,6 @@ abstract class BaseCwfFileEditorProvider<T>(
     protected abstract fun createEditorInstance(
         project: Project,
         file: VirtualFile,
-        data: T
+        data: T,
     ): FileEditor
 }

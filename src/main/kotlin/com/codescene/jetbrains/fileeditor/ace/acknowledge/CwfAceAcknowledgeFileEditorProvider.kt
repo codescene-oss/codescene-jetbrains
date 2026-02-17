@@ -10,7 +10,7 @@ import com.intellij.openapi.vfs.VirtualFile
 
 data class CwfAceAcknowledgeEditorProviderData(
     val fnToRefactor: FnToRefactor,
-    val aceAcknowledgeData: AceAcknowledgeData
+    val aceAcknowledgeData: AceAcknowledgeData,
 )
 
 val CWF_ACE_ACKNOWLEDGE_DATA_KEY: Key<CwfAceAcknowledgeEditorProviderData> =
@@ -23,12 +23,11 @@ val CWF_ACE_ACKNOWLEDGE_DATA_KEY: Key<CwfAceAcknowledgeEditorProviderData> =
 @Suppress("UnstableApiUsage")
 internal class CwfAceAcknowledgeEditorProvider :
     BaseCwfFileEditorProvider<CwfAceAcknowledgeEditorProviderData>(CWF_ACE_ACKNOWLEDGE_DATA_KEY) {
-
     override fun getEditorTypeId(): String = CwfAceAcknowledgeEditorProvider::class.java.simpleName
 
     override fun createEditorInstance(
         project: Project,
         file: VirtualFile,
-        data: CwfAceAcknowledgeEditorProviderData
+        data: CwfAceAcknowledgeEditorProviderData,
     ): FileEditor = CwfAceAcknowledgeFileEditor(project, file, data)
 }

@@ -17,7 +17,9 @@ import com.intellij.testFramework.LightVirtualFile
 
 // TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 @Service(Service.Level.PROJECT)
-class AceAcknowledgementViewer(private val project: Project) : HtmlViewer<FnToRefactor>(project) {
+class AceAcknowledgementViewer(
+    private val project: Project,
+) : HtmlViewer<FnToRefactor>(project) {
     var functionToRefactor: FnToRefactor? = null
         private set
 
@@ -32,12 +34,13 @@ class AceAcknowledgementViewer(private val project: Project) : HtmlViewer<FnToRe
         val title = markdown.split("\n\n", limit = 2)[0]
         val transformParams = TransformMarkdownParams(originalContent = markdown, generalDocumentation = true)
 
-        val fileContent = DocumentationHtmlContentBuilder()
-            .title(title, Constants.LOGO_PATH)
-            .usingStyleSheet(Constants.STYLE_BASE_PATH + "code-smell.css")
-            .usingStyleSheet(Constants.STYLE_BASE_PATH + "ace.css")
-            .content(transformParams)
-            .build()
+        val fileContent =
+            DocumentationHtmlContentBuilder()
+                .title(title, Constants.LOGO_PATH)
+                .usingStyleSheet(Constants.STYLE_BASE_PATH + "code-smell.css")
+                .usingStyleSheet(Constants.STYLE_BASE_PATH + "ace.css")
+                .content(transformParams)
+                .build()
 
         return createTempFile(CreateTempFileParams("$ACE_ACKNOWLEDGEMENT.md", fileContent, project))
     }
@@ -46,10 +49,11 @@ class AceAcknowledgementViewer(private val project: Project) : HtmlViewer<FnToRe
         TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_INFO_PRESENTED)
     }
 
-    private fun getContent() = this@AceAcknowledgementViewer.javaClass.classLoader
-        .getResourceAsStream(ACE_ACKNOWLEDGEMENT_FILE) //This file has not been added to shared docs yet
-        ?.bufferedReader()
-        ?.readText()
-        ?: ""
-
+    private fun getContent() =
+        this@AceAcknowledgementViewer
+            .javaClass.classLoader
+            .getResourceAsStream(ACE_ACKNOWLEDGEMENT_FILE) // This file has not been added to shared docs yet
+            ?.bufferedReader()
+            ?.readText()
+            ?: ""
 }

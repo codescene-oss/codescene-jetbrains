@@ -22,7 +22,11 @@ object CodeHighlighter {
      * If needed, highlighting will be applied, if not default coloring will be left.
      * Besides highlighting, code will be converted to HTML code block by manually adding HTML tags.
      */
-    fun generateHighlightedHtml(code: String, languageId: String, delimiter: MarkdownCodeDelimiter): String {
+    fun generateHighlightedHtml(
+        code: String,
+        languageId: String,
+        delimiter: MarkdownCodeDelimiter,
+    ): String {
         var language = Language.ANY
         // currently used languages for code examples in our documentation
         // in case of new language used, it's mapping needs to be added here
@@ -34,7 +38,6 @@ object CodeHighlighter {
         }
 
         // code formatting
-
 
         // Syntax highlighting
         val highlighter = SyntaxHighlighterFactory.getSyntaxHighlighter(language, null, null)
@@ -52,9 +55,10 @@ object CodeHighlighter {
             val tokenText = code.substring(lexer.tokenStart, lexer.tokenEnd)
             val colorAttributes =
                 highlighter.getTokenHighlights(lexer.tokenType).firstOrNull()?.let { colorScheme.getAttributes(it) }
-            val colorStyle = colorAttributes?.foregroundColor?.let {
-                "color: ${it.webRgba()};"
-            } ?: ""
+            val colorStyle =
+                colorAttributes?.foregroundColor?.let {
+                    "color: ${it.webRgba()};"
+                } ?: ""
 
             highlightedCode.append("<span style=\"$colorStyle\">").append(tokenText).append("</span>")
             lexer.advance()
@@ -68,16 +72,19 @@ object CodeHighlighter {
         return highlightedCode.toString().replace("\t", "    ").trim()
     }
 
-    private fun reformatCode(code: String, language: Language): String {
+    private fun reformatCode(
+        code: String,
+        language: Language,
+    ): String {
         val project = ProjectManager.getInstance().defaultProject
         val fileType = language.associatedFileType ?: PlainTextFileType.INSTANCE
-        val psiFile = PsiFileFactory.getInstance(project)
-            .createFileFromText("Dummy.${fileType.defaultExtension}", fileType, code)
+        val psiFile =
+            PsiFileFactory.getInstance(project)
+                .createFileFromText("Dummy.${fileType.defaultExtension}", fileType, code)
 
         CodeStyleManager.getInstance(project).reformat(psiFile)
         return psiFile.text
     }
-
 
     private fun printSupportedLanguages() {
         Language.getRegisteredLanguages().forEach {
@@ -88,5 +95,5 @@ object CodeHighlighter {
 
 enum class MarkdownCodeDelimiter(val value: String) {
     SINGLE_LINE("`"),
-    MULTI_LINE("```")
+    MULTI_LINE("```"),
 }

@@ -31,7 +31,10 @@ class CodeNavigationService(val project: Project) : Disposable {
         fun getInstance(project: Project): CodeNavigationService = project.service<CodeNavigationService>()
     }
 
-    fun focusOnLine(filePath: String, line: Int) {
+    fun focusOnLine(
+        filePath: String,
+        line: Int,
+    ) {
         scope.launch {
             val file = getFileByName(filePath) ?: return@launch
 
@@ -43,20 +46,25 @@ class CodeNavigationService(val project: Project) : Disposable {
         val fileName = File(filePath).name
         val searchScope = GlobalSearchScope.projectScope(project)
 
-        val file = runReadAction {
-            FilenameIndex.getVirtualFilesByName(fileName, searchScope)
-                .firstOrNull { it.path.endsWith(filePath) }
-        }
+        val file =
+            runReadAction {
+                FilenameIndex.getVirtualFilesByName(fileName, searchScope)
+                    .firstOrNull { it.path.endsWith(filePath) }
+            }
 
         return file
     }
 
-    private suspend fun openEditorAndMoveCaret(file: VirtualFile, line: Int) = withContext(Dispatchers.Main) {
+    private suspend fun openEditorAndMoveCaret(
+        file: VirtualFile,
+        line: Int,
+    ) = withContext(Dispatchers.Main) {
         // Only calculate/capture data in runReadAction, NOT open the editor!
         val focusLine = if (line == 0) 0 else line - 1
-        val openFileDescriptor = runReadAction {
-            OpenFileDescriptor(project, file, focusLine, 0)
-        }
+        val openFileDescriptor =
+            runReadAction {
+                OpenFileDescriptor(project, file, focusLine, 0)
+            }
 
         val editor =
             ApplicationManager
@@ -71,7 +79,10 @@ class CodeNavigationService(val project: Project) : Disposable {
         }
     }
 
-    private fun moveCaret(editor: Editor, line: Int) {
+    private fun moveCaret(
+        editor: Editor,
+        line: Int,
+    ) {
         val caretModel = editor.caretModel
 
         runWriteAction {

@@ -34,18 +34,19 @@ fun updateMonitor(project: Project) {
     val deltaResults = DeltaCacheService.getInstance(project).getAll()
     val activeJobs = CodeDeltaService.getInstance(project).activeReviewCalls.map { it.key }
 
-    val dataJson = parseMessage(
-        mapper = { mapper.toCwfData(deltaResults, activeJobs) },
-        serializer = CwfData.serializer(HomeData.serializer())
-    )
+    val dataJson =
+        parseMessage(
+            mapper = { mapper.toCwfData(deltaResults, activeJobs) },
+            serializer = CwfData.serializer(HomeData.serializer()),
+        )
 
     updateToolWindowIcon(
         UpdateToolWindowIconParams(
             project = project,
             baseIcon = CODESCENE_TW,
             toolWindowId = "CodeSceneCwf", // TODO: change to "CodeScene" after making CWF publicly available.
-            hasNotification = deltaResults.isNotEmpty()
-        )
+            hasNotification = deltaResults.isNotEmpty(),
+        ),
     )
     CwfMessageHandler.getInstance(project).postMessage(View.HOME, dataJson)
 }

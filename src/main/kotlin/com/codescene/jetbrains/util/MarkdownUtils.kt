@@ -19,33 +19,34 @@ val oneBacktick = MarkdownCodeDelimiter.SINGLE_LINE.value
 data class TransformMarkdownParams(
     val originalContent: String,
     val heading: String = "",
-    val generalDocumentation: Boolean = false
+    val generalDocumentation: Boolean = false,
 )
 
 data class HtmlPart(
     val title: String,
     val body: String,
     val isCode: Boolean = false,
-    val languageString: String = "un"
+    val languageString: String = "un",
 )
 
 data class CreateTempFileParams(
     val name: String,
     val content: String,
-    val project: Project
+    val project: Project,
 )
 
 /**
  * Transforming Markdown content into HTML content by reorganizing it and inserting HTML tags.
  */
-fun transformMarkdownToHtml(
-    params: TransformMarkdownParams
-): String {
+fun transformMarkdownToHtml(params: TransformMarkdownParams): String {
     val (originalContent, heading, standaloneDocumentation) = params
 
-    val content = if (!standaloneDocumentation)
-        "$heading\n\n$originalContent"
-    else originalContent.split("\n\n", limit = 2)[1]
+    val content =
+        if (!standaloneDocumentation) {
+            "$heading\n\n$originalContent"
+        } else {
+            originalContent.split("\n\n", limit = 2)[1]
+        }
 
     val parts = content.split("## ")
     val newContent = StringBuilder("")
@@ -66,15 +67,20 @@ fun transformMarkdownToHtml(
  * Adapts and appends the provided content to the current `StringBuilder` in an HTML format,
  * handling markdown conversion, code highlighting, and specific cases for standalone documentation.
  */
-fun StringBuilder.adaptBody(title: String, body: String, standaloneDocumentation: Boolean) {
+fun StringBuilder.adaptBody(
+    title: String,
+    body: String,
+    standaloneDocumentation: Boolean,
+) {
     if (body.contains(threeBackticks)) {
         val codePart = body.substring(body.indexOf(threeBackticks), body.lastIndexOf(threeBackticks) + 4)
         val languageString = codePart.substring(3, codePart.indexOf("\n"))
-        val highlightedBody: String = generateHighlightedHtml(
-            codePart.substring(codePart.indexOf("\n") + 1, codePart.lastIndexOf(threeBackticks)),
-            languageString,
-            MarkdownCodeDelimiter.MULTI_LINE
-        )
+        val highlightedBody: String =
+            generateHighlightedHtml(
+                codePart.substring(codePart.indexOf("\n") + 1, codePart.lastIndexOf(threeBackticks)),
+                languageString,
+                MarkdownCodeDelimiter.MULTI_LINE,
+            )
 
         val newBody = convertMarkdownToHtml(body.replace(codePart, highlightedBody))
         appendSubpart(this, HtmlPart(title, newBody))
@@ -94,16 +100,18 @@ fun updateOneLineCodeParts(body: String): String {
     if (containsSingleBacktick(body)) {
         while (containsSingleBacktick(singleLineCodeResolved)) {
             val firstIndex = singleLineCodeResolved.indexOf(oneBacktick)
-            val codePart = singleLineCodeResolved.substring(
-                firstIndex,
-                singleLineCodeResolved.indexOf(oneBacktick, firstIndex + 1) + 1
-            )
+            val codePart =
+                singleLineCodeResolved.substring(
+                    firstIndex,
+                    singleLineCodeResolved.indexOf(oneBacktick, firstIndex + 1) + 1,
+                )
 
-            val highlightedBody: String = generateHighlightedHtml(
-                codePart.substring(codePart.indexOf(oneBacktick) + 1, codePart.lastIndexOf(oneBacktick)),
-                "",
-                MarkdownCodeDelimiter.SINGLE_LINE
-            )
+            val highlightedBody: String =
+                generateHighlightedHtml(
+                    codePart.substring(codePart.indexOf(oneBacktick) + 1, codePart.lastIndexOf(oneBacktick)),
+                    "",
+                    MarkdownCodeDelimiter.SINGLE_LINE,
+                )
             singleLineCodeResolved = singleLineCodeResolved.replace(codePart, highlightedBody)
         }
     }

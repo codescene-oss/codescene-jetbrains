@@ -19,23 +19,32 @@ class AceAcknowledgementMapper {
             ApplicationManager.getApplication().getService(AceAcknowledgementMapper::class.java)
     }
 
-    fun toCwfData(params: OpenAceAcknowledgementParams, pro: Boolean = false): CwfData<AceAcknowledgeData> = CwfData(
-        pro = pro,
-        devmode = RuntimeFlags.isDevMode,
-        view = View.ACE_ACKNOWLEDGE.value,
-        data = AceAcknowledgeData(
-            fileData = FileMetaType(
-                fn = Fn(
-                    name = params.fnToRefactor.name, range = RangeCamelCase(
-                        endLine = params.fnToRefactor.range.endLine,
-                        endColumn = params.fnToRefactor.range.endColumn,
-                        startLine = params.fnToRefactor.range.startLine,
-                        startColumn = params.fnToRefactor.range.startColumn
-                    )
+    fun toCwfData(
+        params: OpenAceAcknowledgementParams,
+        pro: Boolean = false,
+    ): CwfData<AceAcknowledgeData> =
+        CwfData(
+            pro = pro,
+            devmode = RuntimeFlags.isDevMode,
+            view = View.ACE_ACKNOWLEDGE.value,
+            data =
+                AceAcknowledgeData(
+                    fileData =
+                        FileMetaType(
+                            fn =
+                                Fn(
+                                    name = params.fnToRefactor.name,
+                                    range =
+                                        RangeCamelCase(
+                                            endLine = params.fnToRefactor.range.endLine,
+                                            endColumn = params.fnToRefactor.range.endColumn,
+                                            startLine = params.fnToRefactor.range.startLine,
+                                            startColumn = params.fnToRefactor.range.startColumn,
+                                        ),
+                                ),
+                            fileName = params.filePath,
+                        ),
+                    autoRefactor = AutoRefactorConfig(),
                 ),
-                fileName = params.filePath,
-            ),
-            autoRefactor = AutoRefactorConfig()
         )
-    )
 }

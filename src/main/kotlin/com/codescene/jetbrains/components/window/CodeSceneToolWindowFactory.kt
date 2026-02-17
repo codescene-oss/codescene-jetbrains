@@ -34,7 +34,10 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
         subscribeToHealthDetailsRefreshEvent(toolWindow.project)
     }
 
-    override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
+    override fun createToolWindowContent(
+        project: Project,
+        toolWindow: ToolWindow,
+    ) {
         splitPane = createSplitter(toolWindow)
 
         val content = ContentFactory.getInstance().createContent(splitPane, null, false)
@@ -54,7 +57,10 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
     private fun isSplitterVertical(anchor: ToolWindowAnchor?) =
         anchor == ToolWindowAnchor.LEFT || anchor == ToolWindowAnchor.RIGHT
 
-    private fun subscribeToAnchorChangeListener(project: Project, toolWindow: ToolWindow) {
+    private fun subscribeToAnchorChangeListener(
+        project: Project,
+        toolWindow: ToolWindow,
+    ) {
         val parentDisposable = Disposer.newDisposable("CodeSceneToolWindowDisposable")
 
         project.messageBus.connect(parentDisposable).subscribe(
@@ -68,37 +74,52 @@ class CodeSceneToolWindowFactory : ToolWindowFactory {
                     splitPane.parent?.revalidate()
                     splitPane.parent?.repaint()
                 }
-            }
+            },
         )
 
         Disposer.register(toolWindow.disposable, parentDisposable)
     }
 
     private fun subscribeToMonitorRefreshEvent(project: Project) {
-        project.messageBus.connect().subscribe(ToolWindowRefreshNotifier.TOPIC, object : ToolWindowRefreshNotifier {
-            override fun refresh(file: VirtualFile?, shouldCollapseTree: Boolean) {
-                Log.info("Refreshing code health monitor...", "Tool Window Factory - ${project.name}")
+        project.messageBus.connect().subscribe(
+            ToolWindowRefreshNotifier.TOPIC,
+            object : ToolWindowRefreshNotifier {
+                override fun refresh(
+                    file: VirtualFile?,
+                    shouldCollapseTree: Boolean,
+                ) {
+                    Log.info("Refreshing code health monitor...", "Tool Window Factory - ${project.name}")
 
-                CodeHealthMonitorPanel.getInstance(project).refreshContent(file, shouldCollapseTree)
-            }
+                    CodeHealthMonitorPanel.getInstance(project).refreshContent(file, shouldCollapseTree)
+                }
 
-            override fun invalidateAndRefresh(fileToInvalidate: String, file: VirtualFile?) {
-                Log.debug("Refreshing & invalidating code health monitor...", "Tool Window Factory - ${project.name}")
+                override fun invalidateAndRefresh(
+                    fileToInvalidate: String,
+                    file: VirtualFile?,
+                ) {
+                    Log.debug(
+                        "Refreshing & invalidating code health monitor...",
+                        "Tool Window Factory - ${project.name}",
+                    )
 
-                CodeHealthMonitorPanel.getInstance(project).invalidateAndRefreshContent(fileToInvalidate, file)
-            }
-        })
+                    CodeHealthMonitorPanel.getInstance(project).invalidateAndRefreshContent(fileToInvalidate, file)
+                }
+            },
+        )
     }
 
     private fun subscribeToHealthDetailsRefreshEvent(project: Project) {
         project.messageBus.connect()
-            .subscribe(CodeHealthDetailsRefreshNotifier.TOPIC, object : CodeHealthDetailsRefreshNotifier {
-                override fun refresh(finding: CodeHealthFinding?) {
-                    Log.debug("Refreshing code health details...", "Tool Window Factory - ${project.name}")
+            .subscribe(
+                CodeHealthDetailsRefreshNotifier.TOPIC,
+                object : CodeHealthDetailsRefreshNotifier {
+                    override fun refresh(finding: CodeHealthFinding?) {
+                        Log.debug("Refreshing code health details...", "Tool Window Factory - ${project.name}")
 
-                    CodeHealthDetailsPanel.getInstance(project).refreshContent(finding)
-                }
-            })
+                        CodeHealthDetailsPanel.getInstance(project).refreshContent(finding)
+                    }
+                },
+            )
     }
 
     override fun shouldBeAvailable(project: Project) = !RuntimeFlags.cwfFeature

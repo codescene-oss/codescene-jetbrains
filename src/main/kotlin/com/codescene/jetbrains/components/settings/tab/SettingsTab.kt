@@ -37,7 +37,9 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                 row {
                     checkBox("Ace acknowledged")
                         .bindSelected(settings::aceAcknowledged)
-                        .comment("For testing purposes. This should only be visible when FEATURE_CWF_DEVMODE is enabled.")
+                        .comment(
+                            "For testing purposes. This should only be visible when FEATURE_CWF_DEVMODE is enabled.",
+                        )
                         .visible(RuntimeFlags.isDevMode)
                 }
 
@@ -56,7 +58,8 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                 }
             }.visible(RuntimeFlags.aceFeature)
 
-            groupRowsRange(UiLabelsBundle.message("cloudConnection")) { //TODO: verify naming of this section, currently just a placeholder
+            // TODO: verify naming of this section, currently just a placeholder
+            groupRowsRange(UiLabelsBundle.message("cloudConnection")) {
                 row(UiLabelsBundle.message("serverUrl")) {
                     textField()
                         .align(Align.FILL)

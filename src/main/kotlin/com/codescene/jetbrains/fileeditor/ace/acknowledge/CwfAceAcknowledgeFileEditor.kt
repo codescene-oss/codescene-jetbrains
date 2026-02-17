@@ -9,11 +9,11 @@ import com.intellij.openapi.vfs.VirtualFile
 class CwfAceAcknowledgeFileEditor(
     project: Project,
     file: VirtualFile,
-    data: CwfAceAcknowledgeEditorProviderData
+    data: CwfAceAcknowledgeEditorProviderData,
 ) :
     BaseCwfFileEditor<AceAcknowledgeData>(
-        project,
-        file,
-        View.ACE_ACKNOWLEDGE,
-        data.aceAcknowledgeData
-    )
+            project,
+            file,
+            View.ACE_ACKNOWLEDGE,
+            data.aceAcknowledgeData,
+        )

@@ -7,5 +7,5 @@ import kotlinx.serialization.Serializable
 data class OpenDocsForFunction(
     val docType: String,
     val fileName: String,
-    val fn: Fn? = null
+    val fn: Fn? = null,
 )

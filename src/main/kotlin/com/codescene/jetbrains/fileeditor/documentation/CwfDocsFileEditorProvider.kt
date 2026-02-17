@@ -17,5 +17,9 @@ val CWF_DOCS_DATA_KEY: Key<DocsData> = Key.create("codescene.documentation.data"
 internal class CwfDocsFileEditorProvider : BaseCwfFileEditorProvider<DocsData>(CWF_DOCS_DATA_KEY) {
     override fun getEditorTypeId(): String = CodeSceneFileEditor::class.java.simpleName
 
-    override fun createEditorInstance(project: Project, file: VirtualFile, data: DocsData): FileEditor = CwfDocsFileEditor(project, file, data)
+    override fun createEditorInstance(
+        project: Project,
+        file: VirtualFile,
+        data: DocsData,
+    ): FileEditor = CwfDocsFileEditor(project, file, data)
 }

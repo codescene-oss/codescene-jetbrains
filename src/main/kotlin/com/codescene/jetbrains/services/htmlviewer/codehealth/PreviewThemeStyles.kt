@@ -8,7 +8,6 @@ import java.awt.Color
 
 // TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 object PreviewThemeStyles {
-
     fun createStylesheet(): String {
         val scheme = EditorColorsManager.getInstance().globalScheme
         val disabledColorString = JBUI.CurrentTheme.Label.disabledForeground().webRgba()
@@ -38,6 +37,6 @@ object PreviewThemeStyles {
             |#line-number {
             |  color: $disabledColorString;
             |}
-        """.trimMargin().trim()
+            """.trimMargin().trim()
     }
 }

@@ -9,10 +9,10 @@ import com.intellij.openapi.vfs.VirtualFile
 internal class CwfDocsFileEditor(
     project: Project,
     file: VirtualFile,
-    data: DocsData
+    data: DocsData,
 ) : BaseCwfFileEditor<DocsData>(
-    project,
-    file,
-    View.DOCS,
-    data
-)
+        project,
+        file,
+        View.DOCS,
+        data,
+    )

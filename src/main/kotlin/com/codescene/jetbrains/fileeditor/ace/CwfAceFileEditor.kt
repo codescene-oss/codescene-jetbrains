@@ -11,5 +11,5 @@ class CwfAceFileEditor(project: Project, file: VirtualFile, data: CwfAceFileEdit
         project,
         file,
         View.ACE,
-        data.aceData
+        data.aceData,
     )

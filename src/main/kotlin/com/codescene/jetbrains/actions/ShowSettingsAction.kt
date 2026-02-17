@@ -15,7 +15,8 @@ class ShowSettingsAction : AnAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
         ShowSettingsUtil.getInstance().showSettingsDialog(
-            e.project, CODESCENE
+            e.project,
+            CODESCENE,
         )
     }
 }

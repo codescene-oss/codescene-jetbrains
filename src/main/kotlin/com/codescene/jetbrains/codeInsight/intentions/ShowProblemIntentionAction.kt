@@ -18,9 +18,17 @@ class ShowProblemIntentionAction(private val codeSmell: CodeVisionCodeSmell) : I
 
     override fun getFamilyName(): String = name
 
-    override fun isAvailable(project: Project, editor: Editor?, file: PsiFile): Boolean = true
+    override fun isAvailable(
+        project: Project,
+        editor: Editor?,
+        file: PsiFile,
+    ): Boolean = true
 
-    override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {
+    override fun invoke(
+        project: Project,
+        editor: Editor?,
+        file: PsiFile?,
+    ) {
         handleOpenDocs(editor, codeSmell, DocsEntryPoint.INTENTION_ACTION)
     }
 

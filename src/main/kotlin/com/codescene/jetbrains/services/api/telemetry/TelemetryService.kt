@@ -26,19 +26,23 @@ class TelemetryService : BaseService(), Disposable {
         fun getInstance(): TelemetryService = service<TelemetryService>()
     }
 
-    fun logUsage(eventName: String, eventData: Map<String, Any> = mutableMapOf()) {
+    fun logUsage(
+        eventName: String,
+        eventData: Map<String, Any> = mutableMapOf(),
+    ) {
         val isTelemetryEnabled = CodeSceneGlobalSettingsStore.getInstance().state.telemetryConsentGiven
         if (!isTelemetryEnabled) return
 
         val extendedName = "${Constants.TELEMETRY_EDITOR_TYPE}/$eventName"
 
-        val telemetryEvent = TelemetryEvent(
-            extendedName,
-            "", // TODO: Get user ID of logged in user when authentication is implemented
-            getIdeInfo(),
-            getPluginVersion(),
-            false // TODO: determine by isDevMode
-        )
+        val telemetryEvent =
+            TelemetryEvent(
+                extendedName,
+                "", // TODO: Get user ID of logged in user when authentication is implemented
+                getIdeInfo(),
+                getPluginVersion(),
+                false, // TODO: determine by isDevMode
+            )
 
         telemetryEvent.setAdditionalProperty("device-id", DeviceIdStore.get())
         eventData.forEach { telemetryEvent.setAdditionalProperty(it.key, it.value) }

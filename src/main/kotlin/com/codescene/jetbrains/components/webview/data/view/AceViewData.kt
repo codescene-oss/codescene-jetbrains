@@ -10,7 +10,7 @@ data class AceData(
     val aceResultData: RefactorResponse?,
     val error: String? = null,
     val isStale: Boolean?,
-    val loading: Boolean?
+    val loading: Boolean?,
 )
 
 @Serializable
@@ -33,7 +33,7 @@ data class RefactorResponse(
     val confidence: Confidence,
     @SerialName("trace-id") val traceId: String,
     @SerialName("credits-info") val creditsInfo: CreditsInfo,
-    @SerialName("refactoring-properties") val refactoringProperties: RefactoringProperties
+    @SerialName("refactoring-properties") val refactoringProperties: RefactoringProperties,
 )
 
 @Serializable
@@ -41,7 +41,6 @@ data class Confidence(
     val title: String,
     @SerialName("review-header") val reviewHeader: String,
     @SerialName("recommended-action") val recommendedAction: RecommendedAction,
-
     /**
      *   Low = 0
      *   MediumLow = 1
@@ -56,24 +55,23 @@ data class Confidence(
 data class CreditsInfo(
     val used: Int,
     val limit: Int,
-    val reset: String? // Credit reset date in ISO-8601 format
+    val reset: String?, // Credit reset date in ISO-8601 format
 )
-
 
 @Serializable
 data class Metadata(
-    @SerialName("cached?") val cached: Boolean? = null
+    @SerialName("cached?") val cached: Boolean? = null,
 )
 
 @Serializable
 data class Reason(
     val summary: String,
-    val details: List<ReasonDetails>
+    val details: List<ReasonDetails>,
 )
 
 @Serializable
 data class ReasonDetails(
     val message: String,
     val lines: List<Int>,
-    val columns: List<Int>
+    val columns: List<Int>,
 )

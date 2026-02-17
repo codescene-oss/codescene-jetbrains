@@ -39,7 +39,7 @@ abstract class CodeSceneService :
     protected fun reviewFile(
         editor: Editor,
         timeout: Long = 60_000,
-        performAction: suspend () -> Unit
+        performAction: suspend () -> Unit,
     ) {
         val service = getServiceForLogging(editor)
         val filePath = editor.virtualFile.path
@@ -48,40 +48,45 @@ abstract class CodeSceneService :
         activeReviewCalls[filePath]?.cancel()
 
         val progressMessage = getProgressMessage(fileName)
-        val job = scope.launch {
-            withTimeout(timeout) {
-                withBackgroundProgress(editor.project!!, progressMessage, cancellable = false) {
-                    try {
-                        delay(debounceDelay)
+        val job =
+            scope.launch {
+                withTimeout(timeout) {
+                    withBackgroundProgress(editor.project!!, progressMessage, cancellable = false) {
+                        try {
+                            delay(debounceDelay)
 
-                        Log.info("Initiating review for file $fileName at path $filePath.", service)
-                        performAction()
+                            Log.info("Initiating review for file $fileName at path $filePath.", service)
+                            performAction()
 
-                        CodeSceneCodeVisionProvider.markApiCallComplete(
-                            filePath,
-                            getActiveApiCalls()
-                        )
-                    } catch (e: TimeoutCancellationException) {
-                        handleError(editor, FailureType.TIMED_OUT, e.message)
-                    } catch (e: CancellationException) {
-                        // because of Intellij's bug https://youtrack.jetbrains.com/issue/IJPL-5335/Non-cancellable-progress-indicator-can-be-cancelled
-                        // even if we have cancellable false, we should handle cancellation
-                        handleError(editor, FailureType.CANCELLED, e.message)
-                    } catch (e: Exception) {
-                        handleError(editor, FailureType.FAILED, e.message)
-                    } finally {
-                        removeActiveCall(filePath)
+                            CodeSceneCodeVisionProvider.markApiCallComplete(
+                                filePath,
+                                getActiveApiCalls(),
+                            )
+                        } catch (e: TimeoutCancellationException) {
+                            handleError(editor, FailureType.TIMED_OUT, e.message)
+                        } catch (e: CancellationException) {
+                            // because of Intellij's bug https://youtrack.jetbrains.com/issue/IJPL-5335/Non-cancellable-progress-indicator-can-be-cancelled
+                            // even if we have cancellable false, we should handle cancellation
+                            handleError(editor, FailureType.CANCELLED, e.message)
+                            throw e
+                        } catch (e: Exception) {
+                            handleError(editor, FailureType.FAILED, e.message)
+                        } finally {
+                            removeActiveCall(filePath)
+                        }
                     }
                 }
             }
-        }
 
         addActiveCall(filePath, job)
     }
 
     protected abstract fun getActiveApiCalls(): MutableSet<String>
 
-    protected open fun addActiveCall(filePath: String, job: Job) {
+    protected open fun addActiveCall(
+        filePath: String,
+        job: Job,
+    ) {
         activeReviewCalls[filePath] = job
     }
 
@@ -89,13 +94,16 @@ abstract class CodeSceneService :
         activeReviewCalls.remove(filePath)
     }
 
-    fun cancelFileReview(filePath: String, calls: MutableSet<String>) {
+    fun cancelFileReview(
+        filePath: String,
+        calls: MutableSet<String>,
+    ) {
         activeReviewCalls[filePath]?.let { job ->
             job.cancel()
 
             Log.info(
                 "Cancelling active $CODESCENE review for file '$filePath' because it was closed.",
-                serviceImplementation
+                serviceImplementation,
             )
 
             activeReviewCalls.remove(filePath)
@@ -112,11 +120,13 @@ abstract class CodeSceneService :
         scope.cancel()
     }
 
-    private fun getServiceForLogging(editor: Editor): String {
-        return "$serviceImplementation - ${editor.project!!.name}"
-    }
+    private fun getServiceForLogging(editor: Editor): String = "$serviceImplementation - ${editor.project!!.name}"
 
-    private fun handleError(editor: Editor, failureType: FailureType, exceptionMessage: String?) {
+    private fun handleError(
+        editor: Editor,
+        failureType: FailureType,
+        exceptionMessage: String?,
+    ) {
         val newProgressMessage = getProgressMessage(editor.virtualFile.name) + failureType.value
         val service = getServiceForLogging(editor)
         scope.launch {
@@ -125,9 +135,20 @@ abstract class CodeSceneService :
             }
         }
         when (failureType) {
-            FailureType.CANCELLED -> Log.info("Review canceled for file ${editor.virtualFile.name}.", service)
-            FailureType.FAILED -> Log.error("Error during review for file ${editor.virtualFile.name} - $exceptionMessage", service)
-            FailureType.TIMED_OUT -> logTimeout(editor)
+            FailureType.CANCELLED -> {
+                Log.info("Review canceled for file ${editor.virtualFile.name}.", service)
+            }
+
+            FailureType.FAILED -> {
+                Log.error(
+                    "Error during review for file ${editor.virtualFile.name} - $exceptionMessage",
+                    service,
+                )
+            }
+
+            FailureType.TIMED_OUT -> {
+                logTimeout(editor)
+            }
         }
     }
 
@@ -136,16 +157,17 @@ abstract class CodeSceneService :
         TelemetryService.getInstance().logUsage(TelemetryEvents.REVIEW_OR_DELTA_TIMEOUT)
     }
 
-    private fun getProgressMessage(fileName: String): String {
-        return when (this) {
+    private fun getProgressMessage(fileName: String): String =
+        when (this) {
             is CodeReviewService -> "CodeScene: Reviewing file $fileName..."
             else -> "CodeScene: Updating monitor for file $fileName..."
         }
-    }
 }
 
-enum class FailureType(val value: String) {
+enum class FailureType(
+    val value: String,
+) {
     CANCELLED("Cancelled"),
     FAILED("Failed"),
-    TIMED_OUT("Timed out")
+    TIMED_OUT("Timed out"),
 }

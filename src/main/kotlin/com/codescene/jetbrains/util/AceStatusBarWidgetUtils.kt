@@ -34,82 +34,93 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-fun getStatusBarWidgetTooltip() = when (CodeSceneGlobalSettingsStore.getInstance().state.aceStatus) {
-    AceStatus.SIGNED_IN -> SIGNED_IN
-    AceStatus.SIGNED_OUT -> SIGNED_OUT
-    AceStatus.DEACTIVATED -> DEACTIVATED
-    AceStatus.OUT_OF_CREDITS -> OUT_OF_CREDITS
-    AceStatus.ERROR, AceStatus.OFFLINE -> RETRY
-}
+fun getStatusBarWidgetTooltip() =
+    when (CodeSceneGlobalSettingsStore.getInstance().state.aceStatus) {
+        AceStatus.SIGNED_IN -> SIGNED_IN
+        AceStatus.SIGNED_OUT -> SIGNED_OUT
+        AceStatus.DEACTIVATED -> DEACTIVATED
+        AceStatus.OUT_OF_CREDITS -> OUT_OF_CREDITS
+        AceStatus.ERROR, AceStatus.OFFLINE -> RETRY
+    }
 
 fun getStatusBarWidgetIcon(): Icon {
     val originalIcon = CODESCENE_TW
     val wh = 10
     val aceStatus = CodeSceneGlobalSettingsStore.getInstance().state.aceStatus
 
-    val iconWithBadge = when (aceStatus) {
-        AceStatus.ERROR -> ExecutionUtil.getIndicator(originalIcon, wh, wh, RED)
-        AceStatus.SIGNED_IN -> ExecutionUtil.getIndicator(originalIcon, wh, wh, GREEN)
-        AceStatus.SIGNED_OUT -> ExecutionUtil.getIndicator(originalIcon, wh, wh, JBColor.ORANGE)
-        AceStatus.DEACTIVATED -> ExecutionUtil.getIndicator(originalIcon, wh, wh, JBColor.GRAY)
-        AceStatus.OFFLINE -> ExecutionUtil.getIndicator(originalIcon, wh, wh, JBColor.LIGHT_GRAY)
-        AceStatus.OUT_OF_CREDITS -> ExecutionUtil.getIndicator(originalIcon, wh, wh, JBColor.YELLOW)
-    }
+    val iconWithBadge =
+        when (aceStatus) {
+            AceStatus.ERROR -> ExecutionUtil.getIndicator(originalIcon, wh, wh, RED)
+            AceStatus.SIGNED_IN -> ExecutionUtil.getIndicator(originalIcon, wh, wh, GREEN)
+            AceStatus.SIGNED_OUT -> ExecutionUtil.getIndicator(originalIcon, wh, wh, JBColor.ORANGE)
+            AceStatus.DEACTIVATED -> ExecutionUtil.getIndicator(originalIcon, wh, wh, JBColor.GRAY)
+            AceStatus.OFFLINE -> ExecutionUtil.getIndicator(originalIcon, wh, wh, JBColor.LIGHT_GRAY)
+            AceStatus.OUT_OF_CREDITS -> ExecutionUtil.getIndicator(originalIcon, wh, wh, JBColor.YELLOW)
+        }
 
     return iconWithBadge
 }
 
-fun getAceStatusClickConsumer() = Consumer { e: MouseEvent ->
-    if (e.button == MouseEvent.BUTTON1) {
-        val aceStatus = CodeSceneGlobalSettingsStore.getInstance().state.aceStatus
-        val actionGroup = DefaultActionGroup()
-        getActionsBasedOnStatus(aceStatus, actionGroup)
+fun getAceStatusClickConsumer() =
+    Consumer { e: MouseEvent ->
+        if (e.button == MouseEvent.BUTTON1) {
+            val aceStatus = CodeSceneGlobalSettingsStore.getInstance().state.aceStatus
+            val actionGroup = DefaultActionGroup()
+            getActionsBasedOnStatus(aceStatus, actionGroup)
 
-        // get the specific component (widget)
-        val widgetComponent: JComponent? = e.source as? JComponent
+            // get the specific component (widget)
+            val widgetComponent: JComponent? = e.source as? JComponent
 
-        widgetComponent?.let { component ->
-            val popup = JBPopupFactory.getInstance()
-                .createActionGroupPopup(
-                    "$ACE_STATUS: ${aceStatus.value}",
-                    actionGroup,
-                    DataManager.getInstance().getDataContext(component),
-                    JBPopupFactory.ActionSelectionAid.SPEEDSEARCH,
-                    true
-                )
+            widgetComponent?.let { component ->
+                val popup =
+                    JBPopupFactory.getInstance()
+                        .createActionGroupPopup(
+                            "$ACE_STATUS: ${aceStatus.value}",
+                            actionGroup,
+                            DataManager.getInstance().getDataContext(component),
+                            JBPopupFactory.ActionSelectionAid.SPEEDSEARCH,
+                            true,
+                        )
 
-            val popupSize = popup.content.preferredSize
-            val locationOnScreen = component.locationOnScreen
-            val popupX = locationOnScreen.x + e.x
-            val popupY = locationOnScreen.y - popupSize.height
+                val popupSize = popup.content.preferredSize
+                val locationOnScreen = component.locationOnScreen
+                val popupX = locationOnScreen.x + e.x
+                val popupY = locationOnScreen.y - popupSize.height
 
-            ApplicationManager.getApplication().invokeLater {
-                popup.showInScreenCoordinates(component, Point(popupX, popupY))
+                ApplicationManager.getApplication().invokeLater {
+                    popup.showInScreenCoordinates(component, Point(popupX, popupY))
+                }
             }
         }
     }
-}
 
-private fun getActionsBasedOnStatus(aceStatus: AceStatus, actionGroup: DefaultActionGroup) {
+private fun getActionsBasedOnStatus(
+    aceStatus: AceStatus,
+    actionGroup: DefaultActionGroup,
+) {
     when (aceStatus) {
         AceStatus.ERROR, AceStatus.OFFLINE -> {
-            actionGroup.add(object : AnAction(UiLabelsBundle.message("widgetRetryAce")) {
-                override fun actionPerformed(e: AnActionEvent) {
-                    Log.info("Connection to ACE retried from status bar widget for '${aceStatus.value}' status.")
-                    CoroutineScope(Dispatchers.IO).launch {
-                        AceService.getInstance().runPreflight(true)
+            actionGroup.add(
+                object : AnAction(UiLabelsBundle.message("widgetRetryAce")) {
+                    override fun actionPerformed(e: AnActionEvent) {
+                        Log.info("Connection to ACE retried from status bar widget for '${aceStatus.value}' status.")
+                        CoroutineScope(Dispatchers.IO).launch {
+                            AceService.getInstance().runPreflight(true)
+                        }
                     }
-                }
-            })
+                },
+            )
             actionGroup.addSeparator()
         }
 
         AceStatus.OUT_OF_CREDITS -> {
-            actionGroup.add(object : AnAction(UiLabelsBundle.message("widgetLearnMore")) {
-                override fun actionPerformed(e: AnActionEvent) {
-                    BrowserUtil.browse(CONTACT_US_ABOUT_ACE_URL)
-                }
-            })
+            actionGroup.add(
+                object : AnAction(UiLabelsBundle.message("widgetLearnMore")) {
+                    override fun actionPerformed(e: AnActionEvent) {
+                        BrowserUtil.browse(CONTACT_US_ABOUT_ACE_URL)
+                    }
+                },
+            )
         }
 
         AceStatus.SIGNED_OUT, AceStatus.DEACTIVATED -> {
@@ -117,17 +128,19 @@ private fun getActionsBasedOnStatus(aceStatus: AceStatus, actionGroup: DefaultAc
         }
 
         AceStatus.SIGNED_IN -> {
-            actionGroup.add(object : AnAction(UiLabelsBundle.message("widgetAceActive")) {
-                override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
+            actionGroup.add(
+                object : AnAction(UiLabelsBundle.message("widgetAceActive")) {
+                    override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
 
-                override fun update(e: AnActionEvent) {
-                    e.presentation.isEnabled = false
-                }
+                    override fun update(e: AnActionEvent) {
+                        e.presentation.isEnabled = false
+                    }
 
-                override fun actionPerformed(p0: AnActionEvent) {
-                    // No action needed
-                }
-            })
+                    override fun actionPerformed(p0: AnActionEvent) {
+                        // No action needed
+                    }
+                },
+            )
         }
     }
 }

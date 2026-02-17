@@ -16,20 +16,22 @@ import kotlinx.serialization.json.Json
 fun <T> parseMessage(
     mapper: () -> T,
     serializer: KSerializer<T>,
-    messageType: String = LifecycleMessages.UPDATE_RENDERER.value
+    messageType: String = LifecycleMessages.UPDATE_RENDERER.value,
 ): String {
-    val json = Json {
-        encodeDefaults = true
-        prettyPrint = true
-    }
+    val json =
+        Json {
+            encodeDefaults = true
+            prettyPrint = true
+        }
 
     val data = mapper()
     val payloadJson = json.encodeToJsonElement(serializer, data)
 
-    val message = CwfMessage(
-        messageType = messageType,
-        payload = payloadJson
-    )
+    val message =
+        CwfMessage(
+            messageType = messageType,
+            payload = payloadJson,
+        )
 
     return json.encodeToString(CwfMessage.serializer(), message)
 }

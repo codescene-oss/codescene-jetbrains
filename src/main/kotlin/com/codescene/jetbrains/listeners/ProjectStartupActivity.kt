@@ -31,14 +31,17 @@ class ProjectStartupActivity : ProjectActivity {
         AceService.getInstance().runPreflight(true)
     }
 
-    private fun addStateListener() = PluginInstaller.addStateListener(object : PluginStateListener {
-        override fun install(descriptor: IdeaPluginDescriptor) {
-            // No action needed
-        }
+    private fun addStateListener() =
+        PluginInstaller.addStateListener(
+            object : PluginStateListener {
+                override fun install(descriptor: IdeaPluginDescriptor) {
+                    // No action needed
+                }
 
-        override fun uninstall(descriptor: IdeaPluginDescriptor) {
-            Log.info("Plugin uninstalled: ${descriptor.pluginId} ${descriptor.version}")
-            CodeSceneGlobalSettingsStore.getInstance().updateTelemetryConsent(false)
-        }
-    })
+                override fun uninstall(descriptor: IdeaPluginDescriptor) {
+                    Log.info("Plugin uninstalled: ${descriptor.pluginId} ${descriptor.version}")
+                    CodeSceneGlobalSettingsStore.getInstance().updateTelemetryConsent(false)
+                }
+            },
+        )
 }

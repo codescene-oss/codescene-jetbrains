@@ -12,7 +12,7 @@ import com.intellij.openapi.vfs.VirtualFile
 data class CwfAceFileEditorProviderData(
     val aceData: AceData?,
     val functionToRefactor: FnToRefactor,
-    val refactorResponse: RefactorResponse?
+    val refactorResponse: RefactorResponse?,
 )
 
 val CWF_ACE_DATA_KEY: Key<CwfAceFileEditorProviderData> = Key.create("codescene.ace.data")
@@ -22,12 +22,11 @@ val CWF_ACE_DATA_KEY: Key<CwfAceFileEditorProviderData> = Key.create("codescene.
  */
 @Suppress("UnstableApiUsage")
 internal class CwfAceFileEditorProvider : BaseCwfFileEditorProvider<CwfAceFileEditorProviderData>(CWF_ACE_DATA_KEY) {
-
     override fun getEditorTypeId(): String = CwfAceFileEditorProvider::class.java.simpleName
 
     override fun createEditorInstance(
         project: Project,
         file: VirtualFile,
-        data: CwfAceFileEditorProviderData
+        data: CwfAceFileEditorProviderData,
     ): FileEditor = CwfAceFileEditor(project, file, data)
 }

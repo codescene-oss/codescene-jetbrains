@@ -57,7 +57,7 @@ class CodeReviewService(private val project: Project) : CodeSceneService() {
                 Pair("elapsedMs", elapsedMs),
                 Pair("loc", telemetryInfo.loc),
                 Pair("language", telemetryInfo.language),
-            )
+            ),
         )
 
         result ?: return
@@ -69,7 +69,7 @@ class CodeReviewService(private val project: Project) : CodeSceneService() {
 
         Log.debug(
             "Review response cached for file $fileName with path $path",
-            "$serviceImplementation - ${project.name}"
+            "$serviceImplementation - ${project.name}",
         )
     }
 }

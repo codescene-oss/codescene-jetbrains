@@ -56,9 +56,10 @@ class CodeSceneGlobalSettingsStoreTest : BasePlatformTestCase() {
         assertFalse(state.previewCodeHealthGate)
     }
 
-    private fun createCustomState(): CodeSceneGlobalSettings = CodeSceneGlobalSettings(
-        serverUrl = "https://new-server.com",
-        excludeGitignoreFiles = false,
-        previewCodeHealthGate = true
-    )
+    private fun createCustomState(): CodeSceneGlobalSettings =
+        CodeSceneGlobalSettings(
+            serverUrl = "https://new-server.com",
+            excludeGitignoreFiles = false,
+            previewCodeHealthGate = true,
+        )
 }

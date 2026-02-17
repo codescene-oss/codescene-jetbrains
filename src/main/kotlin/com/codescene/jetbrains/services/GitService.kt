@@ -32,24 +32,24 @@ class GitService(val project: Project) {
      *         in a detached HEAD state.
      */
     fun getBranchCreationCommitCode(file: VirtualFile): String {
-        val gitRepository = GitRepositoryManager.getInstance(project).getRepositoryForFile(file) ?: run {
-            Log.debug("File ${file.path} is not part of a Git repository.", service)
-            return ""
-        }
+        val gitRepository =
+            GitRepositoryManager.getInstance(project).getRepositoryForFile(file) ?: run {
+                Log.debug("File ${file.path} is not part of a Git repository.", service)
+                return ""
+            }
 
         if (gitRepository.state == Repository.State.DETACHED) return ""
 
-        val commit = getBranchCreationCommit(gitRepository) ?: run {
-            Log.debug("Could not retrieve branch creation commit for ${file.path}", service)
-            return ""
-        }
+        val commit =
+            getBranchCreationCommit(gitRepository) ?: run {
+                Log.debug("Could not retrieve branch creation commit for ${file.path}", service)
+                return ""
+            }
 
         return getCodeByCommit(gitRepository, file, commit)
     }
 
-    private fun getBranchCreationCommit(
-        gitRepository: GitRepository,
-    ): String? {
+    private fun getBranchCreationCommit(gitRepository: GitRepository): String? {
         val reflog = getRefLog(project, gitRepository)
 
         return reflog
@@ -61,38 +61,46 @@ class GitService(val project: Project) {
 
     private fun getRefLog(
         project: Project,
-        gitRepository: GitRepository
+        gitRepository: GitRepository,
     ): List<String>? {
-        val handler = GitLineHandler(project, gitRepository.root, GitCommand.REF_LOG).apply {
-            addParameters(gitRepository.currentBranchName!!)
-        }
+        val handler =
+            GitLineHandler(project, gitRepository.root, GitCommand.REF_LOG).apply {
+                addParameters(gitRepository.currentBranchName!!)
+            }
 
         return Git.getInstance().runCommand(handler).let {
-            if (it.success()) it.output
-            else null
+            if (it.success()) {
+                it.output
+            } else {
+                null
+            }
         }
     }
 
     private fun getCodeByCommit(
         gitRepository: GitRepository,
         file: VirtualFile,
-        commit: String
+        commit: String,
     ): String {
         val repositoryRoot = gitRepository.root.path
         val relativePath = file.path.substringAfter("$repositoryRoot/")
 
         if (!file.path.startsWith(repositoryRoot)) {
-            Log.warn("File ${file.path} is not within the repository root ${repositoryRoot}.")
+            Log.warn("File ${file.path} is not within the repository root $repositoryRoot.")
             return ""
         }
 
-        val handler = GitLineHandler(project, gitRepository.root, GitCommand.SHOW).apply {
-            addParameters("$commit:$relativePath")
-        }
+        val handler =
+            GitLineHandler(project, gitRepository.root, GitCommand.SHOW).apply {
+                addParameters("$commit:$relativePath")
+            }
 
         Git.getInstance().runCommand(handler).let {
-            if (it.success()) return it.output.joinToString("\n")
-            else return ""
+            if (it.success()) {
+                return it.output.joinToString("\n")
+            } else {
+                return ""
+            }
         }
     }
 }

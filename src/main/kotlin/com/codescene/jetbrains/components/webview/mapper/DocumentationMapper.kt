@@ -17,10 +17,11 @@ class DocumentationMapper {
     fun toCwfData(
         docsData: DocsData,
         pro: Boolean = true,
-    ): CwfData<DocsData> = CwfData(
-        pro = pro,
-        devmode = RuntimeFlags.isDevMode,
-        view = View.DOCS.value,
-        data = docsData
-    )
+    ): CwfData<DocsData> =
+        CwfData(
+            pro = pro,
+            devmode = RuntimeFlags.isDevMode,
+            view = View.DOCS.value,
+            data = docsData,
+        )
 }

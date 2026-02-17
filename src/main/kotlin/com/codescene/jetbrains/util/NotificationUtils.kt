@@ -20,7 +20,7 @@ data class NotificationParams(
     val title: String,
     val message: String,
     val group: String,
-    val actions: List<NotificationAction>
+    val actions: List<NotificationAction>,
 )
 
 typealias NotificationAction = Pair<String, (AnActionEvent, Notification) -> Unit>
@@ -28,70 +28,87 @@ typealias NotificationAction = Pair<String, (AnActionEvent, Notification) -> Uni
 fun showNotification(params: NotificationParams) {
     val (project, title, message, group, actions) = params
 
-    val notification = NotificationGroupManager.getInstance()
-        .getNotificationGroup(group)
-        .createNotification(title, message, NotificationType.INFORMATION)
+    val notification =
+        NotificationGroupManager.getInstance()
+            .getNotificationGroup(group)
+            .createNotification(title, message, NotificationType.INFORMATION)
 
     actions.forEach { (label, action) ->
-        notification.addAction(object : AnAction(label) {
-            override fun actionPerformed(e: AnActionEvent) {
-                action(e, notification)
-            }
-        })
+        notification.addAction(
+            object : AnAction(label) {
+                override fun actionPerformed(e: AnActionEvent) {
+                    action(e, notification)
+                }
+            },
+        )
     }
 
     notification.notify(project)
 }
 
 fun showTelemetryConsentNotification(project: Project?) {
-    val params = NotificationParams(
-        project,
-        CODESCENE,
-        UiLabelsBundle.message("telemetryDescription"),
-        CODESCENE,
-        listOf(
-            UiLabelsBundle.message("acceptButton") to { _, n ->
-                CodeSceneGlobalSettingsStore.getInstance().updateTelemetryConsent(true)
-                n.expire()
-            },
-            UiLabelsBundle.message("closeButton") to { _, n -> n.expire() }
-        ))
+    val params =
+        NotificationParams(
+            project,
+            CODESCENE,
+            UiLabelsBundle.message("telemetryDescription"),
+            CODESCENE,
+            listOf(
+                UiLabelsBundle.message("acceptButton") to { _, n ->
+                    CodeSceneGlobalSettingsStore.getInstance().updateTelemetryConsent(true)
+                    n.expire()
+                },
+                UiLabelsBundle.message("closeButton") to { _, n -> n.expire() },
+            ),
+        )
 
     showNotification(params)
 }
 
-fun showRefactoringFinishedNotification(editor: Editor, params: AceCwfParams) {
+fun showRefactoringFinishedNotification(
+    editor: Editor,
+    params: AceCwfParams,
+) {
     val project = editor.project!!
 
-    val notification = NotificationParams(
-        project,
-        CODESCENE,
-        "Refactoring is ready for ${params.function.name}.",
-        ACE_NOTIFICATION_GROUP,
-        listOf(
-            UiLabelsBundle.message("viewRefactoringResult") to { _, n ->
-                handleOpenAceWindow(params, editor)
-                n.expire()
-            },
-            UiLabelsBundle.message("dismissRefactoringResult") to { _, n -> n.expire() }
-        ))
+    val notification =
+        NotificationParams(
+            project,
+            CODESCENE,
+            "Refactoring is ready for ${params.function.name}.",
+            ACE_NOTIFICATION_GROUP,
+            listOf(
+                UiLabelsBundle.message("viewRefactoringResult") to { _, n ->
+                    handleOpenAceWindow(params, editor)
+                    n.expire()
+                },
+                UiLabelsBundle.message("dismissRefactoringResult") to { _, n -> n.expire() },
+            ),
+        )
 
     showNotification(notification)
 }
 
-fun showInfoNotification(message: String, project: Project) {
-    val notification = NotificationParams(
-        project,
-        CODESCENE,
-        message,
-        INFO_NOTIFICATION_GROUP,
-        listOf(UiLabelsBundle.message("dismissRefactoringResult") to { _, n -> n.expire() })
-    )
+fun showInfoNotification(
+    message: String,
+    project: Project,
+) {
+    val notification =
+        NotificationParams(
+            project,
+            CODESCENE,
+            message,
+            INFO_NOTIFICATION_GROUP,
+            listOf(UiLabelsBundle.message("dismissRefactoringResult") to { _, n -> n.expire() }),
+        )
 
     showNotification(notification)
 }
 
-fun showErrorNotification(project: Project, message: String) {
+fun showErrorNotification(
+    project: Project,
+    message: String,
+) {
     NotificationGroupManager.getInstance()
         .getNotificationGroup(ERROR_NOTIFICATION_GROUP)
         .createNotification(message, NotificationType.ERROR)

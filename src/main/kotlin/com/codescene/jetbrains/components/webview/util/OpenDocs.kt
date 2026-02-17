@@ -38,7 +38,11 @@ import kotlinx.coroutines.launch
  * @param project The current project.
  * @param entryPoint The entry point from which the documentation was opened (for telemetry).
  */
-fun openDocs(docsData: DocsData, project: Project, entryPoint: DocsEntryPoint) {
+fun openDocs(
+    docsData: DocsData,
+    project: Project,
+    entryPoint: DocsEntryPoint,
+) {
     val existingBrowser = WebViewInitializer.getInstance(project).getBrowser(View.DOCS)
 
     if (existingBrowser != null) updateWebView(docsData, existingBrowser, project) else openFile(docsData, project)
@@ -46,20 +50,28 @@ fun openDocs(docsData: DocsData, project: Project, entryPoint: DocsEntryPoint) {
     sendTelemetry(docsData, entryPoint)
 }
 
-private fun updateWebView(docsData: DocsData, browser: JBCefBrowser, project: Project) {
+private fun updateWebView(
+    docsData: DocsData,
+    browser: JBCefBrowser,
+    project: Project,
+) {
     val mapper = DocumentationMapper.getInstance()
 
     val messageHandler = CwfMessageHandler.getInstance(project)
 
-    val dataJson = parseMessage(
-        mapper = { mapper.toCwfData(docsData) },
-        serializer = CwfData.serializer(DocsData.serializer())
-    )
+    val dataJson =
+        parseMessage(
+            mapper = { mapper.toCwfData(docsData) },
+            serializer = CwfData.serializer(DocsData.serializer()),
+        )
 
     messageHandler.postMessage(View.DOCS, dataJson, browser)
 }
 
-private fun openFile(docsData: DocsData, project: Project) {
+private fun openFile(
+    docsData: DocsData,
+    project: Project,
+) {
     val fileEditorManager = FileEditorManager.getInstance(project)
 
     val fileName = UiLabelsBundle.message("codeSmellDocs")
@@ -69,19 +81,23 @@ private fun openFile(docsData: DocsData, project: Project) {
     CoroutineScope(Dispatchers.Main).launch {
         val editor = getSelectedTextEditor(project, "", "${this::class.simpleName} - ${project.name}")
 
-        if (editor != null)
+        if (editor != null) {
             FileUtils.splitWindow(file, fileEditorManager, project)
-        else
+        } else {
             FileUtils.openDocumentationWithoutActiveEditor(file, fileEditorManager)
+        }
     }
 }
 
-private fun sendTelemetry(docsData: DocsData, entryPoint: DocsEntryPoint) {
+private fun sendTelemetry(
+    docsData: DocsData,
+    entryPoint: DocsEntryPoint,
+) {
     TelemetryService.getInstance().logUsage(
         TelemetryEvents.OPEN_DOCS_PANEL,
         mutableMapOf<String, Any>(
             Pair("source", entryPoint.value),
-            Pair("category", docNameMap[docsData.docType] ?: "")
-        )
+            Pair("category", docNameMap[docsData.docType] ?: ""),
+        ),
     )
 }

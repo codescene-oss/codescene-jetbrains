@@ -6,7 +6,7 @@ import com.intellij.openapi.vfs.VirtualFile
 
 data class TelemetryInfo(
     val loc: Int,
-    val language: String
+    val language: String,
 )
 
 fun getTelemetryInfo(file: VirtualFile): TelemetryInfo =

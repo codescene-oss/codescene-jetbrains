@@ -46,7 +46,7 @@ class NotificationUtilsTest {
             mockNotificationGroup.createNotification(
                 CODESCENE,
                 UiLabelsBundle.message("telemetryDescription"),
-                NotificationType.INFORMATION
+                NotificationType.INFORMATION,
             )
         } returns mockNotification
     }
@@ -65,7 +65,7 @@ class NotificationUtilsTest {
             mockNotificationGroup.createNotification(
                 CODESCENE,
                 UiLabelsBundle.message("telemetryDescription"),
-                NotificationType.INFORMATION
+                NotificationType.INFORMATION,
             )
         }
 

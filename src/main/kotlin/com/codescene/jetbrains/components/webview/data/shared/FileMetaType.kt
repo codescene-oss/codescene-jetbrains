@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FileMetaType(
     val fn: Fn? = null,
-    val fileName: String
+    val fileName: String,
 )

@@ -11,7 +11,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
-class ReadGitignoreTest {
+class ReadGitIgnoreTest {
     private val project: Project = mockk()
     private lateinit var tempDir: Path
     private lateinit var gitignoreFile: Path
@@ -26,7 +26,8 @@ class ReadGitignoreTest {
 
     @After
     fun tearDown() {
-        Files.walk(tempDir)
+        Files
+            .walk(tempDir)
             .sorted(Comparator.reverseOrder())
             .forEach(Files::delete)
     }

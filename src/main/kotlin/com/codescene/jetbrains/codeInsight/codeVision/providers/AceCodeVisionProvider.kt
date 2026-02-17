@@ -36,10 +36,14 @@ class AceCodeVisionProvider : CodeVisionProvider<Unit> {
         // Precomputations on the UI thread are unnecessary in this context, so this is left intentionally empty.
     }
 
-    override fun computeCodeVision(editor: Editor, uiData: Unit): CodeVisionState {
+    override fun computeCodeVision(
+        editor: Editor,
+        uiData: Unit,
+    ): CodeVisionState {
         val settings = CodeSceneGlobalSettingsStore.getInstance().state
 
-        val disabled = editor.project == null || !settings.enableAutoRefactor ||
+        val disabled =
+            editor.project == null || !settings.enableAutoRefactor ||
                 settings.aceAuthToken.trim().isEmpty() || settings.aceStatus == AceStatus.DEACTIVATED
         if (disabled) {
             Log.info("Rendering empty code vision providers for file '${editor.virtualFile?.name}'.")
@@ -54,18 +58,19 @@ class AceCodeVisionProvider : CodeVisionProvider<Unit> {
 
     private fun getLens(
         editor: Editor,
-        refactorableFunctions: List<FnToRefactor>?
+        refactorableFunctions: List<FnToRefactor>?,
     ): List<Pair<TextRange, CodeVisionEntry>> {
         val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
 
         refactorableFunctions?.forEach {
             val range = getTextRange(it.range.startLine to it.range.endLine, editor.document)
-            val entry = ClickableTextCodeVisionEntry(
-                text = name,
-                providerId = id,
-                onClick = { _, sourceEditor -> handleLensClick(sourceEditor, it) },
-                icon = CODESCENE_ACE
-            )
+            val entry =
+                ClickableTextCodeVisionEntry(
+                    text = name,
+                    providerId = id,
+                    onClick = { _, sourceEditor -> handleLensClick(sourceEditor, it) },
+                    icon = CODESCENE_ACE,
+                )
 
             lenses.add(range to entry)
         }
@@ -73,7 +78,10 @@ class AceCodeVisionProvider : CodeVisionProvider<Unit> {
         return lenses
     }
 
-    private fun handleLensClick(editor: Editor, function: FnToRefactor) {
+    private fun handleLensClick(
+        editor: Editor,
+        function: FnToRefactor,
+    ) {
         handleAceEntryPoint(RefactoringParams(editor.project!!, editor, function, AceEntryPoint.CODE_VISION))
     }
 }
