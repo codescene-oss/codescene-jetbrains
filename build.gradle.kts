@@ -161,6 +161,17 @@ val ktlintFailOnError = providers.gradleProperty("ktlintFailOnError")
 ktlint {
     // Keep default warning-only behavior unless explicitly overridden via -PktlintFailOnError=true.
     ignoreFailures.set(ktlintFailOnError.map { failOnError -> !failOnError })
+
+    version.set("1.2.1")
+    android.set(false)
+    outputToConsole.set(true)
+    ignoreFailures.set(false)
+    enableExperimentalRules.set(false)
+
+    filter {
+        exclude("**/generated/**")
+        exclude("**/build/**")
+    }
 }
 
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
