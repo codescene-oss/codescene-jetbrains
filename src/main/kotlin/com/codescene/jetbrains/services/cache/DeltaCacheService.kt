@@ -22,7 +22,7 @@ data class DeltaCacheEntry(
 data class DeltaCacheQuery(
     val filePath: String,
     val headCommitContent: String,
-    val currentFileContent: String
+    val currentFileContent: String,
 )
 
 @Service(Service.Level.PROJECT)

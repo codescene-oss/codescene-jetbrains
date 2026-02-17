@@ -13,15 +13,19 @@ object FileUtils {
      *
      * @param file The [VirtualFile] to be opened in a right-split editor.
      */
-    fun openDocumentationWithoutActiveEditor(file: LightVirtualFile, fileEditorManager: FileEditorManager) {
+    fun openDocumentationWithoutActiveEditor(
+        file: LightVirtualFile,
+        fileEditorManager: FileEditorManager,
+    ) {
         fileEditorManager.openFiles
             .filterIsInstance<LightVirtualFile>()
             .filter { shouldCloseFile(it, file) }
             .forEach { fileEditorManager.closeFile(it) }
 
         val docNotOpen = fileEditorManager.openFiles.none { it.name == file.name }
-        if (docNotOpen)
+        if (docNotOpen) {
             fileEditorManager.openFile(file, false, true)
+        }
     }
 
     /**
@@ -30,12 +34,17 @@ object FileUtils {
      *
      * @param file The [VirtualFile] to be opened in a right-split editor.
      */
-    fun splitWindow(file: LightVirtualFile, fileEditorManager: FileEditorManager, project: Project) {
+    fun splitWindow(
+        file: LightVirtualFile,
+        fileEditorManager: FileEditorManager,
+        project: Project,
+    ) {
         val editorManagerEx = FileEditorManagerEx.getInstanceEx(project)
-        val docWindow = editorManagerEx.windows
-            .firstOrNull { editorWindow ->
-                editorWindow.fileList.any { acceptedFileNames.contains(it.nameWithoutExtension) }
-            }
+        val docWindow =
+            editorManagerEx.windows
+                .firstOrNull { editorWindow ->
+                    editorWindow.fileList.any { acceptedFileNames.contains(it.nameWithoutExtension) }
+                }
 
         editorManagerEx.splitters.openInRightSplit(file, false)
 
@@ -45,6 +54,8 @@ object FileUtils {
             .forEach { docWindow?.closeFile(it) }
     }
 
-    private fun shouldCloseFile(existing: LightVirtualFile, new: LightVirtualFile) =
-        existing != new && acceptedFileNames.contains(existing.nameWithoutExtension)
+    private fun shouldCloseFile(
+        existing: LightVirtualFile,
+        new: LightVirtualFile,
+    ) = existing != new && acceptedFileNames.contains(existing.nameWithoutExtension)
 }

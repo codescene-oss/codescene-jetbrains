@@ -10,8 +10,9 @@ import com.intellij.openapi.vfs.newvfs.events.VFilePropertyChangeEvent
 
 class FileChangeListener(private val project: Project) : AsyncFileListener {
     override fun prepareChange(events: List<VFileEvent>): AsyncFileListener.ChangeApplier? {
-        val renameEvents = events.filterIsInstance<VFilePropertyChangeEvent>()
-            .filter { it.propertyName == VirtualFile.PROP_NAME }
+        val renameEvents =
+            events.filterIsInstance<VFilePropertyChangeEvent>()
+                .filter { it.propertyName == VirtualFile.PROP_NAME }
         val deleteEvents = events.filterIsInstance<VFileDeleteEvent>()
         val moveEvents = events.filterIsInstance<VFileMoveEvent>()
 

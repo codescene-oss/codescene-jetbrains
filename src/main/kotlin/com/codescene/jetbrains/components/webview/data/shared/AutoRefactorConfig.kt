@@ -6,7 +6,16 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class AutoRefactorConfig(
-    val activated: Boolean = CodeSceneGlobalSettingsStore.getInstance().state.aceAcknowledged, // Indicate whether the user has approved the use of ACE yet
-    val visible: Boolean = RuntimeFlags.aceFeature && CodeSceneGlobalSettingsStore.getInstance().state.enableAutoRefactor,// Show any type of ACE functionality
-    val disabled: Boolean = CodeSceneGlobalSettingsStore.getInstance().state.aceAuthToken.trim().isEmpty() // Disable the visible button if visible: true
+    // Indicate whether the user has approved the use of ACE yet
+    val activated: Boolean = CodeSceneGlobalSettingsStore.getInstance().state.aceAcknowledged,
+    // Show any type of ACE functionality
+    val visible: Boolean =
+        RuntimeFlags.aceFeature && CodeSceneGlobalSettingsStore.getInstance().state.enableAutoRefactor,
+    // Disable the visible button if visible: true
+    val disabled: Boolean =
+        CodeSceneGlobalSettingsStore
+            .getInstance()
+            .state.aceAuthToken
+            .trim()
+            .isEmpty(),
 )

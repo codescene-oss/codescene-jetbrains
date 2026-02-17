@@ -8,18 +8,18 @@ import org.apache.commons.codec.digest.DigestUtils
 
 data class ReviewCacheItem(
     val fileContents: String,
-    val response: Review
+    val response: Review,
 )
 
 data class ReviewCacheQuery(
     val fileContents: String,
-    val filePath: String
+    val filePath: String,
 )
 
 data class ReviewCacheEntry(
     val fileContents: String,
     val filePath: String,
-    val response: Review
+    val response: Review,
 )
 
 @Service(Service.Level.PROJECT)

@@ -1,8 +1,8 @@
 package com.codescene.jetbrains.listeners
 
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
-import com.codescene.jetbrains.services.api.AceService
 import com.codescene.jetbrains.config.global.DeviceIdStore
+import com.codescene.jetbrains.services.api.AceService
 import com.codescene.jetbrains.util.Log
 import com.codescene.jetbrains.util.showTelemetryConsentNotification
 import com.intellij.ide.plugins.IdeaPluginDescriptor
@@ -31,14 +31,17 @@ class ProjectStartupActivity : ProjectActivity {
         AceService.getInstance().runPreflight(true)
     }
 
-    private fun addStateListener() = PluginInstaller.addStateListener(object : PluginStateListener {
-        override fun install(descriptor: IdeaPluginDescriptor) {
-            // No action needed
-        }
+    private fun addStateListener() =
+        PluginInstaller.addStateListener(
+            object : PluginStateListener {
+                override fun install(descriptor: IdeaPluginDescriptor) {
+                    // No action needed
+                }
 
-        override fun uninstall(descriptor: IdeaPluginDescriptor) {
-            Log.info("Plugin uninstalled: ${descriptor.pluginId} ${descriptor.version}")
-            CodeSceneGlobalSettingsStore.getInstance().updateTelemetryConsent(false)
-        }
-    })
+                override fun uninstall(descriptor: IdeaPluginDescriptor) {
+                    Log.info("Plugin uninstalled: ${descriptor.pluginId} ${descriptor.version}")
+                    CodeSceneGlobalSettingsStore.getInstance().updateTelemetryConsent(false)
+                }
+            },
+        )
 }

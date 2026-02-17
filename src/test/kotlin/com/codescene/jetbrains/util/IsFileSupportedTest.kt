@@ -20,18 +20,19 @@ import org.junit.Test
 class IsFileSupportedTest {
     @Before
     fun setUp() {
-        val mockApplication = mockk<Application> {
-            every { runReadAction(any<Computable<*>>()) } answers {
-                val computable = firstArg<Computable<*>>()
-                computable.compute()
+        val mockApplication =
+            mockk<Application> {
+                every { runReadAction(any<Computable<*>>()) } answers {
+                    val computable = firstArg<Computable<*>>()
+                    computable.compute()
+                }
+                every { getService(CodeSceneGlobalSettingsStore::class.java) } returns mockk()
+                every { getService(CodeSceneGlobalSettingsStore::class.java).state } returns mockk()
+                every { getService(CodeSceneGlobalSettingsStore::class.java).state.excludeGitignoreFiles } returns true
+                every { isUnitTestMode } returns true
+                every { getServiceIfCreated(FileBasedIndex::class.java) } returns mockk(relaxed = true)
+                every { getServiceIfCreated(VirtualFilePointerManager::class.java) } returns mockk(relaxed = true)
             }
-            every { getService(CodeSceneGlobalSettingsStore::class.java) } returns mockk()
-            every { getService(CodeSceneGlobalSettingsStore::class.java).state } returns mockk()
-            every { getService(CodeSceneGlobalSettingsStore::class.java).state.excludeGitignoreFiles } returns true
-            every { isUnitTestMode } returns true
-            every { getServiceIfCreated(FileBasedIndex::class.java) } returns mockk(relaxed = true)
-            every { getServiceIfCreated(VirtualFilePointerManager::class.java) } returns mockk(relaxed = true)
-        }
 
         mockkStatic(ApplicationManager::class)
         every { ApplicationManager.getApplication() } returns mockApplication
@@ -39,12 +40,14 @@ class IsFileSupportedTest {
 
     @Test
     fun `isFileSupported returns true for supported file types`() {
-        val mockProject = mockk<Project>() {
-            every { basePath } returns "/mock/project/path"
-        }
-        val mockFile = mockk<VirtualFile> {
-            every { extension } returns "java"
-        }
+        val mockProject =
+            mockk<Project> {
+                every { basePath } returns "/mock/project/path"
+            }
+        val mockFile =
+            mockk<VirtualFile> {
+                every { extension } returns "java"
+            }
         mockProjectFileIndex(mockProject, mockFile, true)
 
         val result = isFileSupported(mockProject, mockFile)
@@ -54,12 +57,14 @@ class IsFileSupportedTest {
 
     @Test
     fun `isFileSupported returns false for unsupported file types`() {
-        val mockProject = mockk<Project>() {
-            every { basePath } returns "/mock/project/path"
-        }
-        val mockFile = mockk<VirtualFile> {
-            every { extension } returns "unsupported_extension"
-        }
+        val mockProject =
+            mockk<Project> {
+                every { basePath } returns "/mock/project/path"
+            }
+        val mockFile =
+            mockk<VirtualFile> {
+                every { extension } returns "unsupported_extension"
+            }
         mockProjectFileIndex(mockProject, mockFile, true)
 
         val result = isFileSupported(mockProject, mockFile)
@@ -69,12 +74,14 @@ class IsFileSupportedTest {
 
     @Test
     fun `isFileSupported returns false for excluded files`() {
-        val mockProject = mockk<Project>() {
-            every { basePath } returns "/mock/project/path"
-        }
-        val mockFile = mockk<VirtualFile> {
-            every { extension } returns "env"
-        }
+        val mockProject =
+            mockk<Project> {
+                every { basePath } returns "/mock/project/path"
+            }
+        val mockFile =
+            mockk<VirtualFile> {
+                every { extension } returns "env"
+            }
         mockProjectFileIndex(mockProject, mockFile, true)
 
         val result = isFileSupported(mockProject, mockFile)
@@ -84,12 +91,14 @@ class IsFileSupportedTest {
 
     @Test
     fun `isFileSupported returns false for non-project files`() {
-        val mockProject = mockk<Project>() {
-            every { basePath } returns "/mock/project/path"
-        }
-        val mockFile = mockk<VirtualFile> {
-            every { extension } returns "java"
-        }
+        val mockProject =
+            mockk<Project> {
+                every { basePath } returns "/mock/project/path"
+            }
+        val mockFile =
+            mockk<VirtualFile> {
+                every { extension } returns "java"
+            }
         mockProjectFileIndex(mockProject, mockFile, false)
 
         val result = isFileSupported(mockProject, mockFile)
@@ -97,10 +106,15 @@ class IsFileSupportedTest {
         assertFalse(result)
     }
 
-    private fun mockProjectFileIndex(project: Project, file: VirtualFile, isInContent: Boolean) {
-        val mockIndex = mockk<ProjectFileIndex> {
-            every { isInContent(file) } returns isInContent
-        }
+    private fun mockProjectFileIndex(
+        project: Project,
+        file: VirtualFile,
+        isInContent: Boolean,
+    ) {
+        val mockIndex =
+            mockk<ProjectFileIndex> {
+                every { isInContent(file) } returns isInContent
+            }
 
         mockkStatic(ProjectFileIndex::class)
         every { ProjectFileIndex.getInstance(project) } returns mockIndex

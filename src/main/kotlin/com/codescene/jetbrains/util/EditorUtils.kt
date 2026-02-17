@@ -8,18 +8,23 @@ import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
+import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.File
 
-fun getSelectedTextEditor(project: Project, filePath: String, source: String = ""): Editor? {
+fun getSelectedTextEditor(
+    project: Project,
+    filePath: String,
+    source: String = "",
+): Editor? {
     var result: Editor? = null
 
     ApplicationManager.getApplication().invokeAndWait {
         val editorManager = FileEditorManager.getInstance(project)
-        val openEditor = editorManager.allEditors.firstOrNull { it.file.path == filePath }
-            ?: editorManager.allEditors.firstOrNull()
+        val openEditor =
+            editorManager.allEditors.firstOrNull { it.file.path == filePath }
+                ?: editorManager.allEditors.firstOrNull()
 
         if (editorManager.selectedTextEditor == null && openEditor != null) {
             Log.debug("Selected editor was null, opening file: ${openEditor.file.path}", source)
@@ -32,19 +37,24 @@ fun getSelectedTextEditor(project: Project, filePath: String, source: String = "
     return result
 }
 
-fun closeWindow(fileName: String, project: Project) {
+fun closeWindow(
+    fileName: String,
+    project: Project,
+) {
     val editorManager = FileEditorManagerEx.getInstanceEx(project)
-    val docFile = editorManager.windows
-        .firstOrNull { editorWindow ->
-            editorWindow
-                .fileList
-                .any { it.nameWithoutExtension == fileName }
-        }?.let { window ->
-            val matchingFile = window
-                .fileList
-                .firstOrNull { it.nameWithoutExtension == fileName }
-            matchingFile?.let { window to it }
-        }
+    val docFile =
+        editorManager.windows
+            .firstOrNull { editorWindow ->
+                editorWindow
+                    .fileList
+                    .any { it.nameWithoutExtension == fileName }
+            }?.let { window ->
+                val matchingFile =
+                    window
+                        .fileList
+                        .firstOrNull { it.nameWithoutExtension == fileName }
+                matchingFile?.let { window to it }
+            }
 
     val (editorWindow, virtualFile) = docFile ?: return
 
@@ -56,7 +66,7 @@ data class ReplaceCodeSnippetArgs(
     val filePath: String,
     val startLine: Int,
     val endLine: Int,
-    val newContent: String
+    val newContent: String,
 )
 
 fun replaceCodeSnippet(args: ReplaceCodeSnippetArgs) {

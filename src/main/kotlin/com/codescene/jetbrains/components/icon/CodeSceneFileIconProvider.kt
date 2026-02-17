@@ -9,11 +9,15 @@ import com.intellij.testFramework.LightVirtualFile
 import javax.swing.Icon
 
 internal class CodeSceneFileIconProvider : IconProvider() {
-    override fun getIcon(element: PsiElement, flags: Int): Icon? {
+    override fun getIcon(
+        element: PsiElement,
+        flags: Int,
+    ): Icon? {
         val vFile: VirtualFile? = element.containingFile?.virtualFile
 
-        if (vFile is LightVirtualFile && codeSceneWindowFileNames.contains(vFile.name))
+        if (vFile is LightVirtualFile && codeSceneWindowFileNames.contains(vFile.name)) {
             return CODESCENE_TW
+        }
 
         return null
     }

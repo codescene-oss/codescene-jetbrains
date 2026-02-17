@@ -21,9 +21,17 @@ class AceRefactorAction(private val function: FnToRefactor) : IntentionAction, H
 
     override fun getFamilyName(): String = name
 
-    override fun isAvailable(project: Project, editor: Editor?, file: PsiFile): Boolean = true
+    override fun isAvailable(
+        project: Project,
+        editor: Editor?,
+        file: PsiFile,
+    ): Boolean = true
 
-    override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {
+    override fun invoke(
+        project: Project,
+        editor: Editor?,
+        file: PsiFile?,
+    ) {
         handleAceEntryPoint(RefactoringParams(project, editor, function, AceEntryPoint.INTENTION_ACTION))
     }
 

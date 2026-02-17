@@ -9,7 +9,12 @@ import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
 import com.codescene.jetbrains.services.cache.ReviewCacheService
-import com.codescene.jetbrains.util.*
+import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.fetchAceCache
+import com.codescene.jetbrains.util.formatCodeSmellMessage
+import com.codescene.jetbrains.util.getRefactorableFunction
+import com.codescene.jetbrains.util.getTextRange
+import com.codescene.jetbrains.util.isFileSupported
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.ExternalAnnotator
@@ -20,12 +25,13 @@ import com.intellij.psi.PsiFile
 import org.jetbrains.annotations.NotNull
 
 class CodeSmellAnnotator : ExternalAnnotator<
-        CodeSmellAnnotator.AnnotationContext, CodeSmellAnnotator.AnnotationContext
-        >() {
+    CodeSmellAnnotator.AnnotationContext,
+    CodeSmellAnnotator.AnnotationContext,
+>() {
     override fun apply(
         @NotNull psiFile: PsiFile,
         annotationContext: AnnotationContext,
-        @NotNull holder: AnnotationHolder
+        @NotNull holder: AnnotationHolder,
     ) {
         if (!isFileSupported(psiFile.project, psiFile.virtualFile)) {
             Log.warn("File type not supported: ${psiFile.virtualFile.name}. Skipping code smell annotation.")
@@ -36,7 +42,9 @@ class CodeSmellAnnotator : ExternalAnnotator<
     }
 
     private fun annotateFile(
-        psiFile: PsiFile, holder: AnnotationHolder, annotationContext: AnnotationContext
+        psiFile: PsiFile,
+        holder: AnnotationHolder,
+        annotationContext: AnnotationContext,
     ) {
         val document = FileDocumentManager.getInstance().getDocument(psiFile.virtualFile) ?: return
         val review = annotationContext.reviewCache
@@ -50,8 +58,11 @@ class CodeSmellAnnotator : ExternalAnnotator<
                     CodeVisionCodeSmell(
                         details = it.details,
                         highlightRange = it.highlightRange,
-                        category = it.category
-                    ), document, holder, ace
+                        category = it.category,
+                    ),
+                    document,
+                    holder,
+                    ace,
                 )
             }
             review.functionLevelCodeSmells
@@ -62,7 +73,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
                                 details = codeSmell.details,
                                 category = codeSmell.category,
                                 highlightRange = codeSmell.highlightRange,
-                                functionName = functionSmell.function
+                                functionName = functionSmell.function,
                             )
                         }
                 }
@@ -76,7 +87,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
         codeSmell: CodeVisionCodeSmell,
         document: Document,
         holder: AnnotationHolder,
-        refactorableFunctions: List<FnToRefactor> = emptyList()
+        refactorableFunctions: List<FnToRefactor> = emptyList(),
     ) {
         val settings = CodeSceneGlobalSettingsStore.getInstance().state
         val range = getTextRange(codeSmell.highlightRange.startLine to codeSmell.highlightRange.endLine, document)
@@ -86,37 +97,47 @@ class CodeSmellAnnotator : ExternalAnnotator<
 
         val aceAvailable =
             RuntimeFlags.aceFeature && settings.enableAutoRefactor && settings.aceAuthToken.trim().isNotEmpty()
-        val function = if (aceAvailable)
-            getRefactorableFunction(codeSmell, refactorableFunctions)
-        else null
+        val function =
+            if (aceAvailable) {
+                getRefactorableFunction(codeSmell, refactorableFunctions)
+            } else {
+                null
+            }
 
-        val annotationBuilder = holder.newAnnotation(HighlightSeverity.WARNING, message)
-            .range(range)
-            .highlightType(ProblemHighlightType.WARNING)
-            .withFix(ShowProblemIntentionAction(codeSmell))
+        val annotationBuilder =
+            holder.newAnnotation(HighlightSeverity.WARNING, message)
+                .range(range)
+                .highlightType(ProblemHighlightType.WARNING)
+                .withFix(ShowProblemIntentionAction(codeSmell))
 
         function?.let { annotationBuilder.withFix(AceRefactorAction(function)) }
 
         annotationBuilder.create()
     }
 
-    private fun fetchCache(psiFile: PsiFile, content: String): Review? {
+    private fun fetchCache(
+        psiFile: PsiFile,
+        content: String,
+    ): Review? {
         val path = psiFile.virtualFile.path
         val query = ReviewCacheQuery(content, path)
 
         return ReviewCacheService.getInstance(psiFile.project).get(query).also {
-            if (it == null) Log.info("No cache available for ${path}. Skipping annotation.")
+            if (it == null) Log.info("No cache available for $path. Skipping annotation.")
         }
     }
 
-    override fun collectInformation(@NotNull file: PsiFile): AnnotationContext? {
+    override fun collectInformation(
+        @NotNull file: PsiFile,
+    ): AnnotationContext? {
         val document = FileDocumentManager.getInstance().getDocument(file.virtualFile)
 
-        val content = document?.text ?: run {
-            Log.warn("No document found for file: ${file.name}. Skipping annotation.")
+        val content =
+            document?.text ?: run {
+                Log.warn("No document found for file: ${file.name}. Skipping annotation.")
 
-            return null
-        }
+                return null
+            }
 
         val cache = fetchCache(file, content)
         val aceCache = fetchAceCache(file.virtualFile.path, content, file.project)

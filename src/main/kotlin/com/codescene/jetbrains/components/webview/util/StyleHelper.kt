@@ -14,22 +14,23 @@ class StyleHelper {
         fun getInstance(): StyleHelper = ApplicationManager.getApplication().getService(StyleHelper::class.java)
     }
 
-    private val opacityVariants = mapOf(
-        1 to "03",
-        3 to "08",
-        7 to "12",
-        10 to "1A",
-        20 to "33",
-        30 to "4D",
-        40 to "66",
-        50 to "80",
-        60 to "99",
-        70 to "B3",
-        75 to "BF",
-        80 to "CC",
-        85 to "D9",
-        90 to "E6"
-    )
+    private val opacityVariants =
+        mapOf(
+            1 to "03",
+            3 to "08",
+            7 to "12",
+            10 to "1A",
+            20 to "33",
+            30 to "4D",
+            40 to "66",
+            50 to "80",
+            60 to "99",
+            70 to "B3",
+            75 to "BF",
+            80 to "CC",
+            85 to "D9",
+            90 to "E6",
+        )
 
     private fun toHex(c: Color): String = "%02X%02X%02X".format(c.red, c.green, c.blue)
 

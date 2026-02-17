@@ -10,9 +10,11 @@ class TreeMouseMotionAdapter(private val tree: Tree) : MouseMotionAdapter() {
     override fun mouseMoved(e: MouseEvent) {
         val path = tree.getPathForLocation(e.x, e.y)
 
-        tree.cursor = if (path != null)
-            Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-        else
-            Cursor.getDefaultCursor()
+        tree.cursor =
+            if (path != null) {
+                Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+            } else {
+                Cursor.getDefaultCursor()
+            }
     }
 }

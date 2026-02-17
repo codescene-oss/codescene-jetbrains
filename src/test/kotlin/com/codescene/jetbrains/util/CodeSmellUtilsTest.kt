@@ -7,14 +7,14 @@ import com.intellij.openapi.util.TextRange
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import java.awt.Color
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.awt.Color
 
 val codeSmell = CodeSmell("", Range(394, 10, 394, 26), "")
 val color = Color(170, 99, 243, 100)
-const val startOffset = 10
-const val endOffset = 50
+const val START_OFFSET = 10
+const val END_OFFSET = 50
 val startLine = codeSmell.highlightRange.startLine - 1
 val endLine = codeSmell.highlightRange.endLine - 1
 
@@ -23,12 +23,12 @@ class CodeSmellUtilsTest {
     fun `getTextRange returns correct TextRange`() {
         val document = mockk<Document>()
 
-        every { document.getLineStartOffset(startLine) } returns startOffset
-        every { document.getLineEndOffset(endLine) } returns endOffset
+        every { document.getLineStartOffset(startLine) } returns START_OFFSET
+        every { document.getLineEndOffset(endLine) } returns END_OFFSET
 
         val result = getTextRange(codeSmell.highlightRange.startLine to codeSmell.highlightRange.endLine, document)
 
-        assertEquals(TextRange(startOffset, endOffset), result)
+        assertEquals(TextRange(START_OFFSET, END_OFFSET), result)
         verify(exactly = 1) { document.getLineStartOffset(startLine) }
         verify(exactly = 1) { document.getLineEndOffset(endLine) }
     }
@@ -126,7 +126,8 @@ class CodeSmellUtilsTest {
     @Test
     fun `surroundingCharactersNotBackticks return false for two backticks when checking second`() {
         val inputString = "``"
-        val result = surroundingCharactersNotBackticks(CharactersBackticksData(inputString, inputString.lastIndexOf('`')))
+        val result =
+            surroundingCharactersNotBackticks(CharactersBackticksData(inputString, inputString.lastIndexOf('`')))
         assertEquals(false, result)
     }
 
@@ -140,14 +141,16 @@ class CodeSmellUtilsTest {
     @Test
     fun `surroundingCharactersNotBackticks return false for three backticks when checking second`() {
         val inputString = "some text before ``` and after"
-        val result = surroundingCharactersNotBackticks(CharactersBackticksData(inputString, inputString.indexOf('`') + 1))
+        val result =
+            surroundingCharactersNotBackticks(CharactersBackticksData(inputString, inputString.indexOf('`') + 1))
         assertEquals(false, result)
     }
 
     @Test
     fun `surroundingCharactersNotBackticks return false for three backticks when checking third`() {
         val inputString = "some text before ``` and after"
-        val result = surroundingCharactersNotBackticks(CharactersBackticksData(inputString, inputString.lastIndexOf('`')))
+        val result =
+            surroundingCharactersNotBackticks(CharactersBackticksData(inputString, inputString.lastIndexOf('`')))
         assertEquals(false, result)
     }
 }

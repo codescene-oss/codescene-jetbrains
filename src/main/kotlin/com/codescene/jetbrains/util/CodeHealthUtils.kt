@@ -23,9 +23,13 @@ fun getChangePercentage(healthDetails: HealthDetails): Double? {
 }
 
 private fun codeImproved(healthDetails: HealthDetails) =
-    if (healthDetails.newScore == null || healthDetails.oldScore == null) ""
-    else if (healthDetails.newScore > healthDetails.oldScore) "+"
-    else "-"
+    if (healthDetails.newScore == null || healthDetails.oldScore == null) {
+        ""
+    } else if (healthDetails.newScore > healthDetails.oldScore) {
+        "+"
+    } else {
+        "-"
+    }
 
 data class HealthInformation(val change: String, val percentage: String = "")
 
@@ -36,8 +40,11 @@ fun getCodeHealth(healthDetails: HealthDetails): HealthInformation {
     val changePercentage = getChangePercentage(healthDetails)
     val sign = codeImproved(healthDetails)
 
-    val percentage = if (changePercentage == null || sign.isEmpty()) "" else "$sign${changePercentage}%"
+    val percentage = if (changePercentage == null || sign.isEmpty()) "" else "$sign$changePercentage%"
 
-    return if (newScore != oldScore) HealthInformation("$oldScore → $newScore", percentage)
-    else HealthInformation(newScore.toString())
+    return if (newScore != oldScore) {
+        HealthInformation("$oldScore → $newScore", percentage)
+    } else {
+        HealthInformation(newScore.toString())
+    }
 }

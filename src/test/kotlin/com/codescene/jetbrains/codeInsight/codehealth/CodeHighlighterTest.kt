@@ -15,15 +15,13 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
+import java.awt.Color
 import junit.framework.TestCase.assertEquals
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import java.awt.Color
-
 
 class CodeHighlighterTest {
-
     private val mockHighlighter = mockk<SyntaxHighlighter>()
     private val mockLexer = mockk<Lexer>()
     private val mockColorScheme = mockk<EditorColorsScheme>()
@@ -66,7 +64,9 @@ class CodeHighlighterTest {
     @Test
     fun `generateHighlightedHtml with multiple tokens returns correct output`() {
         val code = "let x = 10;"
-        val expectedOutput = "<code><span style=\"color: rgba(0, 0, 255, 255.0);\">let</span><span style=\"\"> x = </span><span style=\"color: rgba(255, 0, 0, 255.0);\">10</span><span style=\"\">;</span></code>"
+        val expectedOutput =
+            "<code><span style=\"color: rgba(0, 0, 255, 255.0);\">let</span><span style=\"\"" +
+                "> x = </span><span style=\"color: rgba(255, 0, 0, 255.0);\">10</span><span style=\"\">;</span></code>"
 
         setupMocksForMultipleTokens()
 
@@ -74,7 +74,11 @@ class CodeHighlighterTest {
         assertEquals(expectedOutput, result)
     }
 
-    private fun doTestWithSingleLineDelimiter(code: String, languageId: String, delimiter: MarkdownCodeDelimiter): String {
+    private fun doTestWithSingleLineDelimiter(
+        code: String,
+        languageId: String,
+        delimiter: MarkdownCodeDelimiter,
+    ): String {
         setupMocksForSimpleHighlighting(code)
 
         return generateHighlightedHtml(code, languageId, delimiter)
@@ -87,18 +91,20 @@ class CodeHighlighterTest {
         every { mockLexer.tokenEnd } returns code.length
         every { mockLexer.advance() } returns Unit
         every { mockHighlighter.getTokenHighlights(any()) } returns arrayOf(mockTextAttributes)
-        every { mockColorScheme.getAttributes(any()) } returns mockk {
-            every { foregroundColor } returns Color.BLACK
-        }
+        every { mockColorScheme.getAttributes(any()) } returns
+            mockk {
+                every { foregroundColor } returns Color.BLACK
+            }
     }
 
     private fun setupMocksForMultipleTokens() {
-        val tokens = listOf(
-            Triple(0, 3, Color.BLUE),  // "let"
-            Triple(3, 8, null),        // " x = "
-            Triple(8, 10, Color.RED),   // "10"
-            Triple(10, 11, null),       // ";"
-        )
+        val tokens =
+            listOf(
+                Triple(0, 3, Color.BLUE), // "let"
+                Triple(3, 8, null), // " x = "
+                Triple(8, 10, Color.RED), // "10"
+                Triple(10, 11, null), // ";"
+            )
         var tokenIndex = 0
         every { mockLexer.start(any()) } returns Unit
         every { mockLexer.tokenType } returnsMany (List<IElementType>(tokens.size * 2) { mockk() } + listOf(null))

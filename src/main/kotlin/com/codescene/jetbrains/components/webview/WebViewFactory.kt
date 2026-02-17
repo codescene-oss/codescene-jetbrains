@@ -10,8 +10,8 @@ import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
-import org.cef.browser.CefMessageRouter
 import javax.swing.JLabel
+import org.cef.browser.CefMessageRouter
 
 object WebViewFactory {
     /**
@@ -29,7 +29,7 @@ object WebViewFactory {
     fun createWebViewComponent(
         project: Project,
         view: View,
-        initialData: Any? = null
+        initialData: Any? = null,
     ): Content {
         val contentFactory = ContentFactory.getInstance()
         val isDevMode = RuntimeFlags.isDevMode
@@ -38,13 +38,14 @@ object WebViewFactory {
             return contentFactory.createContent(
                 JBScrollPane().apply { add(JLabel(UiLabelsBundle.message("jcefNotSupported"))) },
                 null,
-                false
+                false,
             )
         }
 
-        val jcefBrowser = JBCefBrowser.createBuilder()
-            .setEnableOpenDevToolsMenuItem(isDevMode)
-            .build()
+        val jcefBrowser =
+            JBCefBrowser.createBuilder()
+                .setEnableOpenDevToolsMenuItem(isDevMode)
+                .build()
 
         val webViewInitializer = WebViewInitializer.getInstance(project)
         val html = webViewInitializer.getInitialScript(view, jcefBrowser, initialData)

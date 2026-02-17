@@ -5,10 +5,18 @@ import com.codescene.jetbrains.services.CodeNavigationService
 import com.codescene.jetbrains.services.api.AceService
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewer
-import com.codescene.jetbrains.util.*
+import com.codescene.jetbrains.util.AceEntryPoint
 import com.codescene.jetbrains.util.Constants.ACE_ACKNOWLEDGEMENT
 import com.codescene.jetbrains.util.Constants.ACE_REFACTORING_SUGGESTION
 import com.codescene.jetbrains.util.Constants.CODESCENE
+import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.RefactoringParams
+import com.codescene.jetbrains.util.ReplaceCodeSnippetArgs
+import com.codescene.jetbrains.util.TelemetryEvents
+import com.codescene.jetbrains.util.closeWindow
+import com.codescene.jetbrains.util.getSelectedTextEditor
+import com.codescene.jetbrains.util.handleAceEntryPoint
+import com.codescene.jetbrains.util.replaceCodeSnippet
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorState
 import com.intellij.openapi.project.Project
@@ -18,6 +26,11 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JBCefJSQuery
+import java.awt.Desktop
+import java.beans.PropertyChangeListener
+import java.beans.PropertyChangeSupport
+import java.net.URI
+import javax.swing.JComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -28,15 +41,12 @@ import org.cef.handler.CefLoadHandlerAdapter
 import org.cef.handler.CefRequestHandlerAdapter
 import org.cef.network.CefRequest
 import org.json.JSONObject
-import java.awt.Desktop
-import java.beans.PropertyChangeListener
-import java.beans.PropertyChangeSupport
-import java.net.URI
-import javax.swing.JComponent
 
 // TODO[CWF-DELETE]: Remove once CWF is fully rolled out
-class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) : FileEditor {
-
+class CodeSceneFileEditor(
+    val project: Project,
+    private val file: VirtualFile,
+) : FileEditor {
     companion object {
         private const val JAVASCRIPT_SEND_MESSAGE = """
             window.sendMessage = function(data) {
@@ -103,13 +113,14 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
                 }
             });
             """
-        private val eventListeners = listOf(
-            FUNCTION_LOCATION,
-            ACE_BUTTON,
-            ACCEPT_REFACTORING,
-            REJECT_REFACTORING,
-            ACE_BUTTON_RETRY
-        )
+        private val eventListeners =
+            listOf(
+                FUNCTION_LOCATION,
+                ACE_BUTTON,
+                ACCEPT_REFACTORING,
+                REJECT_REFACTORING,
+                ACE_BUTTON_RETRY,
+            )
     }
 
     private val jcefBrowser: JBCefBrowser = JBCefBrowser()
@@ -133,49 +144,57 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
     }
 
     private fun setupBrowserBehaviour() {
-        jcefBrowser.jbCefClient.addRequestHandler(object : CefRequestHandlerAdapter() {
-            override fun onBeforeBrowse(
-                browser: CefBrowser?,
-                frame: CefFrame?,
-                request: CefRequest?,
-                userGesture: Boolean,
-                isRedirect: Boolean
-            ): Boolean {
-                val url = request?.url
-                if (url != null) {
-                    try {
-                        val uri = URI(url)
-                        when (uri.scheme) {
-                            "http", "https" -> {
-                                // Open http/https links in the system's default browser
-                                Desktop.getDesktop().browse(uri)
-                                return true
+        jcefBrowser.jbCefClient.addRequestHandler(
+            object : CefRequestHandlerAdapter() {
+                override fun onBeforeBrowse(
+                    browser: CefBrowser?,
+                    frame: CefFrame?,
+                    request: CefRequest?,
+                    userGesture: Boolean,
+                    isRedirect: Boolean,
+                ): Boolean {
+                    val url = request?.url
+                    if (url != null) {
+                        try {
+                            val uri = URI(url)
+                            when (uri.scheme) {
+                                "http", "https" -> {
+                                    // Open http/https links in the system's default browser
+                                    Desktop.getDesktop().browse(uri)
+                                    return true
+                                }
                             }
+                        } catch (e: Exception) {
+                            Log.debug("Unable to open uri in external browser. Error message: ${e.message}")
                         }
-                    } catch (e: Exception) {
-                        Log.debug("Unable to open uri in external browser. Error message: ${e.message}")
                     }
+                    return false
                 }
-                return false
-            }
-        }, jcefBrowser.cefBrowser)
+            },
+            jcefBrowser.cefBrowser,
+        )
     }
 
     private fun initializeJavascriptCallback() {
         jcefBrowser.jbCefClient.addLoadHandler(
             object : CefLoadHandlerAdapter() {
-                override fun onLoadEnd(browser: CefBrowser?, frame: CefFrame?, httpStatusCode: Int) {
+                override fun onLoadEnd(
+                    browser: CefBrowser?,
+                    frame: CefFrame?,
+                    httpStatusCode: Int,
+                ) {
                     setupJavascript(browser)
                 }
             },
-            jcefBrowser.cefBrowser
+            jcefBrowser.cefBrowser,
         )
     }
 
     private fun setupJavascript(browser: CefBrowser?) {
         browser?.executeJavaScript(
             JAVASCRIPT_SEND_MESSAGE.format(jsQuery.inject("data")),
-            null, 0
+            null,
+            0,
         )
 
         eventListeners.forEach { browser?.executeJavaScript(it, null, 0) }
@@ -193,7 +212,6 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
                     CodeNavigationService
                         .getInstance(project)
                         .focusOnLine(fileName, focusLine)
-
                 }
             }
 
@@ -216,7 +234,7 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
                 val closeWindowScope = CoroutineScope(Dispatchers.Main)
                 val fileName = json.get("windowTitle") as String
 
-                //TODO: add isCached and traceId to metadata for telemetry
+                // TODO: add isCached and traceId to metadata for telemetry
 //                TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_REFACTOR_R)
 
                 val function = AceService.getInstance().lastFunctionToRefactor
@@ -226,10 +244,11 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
                     handleAceEntryPoint(
                         RefactoringParams(
                             project,
-                            editor, function,
+                            editor,
+                            function,
                             AceEntryPoint.CODE_VISION,
-                            true
-                        )
+                            true,
+                        ),
                     )
                     closeWindow(fileName, project)
                 }
@@ -242,7 +261,7 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
                 val path = json.get("filePath") as String
                 val code = json.get("code") as String
 
-                //TODO: add isCached and traceId to metadata for telemetry
+                // TODO: add isCached and traceId to metadata for telemetry
                 TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_REFACTOR_APPLIED)
                 replaceCodeSnippet(ReplaceCodeSnippetArgs(project, path, start, end, code))
                 acceptRefactorScope.launch { closeWindow(ACE_REFACTORING_SUGGESTION, project) }
@@ -251,7 +270,7 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
             "ace-reject-refactor" -> {
                 val rejectRefactorScope = CoroutineScope(Dispatchers.Main)
 
-                //TODO: add isCached and traceId to metadata for telemetry
+                // TODO: add isCached and traceId to metadata for telemetry
                 TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_REFACTOR_REJECTED)
                 rejectRefactorScope.launch { closeWindow(ACE_REFACTORING_SUGGESTION, project) }
             }
@@ -259,13 +278,18 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
     }
 
     override fun getComponent(): JComponent = panel
+
     override fun getPreferredFocusedComponent(): JComponent = panel
+
     override fun getName(): String = "$CODESCENE Html Viewer"
-    override fun setState(state: FileEditorState) { /* implementation not needed */
+
+    override fun setState(state: FileEditorState) { // implementation not needed
     }
 
     override fun isModified(): Boolean = false
+
     override fun isValid(): Boolean = file.isValid
+
     override fun getFile(): VirtualFile = file
 
     override fun addPropertyChangeListener(listener: PropertyChangeListener) {
@@ -283,7 +307,10 @@ class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) :
     }
 
     // Override of FileEditor interface's method
-    override fun <T : Any?> putUserData(key: Key<T>, value: T?) {
+    override fun <T : Any?> putUserData(
+        key: Key<T>,
+        value: T?,
+    ) {
         if (value == null) {
             userData.remove(key)
         } else {

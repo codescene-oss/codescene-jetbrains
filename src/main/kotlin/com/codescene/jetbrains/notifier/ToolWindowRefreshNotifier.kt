@@ -8,9 +8,15 @@ const val DISPLAY_NAME = "Refresh $CODESCENE Tool Window"
 
 // TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 interface ToolWindowRefreshNotifier {
-    fun refresh(file: VirtualFile?, shouldCollapseTree: Boolean = false)
+    fun refresh(
+        file: VirtualFile?,
+        shouldCollapseTree: Boolean = false,
+    )
 
-    fun invalidateAndRefresh(fileToInvalidate: String, file: VirtualFile? = null)
+    fun invalidateAndRefresh(
+        fileToInvalidate: String,
+        file: VirtualFile? = null,
+    )
 
     companion object {
         val TOPIC: Topic<ToolWindowRefreshNotifier> =

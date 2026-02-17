@@ -5,5 +5,4 @@ import com.codescene.jetbrains.util.Constants.CODE_DUPLICATION
 
 class DuplicationCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override val categoryToFilter = CODE_DUPLICATION
-
 }

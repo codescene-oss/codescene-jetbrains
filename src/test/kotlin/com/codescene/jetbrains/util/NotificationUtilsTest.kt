@@ -10,7 +10,12 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.Project
-import io.mockk.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
+import io.mockk.verify
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -41,7 +46,7 @@ class NotificationUtilsTest {
             mockNotificationGroup.createNotification(
                 CODESCENE,
                 UiLabelsBundle.message("telemetryDescription"),
-                NotificationType.INFORMATION
+                NotificationType.INFORMATION,
             )
         } returns mockNotification
     }
@@ -60,7 +65,7 @@ class NotificationUtilsTest {
             mockNotificationGroup.createNotification(
                 CODESCENE,
                 UiLabelsBundle.message("telemetryDescription"),
-                NotificationType.INFORMATION
+                NotificationType.INFORMATION,
             )
         }
 

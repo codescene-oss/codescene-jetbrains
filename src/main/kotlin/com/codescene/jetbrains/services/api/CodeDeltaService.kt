@@ -39,9 +39,10 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
         reviewFile(editor) {
             performDeltaAnalysis(editor)
 
-            if (!RuntimeFlags.cwfFeature)
+            if (!RuntimeFlags.cwfFeature) {
                 project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC)
                     .refresh(editor.virtualFile) // TODO: remove, old CHM implementation
+            }
         }
     }
 
@@ -52,7 +53,10 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
         updateMonitor(project)
     }
 
-    override fun addActiveCall(filePath: String, job: Job) {
+    override fun addActiveCall(
+        filePath: String,
+        job: Job,
+    ) {
         super.addActiveCall(filePath, job)
         updateMonitor(project)
     }
@@ -66,16 +70,20 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
      *   it falls back to comparing against the best score of 10.0.
      */
     private suspend fun performDeltaAnalysis(editor: Editor) {
-        val oldCode = GitService
-            .getInstance(project)
-            .getBranchCreationCommitCode(editor.virtualFile)
+        val oldCode =
+            GitService
+                .getInstance(project)
+                .getBranchCreationCommitCode(editor.virtualFile)
 
         val delta = getDeltaResponse(editor, oldCode)
 
         handleDeltaResponse(editor, delta, oldCode)
     }
 
-    private fun getDeltaResponse(editor: Editor, oldCode: String): Delta? {
+    private fun getDeltaResponse(
+        editor: Editor,
+        oldCode: String,
+    ): Delta? {
         val path = editor.virtualFile.path
 
         val oldReview = ReviewParams(path, oldCode)
@@ -91,19 +99,27 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
                 Pair("elapsedMs", elapsedMs),
                 Pair("loc", telemetryInfo.loc),
                 Pair("language", telemetryInfo.language),
-            )
+            ),
         )
 
         if (result?.oldScore?.isEmpty == true && result?.newScore?.isEmpty == false) {
             return Delta(
-                10.0, result.newScore.get(), result.scoreChange, result.fileLevelFindings, result.functionLevelFindings
+                10.0,
+                result.newScore.get(),
+                result.scoreChange,
+                result.fileLevelFindings,
+                result.functionLevelFindings,
             )
         }
 
         return result
     }
 
-    private suspend fun handleDeltaResponse(editor: Editor, delta: Delta?, oldCode: String) {
+    private suspend fun handleDeltaResponse(
+        editor: Editor,
+        delta: Delta?,
+        oldCode: String,
+    ) {
         val path = editor.virtualFile.path
         val currentCode = editor.document.text
         val cacheService = DeltaCacheService.getInstance(project)

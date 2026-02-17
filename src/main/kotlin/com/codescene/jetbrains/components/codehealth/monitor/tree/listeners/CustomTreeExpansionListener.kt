@@ -15,15 +15,19 @@ class CustomTreeExpansionListener(private val collapsedPaths: MutableSet<String>
         handleTreeExpansion(event, true)
     }
 
-    private fun handleTreeExpansion(event: TreeExpansionEvent, isCollapsed: Boolean) {
+    private fun handleTreeExpansion(
+        event: TreeExpansionEvent,
+        isCollapsed: Boolean,
+    ) {
         val lastComponent = event.path.lastPathComponent
 
         if (lastComponent is DefaultMutableTreeNode) {
             (lastComponent.userObject as? CodeHealthFinding)?.let { finding ->
-                if (isCollapsed)
+                if (isCollapsed) {
                     collapsedPaths.add(finding.filePath)
-                else
+                } else {
                     collapsedPaths.remove(finding.filePath)
+                }
             }
         }
     }

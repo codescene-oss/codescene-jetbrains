@@ -20,14 +20,15 @@ abstract class BaseCwfFileEditor<T>(
     protected val project: Project,
     private val cwfFile: VirtualFile,
     private val view: View,
-    initialData: T
+    initialData: T,
 ) : UserDataHolderBase(), FileEditor {
-    private val component: JComponent = WebViewFactory
-        .createWebViewComponent(
-            view = view,
-            project = project,
-            initialData = initialData
-        ).component
+    private val component: JComponent =
+        WebViewFactory
+            .createWebViewComponent(
+                view = view,
+                project = project,
+                initialData = initialData,
+            ).component
 
     override fun getFile(): VirtualFile = cwfFile
 

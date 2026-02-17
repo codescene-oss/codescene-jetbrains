@@ -34,20 +34,23 @@ import java.util.concurrent.CompletableFuture
 fun showAceDiff(project: Project): CompletableFuture<Boolean> {
     val result = CompletableFuture<Boolean>()
 
-    val (refactoredFilePath, range, refactoredCode) = getAceContext(project) ?: run {
-        result.complete(false)
-        return result
-    }
+    val (refactoredFilePath, range, refactoredCode) =
+        getAceContext(project) ?: run {
+            result.complete(false)
+            return result
+        }
 
     ApplicationManager.getApplication().executeOnPooledThread {
-        val file = LocalFileSystem.getInstance().findFileByPath(refactoredFilePath) ?: run {
-            result.complete(false)
-            return@executeOnPooledThread
-        }
-        val data = getDocumentContext(range, file) ?: run {
-            result.complete(false)
-            return@executeOnPooledThread
-        }
+        val file =
+            LocalFileSystem.getInstance().findFileByPath(refactoredFilePath) ?: run {
+                result.complete(false)
+                return@executeOnPooledThread
+            }
+        val data =
+            getDocumentContext(range, file) ?: run {
+                result.complete(false)
+                return@executeOnPooledThread
+            }
 
         val request = getDiffRequest(file, refactoredCode, data, project)
 
@@ -64,15 +67,16 @@ private fun getDiffRequest(
     file: VirtualFile,
     refactoredCode: String,
     data: Pair<String, IntRange>,
-    project: Project
+    project: Project,
 ): SimpleDiffRequest {
     val factory = DiffContentFactory.getInstance()
 
     val (originalText, offsetRange) = data
 
-    val newText = StringBuilder(originalText).apply {
-        replace(offsetRange.first, offsetRange.last, refactoredCode)
-    }.toString()
+    val newText =
+        StringBuilder(originalText).apply {
+            replace(offsetRange.first, offsetRange.last, refactoredCode)
+        }.toString()
 
     val leftContent = factory.create(project, file)
     val rightContent = factory.create(project, newText)
@@ -82,20 +86,22 @@ private fun getDiffRequest(
         leftContent,
         rightContent,
         UiLabelsBundle.message("original"),
-        UiLabelsBundle.message("refactoring")
+        UiLabelsBundle.message("refactoring"),
     )
 }
 
-private fun getDocumentContext(range: RangeCamelCase, file: VirtualFile) =
-    ApplicationManager.getApplication().runReadAction<Pair<String, IntRange>?> {
-        val document = FileDocumentManager.getInstance().getDocument(file) ?: return@runReadAction null
+private fun getDocumentContext(
+    range: RangeCamelCase,
+    file: VirtualFile,
+) = ApplicationManager.getApplication().runReadAction<Pair<String, IntRange>?> {
+    val document = FileDocumentManager.getInstance().getDocument(file) ?: return@runReadAction null
 
-        val startOffset = document.getLineStartOffset(range.startLine - 1)
-        val endOffset = document.getLineEndOffset(range.endLine - 1)
-        val text = document.text
+    val startOffset = document.getLineStartOffset(range.startLine - 1)
+    val endOffset = document.getLineEndOffset(range.endLine - 1)
+    val text = document.text
 
-        Pair(text, startOffset..endOffset)
-    }
+    Pair(text, startOffset..endOffset)
+}
 
 private data class AceContext(val refactoredFilePath: String, val range: RangeCamelCase, val refactoredCode: String)
 
@@ -110,6 +116,6 @@ private fun getAceContext(project: Project): AceContext? =
             return AceContext(
                 refactoredFilePath,
                 range,
-                refactoredCode
+                refactoredCode,
             )
         }

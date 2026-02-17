@@ -14,18 +14,18 @@ data class HomeData( // Code Health Monitor
     val showOnboarding: Boolean = false,
     val jobs: List<AnalysisJob> = emptyList(),
     val fileDeltaData: List<FileDeltaData> = emptyList(),
-    val autoRefactor: AutoRefactorConfig = AutoRefactorConfig()
+    val autoRefactor: AutoRefactorConfig = AutoRefactorConfig(),
 )
 
 @Serializable
 data class User(
-    val name: String
+    val name: String,
 )
 
 @Serializable
 data class FileDeltaData(
     val file: File,
-    val delta: DeltaForFile
+    val delta: DeltaForFile,
 )
 
 @Serializable
@@ -64,16 +64,16 @@ data class FunctionToRefactor(
 @Serializable
 data class RefactoringTarget(
     val line: Int,
-    val category: String
+    val category: String,
 )
 
 @Serializable
 data class File(
-    val fileName: String
+    val fileName: String,
 )
 
 @Serializable
 data class FunctionInfo(
     val name: String?,
-    val range: Range?
+    val range: Range?,
 )

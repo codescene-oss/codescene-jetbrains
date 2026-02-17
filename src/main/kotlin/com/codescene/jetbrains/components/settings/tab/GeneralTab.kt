@@ -23,15 +23,28 @@ import com.intellij.openapi.options.Configurable
 import com.intellij.ui.IdeBorderFactory
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import java.awt.*
+import java.awt.BasicStroke
+import java.awt.BorderLayout
+import java.awt.Component
+import java.awt.Cursor
+import java.awt.Desktop
+import java.awt.Dimension
+import java.awt.Graphics
+import java.awt.Graphics2D
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.net.URI
-import javax.swing.*
+import javax.swing.Box
+import javax.swing.BoxLayout
+import javax.swing.JButton
+import javax.swing.JComponent
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.SwingConstants
 import javax.swing.border.AbstractBorder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class GeneralTab : Configurable {
     private var statusButton = getStatusButton()
@@ -50,37 +63,44 @@ class GeneralTab : Configurable {
         // No settings to change in this tab
     }
 
-    private val more = listOf(
-        UiLabelsBundle.message("documentation") to DOCUMENTATION_URL,
-        UiLabelsBundle.message("termsAndPolicies") to TERMS_AND_CONDITIONS_URL,
-        UiLabelsBundle.message("aiPrinciples") to AI_PRINCIPLES_URL,
-        UiLabelsBundle.message("contactCodeScene") to CONTACT_URL,
-        UiLabelsBundle.message("supportTicket") to SUPPORT_URL
-    )
+    private val more =
+        listOf(
+            UiLabelsBundle.message("documentation") to DOCUMENTATION_URL,
+            UiLabelsBundle.message("termsAndPolicies") to TERMS_AND_CONDITIONS_URL,
+            UiLabelsBundle.message("aiPrinciples") to AI_PRINCIPLES_URL,
+            UiLabelsBundle.message("contactCodeScene") to CONTACT_URL,
+            UiLabelsBundle.message("supportTicket") to SUPPORT_URL,
+        )
 
-    override fun createComponent(): JPanel {
-        return JPanel().apply {
+    override fun createComponent(): JPanel =
+        JPanel().apply {
             layout = BorderLayout()
 
             if (RuntimeFlags.aceFeature) add(getAceSection(), BorderLayout.NORTH)
             add(getMoreSection(), BorderLayout.CENTER)
         }
-    }
 
-    private fun getAceSection() = JPanel().apply {
-        layout = BorderLayout()
+    private fun getAceSection() =
+        JPanel().apply {
+            layout = BorderLayout()
 
-        border = IdeBorderFactory.createTitledBorder(
-            UiLabelsBundle.message("status"), true, JBUI.insetsRight(10)
-        )
+            border =
+                IdeBorderFactory.createTitledBorder(
+                    UiLabelsBundle.message("status"),
+                    true,
+                    JBUI.insetsRight(10),
+                )
 
-        add(JLabel(UiLabelsBundle.message("ace")).apply {
-            icon = CODESCENE_ACE
-        }, BorderLayout.WEST)
+            add(
+                JLabel(UiLabelsBundle.message("ace")).apply {
+                    icon = CODESCENE_ACE
+                },
+                BorderLayout.WEST,
+            )
 
-        add(statusButton, BorderLayout.EAST)
-        add(Box.createVerticalStrut(20), BorderLayout.SOUTH)
-    }
+            add(statusButton, BorderLayout.EAST)
+            add(Box.createVerticalStrut(20), BorderLayout.SOUTH)
+        }
 
     private fun getStatusButton(): JButton {
         status = CodeSceneGlobalSettingsStore.getInstance().state.aceStatus
@@ -104,15 +124,19 @@ class GeneralTab : Configurable {
         return button
     }
 
-    private fun colorButton(button: JButton, status: AceStatus) {
-        val buttonColor: JBColor = when (status) {
-            AceStatus.ERROR -> RED
-            AceStatus.SIGNED_IN -> GREEN
-            AceStatus.SIGNED_OUT -> JBColor.ORANGE
-            AceStatus.DEACTIVATED -> JBColor.GRAY
-            AceStatus.OFFLINE -> JBColor.LIGHT_GRAY
-            AceStatus.OUT_OF_CREDITS -> JBColor.YELLOW
-        }
+    private fun colorButton(
+        button: JButton,
+        status: AceStatus,
+    ) {
+        val buttonColor: JBColor =
+            when (status) {
+                AceStatus.ERROR -> RED
+                AceStatus.SIGNED_IN -> GREEN
+                AceStatus.SIGNED_OUT -> JBColor.ORANGE
+                AceStatus.DEACTIVATED -> JBColor.GRAY
+                AceStatus.OFFLINE -> JBColor.LIGHT_GRAY
+                AceStatus.OUT_OF_CREDITS -> JBColor.YELLOW
+            }
 
         button.foreground = buttonColor
     }
@@ -123,12 +147,16 @@ class GeneralTab : Configurable {
         colorButton(statusButton, status)
     }
 
-    private fun getMoreSection() = JPanel().apply {
-        layout = BoxLayout(this, BoxLayout.Y_AXIS)
+    private fun getMoreSection() =
+        JPanel().apply {
+            layout = BoxLayout(this, BoxLayout.Y_AXIS)
 
-        border = IdeBorderFactory.createTitledBorder(
-            UiLabelsBundle.message("more"), true, JBUI.insetsRight(10)
-        )
+            border =
+                IdeBorderFactory.createTitledBorder(
+                    UiLabelsBundle.message("more"),
+                    true,
+                    JBUI.insetsRight(10),
+                )
 
         /*
         TODO: uncomment when we have more than 1 section:
@@ -137,33 +165,26 @@ class GeneralTab : Configurable {
                 add(Box.createVerticalStrut(10))
                 addHeader(message, icon)
          */
-        add(Box.createVerticalStrut(10))
-
-        more.map {
-            add(createRoundedPanel(it.first, it.second))
             add(Box.createVerticalStrut(10))
-        }
-    }
 
-    private fun JPanel.addHeader(message: String, icon: Icon) {
-        val panel = JPanel().apply {
-            layout = FlowLayout(FlowLayout.LEFT, 5, 0)
-
-            val statusIcon = JLabel(icon)
-            val status = JLabel(message).apply {
-                font = Font("Arial", Font.BOLD, 13)
+            more.forEach {
+                add(createRoundedPanel(it.first, it.second))
+                add(Box.createVerticalStrut(10))
             }
-
-            add(statusIcon)
-            add(status)
         }
 
-        add(panel)
-    }
-
-    class RoundedBorder(private val radius: Int) : AbstractBorder() {
+    class RoundedBorder(
+        private val radius: Int,
+    ) : AbstractBorder() {
         // @codescene(disable:"Excess Number of Function Arguments")
-        override fun paintBorder(c: Component?, g: Graphics, x: Int, y: Int, width: Int, height: Int) {
+        override fun paintBorder(
+            c: Component?,
+            g: Graphics,
+            x: Int,
+            y: Int,
+            width: Int,
+            height: Int,
+        ) {
             val g2d = g as Graphics2D
 
             g2d.color = JBColor.LIGHT_GRAY
@@ -176,7 +197,10 @@ class GeneralTab : Configurable {
         override fun getBorderInsets(c: Component?) = JBUI.insets(0, 10)
     }
 
-    private fun createRoundedPanel(text: String, link: String): JPanel {
+    private fun createRoundedPanel(
+        text: String,
+        link: String,
+    ): JPanel {
         val padding = 3
         val maxHeight = 35
 
@@ -187,27 +211,34 @@ class GeneralTab : Configurable {
             maximumSize = Dimension(Int.MAX_VALUE, maxHeight)
             preferredSize = Dimension(Int.MAX_VALUE, maxHeight)
 
-            add(JLabel(text).apply {
-                horizontalAlignment = SwingConstants.LEFT
-            }, BorderLayout.WEST)
+            add(
+                JLabel(text).apply {
+                    horizontalAlignment = SwingConstants.LEFT
+                },
+                BorderLayout.WEST,
+            )
 
-            add(JLabel(AllIcons.General.ChevronRight).apply {
-                horizontalAlignment = SwingConstants.RIGHT
-            }, BorderLayout.EAST)
+            add(
+                JLabel(AllIcons.General.ChevronRight).apply {
+                    horizontalAlignment = SwingConstants.RIGHT
+                },
+                BorderLayout.EAST,
+            )
 
             addMouseListener(createLinkMouseListener(link))
         }
     }
 
-    private fun createLinkMouseListener(link: String): MouseAdapter {
-        return object : MouseAdapter() {
+    private fun createLinkMouseListener(link: String): MouseAdapter =
+        object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent?) {
                 try {
                     val uri = URI(link)
                     if (Desktop.isDesktopSupported()) Desktop.getDesktop().browse(uri)
 
                     TelemetryService.getInstance().logUsage(
-                        TelemetryEvents.OPEN_LINK, mutableMapOf<String, Any>(Pair("url", uri))
+                        TelemetryEvents.OPEN_LINK,
+                        mutableMapOf<String, Any>(Pair("url", uri)),
                     )
                 } catch (e: Exception) {
                     Log.warn("Unable to open link. Error message: ${e.message}")
@@ -222,14 +253,19 @@ class GeneralTab : Configurable {
                 (e?.component as? JComponent)?.cursor = Cursor.getDefaultCursor()
             }
         }
-    }
 
     private fun subscribeToAceStatusRefreshEvent() {
-        ApplicationManager.getApplication().messageBus.connect()
-            .subscribe(AceStatusRefreshNotifier.TOPIC, object : AceStatusRefreshNotifier {
-                override fun refresh() {
-                    refreshStatusButton()
-                }
-            })
+        ApplicationManager
+            .getApplication()
+            .messageBus
+            .connect()
+            .subscribe(
+                AceStatusRefreshNotifier.TOPIC,
+                object : AceStatusRefreshNotifier {
+                    override fun refresh() {
+                        refreshStatusButton()
+                    }
+                },
+            )
     }
 }

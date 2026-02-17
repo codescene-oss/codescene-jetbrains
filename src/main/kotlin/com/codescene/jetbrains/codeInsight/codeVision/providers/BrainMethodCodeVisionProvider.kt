@@ -5,5 +5,4 @@ import com.codescene.jetbrains.util.Constants.BRAIN_METHOD
 
 class BrainMethodCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override val categoryToFilter = BRAIN_METHOD
-
 }

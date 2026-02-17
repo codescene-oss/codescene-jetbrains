@@ -6,7 +6,6 @@ import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.ace.PreflightResponse
 import com.codescene.data.ace.RefactorResponse
 import com.codescene.data.ace.RefactoringOptions
-import com.codescene.data.delta.Delta
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.components.webview.util.AceCwfParams
 import com.codescene.jetbrains.components.webview.util.updateMonitor
@@ -17,14 +16,26 @@ import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheEntry
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
-import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.ACE
+import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.RefactoringParams
+import com.codescene.jetbrains.util.TelemetryEvents
+import com.codescene.jetbrains.util.getActivatedAceStatus
+import com.codescene.jetbrains.util.handleAceStatusChange
+import com.codescene.jetbrains.util.handleRefactoringResult
+import com.codescene.jetbrains.util.openAceErrorView
+import com.codescene.jetbrains.util.showErrorNotification
+import com.codescene.jetbrains.util.updateCurrentAceView
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.platform.ide.progress.withBackgroundProgress
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class RefactoredFunction(
     val name: String,
@@ -34,11 +45,13 @@ data class RefactoredFunction(
     val endLine: Int? = null,
     val startColumn: Int? = null,
     val endColumn: Int? = null,
-    var refactoringWindowType: String = ""
+    var refactoringWindowType: String = "",
 )
 
 @Service
-class AceService : BaseService(), Disposable {
+class AceService :
+    BaseService(),
+    Disposable {
     // TODO[CWF-DELETE]: Remove once CWF is fully rolled out
     // TODO: remove as it is not needed in CWF anymore
     var lastFunctionToRefactor: FnToRefactor? = null
@@ -68,41 +81,33 @@ class AceService : BaseService(), Disposable {
                 val (result, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.preflight(force) }
                 Log.info(
                     "Preflight info fetched from the server in ${elapsedMs}ms. Cache bypassed: $force",
-                    serviceImplementation
+                    serviceImplementation,
                 )
 
                 if (force) handleAceStatusChange(getActivatedAceStatus())
                 result
             } catch (e: Exception) {
-                val newStatus = when {
-                    e is java.net.ConnectException || e is java.net.http.HttpTimeoutException -> AceStatus.OFFLINE
-                    else -> AceStatus.ERROR
-                }
+                val newStatus =
+                    when {
+                        e is java.net.ConnectException || e is java.net.http.HttpTimeoutException -> AceStatus.OFFLINE
+                        else -> AceStatus.ERROR
+                    }
                 handleAceStatusChange(newStatus)
 
                 if (newStatus == AceStatus.OFFLINE) {
-                    Log.warn("Preflight request timed out or connection failed. Error message: ${e.message}", serviceImplementation)
+                    Log.warn(
+                        "Preflight request timed out or connection failed. Error message: ${e.message}",
+                        serviceImplementation,
+                    )
                 } else {
-                    Log.error("Error during preflight info fetching. Error message: ${e.message}", serviceImplementation)
+                    Log.error(
+                        "Error during preflight info fetching. Error message: ${e.message}",
+                        serviceImplementation,
+                    )
                 }
                 null
             }
         }
-    }
-
-    /**
-     * Retrieves refactorable functions based on the Delta result.
-     *
-     * The Delta review focuses only on newly introduced code smells, meaning it may return
-     * fewer refactorable functions compared to a full review.
-     */
-    fun getRefactorableFunctions(params: CodeParams, delta: Delta, editor: Editor) {
-        Log.debug(
-            "Getting refactorable functions for ${editor.virtualFile.path} based on Delta review...",
-            serviceImplementation
-        )
-
-        refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, delta) }
     }
 
     /**
@@ -111,31 +116,39 @@ class AceService : BaseService(), Disposable {
      * The Review result provides all refactorable functions in a file. This is a more comprehensive analysis
      * compared to the *Delta review*.
      */
-    fun getRefactorableFunctions(params: CodeParams, review: Review, editor: Editor) {
+    fun getRefactorableFunctions(
+        params: CodeParams,
+        review: Review,
+        editor: Editor,
+    ) {
         val codeSmells = review.fileLevelCodeSmells + review.functionLevelCodeSmells.flatMap { it.codeSmells }
         Log.debug(
-            "Getting refactorable functions for ${editor.virtualFile.path} based on review with ${codeSmells}...",
-            serviceImplementation
+            "Getting refactorable functions for ${editor.virtualFile.path} based on review with $codeSmells...",
+            serviceImplementation,
         )
 
         refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, codeSmells) }
     }
 
-    fun refactor(params: RefactoringParams, options: RefactoringOptions? = null) {
+    fun refactor(
+        params: RefactoringParams,
+        options: RefactoringOptions? = null,
+    ) {
         val (project, _, function, source) = params
         lastFunctionToRefactor = function
         Log.debug(
-            "Initiating refactor for function ${function!!.name}, with refactoring targets: ${function.refactoringTargets}...",
-            serviceImplementation
+            "Initiating refactor for function ${function!!.name}, " +
+                "with refactoring targets: ${function.refactoringTargets}...",
+            serviceImplementation,
         )
 
         TelemetryService.getInstance().logUsage(
             TelemetryEvents.ACE_REFACTOR_REQUESTED,
             mutableMapOf(
                 Pair("source", source),
-                //TODO: Pair("traceId", ...),
-                Pair("skipCache", options?.skipCache ?: false)
-            )
+                // TODO: Pair("traceId", ...),
+                Pair("skipCache", options?.skipCache ?: false),
+            ),
         )
 
         refactoringScope.launch {
@@ -150,44 +163,64 @@ class AceService : BaseService(), Disposable {
                     Log.warn("Problem occurred during ACE refactoring: ${e.message}")
                     handleAceStatusChange(newStatus)
 
-                    if (RuntimeFlags.cwfFeature) openAceErrorView(params.editor, params.function, project, e)
-                    else showErrorNotification(project, "Refactoring failed for function '${params.function?.name}'.")
+                    if (RuntimeFlags.cwfFeature) {
+                        openAceErrorView(params.editor, params.function, project, e)
+                    } else {
+                        showErrorNotification(project, "Refactoring failed for function '${params.function?.name}'.")
+                    }
                 }
             }
         }
     }
 
-    private fun handleRefactoring(params: RefactoringParams, options: RefactoringOptions? = null) {
+    private fun handleRefactoring(
+        params: RefactoringParams,
+        options: RefactoringOptions? = null,
+    ) {
         val function = params.function
 
-        val (result, elapsedMs) = runWithClassLoaderChange {
-            if (options == null) ExtensionAPI.refactor(function)
-            else ExtensionAPI.refactor(function, options)
-        }
+        val (result, elapsedMs) =
+            runWithClassLoaderChange {
+                if (options == null) {
+                    ExtensionAPI.refactor(function)
+                } else {
+                    ExtensionAPI.refactor(function, options)
+                }
+            }
 
         TelemetryService.getInstance().logUsage(
             TelemetryEvents.ANALYSIS_PERFORMANCE,
             mutableMapOf(
                 Pair("type", ACE),
                 Pair("elapsedMs", elapsedMs),
-                Pair("loc", params.function?.body?.lines()?.size ?: 0),
+                Pair(
+                    "loc",
+                    params.function
+                        ?.body
+                        ?.lines()
+                        ?.size ?: 0,
+                ),
                 Pair("language", params.editor?.virtualFile?.extension ?: ""),
-            )
+            ),
         )
         Log.debug("Refactoring ${function!!.name} took ${elapsedMs}ms.", serviceImplementation)
 
         result?.let {
-            val refactoredFunction = AceCwfParams(
-                filePath = params.editor!!.virtualFile.path,
-                function = params.function,
-                refactorResponse = result,
-            )
+            val refactoredFunction =
+                AceCwfParams(
+                    filePath = params.editor!!.virtualFile.path,
+                    function = params.function,
+                    refactorResponse = result,
+                )
 
             handleRefactoringResult(refactoredFunction, elapsedMs, params.editor)
         }
     }
 
-    private fun refactorableFunctionsHandler(editor: Editor, getFunctions: () -> List<FnToRefactor>) {
+    private fun refactorableFunctionsHandler(
+        editor: Editor,
+        getFunctions: () -> List<FnToRefactor>,
+    ) {
         val project = editor.project!!
         val path = editor.virtualFile.path
 
@@ -202,7 +235,7 @@ class AceService : BaseService(), Disposable {
             if (result.isNotEmpty()) {
                 Log.info(
                     "Found ${result.size} refactorable function(s) in file '$path' in ${elapsedMs}ms.",
-                    "${serviceImplementation} - ${project.name}"
+                    "$serviceImplementation - ${project.name}",
                 )
 
                 val uiService = UIRefreshService.getInstance(project)

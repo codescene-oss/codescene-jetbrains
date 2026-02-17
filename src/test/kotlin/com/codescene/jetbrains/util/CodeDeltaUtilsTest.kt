@@ -11,44 +11,46 @@ import org.junit.runners.Parameterized
 @RunWith(Parameterized::class)
 class CodeDeltaUtilsTest(
     private val expected: String,
-    private val excludedTypes: List<ChangeDetail.ChangeType>
+    private val excludedTypes: List<ChangeDetail.ChangeType>,
 ) : BasePlatformTestCase() {
     private val function = Function("exampleFunction", Range(1, 10, 1, 15))
 
-    private val details = listOf(
-        ChangeDetail(
-            ChangeDetail.ChangeType.DEGRADED,
-            "Code Smell",
-            "Duplicate Code",
-            5
-        ),
-        ChangeDetail(
-            ChangeDetail.ChangeType.INTRODUCED,
-            "Code Smell",
-            "Large Method",
-            20
-        ),
-        ChangeDetail(
-            ChangeDetail.ChangeType.FIXED,
-            "Code Smell",
-            "Bumpy Road Ahead",
-            5
-        ),
-    )
+    private val details =
+        listOf(
+            ChangeDetail(
+                ChangeDetail.ChangeType.DEGRADED,
+                "Code Smell",
+                "Duplicate Code",
+                5,
+            ),
+            ChangeDetail(
+                ChangeDetail.ChangeType.INTRODUCED,
+                "Code Smell",
+                "Large Method",
+                20,
+            ),
+            ChangeDetail(
+                ChangeDetail.ChangeType.FIXED,
+                "Code Smell",
+                "Bumpy Road Ahead",
+                5,
+            ),
+        )
 
     companion object {
         @JvmStatic
         @Parameterized.Parameters
-        fun provideTestCases() = listOf(
-            arrayOf(
-                "Function \"exampleFunction\" • 1 issue fixed",
-                listOf(ChangeDetail.ChangeType.INTRODUCED, ChangeDetail.ChangeType.DEGRADED)
-            ),
-            arrayOf(
-                "Function \"exampleFunction\" • 2 issues degrading code health",
-                listOf(ChangeDetail.ChangeType.FIXED, ChangeDetail.ChangeType.IMPROVED)
+        fun provideTestCases() =
+            listOf(
+                arrayOf(
+                    "Function \"exampleFunction\" • 1 issue fixed",
+                    listOf(ChangeDetail.ChangeType.INTRODUCED, ChangeDetail.ChangeType.DEGRADED),
+                ),
+                arrayOf(
+                    "Function \"exampleFunction\" • 2 issues degrading code health",
+                    listOf(ChangeDetail.ChangeType.FIXED, ChangeDetail.ChangeType.IMPROVED),
+                ),
             )
-        )
     }
 
     @Test
@@ -57,7 +59,7 @@ class CodeDeltaUtilsTest(
 
         assertEquals(
             "Function \"exampleFunction\" • 1 issue fixed • 2 issues degrading code health",
-            result
+            result,
         )
     }
 
@@ -69,7 +71,7 @@ class CodeDeltaUtilsTest(
 
         assertEquals(
             "Function \"exampleFunction\"",
-            result
+            result,
         )
     }
 

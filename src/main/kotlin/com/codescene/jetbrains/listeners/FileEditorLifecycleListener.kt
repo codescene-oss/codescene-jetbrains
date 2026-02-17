@@ -6,7 +6,10 @@ import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.vfs.VirtualFile
 
 class FileEditorLifecycleListener : FileEditorManagerListener {
-    override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
+    override fun fileClosed(
+        source: FileEditorManager,
+        file: VirtualFile,
+    ) {
         cancelPendingReviews(file, source.project)
     }
 }

@@ -10,7 +10,7 @@ import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.text.StringUtil.pluralize
-import java.util.*
+import java.util.Optional
 import java.util.concurrent.ConcurrentHashMap
 
 // TODO[CWF-DELETE]: Remove once CWF is fully rolled out. Remove tests as well.
@@ -22,11 +22,14 @@ private fun MutableList<String>.countFixesAndDegradations(details: List<ChangeDe
 }
 
 // TODO[CWF-DELETE]: Remove once CWF is fully rolled out
-fun getFunctionDeltaTooltip(function: Function, details: List<ChangeDetail>): String {
+fun getFunctionDeltaTooltip(
+    function: Function,
+    details: List<ChangeDetail>,
+): String {
     val tooltip = mutableListOf("Function \"${function.name}\"")
 
     tooltip.countFixesAndDegradations(details)
-    //TODO: ACE information
+    // TODO: ACE information
 
     return tooltip.joinToString(separator = " • ")
 }
@@ -37,26 +40,43 @@ fun getCachedDelta(editor: Editor): Pair<Boolean, Delta?> {
     val oldCode = GitService.getInstance(project).getBranchCreationCommitCode(editor.virtualFile)
     val cacheQuery = DeltaCacheQuery(editor.virtualFile.path, oldCode, editor.document.text)
 
-    return DeltaCacheService.getInstance(project)
+    return DeltaCacheService
+        .getInstance(project)
         .get(cacheQuery)
 }
 
 // TODO[CWF-DELETE]: Remove once CWF is fully rolled out
-fun sortDeltaFindings(
-    map: ConcurrentHashMap<String, Delta>
-): List<Map.Entry<String, Delta>> {
+fun sortDeltaFindings(map: ConcurrentHashMap<String, Delta>): List<Map.Entry<String, Delta>> {
     val entryList = map.entries.toList()
     val sortingCriteria = CodeSceneGlobalSettingsStore.getInstance().state.monitorTreeSortOption
 
     return when (sortingCriteria) {
-        MonitorTreeSortOptions.FILE_NAME -> entryList.sortedBy { it.key }
-        MonitorTreeSortOptions.SCORE_ASCENDING -> entryList.sortedByDescending { safeScoreDelta(it.value.newScore, it.value.oldScore) }
-        MonitorTreeSortOptions.SCORE_DESCENDING -> entryList.sortedBy { safeScoreDelta(it.value.newScore, it.value.oldScore) }
+        MonitorTreeSortOptions.FILE_NAME -> {
+            entryList.sortedBy { it.key }
+        }
+
+        MonitorTreeSortOptions.SCORE_ASCENDING -> {
+            entryList.sortedByDescending {
+                safeScoreDelta(it.value.newScore, it.value.oldScore)
+            }
+        }
+
+        MonitorTreeSortOptions.SCORE_DESCENDING -> {
+            entryList.sortedBy {
+                safeScoreDelta(
+                    it.value.newScore,
+                    it.value.oldScore,
+                )
+            }
+        }
     }
 }
 
 // TODO[CWF-DELETE]: Remove once CWF is fully rolled out
-private fun safeScoreDelta(newScore: Optional<Double>, oldScore: Optional<Double>): Double {
+private fun safeScoreDelta(
+    newScore: Optional<Double>,
+    oldScore: Optional<Double>,
+): Double {
     val old = oldScore.orElse(null)
     val new = newScore.orElse(null)
 

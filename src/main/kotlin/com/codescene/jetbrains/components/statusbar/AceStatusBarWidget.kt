@@ -46,7 +46,8 @@ class AceStatusBarWidget : StatusBarWidget.IconPresentation, StatusBarWidget {
                     value = CodeSceneGlobalSettingsStore.getInstance().state.aceStatus.value
                     statusBar?.updateWidget(ID())
                 }
-            })
+            },
+        )
     }
 
     /**
@@ -59,9 +60,14 @@ class AceStatusBarWidget : StatusBarWidget.IconPresentation, StatusBarWidget {
 
 internal class AceStatusBarWidgetFactory : StatusBarWidgetFactory {
     override fun getId(): String = this::class.simpleName!!
+
     override fun getDisplayName(): String = ACE_STATUS
+
     override fun isAvailable(project: Project): Boolean = RuntimeFlags.aceFeature
+
     override fun canBeEnabledOn(statusBar: StatusBar): Boolean = true
+
     override fun createWidget(project: Project): StatusBarWidget = AceStatusBarWidget()
+
     override fun isEnabledByDefault(): Boolean = true
 }

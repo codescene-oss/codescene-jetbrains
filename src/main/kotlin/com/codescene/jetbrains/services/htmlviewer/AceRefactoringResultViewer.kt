@@ -29,23 +29,26 @@ class AceRefactoringResultViewer(private val project: Project) : HtmlViewer<Refa
         val title = refactoringResult.confidence.title
         val builder = AceRefactoringHtmlContentBuilder()
 
-        val functionData = """
+        val functionData =
+            """
             <script id="function-data" type="application/json">
               {
                  "fileName": "$fileName",
                  "focusLine": $startLine
               }
             </script>
-        """.trimIndent()
+            """.trimIndent()
 
-        //JSON encouters errors while parsing on the web view side if we don't do this:
-        val sanitizedCode = refactoringResult.code
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\t", "\\t")
+        // JSON encouters errors while parsing on the web view side if we don't do this:
+        val sanitizedCode =
+            refactoringResult.code
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\t", "\\t")
 
-        val rangeData = """
+        val rangeData =
+            """
             <script id="refactoring-data" type="application/json">
               {
                  "filePath": "$fileName",
@@ -55,16 +58,17 @@ class AceRefactoringResultViewer(private val project: Project) : HtmlViewer<Refa
                  "windowTitle": "${refactoredFunction?.refactoringWindowType}"
               }
             </script>
-        """.trimIndent()
+            """.trimIndent()
 
-        val fileContentBuilder = builder
-            .title(title)
-            .functionLocation(params.fileName, params.startLine ?: 1)
-            .usingStyleSheet(STYLE_BASE_PATH + "ace-results.css")
-            .usingStyleSheet(STYLE_BASE_PATH + "code-smell.css")
-            .summary(refactoringResult.confidence)
-            .reasons(refactoringResult)
-            .code(params)
+        val fileContentBuilder =
+            builder
+                .title(title)
+                .functionLocation(params.fileName, params.startLine ?: 1)
+                .usingStyleSheet(STYLE_BASE_PATH + "ace-results.css")
+                .usingStyleSheet(STYLE_BASE_PATH + "code-smell.css")
+                .summary(refactoringResult.confidence)
+                .reasons(refactoringResult)
+                .code(params)
 
         if (fileName.isNotEmpty()) {
             fileContentBuilder
@@ -76,15 +80,15 @@ class AceRefactoringResultViewer(private val project: Project) : HtmlViewer<Refa
         val fileContent = fileContentBuilder.build()
 
         return createTempFile(CreateTempFileParams("$title.md", fileContent, project))
-
     }
 
     override fun sendTelemetry(params: RefactoredFunction) {
         TelemetryService.getInstance().logUsage(
-            TelemetryEvents.ACE_REFACTOR_PRESENTED, mutableMapOf(
+            TelemetryEvents.ACE_REFACTOR_PRESENTED,
+            mutableMapOf(
                 Pair("confidence", params.refactoringResult.confidence.level),
-                Pair("isCached", params.refactoringResult.metadata.cached)
-            )
+                Pair("isCached", params.refactoringResult.metadata.cached),
+            ),
         )
     }
 }

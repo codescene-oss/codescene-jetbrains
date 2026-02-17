@@ -21,7 +21,7 @@ class FileEventProcessor(
     private val project: Project,
     private val renameEvents: List<VFilePropertyChangeEvent>,
     private val deleteEvents: List<VFileDeleteEvent>,
-    private val moveEvents: List<VFileMoveEvent>
+    private val moveEvents: List<VFileMoveEvent>,
 ) : AsyncFileListener.ChangeApplier {
     private val deltaCache = DeltaCacheService.getInstance(project)
     private val reviewCache = ReviewCacheService.getInstance(project)
@@ -35,9 +35,7 @@ class FileEventProcessor(
         handleMoveEvents(moveEvents)
     }
 
-    private fun handleRenameEvents(
-        renameEvents: List<VFilePropertyChangeEvent>
-    ) {
+    private fun handleRenameEvents(renameEvents: List<VFilePropertyChangeEvent>) {
         handleEvent(renameEvents, {
             val newPath = "${it.file.parent.path}/${it.newValue}"
             val oldPath = "${it.file.parent.path}/${it.oldValue}"
@@ -46,9 +44,7 @@ class FileEventProcessor(
         })
     }
 
-    private fun handleMoveEvents(
-        moveEvents: List<VFileMoveEvent>
-    ) {
+    private fun handleMoveEvents(moveEvents: List<VFileMoveEvent>) {
         moveEvents.forEach {
             val newPath = it.newPath
             val oldPath = it.oldPath
@@ -57,9 +53,7 @@ class FileEventProcessor(
         }
     }
 
-    private fun handleDeleteEvents(
-        deleteEvents: List<VFileDeleteEvent>
-    ) {
+    private fun handleDeleteEvents(deleteEvents: List<VFileDeleteEvent>) {
         handleEvent(deleteEvents, {
             val path = it.file.path
 
@@ -74,7 +68,7 @@ class FileEventProcessor(
     private fun <T : VFileEvent> handleEvent(
         events: List<T>,
         action: (event: T) -> Unit,
-        scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+        scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     ) {
         scope.launch {
             events.forEach { event ->
@@ -89,7 +83,11 @@ class FileEventProcessor(
         }
     }
 
-    private fun reflectChangesOnReview(oldPath: String, newPath: String, file: VirtualFile) {
+    private fun reflectChangesOnReview(
+        oldPath: String,
+        newPath: String,
+        file: VirtualFile,
+    ) {
         cancelPendingReviews(file, project)
 
         deltaCache.updateKey(oldPath, newPath)

@@ -2,95 +2,105 @@ package com.codescene.jetbrains.util
 
 import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.components.codehealth.monitor.tree.NodeType
-import org.junit.After
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Test
 import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
 import javax.swing.tree.TreePath
+import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertNotNull
+import junit.framework.TestCase.assertNull
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
 
 class CodeHealthTreeUtilsTest {
     private lateinit var tree: JTree
 
-    private val root = DefaultMutableTreeNode(
-        CodeHealthFinding(
-            tooltip = "Root Node",
-            filePath = "root",
-            focusLine = 0,
-            displayName = "Root",
-            nodeType = NodeType.ROOT
+    private val root =
+        DefaultMutableTreeNode(
+            CodeHealthFinding(
+                tooltip = "Root Node",
+                filePath = "root",
+                focusLine = 0,
+                displayName = "Root",
+                nodeType = NodeType.ROOT,
+            ),
         )
-    )
 
-    private val node1 = DefaultMutableTreeNode(
-        CodeHealthFinding(
-            tooltip = "Tooltip for File1",
-            filePath = "src/main/File1.kt",
-            focusLine = 1,
-            displayName = "File1",
-            nodeType = NodeType.ROOT
+    private val node1 =
+        DefaultMutableTreeNode(
+            CodeHealthFinding(
+                tooltip = "Tooltip for File1",
+                filePath = "src/main/File1.kt",
+                focusLine = 1,
+                displayName = "File1",
+                nodeType = NodeType.ROOT,
+            ),
         )
-    )
 
-    private val child11 = DefaultMutableTreeNode(
-        CodeHealthFinding(
-            tooltip = "Code Health is decreasing",
-            filePath = "src/main/File1.kt",
-            focusLine = 1,
-            displayName = "Code Health decrease",
-            nodeType = NodeType.CODE_HEALTH_DECREASE,
+    private val child11 =
+        DefaultMutableTreeNode(
+            CodeHealthFinding(
+                tooltip = "Code Health is decreasing",
+                filePath = "src/main/File1.kt",
+                focusLine = 1,
+                displayName = "Code Health decrease",
+                nodeType = NodeType.CODE_HEALTH_DECREASE,
+            ),
         )
-    )
 
-    private val child12 = DefaultMutableTreeNode(
+    private val child12 =
+        DefaultMutableTreeNode(
+            CodeHealthFinding(
+                tooltip = "Complexity",
+                filePath = "src/main/File1.kt",
+                focusLine = 1,
+                displayName = "Complex Code",
+                nodeType = NodeType.FILE_FINDING,
+            ),
+        )
+
+    private val node2 =
+        DefaultMutableTreeNode(
+            CodeHealthFinding(
+                tooltip = "Tooltip for File2",
+                filePath = "src/main/File2.kt",
+                focusLine = 1,
+                displayName = "File2",
+                nodeType = NodeType.ROOT,
+            ),
+        )
+
+    private val child21 =
+        DefaultMutableTreeNode(
+            CodeHealthFinding(
+                tooltip = "Code Health is increasing.",
+                filePath = "src/main/File2.kt",
+                focusLine = 1,
+                displayName = "Code Health Increase",
+                nodeType = NodeType.CODE_HEALTH_INCREASE,
+            ),
+        )
+
+    private val child22 =
+        DefaultMutableTreeNode(
+            CodeHealthFinding(
+                tooltip = "Excess number of function arguments",
+                filePath = "src/main/File2.kt",
+                focusLine = 6,
+                displayName = "functionName",
+                nodeType = NodeType.FUNCTION_FINDING,
+            ),
+        )
+
+    private val nonExistentFinding =
         CodeHealthFinding(
-            tooltip = "Complexity",
-            filePath = "src/main/File1.kt",
+            tooltip = "Non-existent node",
+            filePath = "src/main/File3.kt",
             focusLine = 1,
-            displayName = "Complex Code",
+            displayName = "Non-existent",
             nodeType = NodeType.FILE_FINDING,
         )
-    )
-
-    private val node2 = DefaultMutableTreeNode(
-        CodeHealthFinding(
-            tooltip = "Tooltip for File2",
-            filePath = "src/main/File2.kt",
-            focusLine = 1,
-            displayName = "File2",
-            nodeType = NodeType.ROOT
-        )
-    )
-
-    private val child21 = DefaultMutableTreeNode(
-        CodeHealthFinding(
-            tooltip = "Code Health is increasing.",
-            filePath = "src/main/File2.kt",
-            focusLine = 1,
-            displayName = "Code Health Increase",
-            nodeType = NodeType.CODE_HEALTH_INCREASE,
-        )
-    )
-
-    private val child22 = DefaultMutableTreeNode(
-        CodeHealthFinding(
-            tooltip = "Excess number of function arguments",
-            filePath = "src/main/File2.kt",
-            focusLine = 6,
-            displayName = "functionName",
-            nodeType = NodeType.FUNCTION_FINDING,
-        )
-    )
-
-    private val nonExistentFinding = CodeHealthFinding(
-        tooltip = "Non-existent node",
-        filePath = "src/main/File3.kt",
-        focusLine = 1,
-        displayName = "Non-existent",
-        nodeType = NodeType.FILE_FINDING
-    )
 
     @Before
     fun setupTree() {

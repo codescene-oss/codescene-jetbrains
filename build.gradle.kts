@@ -1,13 +1,13 @@
 import groovy.json.JsonSlurper
+import java.net.HttpURLConnection
+import java.net.URI
+import java.util.zip.ZipInputStream
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.intellij.platform.gradle.models.ProductRelease
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask
-import java.net.HttpURLConnection
-import java.net.URI
-import java.util.zip.ZipInputStream
 
 plugins {
     alias(libs.plugins.kotlin) // Kotlin support
@@ -60,7 +60,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
 
     testImplementation(libs.junit)
-    testImplementation("io.mockk:mockk:${mockkVersion}")
+    testImplementation("io.mockk:mockk:$mockkVersion")
 
     // Provide a no-op SLF4J binding during tests to avoid "No binding found" errors.
     // Some libraries (e.g., MockK or IntelliJ SDK components) rely on SLF4J at runtime.
@@ -88,30 +88,32 @@ intellijPlatform {
         version = providers.gradleProperty("pluginVersion")
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
-        description = providers.fileContents(layout.projectDirectory.file("README.md")).asText.map {
-            val start = "<!-- Plugin description -->"
-            val end = "<!-- Plugin description end -->"
+        description =
+            providers.fileContents(layout.projectDirectory.file("README.md")).asText.map {
+                val start = "<!-- Plugin description -->"
+                val end = "<!-- Plugin description end -->"
 
-            with(it.lines()) {
-                if (!containsAll(listOf(start, end))) {
-                    throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
+                with(it.lines()) {
+                    if (!containsAll(listOf(start, end))) {
+                        throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
+                    }
+                    subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
                 }
-                subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
             }
-        }
 
         val changelog = project.changelog // local variable for configuration cache compatibility
         // Get the latest available change notes from the changelog file
-        changeNotes = providers.gradleProperty("pluginVersion").map { pluginVersion ->
-            with(changelog) {
-                renderItem(
-                    (getOrNull(pluginVersion) ?: getUnreleased())
-                        .withHeader(false)
-                        .withEmptySections(false),
-                    Changelog.OutputType.HTML,
-                )
+        changeNotes =
+            providers.gradleProperty("pluginVersion").map { pluginVersion ->
+                with(changelog) {
+                    renderItem(
+                        (getOrNull(pluginVersion) ?: getUnreleased())
+                            .withHeader(false)
+                            .withEmptySections(false),
+                        Changelog.OutputType.HTML,
+                    )
+                }
             }
-        }
 
         ideaVersion {
             sinceBuild = providers.gradleProperty("pluginSinceBuild")
@@ -130,8 +132,9 @@ intellijPlatform {
         // The pluginVersion is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-custom-channel
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
-        channels = providers.gradleProperty("pluginVersion")
-            .map { listOf(it.substringAfter('-', "").ifEmpty { "default" }) }
+        channels =
+            providers.gradleProperty("pluginVersion")
+                .map { listOf(it.substringAfter('-', "").ifEmpty { "default" }) }
         hidden = true
     }
 
@@ -145,22 +148,33 @@ intellijPlatform {
                 // 2026.1 and later
                 sinceBuild = "261"
                 types = listOf(IntelliJPlatformType.IntellijIdea)
-                channels = listOf(
-                    ProductRelease.Channel.EAP,
-                )
-
+                channels =
+                    listOf(
+                        ProductRelease.Channel.EAP,
+                    )
             }
         }
     }
 }
 
-val ktlintFailOnError = providers.gradleProperty("ktlintFailOnError")
-    .map(String::toBoolean)
-    .orElse(false)
+val ktlintFailOnError =
+    providers.gradleProperty("ktlintFailOnError")
+        .map(String::toBoolean)
+        .orElse(false)
 
 ktlint {
     // Keep default warning-only behavior unless explicitly overridden via -PktlintFailOnError=true.
     ignoreFailures.set(ktlintFailOnError.map { failOnError -> !failOnError })
+
+    version.set("1.2.1")
+    android.set(false)
+    outputToConsole.set(true)
+    enableExperimentalRules.set(false)
+
+    filter {
+        exclude("**/generated/**")
+        exclude("**/build/**")
+    }
 }
 
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
@@ -206,14 +220,15 @@ intellijPlatformTesting {
     runIde {
         register("runIdeForUiTests") {
             task {
-                jvmArgumentProviders += CommandLineArgumentProvider {
-                    listOf(
-                        "-Drobot-server.port=8082",
-                        "-Dide.mac.message.dialogs.as.sheets=false",
-                        "-Djb.privacy.policy.text=<!--999.999-->",
-                        "-Djb.consents.confirmation.enabled=false",
-                    )
-                }
+                jvmArgumentProviders +=
+                    CommandLineArgumentProvider {
+                        listOf(
+                            "-Drobot-server.port=8082",
+                            "-Dide.mac.message.dialogs.as.sheets=false",
+                            "-Djb.privacy.policy.text=<!--999.999-->",
+                            "-Djb.consents.confirmation.enabled=false",
+                        )
+                    }
             }
 
             plugins {
@@ -235,24 +250,27 @@ tasks.processResources {
     inputs.property("FEATURE_ACE", aceProperty ?: "false")
     inputs.property("FEATURE_CWF", cwfProperty ?: "false")
     inputs.property("FEATURE_CWF_DEVMODE", cwfDevmodeProperty ?: "false")
-    
+
     filesMatching("feature-flags.properties") {
-        val featureCwf = cwfProperty?.let { cwf ->
-            cwf.toString().takeIf { it.isNotBlank() } ?: "false"
-        } ?: "false"
+        val featureCwf =
+            cwfProperty?.let { cwf ->
+                cwf.toString().takeIf { it.isNotBlank() } ?: "false"
+            } ?: "false"
 
-        val featureCwfDevMode = cwfDevmodeProperty?.let { devMode ->
-            devMode.toString().takeIf { it.isNotBlank() } ?: "false"
-        } ?: "false"
+        val featureCwfDevMode =
+            cwfDevmodeProperty?.let { devMode ->
+                devMode.toString().takeIf { it.isNotBlank() } ?: "false"
+            } ?: "false"
 
-        val featureAce = aceProperty?.let { ace ->
-            ace.toString().takeIf { it.isNotBlank() } ?: "false"
-        } ?: "false"
+        val featureAce =
+            aceProperty?.let { ace ->
+                ace.toString().takeIf { it.isNotBlank() } ?: "false"
+            } ?: "false"
 
         expand(
             "FEATURE_ACE" to featureAce,
             "FEATURE_CWF" to featureCwf,
-            "FEATURE_CWF_DEVMODE" to featureCwfDevMode
+            "FEATURE_CWF_DEVMODE" to featureCwfDevMode,
         )
     }
 }
@@ -265,20 +283,23 @@ tasks.register("fetchDocs") {
     val assetType = assetName
     val user = "empear-analytics"
     val repo = "codescene-ide-protocol"
-    val token = if (System.getenv("CI") == "true")
-        System.getenv("CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN")
-    else
-        System.getenv("GH_PACKAGE_TOKEN")
+    val token =
+        if (System.getenv("CI") == "true") {
+            System.getenv("CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN")
+        } else {
+            System.getenv("GH_PACKAGE_TOKEN")
+        }
 
     doLast {
         val apiUrl = "https://api.github.com/repos/$user/$repo/releases"
 
-        val releasesJson = run {
-            val url = URI.create(apiUrl).toURL()
-            val connection = url.openConnection() as HttpURLConnection
-            connection.setRequestProperty("Authorization", "token $token")
-            connection.inputStream.reader().readText()
-        }
+        val releasesJson =
+            run {
+                val url = URI.create(apiUrl).toURL()
+                val connection = url.openConnection() as HttpURLConnection
+                connection.setRequestProperty("Authorization", "token $token")
+                connection.inputStream.reader().readText()
+            }
 
         val (tag, assetUrl) = parseResponse(releasesJson, assetName)
         saveAsset(tag, assetUrl, token, assetType)
@@ -293,20 +314,23 @@ tasks.register("fetchCwf") {
     val assetType = "cs-cwf"
     val user = "empear-analytics"
     val repo = "cs-webview"
-    val token = if (System.getenv("CI") == "true")
-        System.getenv("CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN")
-    else
-        System.getenv("GH_PACKAGE_TOKEN")
+    val token =
+        if (System.getenv("CI") == "true") {
+            System.getenv("CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN")
+        } else {
+            System.getenv("GH_PACKAGE_TOKEN")
+        }
 
     doLast {
         val apiUrl = "https://api.github.com/repos/$user/$repo/releases"
 
-        val releasesJson = run {
-            val url = URI.create(apiUrl).toURL()
-            val connection = url.openConnection() as HttpURLConnection
-            connection.setRequestProperty("Authorization", "token $token")
-            connection.inputStream.reader().readText()
-        }
+        val releasesJson =
+            run {
+                val url = URI.create(apiUrl).toURL()
+                val connection = url.openConnection() as HttpURLConnection
+                connection.setRequestProperty("Authorization", "token $token")
+                connection.inputStream.reader().readText()
+            }
 
         val (tag, assetUrl) = parseResponse(releasesJson, assetName)
         saveAsset(tag, assetUrl, token, assetType)
@@ -314,17 +338,22 @@ tasks.register("fetchCwf") {
 }
 
 @Suppress("UNCHECKED_CAST")
-fun parseResponse(json: String, assetName: String): Pair<String, String> {
+fun parseResponse(
+    json: String,
+    assetName: String,
+): Pair<String, String> {
     val releases = JsonSlurper().parseText(json) as List<Map<String, Any>>
-    val release = releases.find { it["prerelease"] == false && it["draft"] == false }
-        ?: throw GradleException("No suitable release found.")
+    val release =
+        releases.find { it["prerelease"] == false && it["draft"] == false }
+            ?: throw GradleException("No suitable release found.")
     val tag = release["tag_name"] as String
 
     val assets = release["assets"] as List<Map<String, Any>>
 
-    val latest = if (assetName == "docs") "${assetName}.zip" else "${assetName}-${tag}.zip"
-    val docsAsset = assets.find { (it["name"] as String) == latest }
-        ?: throw GradleException("No docs found in the latest release.")
+    val latest = if (assetName == "docs") "$assetName.zip" else "$assetName-$tag.zip"
+    val docsAsset =
+        assets.find { (it["name"] as String) == latest }
+            ?: throw GradleException("No docs found in the latest release.")
 
     val assetUrl = docsAsset["url"] as String
 
@@ -333,7 +362,12 @@ fun parseResponse(json: String, assetName: String): Pair<String, String> {
     return tag to assetUrl
 }
 
-fun saveAsset(tag: String, assetUrl: String, token: String, assetType: String = "") {
+fun saveAsset(
+    tag: String,
+    assetUrl: String,
+    token: String,
+    assetType: String = "",
+) {
     logger.lifecycle("Downloading '$assetType' assets for release: $tag")
 
     val resources = File("src/main/resources")
@@ -349,11 +383,12 @@ fun saveAsset(tag: String, assetUrl: String, token: String, assetType: String = 
     }
 
     val url = URI.create(assetUrl).toURL()
-    val assets = url.openConnection().apply {
-        setRequestProperty("Authorization", "token $token")
-        setRequestProperty("Accept", "application/octet-stream")
-        connect()
-    }
+    val assets =
+        url.openConnection().apply {
+            setRequestProperty("Authorization", "token $token")
+            setRequestProperty("Accept", "application/octet-stream")
+            connect()
+        }
 
     outputFile.outputStream().use {
         assets.inputStream.use { input ->
@@ -366,7 +401,10 @@ fun saveAsset(tag: String, assetUrl: String, token: String, assetType: String = 
     unzip(outputFile, assetFolder)
 }
 
-fun unzip(zipFile: File, outputDir: File) {
+fun unzip(
+    zipFile: File,
+    outputDir: File,
+) {
     logger.info("Unzipping ${zipFile.name}...")
 
     ZipInputStream(zipFile.inputStream()).use { zis ->
@@ -376,10 +414,12 @@ fun unzip(zipFile: File, outputDir: File) {
 
         while (entry != null) {
             // Remove top-level folder if it's redundant (like "docs/")
-            val relativePath = if (topLevel.contains("docs") && entry.name.startsWith("$topLevel/"))
-                entry.name.removePrefix("$topLevel/")
-            else
-                entry.name
+            val relativePath =
+                if (topLevel.contains("docs") && entry.name.startsWith("$topLevel/")) {
+                    entry.name.removePrefix("$topLevel/")
+                } else {
+                    entry.name
+                }
 
             val outFile = File(outputDir, relativePath)
 
@@ -397,8 +437,9 @@ fun unzip(zipFile: File, outputDir: File) {
 
     logger.info("Unzip completed to: ${outputDir.absolutePath}")
 
-    if (zipFile.exists() && zipFile.delete())
+    if (zipFile.exists() && zipFile.delete()) {
         logger.debug("Cleaned up ZIP file: ${zipFile.absolutePath}")
-    else
+    } else {
         logger.warn("Failed to delete ZIP file: ${zipFile.absolutePath}")
+    }
 }

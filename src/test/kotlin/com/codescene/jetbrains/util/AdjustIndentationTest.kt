@@ -13,17 +13,17 @@ import org.junit.runners.Parameterized
 class AdjustIndentationTest(
     private val lineIndent: String,
     private val newContent: String,
-    private val expected: String
+    private val expected: String,
 ) {
-
     companion object {
         @JvmStatic
-        //(name = "{index}: lineIndent=''{0}'' newContent=''{1}'' -> expected=''{2}''")
+        // (name = "{index}: lineIndent=''{0}'' newContent=''{1}'' -> expected=''{2}''")
         @Parameterized.Parameters
-        fun data() = listOf(
-            // Case 1: target line has 4 spaces, new content has 2 spaces
-            arrayOf(
-                "    ",
+        fun data() =
+            listOf(
+                // Case 1: target line has 4 spaces, new content has 2 spaces
+                arrayOf(
+                    "    ",
 """
 fun test(a: Boolean, b:Boolean) {
   println("Test")
@@ -40,11 +40,10 @@ fun test(a: Boolean, b:Boolean) {
         }
     }
 """,
-            ),
-
-            // Case 2: no indentation required
-            arrayOf(
-                "    ",
+                ),
+                // Case 2: no indentation required
+                arrayOf(
+                    "    ",
 """
     fun test(a: Boolean, b:Boolean) {
         println("Test")
@@ -61,11 +60,10 @@ fun test(a: Boolean, b:Boolean) {
         }
     }
 """,
-            ),
-
-            // Case 3: no previous indentation
-            arrayOf(
-            "    ",
+                ),
+                // Case 3: no previous indentation
+                arrayOf(
+                    "    ",
 """
 fun test(a: Boolean, b:Boolean) {
 println("Test")
@@ -82,10 +80,10 @@ println("True")
     }
     }
 """,
-        ),
-            // Case 4: target line has 2 spaces, new content has 4 spaces
-            arrayOf(
-                "  ",
+                ),
+                // Case 4: target line has 2 spaces, new content has 4 spaces
+                arrayOf(
+                    "  ",
 """
 fun test(a: Boolean, b:Boolean) {
     println("Test")
@@ -102,10 +100,10 @@ fun test(a: Boolean, b:Boolean) {
     }
   }
 """,
-            ),
-            // Case 5: target line has 2 spaces, new content has 4 spaces
-            arrayOf(
-                "  ",
+                ),
+                // Case 5: target line has 2 spaces, new content has 4 spaces
+                arrayOf(
+                    "  ",
 """
     fun test(a: Boolean, b:Boolean) {
         println("Test")
@@ -122,10 +120,10 @@ fun test(a: Boolean, b:Boolean) {
     }
   }
 """,
-            ),
-            // Case 6: empty new content
-            arrayOf("    ", "", "")
-        )
+                ),
+                // Case 6: empty new content
+                arrayOf("    ", "", ""),
+            )
     }
 
     @Test

@@ -32,7 +32,10 @@ class WebViewInitializer : LafManagerListener {
         bus.subscribe(LafManagerListener.TOPIC, this)
     }
 
-    private fun registerBrowser(id: View, browser: JBCefBrowser) {
+    private fun registerBrowser(
+        id: View,
+        browser: JBCefBrowser,
+    ) {
         browsers[id] = browser
     }
 
@@ -54,7 +57,11 @@ class WebViewInitializer : LafManagerListener {
      *
      * @return The modified HTML document as a string.
      */
-    fun getInitialScript(view: View, browser: JBCefBrowser, initialData: Any? = null): String {
+    fun getInitialScript(
+        view: View,
+        browser: JBCefBrowser,
+        initialData: Any? = null,
+    ): String {
         registerBrowser(view, browser)
 
         val css = getFileContent("cs-cwf/assets/index.css")
@@ -94,7 +101,7 @@ class WebViewInitializer : LafManagerListener {
                 <script type="module">$js</script>
               </body>
             </html>
-        """.trimIndent()
+            """.trimIndent()
     }
 
     /**
@@ -112,17 +119,18 @@ class WebViewInitializer : LafManagerListener {
     override fun lookAndFeelChanged(p0: LafManager) {
         val css = StyleHelper.getInstance().generateCssVariablesFromTheme()
 
-        val js = """
-        (function() {
-            let style = document.getElementById('{STYLE_ELEMENT_ID}');
-            if (!style) {
-                style = document.createElement('style');
-                style.id = '{STYLE_ELEMENT_ID}';
-                document.head.appendChild(style);
-            }
-            style.textContent = `$css`;
-        })();
-        """.trimIndent()
+        val js =
+            """
+            (function() {
+                let style = document.getElementById('{STYLE_ELEMENT_ID}');
+                if (!style) {
+                    style = document.createElement('style');
+                    style.id = '{STYLE_ELEMENT_ID}';
+                    document.head.appendChild(style);
+                }
+                style.textContent = `$css`;
+            })();
+            """.trimIndent()
 
         browsers.values.forEach { it.cefBrowser.executeJavaScript(js, null, 0) }
     }
@@ -141,7 +149,10 @@ class WebViewInitializer : LafManagerListener {
      * - [View.ACE_ACKNOWLEDGE]: Creates and serializes a [AceAcknowledgeData] instance wrapped in [CwfData].
      * - Any other value: Logs a warning and returns an empty JSON object (`{}`).
      */
-    private fun getInitialContext(view: View, initialData: Any? = null): String {
+    private fun getInitialContext(
+        view: View,
+        initialData: Any? = null,
+    ): String {
         val isPro = true // TODO: resolve with auth
 
         return when (view) {
@@ -158,14 +169,15 @@ class WebViewInitializer : LafManagerListener {
     private inline fun <reified T : Any> encodeCwfDataOrEmpty(
         initialData: Any?,
         view: View,
-        isPro: Boolean
+        isPro: Boolean,
     ): String {
         val isDevMode = RuntimeFlags.isDevMode
 
-        val json = Json {
-            encodeDefaults = true
-            prettyPrint = true
-        }
+        val json =
+            Json {
+                encodeDefaults = true
+                prettyPrint = true
+            }
 
         val typed = initialData as? T ?: return "{}"
         val data = buildCwfData(typed, view, isPro, isDevMode)
@@ -177,13 +189,14 @@ class WebViewInitializer : LafManagerListener {
         data: T,
         view: View,
         isPro: Boolean,
-        isDevMode: Boolean
-    ): CwfData<T> = CwfData(
-        view = view.value,
-        pro = isPro,
-        devmode = isDevMode,
-        data = data
-    )
+        isDevMode: Boolean,
+    ): CwfData<T> =
+        CwfData(
+            view = view.value,
+            pro = isPro,
+            devmode = isDevMode,
+            data = data,
+        )
 
     /**
      * Provides a JavaScript snippet that intercepts all link clicks inside the WebView.
@@ -196,7 +209,8 @@ class WebViewInitializer : LafManagerListener {
      * The host can then handle the request and open the link in the user's external
      * browser.
      */
-    private fun getLinkClickHandler() = """
+    private fun getLinkClickHandler() =
+        """
         document.addEventListener("click", (e) => {
             const link = e.target.closest("a");
             if (link && link.href) {
@@ -209,7 +223,7 @@ class WebViewInitializer : LafManagerListener {
                 });
             }
         });
-    """.trimIndent()
+        """.trimIndent()
 
     private fun getFileContent(resource: String) =
         this@WebViewInitializer.javaClass.classLoader.getResourceAsStream(resource)?.bufferedReader()?.readText() ?: ""

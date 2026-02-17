@@ -41,7 +41,7 @@ class CustomTreeCellRendererUtilTest {
 
         every { codeHealthFinding.additionalText } returns "10%"
         val resultWithPercentage = getText(codeHealthFinding, true)
-        assertEquals(resultWithPercentage,  "<html>MyFile<span style='color:gray;'> 10%</span></html>")
+        assertEquals(resultWithPercentage, "<html>MyFile<span style='color:gray;'> 10%</span></html>")
     }
 
     @Test
@@ -55,7 +55,8 @@ class CustomTreeCellRendererUtilTest {
         val resultFixed = resolveMethodIcon("Function \"exampleFunction\" • 1 issue fixed")
         assertEquals(METHOD_FIXED, resultFixed)
 
-        val resultBoth = resolveMethodIcon("Function \"exampleFunction\" • 1 issue fixed • 2 issues degrading code health")
+        val resultBoth =
+            resolveMethodIcon("Function \"exampleFunction\" • 1 issue fixed • 2 issues degrading code health")
         assertEquals(METHOD_IMPROVABLE, resultBoth)
     }
 }

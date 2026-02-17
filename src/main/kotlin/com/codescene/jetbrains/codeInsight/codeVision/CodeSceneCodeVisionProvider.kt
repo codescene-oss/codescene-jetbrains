@@ -4,7 +4,7 @@ import com.codescene.data.review.CodeSmell
 import com.codescene.data.review.Range
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.CodeSceneIcons.CODE_SMELL
- import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.api.CodeDeltaService
 import com.codescene.jetbrains.services.api.CodeReviewService
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
@@ -14,18 +14,22 @@ import com.codescene.jetbrains.util.getCachedDelta
 import com.codescene.jetbrains.util.getTextRange
 import com.codescene.jetbrains.util.handleOpenDocs
 import com.codescene.jetbrains.util.isFileSupported
-import com.intellij.codeInsight.codeVision.*
+import com.intellij.codeInsight.codeVision.CodeVisionAnchorKind
+import com.intellij.codeInsight.codeVision.CodeVisionEntry
+import com.intellij.codeInsight.codeVision.CodeVisionProvider
+import com.intellij.codeInsight.codeVision.CodeVisionRelativeOrdering
+import com.intellij.codeInsight.codeVision.CodeVisionState
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
-import org.reflections.Reflections
 import java.util.concurrent.ConcurrentHashMap
+import org.reflections.Reflections
 
 data class CodeVisionCodeSmell(
     val details: String,
     val category: String,
     val highlightRange: Range,
-    val functionName: String? = null
+    val functionName: String? = null,
 )
 
 @Suppress("UnstableApiUsage")
@@ -37,7 +41,10 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
         private var providers: List<String> = emptyList()
 
-        fun markApiCallComplete(filePath: String, apiCalls: MutableSet<String>) {
+        fun markApiCallComplete(
+            filePath: String,
+            apiCalls: MutableSet<String>,
+        ) {
             apiCalls.remove(filePath)
         }
 
@@ -67,7 +74,10 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         // Precomputations on the UI thread are unnecessary in this context, so this is left intentionally empty.
     }
 
-    override fun computeCodeVision(editor: Editor, uiData: Unit): CodeVisionState {
+    override fun computeCodeVision(
+        editor: Editor,
+        uiData: Unit,
+    ): CodeVisionState {
         editor.project ?: return CodeVisionState.READY_EMPTY
 
         val fileSupported = isFileSupported(editor.project!!, editor.virtualFile)
@@ -80,7 +90,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
     private fun triggerApiCall(
         editor: Editor,
         apiCalls: MutableSet<String>,
-        action: () -> Unit
+        action: () -> Unit,
     ) {
         val filePath = editor.virtualFile.path
 
@@ -104,8 +114,10 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
         val cachedDelta = getCachedDelta(editor)
 
-        if (!cachedDelta.first && monitorEnabled) triggerApiCall(editor, activeDeltaApiCalls) {
-            CodeDeltaService.getInstance(project).review(editor)
+        if (!cachedDelta.first && monitorEnabled) {
+            triggerApiCall(editor, activeDeltaApiCalls) {
+                CodeDeltaService.getInstance(project).review(editor)
+            }
         }
 
         if (cachedReview == null) {
@@ -125,7 +137,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
     open fun getLenses(
         editor: Editor,
-        result: Review?
+        result: Review?,
     ): ArrayList<Pair<TextRange, CodeVisionEntry>> {
         val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
 
@@ -150,23 +162,24 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
                 CodeVisionCodeSmell(
                     details = smell.details,
                     category = smell.category,
-                    highlightRange = smell.highlightRange
+                    highlightRange = smell.highlightRange,
                 )
             } ?: emptyList()
 
-        val functionLevelSmells = codeAnalysisResult?.functionLevelCodeSmells
-            ?.flatMap { function ->
-                function.codeSmells
-                    .filterByCategory(categoryToFilter)
-                    .map { smell ->
-                        CodeVisionCodeSmell(
-                            functionName = function.function,
-                            details = smell.details,
-                            category = smell.category,
-                            highlightRange = smell.highlightRange
-                        )
-                    }
-            } ?: emptyList()
+        val functionLevelSmells =
+            codeAnalysisResult?.functionLevelCodeSmells
+                ?.flatMap { function ->
+                    function.codeSmells
+                        .filterByCategory(categoryToFilter)
+                        .map { smell ->
+                            CodeVisionCodeSmell(
+                                functionName = function.function,
+                                details = smell.details,
+                                category = smell.category,
+                                highlightRange = smell.highlightRange,
+                            )
+                        }
+                } ?: emptyList()
 
         return fileLevelSmells + functionLevelSmells
     }
@@ -176,17 +189,25 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
             codeSmell.category,
             id,
             { _, sourceEditor -> handleLensClick(sourceEditor, codeSmell) },
-            CODE_SMELL
+            CODE_SMELL,
         )
 
-    open fun handleLensClick(editor: Editor, codeSmell: CodeVisionCodeSmell) {
+    open fun handleLensClick(
+        editor: Editor,
+        codeSmell: CodeVisionCodeSmell,
+    ) {
         handleOpenDocs(editor, codeSmell, DocsEntryPoint.CODE_VISION)
     }
 
-    private fun markApiCallInProgress(filePath: String, apiCalls: MutableSet<String>) {
+    private fun markApiCallInProgress(
+        filePath: String,
+        apiCalls: MutableSet<String>,
+    ) {
         apiCalls.add(filePath)
     }
 
-    private fun isApiCallInProgressForFile(filePath: String, apiCalls: MutableSet<String>) = apiCalls.contains(filePath)
-
+    private fun isApiCallInProgressForFile(
+        filePath: String,
+        apiCalls: MutableSet<String>,
+    ) = apiCalls.contains(filePath)
 }

@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 data class OpenAceAcknowledgementParams(
     val filePath: String,
     val project: Project,
-    val fnToRefactor: FnToRefactor
+    val fnToRefactor: FnToRefactor,
 )
 
 fun openAceAcknowledgeView(params: OpenAceAcknowledgementParams) {
@@ -40,33 +40,42 @@ fun openAceAcknowledgeView(params: OpenAceAcknowledgementParams) {
     TelemetryService.getInstance().logUsage(TelemetryEvents.ACE_INFO_PRESENTED)
 }
 
-private fun updateWebView(params: OpenAceAcknowledgementParams, browser: JBCefBrowser) {
+private fun updateWebView(
+    params: OpenAceAcknowledgementParams,
+    browser: JBCefBrowser,
+) {
     val mapper = AceAcknowledgementMapper.getInstance()
     val messageHandler = CwfMessageHandler.getInstance(params.project)
 
-    val dataJson = parseMessage(
-        mapper = { mapper.toCwfData(params) },
-        serializer = CwfData.serializer(AceAcknowledgeData.serializer())
-    )
+    val dataJson =
+        parseMessage(
+            mapper = { mapper.toCwfData(params) },
+            serializer = CwfData.serializer(AceAcknowledgeData.serializer()),
+        )
 
     // Update CWF editor context
     mapper.toCwfData(params).data?.let {
         updateUserData(
             it,
             params.fnToRefactor,
-            params.project
+            params.project,
         )
     }
     messageHandler.postMessage(View.ACE_ACKNOWLEDGE, dataJson, browser)
 }
 
-private fun updateUserData(data: AceAcknowledgeData, fnToRefactor: FnToRefactor, project: Project) {
-    val fileEditor = FileEditorManager.getInstance(project)
-        .allEditors
-        .firstOrNull { it.file.name == UiLabelsBundle.message("aceAcknowledge") }
+private fun updateUserData(
+    data: AceAcknowledgeData,
+    fnToRefactor: FnToRefactor,
+    project: Project,
+) {
+    val fileEditor =
+        FileEditorManager.getInstance(project)
+            .allEditors
+            .firstOrNull { it.file.name == UiLabelsBundle.message("aceAcknowledge") }
     (fileEditor?.file as? LightVirtualFile)?.putUserData(
         CWF_ACE_ACKNOWLEDGE_DATA_KEY,
-        CwfAceAcknowledgeEditorProviderData(fnToRefactor, data)
+        CwfAceAcknowledgeEditorProviderData(fnToRefactor, data),
     )
 }
 
@@ -77,28 +86,37 @@ private fun openFile(params: OpenAceAcknowledgementParams) {
     val fileName = UiLabelsBundle.message("aceAcknowledge")
     val file = LightVirtualFile(fileName)
     file.putUserData(
-        CWF_ACE_ACKNOWLEDGE_DATA_KEY, CwfAceAcknowledgeEditorProviderData(
+        CWF_ACE_ACKNOWLEDGE_DATA_KEY,
+        CwfAceAcknowledgeEditorProviderData(
             fnToRefactor,
             AceAcknowledgeData(
-                fileData = FileMetaType(
-                    fn = Fn(
-                        name = fnToRefactor.name, range = RangeCamelCase(
-                            endLine = fnToRefactor.range.endLine,
-                            endColumn = fnToRefactor.range.endColumn,
-                            startLine = fnToRefactor.range.startLine,
-                            startColumn = fnToRefactor.range.startColumn
-                        )
+                fileData =
+                    FileMetaType(
+                        fn =
+                            Fn(
+                                name = fnToRefactor.name,
+                                range =
+                                    RangeCamelCase(
+                                        endLine = fnToRefactor.range.endLine,
+                                        endColumn = fnToRefactor.range.endColumn,
+                                        startLine = fnToRefactor.range.startLine,
+                                        startColumn = fnToRefactor.range.startColumn,
+                                    ),
+                            ),
+                        fileName = filePath,
                     ),
-                    fileName = filePath,
-                ), autoRefactor = AutoRefactorConfig()
-            )
-        )
+                autoRefactor = AutoRefactorConfig(),
+            ),
+        ),
     )
 
     CoroutineScope(Dispatchers.Main).launch {
         val editor = getSelectedTextEditor(project, "", "${this::class.simpleName} - ${project.name}")
 
-        if (editor != null) FileUtils.splitWindow(file, fileEditorManager, project)
-        else FileUtils.openDocumentationWithoutActiveEditor(file, fileEditorManager)
+        if (editor != null) {
+            FileUtils.splitWindow(file, fileEditorManager, project)
+        } else {
+            FileUtils.openDocumentationWithoutActiveEditor(file, fileEditorManager)
+        }
     }
 }

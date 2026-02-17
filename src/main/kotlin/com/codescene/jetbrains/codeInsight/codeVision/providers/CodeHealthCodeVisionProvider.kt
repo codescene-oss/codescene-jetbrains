@@ -8,9 +8,13 @@ import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
 import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPanel
 import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
-import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
+import com.codescene.jetbrains.util.HealthDetails
+import com.codescene.jetbrains.util.getCachedDelta
+import com.codescene.jetbrains.util.getCodeHealth
+import com.codescene.jetbrains.util.handleOpenGeneralDocs
+import com.codescene.jetbrains.util.selectNode
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.openapi.editor.Editor
@@ -30,17 +34,18 @@ internal class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
             "Code Health: $description",
             id,
             { _, sourceEditor -> handleLensClick(sourceEditor, codeHealth) },
-            CODE_HEALTH
+            CODE_HEALTH,
         )
     }
 
-    private fun getDescription(editor: Editor, result: Review?): String? {
+    private fun getDescription(
+        editor: Editor,
+        result: Review?,
+    ): String? {
         val cachedDelta = getCachedDelta(editor)
 
         val deltaResult = cachedDelta.second
-        val oldScore = deltaResult?.oldScore
-        val newScore = deltaResult?.newScore
-        val hasChanged = oldScore != newScore
+        val hasChanged = deltaResult?.oldScore?.orElse(null) != deltaResult?.newScore?.orElse(null)
 
         return when {
             deltaResult != null && hasChanged -> {
@@ -50,13 +55,20 @@ internal class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
                 getCodeHealth(HealthDetails(oldReviewScore, newReviewScore)).change
             }
 
-            result?.score?.isPresent == true -> result.score.get().toString()
+            result?.score?.isPresent == true -> {
+                result.score.get().toString()
+            }
 
-            else -> "N/A".takeIf { result != null }
+            else -> {
+                "N/A".takeIf { result != null }
+            }
         }
     }
 
-    override fun getLenses(editor: Editor, result: Review?): ArrayList<Pair<TextRange, CodeVisionEntry>> {
+    override fun getLenses(
+        editor: Editor,
+        result: Review?,
+    ): ArrayList<Pair<TextRange, CodeVisionEntry>> {
         val description = getDescription(editor, result) ?: return arrayListOf()
 
         val entry = getCodeVisionEntry(description)
@@ -64,12 +76,16 @@ internal class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
         return arrayListOf(TextRange(0, 0) to entry)
     }
 
-    override fun handleLensClick(editor: Editor, codeSmell: CodeVisionCodeSmell) {
+    override fun handleLensClick(
+        editor: Editor,
+        codeSmell: CodeVisionCodeSmell,
+    ) {
         editor.project?.let {
-            if (RuntimeFlags.cwfFeature)
+            if (RuntimeFlags.cwfFeature) {
                 handleOpenGeneralDocs(it, GENERAL_CODE_HEALTH, DocsEntryPoint.CODE_VISION)
-            else
+            } else {
                 handleOpenNativeDocs(editor)
+            }
         }
     }
 
@@ -77,12 +93,18 @@ internal class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
         val project = editor.project!!
         val toolWindowManager = ToolWindowManager.getInstance(project)
 
-        val nodeSelected = CodeHealthMonitorPanel.getInstance(editor.project!!).contentPanel.components
-            .filterIsInstance<JTree>()
-            .firstOrNull()
-            ?.let { selectNode(it, editor.virtualFile.path) } ?: false
+        val nodeSelected =
+            CodeHealthMonitorPanel
+                .getInstance(editor.project!!)
+                .contentPanel.components
+                .filterIsInstance<JTree>()
+                .firstOrNull()
+                ?.let { selectNode(it, editor.virtualFile.path) } ?: false
 
-        if (!nodeSelected) handleOpenGeneralDocs(project, GENERAL_CODE_HEALTH, DocsEntryPoint.CODE_VISION)
-        else toolWindowManager.getToolWindow(CODESCENE)?.show()
+        if (!nodeSelected) {
+            handleOpenGeneralDocs(project, GENERAL_CODE_HEALTH, DocsEntryPoint.CODE_VISION)
+        } else {
+            toolWindowManager.getToolWindow(CODESCENE)?.show()
+        }
     }
 }

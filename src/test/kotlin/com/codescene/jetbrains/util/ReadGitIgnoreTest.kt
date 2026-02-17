@@ -3,15 +3,15 @@ package com.codescene.jetbrains.util
 import com.intellij.openapi.project.Project
 import io.mockk.every
 import io.mockk.mockk
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.writeText
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import java.nio.file.Files
-import java.nio.file.Path
-import kotlin.io.path.writeText
 
-class ReadGitignoreTest {
+class ReadGitIgnoreTest {
     private val project: Project = mockk()
     private lateinit var tempDir: Path
     private lateinit var gitignoreFile: Path
@@ -26,7 +26,8 @@ class ReadGitignoreTest {
 
     @After
     fun tearDown() {
-        Files.walk(tempDir)
+        Files
+            .walk(tempDir)
             .sorted(Comparator.reverseOrder())
             .forEach(Files::delete)
     }

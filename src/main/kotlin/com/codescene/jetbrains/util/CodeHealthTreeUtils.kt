@@ -13,7 +13,10 @@ import javax.swing.tree.TreePath
 
 // TODO[CWF-DELETE]: Remove once CWF is fully rolled out (whole file)
 
-fun getHealthFinding(filePath: String, delta: Delta): CodeHealthFinding {
+fun getHealthFinding(
+    filePath: String,
+    delta: Delta,
+): CodeHealthFinding {
     val oldScore = delta.oldScore.orElse(null)
     val newScore = delta.newScore.orElse(null)
     val healthDetails = HealthDetails(oldScore, newScore)
@@ -23,42 +26,60 @@ fun getHealthFinding(filePath: String, delta: Delta): CodeHealthFinding {
         filePath = filePath,
         displayName = "Code Health: $change",
         additionalText = if (percentage.isNotEmpty()) "($percentage)" else "",
-        nodeType = resolveHealthNodeType(oldScore, newScore)
+        nodeType = resolveHealthNodeType(oldScore, newScore),
     )
 }
 
-private fun resolveHealthNodeType(oldScore: Double?, newScore: Double?): NodeType {
+private fun resolveHealthNodeType(
+    oldScore: Double?,
+    newScore: Double?,
+): NodeType {
     val emptyScores = oldScore == null || newScore == null
 
-    return if (emptyScores || (oldScore == newScore)) NodeType.CODE_HEALTH_NEUTRAL
-    else if (oldScore!! > newScore!!) NodeType.CODE_HEALTH_DECREASE
-    else NodeType.CODE_HEALTH_INCREASE
+    return if (emptyScores || (oldScore == newScore)) {
+        NodeType.CODE_HEALTH_NEUTRAL
+    } else if (oldScore > newScore) {
+        NodeType.CODE_HEALTH_DECREASE
+    } else {
+        NodeType.CODE_HEALTH_INCREASE
+    }
 }
 
-fun getFileFinding(filePath: String, result: ChangeDetail): CodeHealthFinding {
+fun getFileFinding(
+    filePath: String,
+    result: ChangeDetail,
+): CodeHealthFinding {
     val positiveChange = isPositiveChange(result.changeType)
 
     return CodeHealthFinding(
         tooltip = result.description,
         filePath,
         displayName = result.category,
-        nodeType = if (positiveChange) NodeType.FILE_FINDING_FIXED else NodeType.FILE_FINDING
+        nodeType = if (positiveChange) NodeType.FILE_FINDING_FIXED else NodeType.FILE_FINDING,
     )
 }
 
-fun getFunctionFinding(filePath: String, function: Function, details: List<ChangeDetail>) = CodeHealthFinding(
+fun getFunctionFinding(
+    filePath: String,
+    function: Function,
+    details: List<ChangeDetail>,
+) = CodeHealthFinding(
     tooltip = getFunctionDeltaTooltip(function, details),
     filePath,
     displayName = function.name,
     focusLine = function.range?.orElse(Range(1, 1, 1, 1))?.startLine,
     nodeType = NodeType.FUNCTION_FINDING,
-    functionFindingIssues = details.size
+    functionFindingIssues = details.size,
 )
 
-fun getRootNode(filePath: String, delta: Delta): CodeHealthFinding {
+fun getRootNode(
+    filePath: String,
+    delta: Delta,
+): CodeHealthFinding {
     val (_, percentage) = getCodeHealth(HealthDetails(delta.oldScore.orElse(null), delta.newScore.orElse(null)))
 
-    val count = delta.functionLevelFindings.flatMap { it.changeDetails }.count { canBeImproved(it.changeType) } +
+    val count =
+        delta.functionLevelFindings.flatMap { it.changeDetails }.count { canBeImproved(it.changeType) } +
             delta.fileLevelFindings.count { canBeImproved(it.changeType) }
 
     val tooltip = mutableListOf(filePath)
@@ -70,11 +91,14 @@ fun getRootNode(filePath: String, delta: Delta): CodeHealthFinding {
         displayName = filePath,
         nodeType = NodeType.ROOT,
         additionalText = percentage,
-        numberOfImprovableFunctions = count
+        numberOfImprovableFunctions = count,
     )
 }
 
-fun selectNode(tree: JTree, filePath: String): Boolean {
+fun selectNode(
+    tree: JTree,
+    filePath: String,
+): Boolean {
     val root = tree.model.root as DefaultMutableTreeNode
     val targetNode = findHealthNodeForPath(root, filePath)
 
@@ -86,18 +110,26 @@ fun selectNode(tree: JTree, filePath: String): Boolean {
     return false
 }
 
-fun findHealthNodeForPath(root: DefaultMutableTreeNode, filePath: String): DefaultMutableTreeNode? =
+fun findHealthNodeForPath(
+    root: DefaultMutableTreeNode,
+    filePath: String,
+): DefaultMutableTreeNode? =
     (0 until root.childCount)
         .mapNotNull { root.getChildAt(it) as? DefaultMutableTreeNode }
         .firstOrNull { (it.userObject as? CodeHealthFinding)?.filePath == filePath }
         ?.getChildAt(0) as? DefaultMutableTreeNode
 
-fun getParentNode(root: DefaultMutableTreeNode, path: String) =
-    (0 until root.childCount)
-        .map { root.getChildAt(it) as DefaultMutableTreeNode }
-        .find { (it.userObject as CodeHealthFinding).filePath == path }
+fun getParentNode(
+    root: DefaultMutableTreeNode,
+    path: String,
+) = (0 until root.childCount)
+    .map { root.getChildAt(it) as DefaultMutableTreeNode }
+    .find { (it.userObject as CodeHealthFinding).filePath == path }
 
-fun getSelectedNode(parent: DefaultMutableTreeNode?, selectedNode: CodeHealthFinding): DefaultMutableTreeNode? {
+fun getSelectedNode(
+    parent: DefaultMutableTreeNode?,
+    selectedNode: CodeHealthFinding,
+): DefaultMutableTreeNode? {
     if (parent == null) return null
 
     val type = selectedNode.nodeType
@@ -117,4 +149,6 @@ fun getSelectedNode(parent: DefaultMutableTreeNode?, selectedNode: CodeHealthFin
 }
 
 fun isHealthNode(type: NodeType) =
-    type == NodeType.CODE_HEALTH_NEUTRAL || type == NodeType.CODE_HEALTH_DECREASE || type == NodeType.CODE_HEALTH_INCREASE
+    type == NodeType.CODE_HEALTH_NEUTRAL ||
+        type == NodeType.CODE_HEALTH_DECREASE ||
+        type == NodeType.CODE_HEALTH_INCREASE

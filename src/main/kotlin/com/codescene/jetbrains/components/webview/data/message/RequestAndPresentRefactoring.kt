@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class RequestAndPresentRefactoring(
     val fileName: String,
-    val fn: Fn
+    val fn: Fn,
 )

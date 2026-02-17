@@ -9,13 +9,13 @@ import org.apache.commons.codec.digest.DigestUtils
 
 data class AceRefactorableFunctionCacheItem(
     val content: String,
-    val result: List<FnToRefactor>
+    val result: List<FnToRefactor>,
 )
 
 data class AceRefactorableFunctionCacheEntry(
     val filePath: String,
     val content: String,
-    val result: List<FnToRefactor>
+    val result: List<FnToRefactor>,
 )
 
 data class AceRefactorableFunctionCacheQuery(
@@ -25,11 +25,11 @@ data class AceRefactorableFunctionCacheQuery(
 
 @Service(Service.Level.PROJECT)
 class AceRefactorableFunctionsCacheService : CacheService<
-        AceRefactorableFunctionCacheQuery,
-        AceRefactorableFunctionCacheEntry,
-        AceRefactorableFunctionCacheItem,
-        List<FnToRefactor>
-        >() {
+    AceRefactorableFunctionCacheQuery,
+    AceRefactorableFunctionCacheEntry,
+    AceRefactorableFunctionCacheItem,
+    List<FnToRefactor>,
+>() {
     companion object {
         fun getInstance(project: Project): AceRefactorableFunctionsCacheService =
             project.service<AceRefactorableFunctionsCacheService>()

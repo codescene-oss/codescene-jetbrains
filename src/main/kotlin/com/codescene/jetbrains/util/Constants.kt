@@ -21,7 +21,9 @@ object Constants {
     const val TERMS_AND_CONDITIONS_URL = "$CODESCENE_URL/policies"
     const val CONTACT_URL = "$CODESCENE_URL/company/contact-us"
     const val CONTACT_US_ABOUT_ACE_URL = "${CODESCENE_URL}/contact-us-about-codescene-ace"
-    const val FREE_TRIAL_URL = "$CODESCENE_URL/product/free-trial?trial-experiment-variant=free_trial_landing_page_with_form"
+    const val FREE_TRIAL_URL =
+        "$CODESCENE_URL/product/free-trial" +
+            "?trial-experiment-variant=free_trial_landing_page_with_form"
     const val SUPPORT_URL = "https://supporthub.codescene.com/kb-tickets/new"
     const val AI_PRINCIPLES_URL = "$CODESCENE_URL/product/ace/principles"
 
@@ -88,24 +90,26 @@ object Constants {
 
     // CWF
     const val IDE_TYPE = "JetBrains"
-    val ALLOWED_DOMAINS = listOf(
-        "https://refactoring.com",
-        "https://en.wikipedia.org",
-        "https://codescene.io",
-        "https://codescene.com",
-        "https://blog.ploeh.dk/2018/08/27/on-constructor-over-injection/",
-        "https://supporthub.codescene.com"
-    )
+    val ALLOWED_DOMAINS =
+        listOf(
+            "https://refactoring.com",
+            "https://en.wikipedia.org",
+            "https://codescene.io",
+            "https://codescene.com",
+            "https://blog.ploeh.dk/2018/08/27/on-constructor-over-injection/",
+            "https://supporthub.codescene.com",
+        )
     const val DELTA_ANALYSIS_JOB = "deltaAnalysis"
     const val AUTO_REFACTOR_JOB = "autoRefactor"
     const val JOB_STATE_RUNNING = "running"
     const val JOB_STATE_QUEUED = "queued"
 
-    val codeSceneWindowFileNames = listOf(
-        UiLabelsBundle.message("ace"),
-        UiLabelsBundle.message("codeSmellDocs"),
-        UiLabelsBundle.message("aceAcknowledge"),
-    )
+    val codeSceneWindowFileNames =
+        listOf(
+            UiLabelsBundle.message("ace"),
+            UiLabelsBundle.message("codeSmellDocs"),
+            UiLabelsBundle.message("aceAcknowledge"),
+        )
 
     // ACE Status Bar Widget
     const val SIGNED_IN = "CodeScene ACE is active"

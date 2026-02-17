@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 data class AnalysisJob(
     val type: String, // "deltaAnalysis" | "autoRefactor"
     val state: String, // "running" | "queued"
-    val file: FileMetaType
+    val file: FileMetaType,
 )

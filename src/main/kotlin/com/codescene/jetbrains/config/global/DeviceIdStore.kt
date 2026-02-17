@@ -10,13 +10,14 @@ object DeviceIdStore : BaseService() {
     fun get(): String {
         deviceId?.let { return it }
 
-        deviceId = try {
-            val (result, elapsedMs) = runWithClassLoaderChange { DevToolsAPI.deviceId() }
-            result
-        } catch (e: Exception) {
-            Log.warn("Failed to fetch device ID. Error message: ${e.message}")
-            ""
-        }
+        deviceId =
+            try {
+                val (result, elapsedMs) = runWithClassLoaderChange { DevToolsAPI.deviceId() }
+                result
+            } catch (e: Exception) {
+                Log.warn("Failed to fetch device ID. Error message: ${e.message}")
+                ""
+            }
 
         return deviceId ?: ""
     }

@@ -4,11 +4,11 @@ import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvide
 import com.codescene.jetbrains.services.UIRefreshService
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.project.ProjectManager
+import kotlin.properties.Delegates
+import kotlin.properties.ReadWriteProperty
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlin.properties.Delegates
-import kotlin.properties.ReadWriteProperty
 
 /**
  * Creates a delegate for the "Enable Review Code Lenses" setting.

@@ -4,7 +4,12 @@ import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.webview.WebViewInitializer
 import com.codescene.jetbrains.components.webview.data.CwfMessage
 import com.codescene.jetbrains.components.webview.data.View
-import com.codescene.jetbrains.components.webview.data.message.*
+import com.codescene.jetbrains.components.webview.data.message.EditorMessages
+import com.codescene.jetbrains.components.webview.data.message.GotoFunctionLocation
+import com.codescene.jetbrains.components.webview.data.message.LifecycleMessages
+import com.codescene.jetbrains.components.webview.data.message.OpenDocsForFunction
+import com.codescene.jetbrains.components.webview.data.message.PanelMessages
+import com.codescene.jetbrains.components.webview.data.message.RequestAndPresentRefactoring
 import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
 import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.util.getAceAcknowledgeUserData
@@ -14,8 +19,16 @@ import com.codescene.jetbrains.components.webview.util.updateMonitor
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
-import com.codescene.jetbrains.util.*
+import com.codescene.jetbrains.util.AceEntryPoint
 import com.codescene.jetbrains.util.Constants.ALLOWED_DOMAINS
+import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.ReplaceCodeSnippetArgs
+import com.codescene.jetbrains.util.TelemetryEvents
+import com.codescene.jetbrains.util.closeWindow
+import com.codescene.jetbrains.util.handleRefactoringFromCwf
+import com.codescene.jetbrains.util.replaceCodeSnippet
+import com.codescene.jetbrains.util.showAceDiff
+import com.codescene.jetbrains.util.showInfoNotification
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
@@ -26,6 +39,7 @@ import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.ui.jcef.JBCefBrowser
+import java.awt.datatransfer.StringSelection
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -36,15 +50,18 @@ import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefMessageRouterHandlerAdapter
-import java.awt.datatransfer.StringSelection
 
 @Service(Service.Level.PROJECT)
-class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerAdapter() {
+class CwfMessageHandler(
+    private val project: Project,
+) : CefMessageRouterHandlerAdapter() {
     private val serviceName = this::class::simpleName.toString()
 
     companion object {
         fun getInstance(project: Project): CwfMessageHandler = project.service<CwfMessageHandler>()
     }
+
+    // @codescene(disable:"Excess Number of Function Arguments")
 
     /**
      * Handles incoming messages from the webView (CWF) to the native IDE extension.
@@ -56,40 +73,76 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
      *
      * @return True if the message was handled, false otherwise.
      */
-    // @codescene(disable:"Excess Number of Function Arguments")
     override fun onQuery(
         browser: CefBrowser?,
         frame: CefFrame?,
         queryId: Long,
         request: String?,
         persistent: Boolean,
-        callback: CefQueryCallback?
+        callback: CefQueryCallback?,
     ): Boolean {
         if (request == null) return false
 
-        val json = Json {
-            encodeDefaults = true
-            prettyPrint = true
-        }
+        val json =
+            Json {
+                encodeDefaults = true
+                prettyPrint = true
+            }
 
-        val message = json.decodeFromString<CwfMessage>(request);
+        val message = json.decodeFromString<CwfMessage>(request)
 
         when (message.messageType) {
-            LifecycleMessages.INIT.value -> handleInit(message)
+            LifecycleMessages.INIT.value -> {
+                handleInit(message)
+            }
 
-            EditorMessages.SHOW_DIFF.value -> handleShowDiff()
-            EditorMessages.OPEN_LINK.value -> handleOpenUrl(message)
-            EditorMessages.OPEN_SETTINGS.value -> handleOpenSettings()
-            EditorMessages.GOTO_FUNCTION_LOCATION.value -> handleGotoFunctionLocation(message, json)
+            EditorMessages.SHOW_DIFF.value -> {
+                handleShowDiff()
+            }
 
-            PanelMessages.CLOSE.value -> handleClose()
-            PanelMessages.RETRY.value -> handleRetry()
-            PanelMessages.COPY_CODE.value -> handleCopy()
-            PanelMessages.APPLY.value -> handleApplyRefactoring()
-            PanelMessages.REJECT.value -> handleRefactoringRejection()
-            PanelMessages.ACKNOWLEDGED.value -> handleAceAcknowledged()
-            PanelMessages.OPEN_DOCS_FOR_FUNCTION.value -> handleOpenDocs(message, json)
-            PanelMessages.REQUEST_AND_PRESENT_REFACTORING.value -> handleRequestAndPresentRefactoring(message, json)
+            EditorMessages.OPEN_LINK.value -> {
+                handleOpenUrl(message)
+            }
+
+            EditorMessages.OPEN_SETTINGS.value -> {
+                handleOpenSettings()
+            }
+
+            EditorMessages.GOTO_FUNCTION_LOCATION.value -> {
+                handleGotoFunctionLocation(message, json)
+            }
+
+            PanelMessages.CLOSE.value -> {
+                handleClose()
+            }
+
+            PanelMessages.RETRY.value -> {
+                handleRetry()
+            }
+
+            PanelMessages.COPY_CODE.value -> {
+                handleCopy()
+            }
+
+            PanelMessages.APPLY.value -> {
+                handleApplyRefactoring()
+            }
+
+            PanelMessages.REJECT.value -> {
+                handleRefactoringRejection()
+            }
+
+            PanelMessages.ACKNOWLEDGED.value -> {
+                handleAceAcknowledged()
+            }
+
+            PanelMessages.OPEN_DOCS_FOR_FUNCTION.value -> {
+                handleOpenDocs(message, json)
+            }
+
+            PanelMessages.REQUEST_AND_PRESENT_REFACTORING.value -> {
+                handleRequestAndPresentRefactoring(message, json)
+            }
 
             else -> {
                 println("Unknown message type: ${message.messageType}")
@@ -104,7 +157,11 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         return true
     }
 
-    override fun onQueryCanceled(browser: CefBrowser?, frame: CefFrame?, queryId: Long) {
+    override fun onQueryCanceled(
+        browser: CefBrowser?,
+        frame: CefFrame?,
+        queryId: Long,
+    ) {
         // TODO...
     }
 
@@ -121,16 +178,18 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
      * @param browser Optional explicit `JBCefBrowser` instance. If not provided, the browser
      *                for the given `view` is looked up via [WebViewInitializer].
      */
-    fun postMessage(view: View, message: String, browser: JBCefBrowser? = null) {
+    fun postMessage(
+        view: View,
+        message: String,
+        browser: JBCefBrowser? = null,
+    ) {
         val registeredBrowser = browser ?: WebViewInitializer.getInstance(project).getBrowser(view)
 
-        registeredBrowser?.let {
-            it.cefBrowser.executeJavaScript(
-                "window.postMessage($message);",
-                null,
-                0
-            )
-        }
+        registeredBrowser?.cefBrowser?.executeJavaScript(
+            "window.postMessage($message);",
+            null,
+            0,
+        )
     }
 
     /**
@@ -144,8 +203,11 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
             handleRefactoringFromCwf(
                 FileMetaType(
                     fn = data.aceData.fileData.fn,
-                    fileName = data.aceData.fileData.fileName
-                ), project, AceEntryPoint.RETRY, data.functionToRefactor
+                    fileName = data.aceData.fileData.fileName,
+                ),
+                project,
+                AceEntryPoint.RETRY,
+                data.functionToRefactor,
             )
         }
     }
@@ -161,16 +223,22 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         closeWindow(UiLabelsBundle.message("ace"), project)
     }
 
-    private fun handleRequestAndPresentRefactoring(message: CwfMessage, json: Json) {
-        val requestRefactoringMessage = message.payload?.let {
-            json.decodeFromJsonElement(RequestAndPresentRefactoring.serializer(), it)
-        } ?: return
+    private fun handleRequestAndPresentRefactoring(
+        message: CwfMessage,
+        json: Json,
+    ) {
+        val requestRefactoringMessage =
+            message.payload?.let {
+                json.decodeFromJsonElement(RequestAndPresentRefactoring.serializer(), it)
+            } ?: return
 
         handleRefactoringFromCwf(
             FileMetaType(
                 fn = requestRefactoringMessage.fn,
-                fileName = requestRefactoringMessage.fileName
-            ), project, AceEntryPoint.CODE_HEALTH_DETAILS
+                fileName = requestRefactoringMessage.fileName,
+            ),
+            project,
+            AceEntryPoint.CODE_HEALTH_DETAILS,
         )
     }
 
@@ -185,7 +253,7 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
                 it,
                 project,
                 AceEntryPoint.ACE_ACKNOWLEDGEMENT,
-                data.fnToRefactor
+                data.fnToRefactor,
             )
         }
     }
@@ -195,12 +263,15 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
             if (success) {
                 Log.info("Shown diff for file successfully.", serviceName)
                 TelemetryService.getInstance().logUsage(
-                    TelemetryEvents.ACE_DIFF_SHOWN, mutableMapOf(
-                        //Pair("traceId", TODO),
-                        //Pair("skipCache", TODO)
-                    )
+                    TelemetryEvents.ACE_DIFF_SHOWN,
+                    mutableMapOf(
+                        // Pair("traceId", TODO),
+                        // Pair("skipCache", TODO)
+                    ),
                 )
-            } else Log.warn("Unable to show diff for file.", serviceName)
+            } else {
+                Log.warn("Unable to show diff for file.", serviceName)
+            }
         }
     }
 
@@ -208,30 +279,33 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         val aceContext = getAceUserData(project)?.aceData ?: return
 
         TelemetryService.getInstance().logUsage(
-            TelemetryEvents.ACE_REFACTOR_APPLIED, mutableMapOf(
+            TelemetryEvents.ACE_REFACTOR_APPLIED,
+            mutableMapOf(
                 Pair("traceId", aceContext.aceResultData?.traceId ?: ""),
 //                Pair("skipCache", TODO)
-            )
+            ),
         )
 
-        if (aceContext.fileData.fn?.range != null && !aceContext.aceResultData?.code.isNullOrEmpty())
+        if (aceContext.fileData.fn?.range != null && !aceContext.aceResultData?.code.isNullOrEmpty()) {
             replaceCodeSnippet(
                 ReplaceCodeSnippetArgs(
                     project = project,
                     filePath = aceContext.fileData.fileName,
                     startLine = aceContext.fileData.fn.range.startLine,
                     endLine = aceContext.fileData.fn.range.endLine,
-                    newContent = aceContext.aceResultData!!.code
-                )
+                    newContent = aceContext.aceResultData.code,
+                ),
             )
+        }
 
         closeWindow(UiLabelsBundle.message("ace"), project)
     }
 
     private fun handleCopy() {
-        val aceData = getAceUserData(project)
-            ?.aceData
-            ?.aceResultData
+        val aceData =
+            getAceUserData(project)
+                ?.aceData
+                ?.aceResultData
         val code = aceData?.code
 
         if (!code.isNullOrEmpty()) {
@@ -242,10 +316,11 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
             showInfoNotification(UiLabelsBundle.message("copiedToClipboard"), project)
 
             TelemetryService.getInstance().logUsage(
-                TelemetryEvents.ACE_COPY_CODE, mutableMapOf(
+                TelemetryEvents.ACE_COPY_CODE,
+                mutableMapOf(
                     Pair("traceId", aceData.traceId),
-                    //Pair("skipCache", TODO)
-                )
+                    // Pair("skipCache", TODO)
+                ),
             )
         } else {
             Log.warn("Unable to copy refactored code to clipboard.", serviceName)
@@ -253,15 +328,17 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
     }
 
     private fun handleRefactoringRejection() {
-        val aceData = getAceUserData(project)
-            ?.aceData
-            ?.aceResultData
+        val aceData =
+            getAceUserData(project)
+                ?.aceData
+                ?.aceResultData
 
         TelemetryService.getInstance().logUsage(
-            TelemetryEvents.ACE_REFACTOR_REJECTED, mutableMapOf(
+            TelemetryEvents.ACE_REFACTOR_REJECTED,
+            mutableMapOf(
                 Pair("traceId", aceData?.traceId ?: ""),
-                //Pair("skipCache", TODO)
-            )
+                // Pair("skipCache", TODO)
+            ),
         )
 
         closeWindow(UiLabelsBundle.message("ace"), project)
@@ -272,26 +349,36 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
         if (payload.toString() == View.HOME.value) updateMonitor(project)
     }
 
-    private fun handleOpenDocs(message: CwfMessage, json: Json) {
-        val openDocsMessage = message.payload?.let {
-            json.decodeFromJsonElement(OpenDocsForFunction.serializer(), it)
-        } ?: return
+    private fun handleOpenDocs(
+        message: CwfMessage,
+        json: Json,
+    ) {
+        val openDocsMessage =
+            message.payload?.let {
+                json.decodeFromJsonElement(OpenDocsForFunction.serializer(), it)
+            } ?: return
 
-        val docsData = DocsData(
-            docType = openDocsMessage.docType,
-            fileData = FileMetaType(
-                fileName = openDocsMessage.fileName,
-                fn = openDocsMessage.fn
+        val docsData =
+            DocsData(
+                docType = openDocsMessage.docType,
+                fileData =
+                    FileMetaType(
+                        fileName = openDocsMessage.fileName,
+                        fn = openDocsMessage.fn,
+                    ),
             )
-        )
 
         openDocs(docsData, project, DocsEntryPoint.CODE_HEALTH_DETAILS)
     }
 
-    private fun handleGotoFunctionLocation(message: CwfMessage, json: Json) {
-        val openFileMessage = message.payload?.let {
-            json.decodeFromJsonElement(GotoFunctionLocation.serializer(), it)
-        }
+    private fun handleGotoFunctionLocation(
+        message: CwfMessage,
+        json: Json,
+    ) {
+        val openFileMessage =
+            message.payload?.let {
+                json.decodeFromJsonElement(GotoFunctionLocation.serializer(), it)
+            }
         openFileMessage?.let { handleOpenFile(openFileMessage) }
     }
 
@@ -304,7 +391,8 @@ class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerA
             BrowserUtil.browse(url)
 
             TelemetryService.getInstance().logUsage(
-                TelemetryEvents.OPEN_LINK, mutableMapOf<String, Any>(Pair("url", url))
+                TelemetryEvents.OPEN_LINK,
+                mutableMapOf<String, Any>(Pair("url", url)),
             )
         }
     }

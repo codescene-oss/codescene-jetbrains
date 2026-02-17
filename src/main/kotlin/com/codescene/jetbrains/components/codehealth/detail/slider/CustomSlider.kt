@@ -25,11 +25,15 @@ class CustomSlider(value: String) : JSlider() {
 
         if (value != "N/A") setSliderPosition(value.toDouble())
 
-        setUI(object : BasicSliderUI(this) {
-            override fun paintThumb(g: Graphics) {}
-            override fun paintTrack(g: Graphics) {}
-            override fun paintFocus(g: Graphics) {}
-        })
+        setUI(
+            object : BasicSliderUI(this) {
+                override fun paintThumb(g: Graphics) {}
+
+                override fun paintTrack(g: Graphics) {}
+
+                override fun paintFocus(g: Graphics) {}
+            },
+        )
     }
 
     override fun paintComponent(g: Graphics) {
