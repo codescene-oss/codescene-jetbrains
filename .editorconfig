@@ -19,3 +19,6 @@ ij_kotlin_imports_layout = *
 
 ktlint_function_signature_body_expression_wrapping = multiline
 ktlint_ignore_back_ticked_identifier = true
+
+[src/test/**/*.{kt,kts}]
+ktlint_standard_function-naming = disabled
