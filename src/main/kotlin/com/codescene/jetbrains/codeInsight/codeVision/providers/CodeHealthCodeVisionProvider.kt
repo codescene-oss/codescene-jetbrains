@@ -8,9 +8,13 @@ import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
 import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPanel
 import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
-import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
+import com.codescene.jetbrains.util.HealthDetails
+import com.codescene.jetbrains.util.getCachedDelta
+import com.codescene.jetbrains.util.getCodeHealth
+import com.codescene.jetbrains.util.handleOpenGeneralDocs
+import com.codescene.jetbrains.util.selectNode
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.openapi.editor.Editor

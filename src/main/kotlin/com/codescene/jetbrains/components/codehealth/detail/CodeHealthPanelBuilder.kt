@@ -8,8 +8,17 @@ import com.codescene.jetbrains.components.codehealth.detail.slider.CustomSlider
 import com.codescene.jetbrains.components.layout.ResponsiveLayout
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.flag.RuntimeFlags
-import com.codescene.jetbrains.util.*
+import com.codescene.jetbrains.util.AceEntryPoint
+import com.codescene.jetbrains.util.CodeHealthDetails
+import com.codescene.jetbrains.util.CodeHealthDetailsType
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_URL
+import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.Paragraph
+import com.codescene.jetbrains.util.RefactoringParams
+import com.codescene.jetbrains.util.getMouseAdapter
+import com.codescene.jetbrains.util.getSelectedTextEditor
+import com.codescene.jetbrains.util.handleAceEntryPoint
+import com.codescene.jetbrains.util.resolveHealthBadge
 import com.intellij.ide.ui.laf.darcula.ui.OnboardingDialogButtons
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -17,11 +26,20 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.ui.RoundedLineBorder
 import com.intellij.util.ui.JBUI
-import java.awt.*
+import java.awt.Cursor
+import java.awt.Desktop
+import java.awt.Font
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.net.URI
-import javax.swing.*
+import javax.swing.Box
+import javax.swing.BoxLayout
+import javax.swing.JButton
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.JSeparator
 
 // TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 @Service(Service.Level.PROJECT)

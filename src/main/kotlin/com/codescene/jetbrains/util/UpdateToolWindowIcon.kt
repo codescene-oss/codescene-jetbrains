@@ -4,11 +4,11 @@ import com.intellij.execution.runners.ExecutionUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.ui.JBUI
+import java.awt.Color
+import javax.swing.Icon
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.awt.Color
-import javax.swing.Icon
 
 data class UpdateToolWindowIconParams(
     val baseIcon: Icon,

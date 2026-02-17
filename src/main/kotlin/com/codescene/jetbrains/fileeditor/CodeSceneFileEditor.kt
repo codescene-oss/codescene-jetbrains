@@ -5,10 +5,18 @@ import com.codescene.jetbrains.services.CodeNavigationService
 import com.codescene.jetbrains.services.api.AceService
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewer
-import com.codescene.jetbrains.util.*
+import com.codescene.jetbrains.util.AceEntryPoint
 import com.codescene.jetbrains.util.Constants.ACE_ACKNOWLEDGEMENT
 import com.codescene.jetbrains.util.Constants.ACE_REFACTORING_SUGGESTION
 import com.codescene.jetbrains.util.Constants.CODESCENE
+import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.RefactoringParams
+import com.codescene.jetbrains.util.ReplaceCodeSnippetArgs
+import com.codescene.jetbrains.util.TelemetryEvents
+import com.codescene.jetbrains.util.closeWindow
+import com.codescene.jetbrains.util.getSelectedTextEditor
+import com.codescene.jetbrains.util.handleAceEntryPoint
+import com.codescene.jetbrains.util.replaceCodeSnippet
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorState
 import com.intellij.openapi.project.Project
@@ -18,6 +26,11 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JBCefJSQuery
+import java.awt.Desktop
+import java.beans.PropertyChangeListener
+import java.beans.PropertyChangeSupport
+import java.net.URI
+import javax.swing.JComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -28,11 +41,6 @@ import org.cef.handler.CefLoadHandlerAdapter
 import org.cef.handler.CefRequestHandlerAdapter
 import org.cef.network.CefRequest
 import org.json.JSONObject
-import java.awt.Desktop
-import java.beans.PropertyChangeListener
-import java.beans.PropertyChangeSupport
-import java.net.URI
-import javax.swing.JComponent
 
 // TODO[CWF-DELETE]: Remove once CWF is fully rolled out
 class CodeSceneFileEditor(val project: Project, private val file: VirtualFile) : FileEditor {

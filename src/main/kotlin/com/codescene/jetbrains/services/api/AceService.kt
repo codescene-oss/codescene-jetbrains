@@ -6,7 +6,6 @@ import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.ace.PreflightResponse
 import com.codescene.data.ace.RefactorResponse
 import com.codescene.data.ace.RefactoringOptions
-import com.codescene.data.delta.Delta
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.components.webview.util.AceCwfParams
 import com.codescene.jetbrains.components.webview.util.updateMonitor
@@ -17,14 +16,26 @@ import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheEntry
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
-import com.codescene.jetbrains.util.*
 import com.codescene.jetbrains.util.Constants.ACE
+import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.RefactoringParams
+import com.codescene.jetbrains.util.TelemetryEvents
+import com.codescene.jetbrains.util.getActivatedAceStatus
+import com.codescene.jetbrains.util.handleAceStatusChange
+import com.codescene.jetbrains.util.handleRefactoringResult
+import com.codescene.jetbrains.util.openAceErrorView
+import com.codescene.jetbrains.util.showErrorNotification
+import com.codescene.jetbrains.util.updateCurrentAceView
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.platform.ide.progress.withBackgroundProgress
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class RefactoredFunction(
     val name: String,

@@ -7,9 +7,9 @@ import com.intellij.openapi.util.TextRange
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import java.awt.Color
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.awt.Color
 
 val codeSmell = CodeSmell("", Range(394, 10, 394, 26), "")
 val color = Color(170, 99, 243, 100)

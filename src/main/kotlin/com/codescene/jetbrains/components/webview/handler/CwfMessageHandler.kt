@@ -4,7 +4,12 @@ import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.components.webview.WebViewInitializer
 import com.codescene.jetbrains.components.webview.data.CwfMessage
 import com.codescene.jetbrains.components.webview.data.View
-import com.codescene.jetbrains.components.webview.data.message.*
+import com.codescene.jetbrains.components.webview.data.message.EditorMessages
+import com.codescene.jetbrains.components.webview.data.message.GotoFunctionLocation
+import com.codescene.jetbrains.components.webview.data.message.LifecycleMessages
+import com.codescene.jetbrains.components.webview.data.message.OpenDocsForFunction
+import com.codescene.jetbrains.components.webview.data.message.PanelMessages
+import com.codescene.jetbrains.components.webview.data.message.RequestAndPresentRefactoring
 import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
 import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.util.getAceAcknowledgeUserData
@@ -14,8 +19,16 @@ import com.codescene.jetbrains.components.webview.util.updateMonitor
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
-import com.codescene.jetbrains.util.*
+import com.codescene.jetbrains.util.AceEntryPoint
 import com.codescene.jetbrains.util.Constants.ALLOWED_DOMAINS
+import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.ReplaceCodeSnippetArgs
+import com.codescene.jetbrains.util.TelemetryEvents
+import com.codescene.jetbrains.util.closeWindow
+import com.codescene.jetbrains.util.handleRefactoringFromCwf
+import com.codescene.jetbrains.util.replaceCodeSnippet
+import com.codescene.jetbrains.util.showAceDiff
+import com.codescene.jetbrains.util.showInfoNotification
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
@@ -26,6 +39,7 @@ import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.ui.jcef.JBCefBrowser
+import java.awt.datatransfer.StringSelection
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -36,7 +50,6 @@ import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefMessageRouterHandlerAdapter
-import java.awt.datatransfer.StringSelection
 
 @Service(Service.Level.PROJECT)
 class CwfMessageHandler(private val project: Project) : CefMessageRouterHandlerAdapter() {

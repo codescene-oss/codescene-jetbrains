@@ -10,7 +10,7 @@ import com.codescene.jetbrains.services.cache.DeltaCacheQuery
 import com.codescene.jetbrains.services.cache.DeltaCacheService
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.text.StringUtil.pluralize
-import java.util.*
+import java.util.Optional
 import java.util.concurrent.ConcurrentHashMap
 
 // TODO[CWF-DELETE]: Remove once CWF is fully rolled out. Remove tests as well.

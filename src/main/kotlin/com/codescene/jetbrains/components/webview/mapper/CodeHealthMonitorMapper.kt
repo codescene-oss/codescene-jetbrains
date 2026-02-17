@@ -6,7 +6,15 @@ import com.codescene.jetbrains.components.webview.data.shared.AnalysisJob
 import com.codescene.jetbrains.components.webview.data.shared.AutoRefactorConfig
 import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
 import com.codescene.jetbrains.components.webview.data.shared.Range
-import com.codescene.jetbrains.components.webview.data.view.*
+import com.codescene.jetbrains.components.webview.data.view.ChangeDetail
+import com.codescene.jetbrains.components.webview.data.view.DeltaForFile
+import com.codescene.jetbrains.components.webview.data.view.File
+import com.codescene.jetbrains.components.webview.data.view.FileDeltaData
+import com.codescene.jetbrains.components.webview.data.view.FunctionFinding
+import com.codescene.jetbrains.components.webview.data.view.FunctionInfo
+import com.codescene.jetbrains.components.webview.data.view.FunctionToRefactor
+import com.codescene.jetbrains.components.webview.data.view.HomeData
+import com.codescene.jetbrains.components.webview.data.view.RefactoringTarget
 import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheQuery
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService

@@ -8,7 +8,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
-import io.ktor.util.*
+import io.ktor.util.toLowerCasePreservingASCIIRules
 import java.awt.Color
 import java.io.File
 

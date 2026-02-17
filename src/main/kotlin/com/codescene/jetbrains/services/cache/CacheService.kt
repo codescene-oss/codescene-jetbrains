@@ -1,8 +1,8 @@
 package com.codescene.jetbrains.services.cache
 
 import com.codescene.jetbrains.util.Log
-import org.apache.commons.codec.digest.DigestUtils
 import java.util.concurrent.ConcurrentHashMap
+import org.apache.commons.codec.digest.DigestUtils
 
 abstract class CacheService<Q, E, V, R> {
     protected val cache = ConcurrentHashMap<String, V>()

@@ -8,11 +8,11 @@ import com.intellij.openapi.application.ApplicationManager
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import java.util.Optional
+import java.util.concurrent.ConcurrentHashMap
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import java.util.Optional
-import java.util.concurrent.ConcurrentHashMap
 
 class SortDeltaFindingsTest {
     private lateinit var mockApplication: Application

@@ -1,7 +1,7 @@
 package com.codescene.jetbrains.flag
 
 import com.codescene.jetbrains.util.Constants
-import java.util.*
+import java.util.Properties
 
 object RuntimeFlags {
     private val props: Properties by lazy {

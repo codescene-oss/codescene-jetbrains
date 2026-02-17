@@ -9,7 +9,12 @@ import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
 import com.codescene.jetbrains.services.cache.ReviewCacheService
-import com.codescene.jetbrains.util.*
+import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.fetchAceCache
+import com.codescene.jetbrains.util.formatCodeSmellMessage
+import com.codescene.jetbrains.util.getRefactorableFunction
+import com.codescene.jetbrains.util.getTextRange
+import com.codescene.jetbrains.util.isFileSupported
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.ExternalAnnotator

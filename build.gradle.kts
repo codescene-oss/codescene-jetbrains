@@ -1,13 +1,13 @@
 import groovy.json.JsonSlurper
+import java.net.HttpURLConnection
+import java.net.URI
+import java.util.zip.ZipInputStream
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.intellij.platform.gradle.models.ProductRelease
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask
-import java.net.HttpURLConnection
-import java.net.URI
-import java.util.zip.ZipInputStream
 
 plugins {
     alias(libs.plugins.kotlin) // Kotlin support

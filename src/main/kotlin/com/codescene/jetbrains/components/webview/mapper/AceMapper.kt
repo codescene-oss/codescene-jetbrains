@@ -7,7 +7,14 @@ import com.codescene.jetbrains.components.webview.data.View
 import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
 import com.codescene.jetbrains.components.webview.data.shared.Fn
 import com.codescene.jetbrains.components.webview.data.shared.RangeCamelCase
-import com.codescene.jetbrains.components.webview.data.view.*
+import com.codescene.jetbrains.components.webview.data.view.AceData
+import com.codescene.jetbrains.components.webview.data.view.Confidence
+import com.codescene.jetbrains.components.webview.data.view.CreditsInfo
+import com.codescene.jetbrains.components.webview.data.view.Metadata
+import com.codescene.jetbrains.components.webview.data.view.Reason
+import com.codescene.jetbrains.components.webview.data.view.ReasonDetails
+import com.codescene.jetbrains.components.webview.data.view.RecommendedAction
+import com.codescene.jetbrains.components.webview.data.view.RefactoringProperties
 import com.codescene.jetbrains.components.webview.util.AceCwfParams
 import com.codescene.jetbrains.flag.RuntimeFlags
 import com.intellij.openapi.application.ApplicationManager

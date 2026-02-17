@@ -8,10 +8,19 @@ import com.codescene.jetbrains.util.TelemetryEvents
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.editor.Editor
 import com.intellij.platform.ide.progress.withBackgroundProgress
-import kotlinx.coroutines.*
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
-abstract class CodeSceneService : BaseService(), Disposable {
+abstract class CodeSceneService :
+    BaseService(),
+    Disposable {
     abstract val scope: CoroutineScope
     abstract val activeReviewCalls: MutableMap<String, Job>
 

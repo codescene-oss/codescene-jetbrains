@@ -6,7 +6,15 @@ import com.codescene.jetbrains.components.codehealth.monitor.tree.listeners.Tree
 import com.codescene.jetbrains.notifier.CodeHealthDetailsRefreshNotifier
 import com.codescene.jetbrains.services.CodeNavigationService
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
-import com.codescene.jetbrains.util.*
+import com.codescene.jetbrains.util.Log
+import com.codescene.jetbrains.util.TelemetryEvents
+import com.codescene.jetbrains.util.getFileFinding
+import com.codescene.jetbrains.util.getFunctionFinding
+import com.codescene.jetbrains.util.getHealthFinding
+import com.codescene.jetbrains.util.getParentNode
+import com.codescene.jetbrains.util.getRootNode
+import com.codescene.jetbrains.util.getSelectedNode
+import com.codescene.jetbrains.util.isHealthNode
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project

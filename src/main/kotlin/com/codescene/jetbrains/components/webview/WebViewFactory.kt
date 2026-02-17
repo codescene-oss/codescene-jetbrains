@@ -10,8 +10,8 @@ import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
-import org.cef.browser.CefMessageRouter
 import javax.swing.JLabel
+import org.cef.browser.CefMessageRouter
 
 object WebViewFactory {
     /**

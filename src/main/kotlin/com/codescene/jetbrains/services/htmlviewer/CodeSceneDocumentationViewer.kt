@@ -2,11 +2,17 @@ package com.codescene.jetbrains.services.htmlviewer
 
 import com.codescene.jetbrains.services.api.telemetry.TelemetryService
 import com.codescene.jetbrains.services.htmlviewer.codehealth.DocumentationHtmlContentBuilder
-import com.codescene.jetbrains.util.*
+import com.codescene.jetbrains.util.Constants
 import com.codescene.jetbrains.util.Constants.CODE_HEALTH_MONITOR
 import com.codescene.jetbrains.util.Constants.DOCUMENTATION_BASE_PATH
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
 import com.codescene.jetbrains.util.Constants.ISSUES_PATH
+import com.codescene.jetbrains.util.CreateTempFileParams
+import com.codescene.jetbrains.util.TelemetryEvents
+import com.codescene.jetbrains.util.TransformMarkdownParams
+import com.codescene.jetbrains.util.categoryToFileName
+import com.codescene.jetbrains.util.createTempFile
+import com.codescene.jetbrains.util.generalDocs
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
