@@ -121,9 +121,9 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Run tests
-      - name: Run Tests
-        run: ./gradlew check
+      # Run tests and Lint check
+      - name: Run Tests and Lint check
+        run: ./gradlew check -PktlintlintFailOnError=true
 
       # Collect Tests Result of failed tests
       - name: Collect Tests Result
