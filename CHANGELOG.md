@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Fixed**
+  - Fixed API Compatibility problems with IntelliJ 2026.1
+
 ### [0.4.1] - 2025-11-03
 - **Fixed**
   - Bump Extension API version 1.0-2935bd0
