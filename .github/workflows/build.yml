@@ -185,7 +185,7 @@ jobs:
               echo "::group::$version"
               echo "=== $version ==="
               echo "### $version" >> $GITHUB_STEP_SUMMARY
-              find "$version_dir" -maxdepth 1 -name '*.txt' | sort | while read -r file; do
+              find "$version_dir" -name '*.txt' | sort | while read -r file; do
                 fname=$(basename "$file")
                 echo "--- $fname ---"
                 cat "$file"
