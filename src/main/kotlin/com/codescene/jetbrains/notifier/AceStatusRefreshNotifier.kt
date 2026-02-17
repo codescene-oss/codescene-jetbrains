@@ -13,6 +13,3 @@ interface AceStatusRefreshNotifier {
             Topic.create(ACE_STATUS_NOTIFIER, AceStatusRefreshNotifier::class.java)
     }
 }
-
-
-

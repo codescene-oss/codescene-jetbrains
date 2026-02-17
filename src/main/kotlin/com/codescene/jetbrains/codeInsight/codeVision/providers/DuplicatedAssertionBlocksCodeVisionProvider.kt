@@ -5,5 +5,4 @@ import com.codescene.jetbrains.util.Constants.DUPLICATED_ASSERTION_BLOCKS
 
 class DuplicatedAssertionBlocksCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override val categoryToFilter = DUPLICATED_ASSERTION_BLOCKS
-
 }

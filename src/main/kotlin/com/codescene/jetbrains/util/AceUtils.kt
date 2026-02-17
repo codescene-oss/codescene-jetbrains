@@ -426,4 +426,5 @@ fun openAceErrorView(editor: Editor?, function: FnToRefactor?, project: Project,
                 filePath = editor.virtualFile.path
             ), project
         )
+    }
 }

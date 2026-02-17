@@ -58,4 +58,3 @@ data class AnalysisStats(
     var avgTime: Double,
     var maxTime: Double
 )
-

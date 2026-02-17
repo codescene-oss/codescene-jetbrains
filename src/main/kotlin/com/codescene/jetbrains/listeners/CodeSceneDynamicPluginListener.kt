@@ -10,5 +10,4 @@ class CodeSceneDynamicPluginListener : DynamicPluginListener {
     override fun pluginLoaded(pluginDescriptor: IdeaPluginDescriptor) {
         TelemetryService.Companion.getInstance().logUsage(TelemetryEvents.ON_ACTIVATE_EXTENSION)
     }
-
 }

@@ -5,5 +5,4 @@ import com.codescene.jetbrains.util.Constants.BUMPY_ROAD_AHEAD
 
 class BumpyRoadCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override val categoryToFilter = BUMPY_ROAD_AHEAD
-
 }

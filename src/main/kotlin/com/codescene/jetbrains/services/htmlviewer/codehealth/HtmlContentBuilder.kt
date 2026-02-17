@@ -86,4 +86,3 @@ abstract class HtmlContentBuilder {
     abstract fun content(params: TransformMarkdownParams?): HtmlContentBuilder
 }
 
-

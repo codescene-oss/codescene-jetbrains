@@ -60,5 +60,4 @@ class CodeSceneSettings : Composite, Configurable {
     }
 
     override fun getDisplayName(): String = CODESCENE
-
 }

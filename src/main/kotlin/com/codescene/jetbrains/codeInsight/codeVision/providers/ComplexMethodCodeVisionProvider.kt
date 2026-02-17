@@ -5,6 +5,4 @@ import com.codescene.jetbrains.util.Constants.COMPLEX_METHOD
 
 class ComplexMethodCodeVisionProvider : CodeSceneCodeVisionProvider() {
     override val categoryToFilter = COMPLEX_METHOD
-
-
 }
