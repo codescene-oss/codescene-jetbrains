@@ -1,7 +1,10 @@
 import groovy.json.JsonSlurper
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.intellij.platform.gradle.models.ProductRelease
+import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask
 import java.net.HttpURLConnection
 import java.net.URI
 import java.util.zip.ZipInputStream
@@ -133,11 +136,20 @@ intellijPlatform {
     }
 
     pluginVerification {
+        failureLevel.set(listOf(VerifyPluginTask.FailureLevel.COMPATIBILITY_PROBLEMS))
         ides {
-            // Use: ./gradlew printProductsReleases to find and target specific releases in verifyPlugin.
-            create("IC", "2023.3.8") { useInstaller = true }
-            create("IC", "2024.1.7") { useInstaller = true }
-            create("IC", "2025.2.4") { useInstaller = true }
+            create(IntelliJPlatformType.IntellijIdeaCommunity, "2023.3.8") { useInstaller = true }
+            create(IntelliJPlatformType.IntellijIdeaCommunity, "2024.3.7") { useInstaller = true }
+            create(IntelliJPlatformType.IntellijIdea, "2025.3.2") { useInstaller = true }
+            select {
+                // 2026.1 and later
+                sinceBuild = "261"
+                types = listOf(IntelliJPlatformType.IntellijIdea)
+                channels = listOf(
+                    ProductRelease.Channel.EAP,
+                )
+
+            }
         }
     }
 }
