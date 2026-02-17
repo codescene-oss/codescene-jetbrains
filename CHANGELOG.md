@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Handling of empty old/new scores, mainly affecting the old native monitor presentation.
   - Review Code Vision now automatically refreshes for all open files across all projects when settings change, without requiring manual file content refresh.
 
+### [0.4.2] - 2026-02-17
+- **Fixed**
+  - Fixed API Compatibility problems with IntelliJ 2026.1
+
 ### [0.4.1] - 2025-11-03
 - **Fixed**
   - Bump Extension API version 1.0-2935bd0
