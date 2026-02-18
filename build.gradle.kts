@@ -213,10 +213,23 @@ tasks {
         dependsOn("processResources")
     }
 
+    withType<Test>().configureEach {
+        extensions.configure<org.gradle.testing.jacoco.plugins.JacocoTaskExtension> {
+            isIncludeNoLocationClasses = true
+            excludes = listOf("jdk.internal.*")
+        }
+    }
+
     jacocoTestReport {
         reports {
             xml.required.set(true)
         }
+        val instrumentCodeTask = named("instrumentCode").get()
+        classDirectories.setFrom(instrumentCodeTask.outputs.files)
+    }
+
+    jacocoTestCoverageVerification {
+        classDirectories.setFrom(named("instrumentCode").get().outputs.files)
     }
 }
 
