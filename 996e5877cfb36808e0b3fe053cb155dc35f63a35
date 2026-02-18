@@ -1,0 +1,23 @@
+src/test/kotlin/com/codescene/jetbrains/util/NotificationUtilsTest.kt
+  f5644ceb4044dd5d 24-25,33-37,43,55,74
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.2",
+  "base_commit_sha": "996e5877cfb36808e0b3fe053cb155dc35f63a35",
+  "prompts": {
+    "f5644ceb4044dd5d": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "2e656fbe-ae51-46b7-8d1c-20c5ae53b4ef",
+        "model": "composer-1.5"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 14,
+      "total_deletions": 7,
+      "accepted_lines": 10,
+      "overriden_lines": 0
+    }
+  }
+}
