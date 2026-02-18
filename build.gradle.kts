@@ -14,6 +14,7 @@ plugins {
     alias(libs.plugins.intelliJPlatform) // IntelliJ Platform Gradle Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.ktlint)
+    jacoco
     kotlin("plugin.serialization") version "2.2.0"
 }
 
@@ -210,6 +211,25 @@ tasks {
     buildPlugin {
         dependsOn("fetchCwf")
         dependsOn("processResources")
+    }
+
+    withType<Test>().configureEach {
+        extensions.configure<org.gradle.testing.jacoco.plugins.JacocoTaskExtension> {
+            isIncludeNoLocationClasses = true
+            excludes = listOf("jdk.internal.*")
+        }
+    }
+
+    jacocoTestReport {
+        reports {
+            xml.required.set(true)
+        }
+        val instrumentCodeTask = named("instrumentCode").get()
+        classDirectories.setFrom(instrumentCodeTask.outputs.files)
+    }
+
+    jacocoTestCoverageVerification {
+        classDirectories.setFrom(named("instrumentCode").get().outputs.files)
     }
 }
 
