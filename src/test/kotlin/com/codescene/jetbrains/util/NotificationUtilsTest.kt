@@ -21,6 +21,8 @@ import org.junit.Before
 import org.junit.Test
 
 class NotificationUtilsTest {
+    private val telemetryDesc = "test-telemetry-description"
+
     private lateinit var mockProject: Project
     private lateinit var mockNotification: Notification
     private lateinit var mockState: CodeSceneGlobalSettingsStore
@@ -28,12 +30,17 @@ class NotificationUtilsTest {
 
     @Before
     fun setUp() {
+        mockkObject(UiLabelsBundle)
+        every { UiLabelsBundle.message("telemetryDescription") } returns telemetryDesc
+        every { UiLabelsBundle.message("acceptButton") } returns "Accept"
+        every { UiLabelsBundle.message("closeButton") } returns "Close"
+
         mockProject = mockk<Project>(relaxed = true)
         mockNotificationGroup = mockk<NotificationGroup>(relaxed = true)
 
         mockNotification = mockk<Notification>(relaxed = true)
         every { mockNotification.title } returns CODESCENE
-        every { mockNotification.content } returns UiLabelsBundle.message("telemetryDescription")
+        every { mockNotification.content } returns telemetryDesc
         every { mockNotification.type } returns NotificationType.INFORMATION
 
         mockState = mockk<CodeSceneGlobalSettingsStore>(relaxed = true)
@@ -45,7 +52,7 @@ class NotificationUtilsTest {
         every {
             mockNotificationGroup.createNotification(
                 CODESCENE,
-                UiLabelsBundle.message("telemetryDescription"),
+                telemetryDesc,
                 NotificationType.INFORMATION,
             )
         } returns mockNotification
@@ -64,7 +71,7 @@ class NotificationUtilsTest {
         verify {
             mockNotificationGroup.createNotification(
                 CODESCENE,
-                UiLabelsBundle.message("telemetryDescription"),
+                telemetryDesc,
                 NotificationType.INFORMATION,
             )
         }
