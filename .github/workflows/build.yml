@@ -126,7 +126,7 @@ jobs:
 
       - name: Check code coverage
         uses: ./.github/actions/check-coverage
-        if: always()
+        if: ${{ success() }}
         with:
           access-token: ${{ secrets.CODESCENE_CODE_COVERAGE_API_TOKEN }}
           project-url: "https://api.codescene.io/v2/projects/63256"

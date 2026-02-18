@@ -14,17 +14,16 @@ runs:
   using: "composite"
   steps:
     - name: Install cs tool
-      shell: pwsh
+      shell: bash
       run: curl https://downloads.codescene.io/enterprise/cli/install-cs-coverage-tool.sh | bash -s -- -y
 
     - name: Add ~/.local/bin to PATH
-      shell: pwsh
-      run: |
-        "$HOME\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      shell: bash
+      run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Upload coverage data to CodeScene
-      shell: pwsh
-      run: 'cs-coverage check --verbose --coverage-files "${{ inputs.coverage-files }}"'
+      shell: bash
+      run: cs-coverage check --verbose --coverage-files "${{ inputs.coverage-files }}"
       env:
         CS_PROJECT_URL: ${{ inputs.project-url }}
         CS_ACCESS_TOKEN: ${{ inputs.access-token }}
