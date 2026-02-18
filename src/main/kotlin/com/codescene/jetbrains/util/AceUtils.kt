@@ -6,7 +6,6 @@ import com.codescene.data.ace.RefactoringOptions
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.UiLabelsBundle
 import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
-import com.codescene.jetbrains.components.codehealth.monitor.tree.CodeHealthFinding
 import com.codescene.jetbrains.components.webview.data.shared.FileMetaType
 import com.codescene.jetbrains.components.webview.util.AceCwfParams
 import com.codescene.jetbrains.components.webview.util.OpenAceAcknowledgementParams
@@ -18,17 +17,13 @@ import com.codescene.jetbrains.config.global.AceStatus
 import com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.notifier.AceStatusRefreshNotifier
-import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
 import com.codescene.jetbrains.services.UIRefreshService
 import com.codescene.jetbrains.services.api.AceService
-import com.codescene.jetbrains.services.api.RefactoredFunction
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheEntry
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionCacheQuery
 import com.codescene.jetbrains.services.cache.AceRefactorableFunctionsCacheService
 import com.codescene.jetbrains.services.cache.ReviewCacheQuery
 import com.codescene.jetbrains.services.cache.ReviewCacheService
-import com.codescene.jetbrains.services.htmlviewer.AceAcknowledgementViewer
-import com.codescene.jetbrains.services.htmlviewer.AceRefactoringResultViewer
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
@@ -90,17 +85,13 @@ fun handleOpenAceAcknowledgement(
     editor: Editor,
     function: FnToRefactor,
 ) {
-    if (RuntimeFlags.cwfFeature) {
-        openAceAcknowledgeView(
-            OpenAceAcknowledgementParams(
-                project = editor.project!!,
-                fnToRefactor = function,
-                filePath = editor.virtualFile.path,
-            ),
-        )
-    } else {
-        AceAcknowledgementViewer.getInstance(editor.project!!).open(editor, function)
-    }
+    openAceAcknowledgeView(
+        OpenAceAcknowledgementParams(
+            project = editor.project!!,
+            fnToRefactor = function,
+            filePath = editor.virtualFile.path,
+        ),
+    )
 }
 
 fun fetchAceCache(
@@ -147,35 +138,12 @@ fun handleRefactoringResult(
     }
 }
 
-/**
- * Based on whether CWF is enabled, open an appropriate ACE refactoring result view.
- */
 fun handleOpenAceWindow(
     params: AceCwfParams,
     editor: Editor,
 ) {
-    if (RuntimeFlags.cwfFeature) {
-        CoroutineScope(Dispatchers.Main).launch {
-            openAceWindow(params, editor.project!!)
-        }
-    } else {
-        val project = editor.project ?: return
-        val result = params.refactorResponse ?: return
-        val function = params.function
-        val refactoredFunction =
-            RefactoredFunction(
-                function.name,
-                result,
-                editor.virtualFile?.path ?: "",
-                function.range.startLine,
-                function.range.endLine,
-                function.range.startColumn,
-                function.range.endColumn,
-            )
-
-        CoroutineScope(Dispatchers.Main).launch {
-            AceRefactoringResultViewer.getInstance(project).open(editor, refactoredFunction)
-        }
+    CoroutineScope(Dispatchers.Main).launch {
+        openAceWindow(params, editor.project!!)
     }
 }
 
@@ -186,26 +154,6 @@ fun getRefactorableFunction(
     function.refactoringTargets.any { target ->
         target.category == codeSmell.category && target.line == codeSmell.highlightRange.startLine
     }
-}
-
-fun getRefactorableFunction(
-    finding: CodeHealthFinding,
-    project: Project,
-): FnToRefactor? {
-    val file = LocalFileSystem.getInstance().findFileByPath(finding.filePath)
-
-    val documentText =
-        if (file != null) {
-            ApplicationManager.getApplication().runReadAction<String> {
-                FileDocumentManager.getInstance().getDocument(file)?.text
-            }
-        } else {
-            null
-        }
-
-    val aceEntry = fetchAceCache(finding.filePath, documentText ?: "", project)
-
-    return aceEntry.find { it.name == finding.displayName && it.range.startLine == finding.focusLine }
 }
 
 fun aceStatusDelegate(): ReadWriteProperty<Any?, AceStatus> =
@@ -249,7 +197,7 @@ private val aceUiRefreshLock = Mutex()
  * 4. For each project:
  *    - Collects all valid editors belonging to the project.
  *    - Triggers either a cache-based or direct UI refresh depending on [refreshFnsToRefactorCache].
- *    - Updates the Code Health Monitor and notifies listeners via [ToolWindowRefreshNotifier].
+ *    - Updates the Code Health Monitor via [updateMonitor].
  * 5. Releases the lock and logs completion or errors.
  */
 fun refreshAceUi(
@@ -276,13 +224,7 @@ fun refreshAceUi(
 
             refreshUiPerEditor(project, aceEnabled, editors)
 
-            if (RuntimeFlags.cwfFeature) {
-                updateMonitor(project)
-            } else {
-                project.messageBus
-                    .syncPublisher(ToolWindowRefreshNotifier.TOPIC)
-                    .refresh(null)
-            }
+            updateMonitor(project)
         }
 
         Log.info("ACE UI refresh completed.")
@@ -399,8 +341,6 @@ fun updateCurrentAceView(
     project: Project,
     entry: AceRefactorableFunctionCacheEntry,
 ) {
-    if (!RuntimeFlags.cwfFeature) return
-
     val currentAceData = getAceUserData(project)
     if (currentAceData == null || currentAceData.aceData?.fileData?.fileName != entry.filePath) return // Not applicable
 

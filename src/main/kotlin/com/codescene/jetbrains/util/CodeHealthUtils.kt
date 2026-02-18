@@ -7,9 +7,6 @@ data class HealthDetails(
     val newScore: Double?,
 )
 
-// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
-fun round(score: Double): Double = kotlin.math.floor(score * 100.0) / 100.0
-
 fun getChangePercentage(healthDetails: HealthDetails): Double? {
     if (healthDetails.newScore == null || healthDetails.oldScore == null) return null
 
@@ -19,7 +16,7 @@ fun getChangePercentage(healthDetails: HealthDetails): Double? {
 
     val percentageChange = ((healthDetails.newScore - healthDetails.oldScore) / healthDetails.oldScore) * 100
 
-    return round(abs(percentageChange))
+    return kotlin.math.floor(abs(percentageChange) * 100.0) / 100.0
 }
 
 private fun codeImproved(healthDetails: HealthDetails) =
@@ -31,7 +28,10 @@ private fun codeImproved(healthDetails: HealthDetails) =
         "-"
     }
 
-data class HealthInformation(val change: String, val percentage: String = "")
+data class HealthInformation(
+    val change: String,
+    val percentage: String = "",
+)
 
 fun getCodeHealth(healthDetails: HealthDetails): HealthInformation {
     val newScore = healthDetails.newScore ?: "N/A"

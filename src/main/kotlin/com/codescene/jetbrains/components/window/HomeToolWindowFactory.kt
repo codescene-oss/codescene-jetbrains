@@ -2,7 +2,6 @@ package com.codescene.jetbrains.components.window
 
 import com.codescene.jetbrains.components.webview.WebViewFactory
 import com.codescene.jetbrains.components.webview.data.View
-import com.codescene.jetbrains.flag.RuntimeFlags
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
@@ -28,5 +27,5 @@ internal class HomeToolWindowFactory : ToolWindowFactory {
         toolWindow.contentManager.addContent(content)
     }
 
-    override fun shouldBeAvailable(project: Project) = RuntimeFlags.cwfFeature
+    override fun shouldBeAvailable(project: Project) = true
 }

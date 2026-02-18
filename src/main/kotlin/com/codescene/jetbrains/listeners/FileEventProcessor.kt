@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.listeners
 
-import com.codescene.jetbrains.notifier.ToolWindowRefreshNotifier
+import com.codescene.jetbrains.components.webview.util.updateMonitor
 import com.codescene.jetbrains.services.cache.DeltaCacheService
 import com.codescene.jetbrains.services.cache.ReviewCacheService
 import com.codescene.jetbrains.util.Log
@@ -60,8 +60,7 @@ class FileEventProcessor(
             deltaCache.invalidate(path)
             reviewCache.invalidate(path)
 
-            project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC)
-                .invalidateAndRefresh(path)
+            updateMonitor(project)
         })
     }
 
@@ -93,8 +92,6 @@ class FileEventProcessor(
         deltaCache.updateKey(oldPath, newPath)
         reviewCache.updateKey(oldPath, newPath)
 
-        // TODO: CS-6198
-        project.messageBus.syncPublisher(ToolWindowRefreshNotifier.TOPIC)
-            .invalidateAndRefresh(oldPath, file)
+        updateMonitor(project)
     }
 }

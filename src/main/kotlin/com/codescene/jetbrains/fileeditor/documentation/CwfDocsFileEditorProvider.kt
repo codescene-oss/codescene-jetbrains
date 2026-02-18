@@ -2,7 +2,6 @@ package com.codescene.jetbrains.fileeditor.documentation
 
 import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.fileeditor.BaseCwfFileEditorProvider
-import com.codescene.jetbrains.fileeditor.CodeSceneFileEditor
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
@@ -15,7 +14,7 @@ val CWF_DOCS_DATA_KEY: Key<DocsData> = Key.create("codescene.documentation.data"
  */
 @Suppress("UnstableApiUsage")
 internal class CwfDocsFileEditorProvider : BaseCwfFileEditorProvider<DocsData>(CWF_DOCS_DATA_KEY) {
-    override fun getEditorTypeId(): String = CodeSceneFileEditor::class.java.simpleName
+    override fun getEditorTypeId(): String = CwfDocsFileEditor::class.java.simpleName
 
     override fun createEditorInstance(
         project: Project,

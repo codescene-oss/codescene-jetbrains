@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.util
 
+import com.codescene.jetbrains.UiLabelsBundle
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
 import com.intellij.openapi.project.Project
@@ -7,6 +8,8 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.LightVirtualFile
 
 object FileUtils {
+    private val cwfDocFileNames = setOf(UiLabelsBundle.message("codeSmellDocs"))
+
     /**
      * Opens a standalone documentation file (e.g., Code Health Monitor docs)
      * if there are no other open files and the documentation file is not already open.
@@ -30,7 +33,7 @@ object FileUtils {
 
     /**
      * Opens the given documentation file in a right-split editor.
-     * Closes any other currently opened document files that match names in `acceptedFileNames` before opening the new file.
+     * Closes any other currently opened CWF documentation files before opening the new file.
      *
      * @param file The [VirtualFile] to be opened in a right-split editor.
      */
@@ -43,7 +46,7 @@ object FileUtils {
         val docWindow =
             editorManagerEx.windows
                 .firstOrNull { editorWindow ->
-                    editorWindow.fileList.any { acceptedFileNames.contains(it.nameWithoutExtension) }
+                    editorWindow.fileList.any { cwfDocFileNames.contains(it.nameWithoutExtension) }
                 }
 
         editorManagerEx.splitters.openInRightSplit(file, false)
@@ -57,5 +60,5 @@ object FileUtils {
     private fun shouldCloseFile(
         existing: LightVirtualFile,
         new: LightVirtualFile,
-    ) = existing != new && acceptedFileNames.contains(existing.nameWithoutExtension)
+    ) = existing != new && cwfDocFileNames.contains(existing.nameWithoutExtension)
 }

@@ -11,8 +11,6 @@ object Constants {
     const val CODESCENE_SERVER_URL = "https://codescene.io"
     const val DOCUMENTATION_URL = "$CODESCENE_SERVER_URL/docs/"
     const val EXAMPLE_SERVER_URL = "https://domain.com"
-    const val DOCUMENTATION_BASE_PATH = "docs/"
-    const val ISSUES_PATH = "${DOCUMENTATION_BASE_PATH}issues/"
     const val STYLE_BASE_PATH = "styles/"
     const val IMAGES_BASE_PATH = "images/"
     const val LOGO_PATH = "${IMAGES_BASE_PATH}logo.svg"
@@ -51,7 +49,6 @@ object Constants {
     const val ERROR_NOTIFICATION_GROUP = "CodeScene Error"
 
     // ACE constants
-    const val ACE_ACKNOWLEDGEMENT_FILE = "ace-info.md"
     const val ACE_STATUS = "CodeScene ACE Status"
     const val ACE_NOTIFICATION_GROUP = "CodeScene ACE"
     const val ACE_REFACTORING_SUGGESTION = "Refactoring suggestion"
@@ -119,7 +116,6 @@ object Constants {
     const val RETRY = "Retry ACE activation"
 
     // Feature flags
-    const val CWF_FLAG = "FEATURE_CWF"
     const val CWF_DEVMODE_FLAG = "FEATURE_CWF_DEVMODE"
     const val ACE_FLAG = "FEATURE_ACE"
 }

@@ -64,8 +64,8 @@ class WebViewInitializer : LafManagerListener {
     ): String {
         registerBrowser(view, browser)
 
-        val css = getFileContent("cs-cwf/assets/index.css")
-        val js = getFileContent("cs-cwf/assets/index.js")
+        val css = getFileContent("cs-cwf/index.css")
+        val js = getFileContent("cs-cwf/index.js")
 
         return """
             <!DOCTYPE html>

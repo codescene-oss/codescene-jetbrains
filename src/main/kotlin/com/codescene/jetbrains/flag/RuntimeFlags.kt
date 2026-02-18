@@ -18,10 +18,7 @@ object RuntimeFlags {
                 ?: false
 
     val cwfFeature
-        get() =
-            System.getProperty(Constants.CWF_FLAG)?.toBoolean()
-                ?: props.getProperty("feature.cwf")?.toBoolean()
-                ?: false
+        get() = true
 
     val aceFeature
         get() =

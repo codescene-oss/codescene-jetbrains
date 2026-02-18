@@ -127,20 +127,6 @@ Alternatively, you can run the following command:
 ./gradlew runIde
 ```
 
-## Documentation management
-
-The documentation for the extension, including details about code smells and other features, is maintained in a
-centralized repository: the _IDE Protocol repository_. This ensures consistency and reduces redundancy across different
-IDE extensions (e.g., Visual Studio Code).
-
-To fetch the latest documentation for local development, run the following command:
-
-```bash
-./gradlew fetchDocs
-```
-
-**Note:** Access to the documentation repository currently requires appropriate permissions.
-
 ## Webview Framework (CWF) management
 
 The Centralized Webviews Framework (CWF) used by the extension, which provides shared webview components across all supported IDEs, is maintained in a private repository.
@@ -160,11 +146,7 @@ Feature flags allow you to enable or disable experimental functionality without 
 
 ### How feature flags work
 
-Feature flags are defined in `src/main/resources/feature-flags.properties` using placeholders, for example:
-
-```
-feature.cwf=${FEATURE_CWF}
-```
+Feature flags are defined in `src/main/resources/feature-flags.properties` using placeholders.
 
 During the build, Gradle replaces these placeholders with actual values. This is done in the `processResources` task.
 
@@ -175,7 +157,7 @@ The generated file is packaged inside the plugin. At runtime, the plugin reads t
 To test feature flags locally using the JetBrains Gradle plugin, pass the flags when launching the sandboxed IDE:
 
 ```bash
-./gradlew runIde -PFEATURE_CWF=true -PFEATURE_CWF_DEVMODE=true
+./gradlew runIde -PFEATURE_CWF_DEVMODE=true
 ```
 
 ### Using feature flags when building the plugin (buildPlugin)
@@ -183,7 +165,7 @@ To test feature flags locally using the JetBrains Gradle plugin, pass the flags 
 Feature flags can also be set during the plugin build so that the resulting plugin artifact contains the desired configuration. For example:
 
 ```bash
-./gradlew buildPlugin -PFEATURE_CWF=true -PFEATURE_CWF_DEVMODE=false
+./gradlew buildPlugin -PFEATURE_CWF_DEVMODE=false
 ```
 
 If a property is not provided, it defaults to false.
@@ -191,7 +173,6 @@ If a property is not provided, it defaults to false.
 | Flag name           | Description                                                                        |
 | ------------------- | ---------------------------------------------------------------------------------- |
 | FEATURE_ACE         | Enables ACE.                                                                       |
-| FEATURE_CWF         | Enables the new UI (Centralized Webiews Framework).                                |
 | FEATURE_CWF_DEVMODE | Allows easier debugging of CWF payloads, enables opening devtools in the webviews. |
 
 ## Project structure
