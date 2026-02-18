@@ -196,11 +196,9 @@ tasks {
         classpath += sourceSets["main"].runtimeClasspath
 
         val devMode = project.properties["FEATURE_CWF_DEVMODE"]?.toString()?.toBoolean() ?: false
-        val featureCwf = project.properties["FEATURE_CWF"]?.toString()?.toBoolean() ?: false
         val featureACE = project.properties["FEATURE_ACE"]?.toString()?.toBoolean() ?: false
 
         systemProperty("FEATURE_CWF_DEVMODE", devMode)
-        systemProperty("FEATURE_CWF", featureCwf)
         systemProperty("FEATURE_ACE", featureACE)
     }
 
@@ -211,7 +209,6 @@ tasks {
 
     buildPlugin {
         dependsOn("fetchCwf")
-        dependsOn("fetchDocs")
         dependsOn("processResources")
     }
 }
@@ -243,20 +240,12 @@ intellijPlatformTesting {
 tasks.processResources {
     // Only use properties if explicitly set via -P flag, default to "false" otherwise
     val aceProperty = project.findProperty("FEATURE_ACE")
-    val cwfProperty = project.findProperty("FEATURE_CWF")
     val cwfDevmodeProperty = project.findProperty("FEATURE_CWF_DEVMODE")
 
-    // Include properties as inputs so cache is invalidated when they change
     inputs.property("FEATURE_ACE", aceProperty ?: "false")
-    inputs.property("FEATURE_CWF", cwfProperty ?: "false")
     inputs.property("FEATURE_CWF_DEVMODE", cwfDevmodeProperty ?: "false")
 
     filesMatching("feature-flags.properties") {
-        val featureCwf =
-            cwfProperty?.let { cwf ->
-                cwf.toString().takeIf { it.isNotBlank() } ?: "false"
-            } ?: "false"
-
         val featureCwfDevMode =
             cwfDevmodeProperty?.let { devMode ->
                 devMode.toString().takeIf { it.isNotBlank() } ?: "false"
@@ -269,40 +258,8 @@ tasks.processResources {
 
         expand(
             "FEATURE_ACE" to featureAce,
-            "FEATURE_CWF" to featureCwf,
             "FEATURE_CWF_DEVMODE" to featureCwfDevMode,
         )
-    }
-}
-
-tasks.register("fetchDocs") {
-    group = "codescene assets"
-    description = "Get the docs asset from the latest GitHub release."
-
-    val assetName = "docs"
-    val assetType = assetName
-    val user = "empear-analytics"
-    val repo = "codescene-ide-protocol"
-    val token =
-        if (System.getenv("CI") == "true") {
-            System.getenv("CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN")
-        } else {
-            System.getenv("GH_PACKAGE_TOKEN")
-        }
-
-    doLast {
-        val apiUrl = "https://api.github.com/repos/$user/$repo/releases"
-
-        val releasesJson =
-            run {
-                val url = URI.create(apiUrl).toURL()
-                val connection = url.openConnection() as HttpURLConnection
-                connection.setRequestProperty("Authorization", "token $token")
-                connection.inputStream.reader().readText()
-            }
-
-        val (tag, assetUrl) = parseResponse(releasesJson, assetName)
-        saveAsset(tag, assetUrl, token, assetType)
     }
 }
 
@@ -350,12 +307,12 @@ fun parseResponse(
 
     val assets = release["assets"] as List<Map<String, Any>>
 
-    val latest = if (assetName == "docs") "$assetName.zip" else "$assetName-$tag.zip"
-    val docsAsset =
+    val latest = "$assetName-$tag.zip"
+    val asset =
         assets.find { (it["name"] as String) == latest }
-            ?: throw GradleException("No docs found in the latest release.")
+            ?: throw GradleException("No $assetName found in the latest release.")
 
-    val assetUrl = docsAsset["url"] as String
+    val assetUrl = asset["url"] as String
 
     logger.trace("Found $assetName for release: $tag")
 
@@ -410,16 +367,14 @@ fun unzip(
     ZipInputStream(zipFile.inputStream()).use { zis ->
         var entry = zis.nextEntry
 
-        val topLevel = entry?.name?.split("/")?.firstOrNull() ?: ""
-
         while (entry != null) {
-            // Remove top-level folder if it's redundant (like "docs/")
             val relativePath =
-                if (topLevel.contains("docs") && entry.name.startsWith("$topLevel/")) {
-                    entry.name.removePrefix("$topLevel/")
-                } else {
-                    entry.name
-                }
+                entry.name
+                    .split("/")
+                    .drop(1)
+                    .joinToString("/")
+                    .takeIf { it.isNotEmpty() }
+                    ?: entry.name
 
             val outFile = File(outputDir, relativePath)
 

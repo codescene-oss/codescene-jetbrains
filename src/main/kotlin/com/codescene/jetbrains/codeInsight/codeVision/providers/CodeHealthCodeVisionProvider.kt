@@ -5,22 +5,16 @@ import com.codescene.data.review.Review
 import com.codescene.jetbrains.CodeSceneIcons.CODE_HEALTH
 import com.codescene.jetbrains.codeInsight.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.codeInsight.codeVision.CodeVisionCodeSmell
-import com.codescene.jetbrains.components.codehealth.monitor.CodeHealthMonitorPanel
-import com.codescene.jetbrains.flag.RuntimeFlags
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
-import com.codescene.jetbrains.util.Constants.CODESCENE
 import com.codescene.jetbrains.util.Constants.GENERAL_CODE_HEALTH
 import com.codescene.jetbrains.util.HealthDetails
 import com.codescene.jetbrains.util.getCachedDelta
 import com.codescene.jetbrains.util.getCodeHealth
 import com.codescene.jetbrains.util.handleOpenGeneralDocs
-import com.codescene.jetbrains.util.selectNode
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
-import com.intellij.openapi.wm.ToolWindowManager
-import javax.swing.JTree
 
 const val HEALTH_SCORE = "Health Score"
 
@@ -81,30 +75,7 @@ internal class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
         codeSmell: CodeVisionCodeSmell,
     ) {
         editor.project?.let {
-            if (RuntimeFlags.cwfFeature) {
-                handleOpenGeneralDocs(it, GENERAL_CODE_HEALTH, DocsEntryPoint.CODE_VISION)
-            } else {
-                handleOpenNativeDocs(editor)
-            }
-        }
-    }
-
-    private fun handleOpenNativeDocs(editor: Editor) {
-        val project = editor.project!!
-        val toolWindowManager = ToolWindowManager.getInstance(project)
-
-        val nodeSelected =
-            CodeHealthMonitorPanel
-                .getInstance(editor.project!!)
-                .contentPanel.components
-                .filterIsInstance<JTree>()
-                .firstOrNull()
-                ?.let { selectNode(it, editor.virtualFile.path) } ?: false
-
-        if (!nodeSelected) {
-            handleOpenGeneralDocs(project, GENERAL_CODE_HEALTH, DocsEntryPoint.CODE_VISION)
-        } else {
-            toolWindowManager.getToolWindow(CODESCENE)?.show()
+            handleOpenGeneralDocs(it, GENERAL_CODE_HEALTH, DocsEntryPoint.CODE_VISION)
         }
     }
 }

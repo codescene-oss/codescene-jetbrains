@@ -7,10 +7,7 @@ import com.codescene.jetbrains.components.webview.data.shared.RangeCamelCase
 import com.codescene.jetbrains.components.webview.data.view.DocsData
 import com.codescene.jetbrains.components.webview.util.nameDocMap
 import com.codescene.jetbrains.components.webview.util.openDocs
-import com.codescene.jetbrains.flag.RuntimeFlags
-import com.codescene.jetbrains.services.htmlviewer.CodeSceneDocumentationViewer
 import com.codescene.jetbrains.services.htmlviewer.DocsEntryPoint
-import com.codescene.jetbrains.services.htmlviewer.DocumentationParams
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 
@@ -19,12 +16,8 @@ fun handleOpenGeneralDocs(
     source: String,
     docsEntryPoint: DocsEntryPoint,
 ) {
-    if (RuntimeFlags.cwfFeature) {
-        val doc = nameDocMap[source] ?: return
-        handleOpenGeneralCwfDocs(project, doc, docsEntryPoint)
-    } else {
-        handleOpenGeneralNativeDocs(project, source)
-    }
+    val doc = nameDocMap[source] ?: return
+    handleOpenGeneralCwfDocs(project, doc, docsEntryPoint)
 }
 
 fun handleOpenDocs(
@@ -32,13 +25,7 @@ fun handleOpenDocs(
     codeSmell: CodeVisionCodeSmell,
     source: DocsEntryPoint,
 ) {
-    editor?.let {
-        if (RuntimeFlags.cwfFeature) {
-            handleOpenCwfDocs(editor, codeSmell, source)
-        } else {
-            handleOpenNativeDocs(editor, codeSmell, source)
-        }
-    }
+    editor?.let { handleOpenCwfDocs(it, codeSmell, source) }
 }
 
 fun handleOpenCwfDocs(
@@ -70,27 +57,6 @@ fun handleOpenCwfDocs(
     openDocs(docsData, project, source)
 }
 
-// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
-fun handleOpenNativeDocs(
-    editor: Editor,
-    codeSmell: CodeVisionCodeSmell,
-    source: DocsEntryPoint,
-) {
-    val project = editor.project ?: return
-    val docViewer = CodeSceneDocumentationViewer.getInstance(project)
-
-    docViewer.open(
-        editor,
-        DocumentationParams(
-            codeSmell.category,
-            editor.virtualFile.name,
-            editor.virtualFile.path,
-            codeSmell.highlightRange.startLine,
-            source,
-        ),
-    )
-}
-
 fun handleOpenGeneralCwfDocs(
     project: Project,
     docType: String,
@@ -103,16 +69,4 @@ fun handleOpenGeneralCwfDocs(
         )
 
     openDocs(docsData, project, entryPoint)
-}
-
-// TODO[CWF-DELETE]: Remove once CWF is fully rolled out
-fun handleOpenGeneralNativeDocs(
-    project: Project,
-    source: String,
-) {
-    val docViewer = CodeSceneDocumentationViewer.getInstance(project)
-    val editor = getSelectedTextEditor(project, "")
-
-    val params = DocumentationParams(heading = source)
-    docViewer.open(editor, params)
 }

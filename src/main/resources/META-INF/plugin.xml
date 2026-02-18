@@ -18,31 +18,6 @@
                 description="Open the settings dialog"
                 class="com.codescene.jetbrains.actions.ShowSettingsAction"/>
 
-        <action
-                text="Collapse All"
-                id="CollapseAllAction"
-                icon="AllIcons.Actions.Collapseall"
-                description="Collapse all Code Health Monitor entries"
-                class="com.codescene.jetbrains.actions.CollapseAllAction"/>
-
-        <action
-                id="ShowDocumentationAction"
-                text="CodeScene: Code Health Monitoring Help"
-                icon="com.codescene.jetbrains.CodeSceneIcons.HELP"
-                class="com.codescene.jetbrains.actions.ShowDocumentationAction"/>
-
-        <group id="CodeSceneToolWindowSortGroup">
-            <group id="CodeHealthMonitorSortGroupActions" icon="AllIcons.ObjectBrowser.SortByType" popup="true"
-                   text="Sort Files By...">
-                <separator text="Sort By"/>
-                <action id="SortByScoreChangeAscending"
-                        class="com.codescene.jetbrains.actions.CodeHealthMonitorSortGroupActions$SortByScoreChangeAscending"/>
-                <action id="SortByScoreChangeDescending"
-                        class="com.codescene.jetbrains.actions.CodeHealthMonitorSortGroupActions$SortByScoreChangeDescending"/>
-                <action id="SortByFileName"
-                        class="com.codescene.jetbrains.actions.CodeHealthMonitorSortGroupActions$SortByFileName"/>
-            </group>
-        </group>
     </actions>
 
     <extensions defaultExtensionNs="com.intellij">
@@ -64,12 +39,6 @@
 
         <toolWindow
                 id="CodeScene"
-                icon="com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW"
-                factoryClass="com.codescene.jetbrains.components.window.CodeSceneToolWindowFactory"/>
-
-        <!-- TODO: replace CodeSceneCwf with CodeScene once CWF is rolled out publicly.-->
-        <toolWindow
-                id="CodeSceneCwf"
                 icon="com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW"
                 factoryClass="com.codescene.jetbrains.components.window.HomeToolWindowFactory"/>
 
@@ -140,8 +109,6 @@
         <codeInsight.codeVisionProvider
                 implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.AceCodeVisionProvider"/>
 
-        <fileEditorProvider
-                implementation="com.codescene.jetbrains.fileeditor.CodeSceneFileEditorProvider"/>
         <fileEditorProvider
                 implementation="com.codescene.jetbrains.fileeditor.documentation.CwfDocsFileEditorProvider"/>
         <fileEditorProvider

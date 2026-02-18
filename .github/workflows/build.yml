@@ -79,7 +79,7 @@ jobs:
 
       # Build plugin
       - name: Build plugin
-        run: ./gradlew buildPlugin -PFEATURE_ACE=${{ secrets.FEATURE_ACE }} -PFEATURE_CWF=${{ secrets.FEATURE_CWF }} -PFEATURE_CWF_DEVMODE=${{ secrets.FEATURE_CWF_DEVMODE }}
+        run: ./gradlew buildPlugin -PFEATURE_ACE=${{ secrets.FEATURE_ACE }} -PFEATURE_CWF_DEVMODE=${{ secrets.FEATURE_CWF_DEVMODE }}
 
       # Prepare plugin archive content for creating artifact
       - name: Prepare Plugin Artifact

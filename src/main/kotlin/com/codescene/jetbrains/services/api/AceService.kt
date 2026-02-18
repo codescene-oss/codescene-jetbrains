@@ -24,7 +24,6 @@ import com.codescene.jetbrains.util.getActivatedAceStatus
 import com.codescene.jetbrains.util.handleAceStatusChange
 import com.codescene.jetbrains.util.handleRefactoringResult
 import com.codescene.jetbrains.util.openAceErrorView
-import com.codescene.jetbrains.util.showErrorNotification
 import com.codescene.jetbrains.util.updateCurrentAceView
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
@@ -52,11 +51,6 @@ data class RefactoredFunction(
 class AceService :
     BaseService(),
     Disposable {
-    // TODO[CWF-DELETE]: Remove once CWF is fully rolled out
-    // TODO: remove as it is not needed in CWF anymore
-    var lastFunctionToRefactor: FnToRefactor? = null
-        private set
-
     private val refactoringScope = CoroutineScope(Dispatchers.IO)
     private val refactorableFunctionsScope = CoroutineScope(Dispatchers.IO)
     private val serviceImplementation: String = this::class.java.simpleName
@@ -135,7 +129,6 @@ class AceService :
         options: RefactoringOptions? = null,
     ) {
         val (project, _, function, source) = params
-        lastFunctionToRefactor = function
         Log.debug(
             "Initiating refactor for function ${function!!.name}, " +
                 "with refactoring targets: ${function.refactoringTargets}...",
@@ -163,11 +156,7 @@ class AceService :
                     Log.warn("Problem occurred during ACE refactoring: ${e.message}")
                     handleAceStatusChange(newStatus)
 
-                    if (RuntimeFlags.cwfFeature) {
-                        openAceErrorView(params.editor, params.function, project, e)
-                    } else {
-                        showErrorNotification(project, "Refactoring failed for function '${params.function?.name}'.")
-                    }
+                    openAceErrorView(params.editor, params.function, project, e)
                 }
             }
         }
