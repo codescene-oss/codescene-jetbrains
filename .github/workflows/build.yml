@@ -124,6 +124,12 @@ jobs:
       - name: Run Tests and Lint check
         run: ./gradlew check jacocoTestReport -PktlintFailOnError=true
 
+      - name: Publish Test Results
+        if: ${{ always() && !cancelled() }}
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: build/test-results/test/**/*.xml
+
       - name: Check code coverage
         uses: ./.github/actions/check-coverage
         if: ${{ success() }}
