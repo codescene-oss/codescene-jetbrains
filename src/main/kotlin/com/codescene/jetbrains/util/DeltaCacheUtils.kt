@@ -7,10 +7,11 @@ import com.codescene.jetbrains.services.cache.DeltaCacheService
 import com.intellij.openapi.editor.Editor
 
 fun getCachedDelta(editor: Editor): Pair<Boolean, Delta?> {
-    val project = editor.project!!
+    val project = editor.project ?: return Pair(false, null)
+    val virtualFile = editor.virtualFile ?: return Pair(false, null)
 
-    val oldCode = GitService.getInstance(project).getBranchCreationCommitCode(editor.virtualFile)
-    val cacheQuery = DeltaCacheQuery(editor.virtualFile.path, oldCode, editor.document.text)
+    val oldCode = GitService.getInstance(project).getBranchCreationCommitCode(virtualFile)
+    val cacheQuery = DeltaCacheQuery(virtualFile.path, oldCode, editor.document.text)
 
     return DeltaCacheService
         .getInstance(project)
