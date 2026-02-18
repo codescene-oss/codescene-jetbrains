@@ -29,9 +29,8 @@ env:
   GH_USERNAME: ${{ secrets.GH_USERNAME }}
   GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
   CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN: ${{ secrets.CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN }}
-  
-jobs:
 
+jobs:
   # Prepare environment and build the plugin
   build:
     name: Build
@@ -41,7 +40,6 @@ jobs:
       changelog: ${{ steps.properties.outputs.changelog }}
       pluginVerifierHomeDir: ${{ steps.properties.outputs.pluginVerifierHomeDir }}
     steps:
-
       # Check out the current repository
       - name: Fetch Sources
         uses: actions/checkout@v4
@@ -72,7 +70,7 @@ jobs:
 
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "pluginVerifierHomeDir=~/.pluginVerifier" >> $GITHUB_OUTPUT
-          
+
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -89,7 +87,7 @@ jobs:
           cd ${{ github.workspace }}/build/distributions
           FILENAME=`ls *.zip`
           unzip "$FILENAME" -d content
-          
+
           echo "filename=${FILENAME:0:-4}" >> $GITHUB_OUTPUT
 
       # Store already-built plugin as an artifact for downloading
@@ -102,10 +100,9 @@ jobs:
   # Run tests and upload a code coverage report
   test:
     name: Test
-    needs: [ build ]
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
-
       # Check out the current repository
       - name: Fetch Sources
         uses: actions/checkout@v4
@@ -123,7 +120,15 @@ jobs:
 
       # Run tests and Lint check
       - name: Run Tests and Lint check
-        run: ./gradlew check -PktlintlintFailOnError=true
+        run: ./gradlew check jacocoTestReport -PktlintFailOnError=true
+
+      - name: Check code coverage
+        uses: ./.github/actions/check-coverage
+        if: always()
+        with:
+          access-token: ${{ secrets.CODESCENE_CODE_COVERAGE_API_TOKEN }}
+          project-url: "https://api.codescene.io/v2/projects/63256"
+          coverage-files: "**/build/reports/jacoco/test/jacocoTestReport.xml"
 
       # Collect Tests Result of failed tests
       - name: Collect Tests Result
@@ -136,10 +141,9 @@ jobs:
   # Run plugin structure verification along with IntelliJ Plugin Verifier
   verify:
     name: Verify plugin
-    needs: [ build ]
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
-
       # Free GitHub Actions Environment Disk Space
       - name: Maximize Build Space
         uses: jlumbroso/free-disk-space@main
@@ -219,10 +223,9 @@ jobs:
   # Check dependencies for vulnerabilities
   dependency-check:
     name: Dependency check
-    needs: [ build ]
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
-
       # Check out the current repository
       - name: Fetch Sources
         uses: actions/checkout@v4
@@ -232,9 +235,9 @@ jobs:
         uses: dependency-check/Dependency-Check_Action@main
         id: Depcheck
         with:
-          project: 'codescene-jetbrains'
-          path: '.'
-          format: 'HTML'
+          project: "codescene-jetbrains"
+          path: "."
+          format: "HTML"
           args: >
             --failOnCVSS 5
             --ossIndexUsername ${{ secrets.DEPENDENCY_CHECK_API_USERNAME }}
@@ -253,12 +256,11 @@ jobs:
   releaseDraft:
     name: Release draft
     if: github.event_name != 'pull_request'
-    needs: [ build, test, verify, dependency-check]
+    needs: [build, test, verify, dependency-check]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-
       # Check out the current repository
       - name: Fetch Sources
         uses: actions/checkout@v4

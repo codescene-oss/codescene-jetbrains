@@ -14,6 +14,7 @@ plugins {
     alias(libs.plugins.intelliJPlatform) // IntelliJ Platform Gradle Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.ktlint)
+    jacoco
     kotlin("plugin.serialization") version "2.2.0"
 }
 
@@ -210,6 +211,12 @@ tasks {
     buildPlugin {
         dependsOn("fetchCwf")
         dependsOn("processResources")
+    }
+
+    jacocoTestReport {
+        reports {
+            xml.required.set(true)
+        }
     }
 }
 

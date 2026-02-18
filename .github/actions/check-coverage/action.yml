@@ -1,0 +1,30 @@
+name: "Check Coverage"
+description: "Used to check coverage data during build"
+inputs:
+  access-token:
+    description: "The access token for the CodeScene project"
+    required: true
+  project-url:
+    description: "The URL of the CodeScene project"
+    required: true
+  coverage-files:
+    description: "The coverage files to check"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Install cs tool
+      shell: pwsh
+      run: curl https://downloads.codescene.io/enterprise/cli/install-cs-coverage-tool.sh | bash -s -- -y
+
+    - name: Add ~/.local/bin to PATH
+      shell: pwsh
+      run: |
+        "$HOME\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    - name: Upload coverage data to CodeScene
+      shell: pwsh
+      run: 'cs-coverage check --verbose --coverage-files "${{ inputs.coverage-files }}"'
+      env:
+        CS_PROJECT_URL: ${{ inputs.project-url }}
+        CS_ACCESS_TOKEN: ${{ inputs.access-token }}

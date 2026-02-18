@@ -1,0 +1,67 @@
+name: Code Coverage (generate data and trigger analysis)
+
+on:
+  schedule:
+    - cron: "0 4 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GH_USERNAME: ${{ secrets.GH_USERNAME }}
+  GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
+  CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN: ${{ secrets.CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN }}
+
+jobs:
+  code-coverage-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run tests with coverage
+        run: ./gradlew fetchCwf test jacocoTestReport -PFEATURE_ACE=${{ secrets.FEATURE_ACE }} -PFEATURE_CWF_DEVMODE=${{ secrets.FEATURE_CWF_DEVMODE }}
+
+      - name: Upload line coverage data
+        if: always()
+        uses: ./.github/actions/upload-coverage
+        with:
+          cs-token: ${{ secrets.CODESCENE_CODE_COVERAGE_API_TOKEN }}
+          format: jacoco
+          metric: line-coverage
+          file: ./build/reports/jacoco/test/jacocoTestReport.xml
+
+      - name: Upload branch coverage data
+        if: always()
+        uses: ./.github/actions/upload-coverage
+        with:
+          cs-token: ${{ secrets.CODESCENE_CODE_COVERAGE_API_TOKEN }}
+          format: jacoco
+          metric: branch-coverage
+          file: ./build/reports/jacoco/test/jacocoTestReport.xml
+
+  trigger-analysis:
+    runs-on: ubuntu-24.04
+    needs: [code-coverage-data]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Trigger CodeScene project analysis
+        env:
+          CS_TOKEN: ${{ secrets.CODESCENE_CODE_COVERAGE_API_TOKEN }}
+          CS_PROJECT_ID: 63256
+        run: |
+          curl --fail -X POST -H "Authorization: Bearer $CS_TOKEN" https://api.codescene.io/v2/projects/${CS_PROJECT_ID}/run-analysis

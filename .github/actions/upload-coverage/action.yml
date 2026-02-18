@@ -1,0 +1,27 @@
+name: "Upload Coverage"
+description: "Used to upload coverage data to CodeScene"
+inputs:
+  cs-token:
+    required: true
+  format:
+    required: true
+  metric:
+    required: true
+  file:
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Install cs tool
+      shell: bash
+      run: curl https://downloads.codescene.io/enterprise/cli/install-cs-coverage-tool.sh | bash -s -- -y
+
+    - name: Add ~/.local/bin to PATH
+      shell: bash
+      run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Upload coverage data to CodeScene
+      shell: bash
+      run: cs-coverage upload --format ${{ inputs.format }} --metric ${{ inputs.metric }} ${{ inputs.file }}
+      env:
+        CS_ACCESS_TOKEN: ${{ inputs.cs-token }}
