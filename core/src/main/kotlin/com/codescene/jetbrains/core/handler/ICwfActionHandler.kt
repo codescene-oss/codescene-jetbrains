@@ -1,0 +1,33 @@
+package com.codescene.jetbrains.core.handler
+
+import com.codescene.jetbrains.core.models.message.GotoFunctionLocation
+import com.codescene.jetbrains.core.models.message.OpenDocsForFunction
+import com.codescene.jetbrains.core.models.message.RequestAndPresentRefactoring
+
+interface ICwfActionHandler {
+    fun handleInit(payload: String?)
+
+    fun handleShowDiff()
+
+    fun handleOpenUrl(url: String)
+
+    fun handleOpenSettings()
+
+    fun handleGotoFunctionLocation(location: GotoFunctionLocation)
+
+    fun handleClose()
+
+    fun handleRetry()
+
+    fun handleCopy()
+
+    fun handleApply()
+
+    fun handleReject()
+
+    fun handleAcknowledged()
+
+    fun handleOpenDocs(docsForFunction: OpenDocsForFunction)
+
+    fun handleRequestAndPresentRefactoring(request: RequestAndPresentRefactoring)
+}

@@ -1,0 +1,87 @@
+package com.codescene.jetbrains.core.util
+
+object Constants {
+    const val CODESCENE = "CodeScene"
+    const val CODESCENE_SERVER_URL = "https://codescene.io"
+    const val DOCUMENTATION_URL = "$CODESCENE_SERVER_URL/docs/"
+    const val EXAMPLE_SERVER_URL = "https://domain.com"
+    const val CODESCENE_URL = "https://codescene.com"
+    const val CODE_HEALTH_URL = "${DOCUMENTATION_URL}guides/technical/code-health.html"
+    const val TERMS_AND_CONDITIONS_URL = "$CODESCENE_URL/policies"
+    const val CONTACT_URL = "$CODESCENE_URL/company/contact-us"
+    const val CONTACT_US_ABOUT_ACE_URL = "${CODESCENE_URL}/contact-us-about-codescene-ace"
+    const val FREE_TRIAL_URL =
+        "$CODESCENE_URL/product/free-trial" +
+            "?trial-experiment-variant=free_trial_landing_page_with_form"
+    const val SUPPORT_URL = "https://supporthub.codescene.com/kb-tickets/new"
+    const val AI_PRINCIPLES_URL = "$CODESCENE_URL/product/ace/principles"
+
+    const val REPOSITORY_URL = "https://github.com/codescene-oss/codescene-jetbrains"
+    const val TELEMETRY_SAMPLES_URL =
+        "$REPOSITORY_URL/tree/master/src/main/resources/telemetrySamples"
+    const val TELEMETRY_EVENTS_URL =
+        "$REPOSITORY_URL/tree/master/src/main/kotlin/com/codescene/jetbrains/core/util/TelemetryEvents.kt"
+
+    const val GENERAL_CODE_HEALTH = "General Code Health"
+    const val CODE_HEALTH_MONITOR = "Code Health Monitor"
+    const val REVIEW = "review"
+    const val DELTA = "delta"
+    const val ACE = "ace"
+
+    const val ACE_REFACTORING_SUGGESTION = "Refactoring suggestion"
+    const val ACE_REFACTORING_RECOMMENDATION = "Refactoring recommendation"
+    const val ACE_REFACTORING_RESULTS = "Refactoring results"
+    const val ACE_ACKNOWLEDGEMENT = "CodeScene ACE Auto-Refactoring"
+
+    const val BRAIN_CLASS = "Brain Class"
+    const val BRAIN_METHOD = "Brain Method"
+    const val BUMPY_ROAD_AHEAD = "Bumpy Road Ahead"
+    const val COMPLEX_CONDITIONAL = "Complex Conditional"
+    const val COMPLEX_METHOD = "Complex Method"
+    const val CONSTRUCTOR_OVER_INJECTION = "Constructor Over Injection"
+    const val DUPLICATED_ASSERTION_BLOCKS = "Duplicated Assertion Blocks"
+    const val CODE_DUPLICATION = "Code Duplication"
+    const val FILE_SIZE_ISSUE = "File Size Issue"
+    const val EXCESS_NUMBER_OF_FUNCTION_ARGUMENTS = "Excess Number of Function Arguments"
+    const val NUMBER_OF_FUNCTIONS_IN_A_SINGLE_MODULE = "Number of Functions in a Single Module"
+    const val GLOBAL_CONDITIONALS = "Global Conditionals"
+    const val DEEP_GLOBAL_NESTED_COMPLEXITY = "Deep, Global Nested Complexity"
+    const val HIGH_DEGREE_OF_CODE_DUPLICATION = "High Degree of Code Duplication"
+    const val LARGE_ASSERTION_BLOCKS = "Large Assertion Blocks"
+    const val LARGE_EMBEDDED_CODE_BLOCK = "Large Embedded Code Block"
+    const val LARGE_METHOD = "Large Method"
+    const val LINES_OF_CODE_IN_A_SINGLE_FILE = "Lines of Code in a Single File"
+    const val LINES_OF_DECLARATION_IN_A_SINGLE_FILE = "Lines of Declaration in a Single File"
+    const val LOW_COHESION = "Low Cohesion"
+    const val MISSING_ARGUMENTS_ABSTRACTIONS = "Missing Arguments Abstractions"
+    const val MODULARITY_ISSUE = "Modularity Issue"
+    const val DEEP_NESTED_COMPLEXITY = "Deep, Nested Complexity"
+    const val OVERALL_CODE_COMPLEXITY = "Overall Code Complexity"
+    const val POTENTIALLY_LOW_COHESION = "Potentially Low Cohesion"
+    const val PRIMITIVE_OBSESSION = "Primitive Obsession"
+    const val STRING_HEAVY_FUNCTION_ARGUMENTS = "String Heavy Function Arguments"
+
+    const val IDE_TYPE = "JetBrains"
+    val ALLOWED_DOMAINS =
+        listOf(
+            "https://refactoring.com",
+            "https://en.wikipedia.org",
+            "https://codescene.io",
+            "https://codescene.com",
+            "https://blog.ploeh.dk/2018/08/27/on-constructor-over-injection/",
+            "https://supporthub.codescene.com",
+        )
+    const val DELTA_ANALYSIS_JOB = "deltaAnalysis"
+    const val AUTO_REFACTOR_JOB = "autoRefactor"
+    const val JOB_STATE_RUNNING = "running"
+    const val JOB_STATE_QUEUED = "queued"
+
+    const val SIGNED_IN = "CodeScene ACE is active"
+    const val SIGNED_OUT = "Configure ACE auth token in extension settings"
+    const val DEACTIVATED = "Enable ACE in the extension settings"
+    const val OUT_OF_CREDITS = "Out of ACE credits"
+    const val RETRY = "Retry ACE activation"
+
+    const val CWF_DEVMODE_FLAG = "FEATURE_CWF_DEVMODE"
+    const val ACE_FLAG = "FEATURE_ACE"
+}
