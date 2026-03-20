@@ -91,18 +91,15 @@ You can also run the build task from the Gradle menu in your IDE.
 
 The Makefile provides development targets for build, test, format, and CodeScene delta analysis. [Babashka](https://babashka.org) must be installed first.
 
-| Target                   | Description                                              |
-| ------------------------ | -------------------------------------------------------- |
-| `make build`             | Build the plugin                                         |
-| `make test`              | Run all tests (cached)                                   |
-| `make test-mine`         | Run tests for changed Kotlin files only (cached)         |
-| `make format-mine`       | Format changed Kotlin files (cached)                     |
-| `make format-all`        | Format all Kotlin files with ktlint (cached)             |
-| `make format-check`      | Check format of all Kotlin files (cached)                |
-| `make format-check-mine` | Check format of changed files only                       |
-| `make delta`             | Run CodeScene delta analysis (requires `cs` CLI, cached) |
-| `make install-cli`       | Install CodeScene CLI (`cs`)                             |
-| `make iter`              | Build and run tests for changed files                    |
+| Target             | Description                                              |
+| ------------------ | -------------------------------------------------------- |
+| `make build`       | Build the plugin (cached)                                |
+| `make test`        | Run all tests                                            |
+| `make format`      | Format all Kotlin files with ktlint (both modules)       |
+| `make format-check`| Check format of all Kotlin files                         |
+| `make delta`       | Run CodeScene delta analysis (requires `cs` CLI)         |
+| `make install-cli` | Install CodeScene CLI (`cs`)                             |
+| `make iter`        | Run format-check, delta, build, and test                 |
 
 ### Run the plugin
 
@@ -177,22 +174,25 @@ If a property is not provided, it defaults to false.
 
 ## Project structure
 
-The CodeScene project has the following content structure:
+The CodeScene project uses a multi-module architecture with a clear separation between core business logic and platform-specific code:
 
 ```
 .
 ├── .github/                GitHub Actions workflows and Dependabot configuration files
 ├── .run/                   Predefined Run/Debug Configurations
 ├── build/                  Output build directory
+├── core/                   Core module - platform-independent business logic
+│   ├── src/main/kotlin/    Core production sources (contracts, models, services)
+│   └── src/test/kotlin/    Core tests and test doubles
 ├── gradle
 │   ├── wrapper/            Gradle Wrapper
 │   └── libs.versions.toml  Gradle version catalog
-├── src                     Plugin sources
+├── src                     Platform module - IntelliJ Platform integration
 │   ├── main
-│   │   ├── kotlin/         Kotlin production sources
+│   │   ├── kotlin/         Platform-specific Kotlin sources
 │   │   └── resources/      Resources - plugin.xml, icons, messages, docs
 │   └── test
-│       ├── kotlin/         Kotlin test sources
+│       ├── kotlin/         Platform-specific test sources
 │       └── testData/       Test data used by tests
 ├── .gitignore              Git ignoring rules
 ├── build.gradle.kts        Gradle configuration
@@ -206,8 +206,25 @@ The CodeScene project has the following content structure:
 └── settings.gradle.kts     Gradle project settings
 ```
 
-In addition to the configuration files, the most crucial part is the `src` directory, which contains our implementation
-and the manifest for our plugin – [plugin.xml][file:plugin.xml].
+### Architecture overview
+
+- **`core/`** - Contains all platform-independent business logic, including:
+  - `contracts/` - Interfaces for dependency inversion (services, caches, etc.)
+  - `models/` - Data models, settings, and view data
+  - `review/` - Code review and analysis orchestration
+  - `delta/` - Delta analysis services
+  - `handler/` - Message routing and action handling
+  - `mapper/` - Data transformation logic
+  - `util/` - Shared utilities
+  - `testdoubles/` - In-memory implementations for testing
+
+- **`src/`** - Contains IntelliJ Platform-specific code in `com.codescene.jetbrains.platform`:
+  - IDE service implementations
+  - Editor integrations (annotators, code vision, intentions)
+  - UI components (settings, tool windows, webviews)
+  - Platform-specific utilities
+
+The plugin manifest is located at [plugin.xml][file:plugin.xml].
 
 ## Predefined Run/Debug configurations
 
