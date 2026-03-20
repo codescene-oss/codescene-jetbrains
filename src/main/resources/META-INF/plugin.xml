@@ -16,120 +16,65 @@
                 id="ShowSettingsAction"
                 icon="AllIcons.General.GearPlain"
                 description="Open the settings dialog"
-                class="com.codescene.jetbrains.actions.ShowSettingsAction"/>
+                class="com.codescene.jetbrains.platform.actions.ShowSettingsAction"/>
 
     </actions>
 
     <extensions defaultExtensionNs="com.intellij">
         <iconMapper mappingFile="CodeSceneIconMappings.json"/>
 
-        <postStartupActivity implementation="com.codescene.jetbrains.listeners.ProjectStartupActivity"/>
+        <postStartupActivity implementation="com.codescene.jetbrains.platform.listeners.ProjectStartupActivity"/>
 
         <notificationGroup id="CodeScene" displayType="STICKY_BALLOON"/>
         <notificationGroup id="CodeScene Information" displayType="BALLOON"/> <!-- Short-lived notifications -->
         <notificationGroup id="CodeScene Error" displayType="BALLOON"/> <!-- Short-lived notifications -->
         <notificationGroup id="CodeScene ACE" displayType="STICKY_BALLOON"/>
 
-        <applicationService serviceImplementation="com.codescene.jetbrains.config.global.CodeSceneGlobalSettingsStore"/>
+        <applicationService serviceImplementation="com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore"/>
 
         <applicationConfigurable
                 parentId="tools"
                 displayName="CodeScene"
-                instance="com.codescene.jetbrains.components.settings.CodeSceneSettings"/>
+                instance="com.codescene.jetbrains.platform.settings.CodeSceneSettings"/>
 
         <toolWindow
                 id="CodeScene"
-                icon="com.codescene.jetbrains.CodeSceneIcons.CODESCENE_TW"
-                factoryClass="com.codescene.jetbrains.components.window.HomeToolWindowFactory"/>
+                icon="com.codescene.jetbrains.platform.icons.CodeSceneIcons.CODESCENE_TW"
+                factoryClass="com.codescene.jetbrains.platform.toolwindow.HomeToolWindowFactory"/>
 
         <!-- An empty language attribute applies to all languages -->
         <externalAnnotator
                 language=""
-                implementationClass="com.codescene.jetbrains.codeInsight.annotator.CodeSmellAnnotator"/>
+                implementationClass="com.codescene.jetbrains.platform.editor.annotator.CodeSmellAnnotator"/>
 
-        <!-- The order of code vision providers' declarations determines their display sequence in the IDE.
-             Providers listed first appear last. Adjust this order to control the hierarchy of code smell warnings shown.
-        -->
         <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.StringHeavyArgumentsCodeVisionProvider"/>
+                implementation="com.codescene.jetbrains.platform.editor.codeVision.providers.AggregatedSmellCodeVisionProvider"/>
         <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.PrimitiveObsessionCodeVisionProvider"/>
+                implementation="com.codescene.jetbrains.platform.editor.codeVision.providers.CodeHealthCodeVisionProvider"/>
         <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.PotentiallyLowCohesionCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.OverallCodeComplexityCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.FunctionsInSingleModuleCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.ModularityIssueCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.MissingAbstractionsCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.LowCohesionCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.LinesOfDeclarationInSingleFileCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.LinesOfCodeInSingleFileCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.LargeMethodCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.LargeEmbeddedCodeBlockCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.LargeAssertionBlocksCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.HighDegreeDuplicationCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.GlobalConditionalsCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.FileSizeIssueCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.FunctionArgumentsCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.DuplicatedAssertionBlocksCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.NestedComplexityCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.GlobalNestedComplexityCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.ConstructorOverInjectionCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.ComplexMethodCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.ComplexConditionalCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.DuplicationCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.BumpyRoadCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.BrainMethodCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.BrainClassCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.CodeHealthCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.codeInsight.codeVision.providers.AceCodeVisionProvider"/>
+                implementation="com.codescene.jetbrains.platform.editor.codeVision.providers.AceCodeVisionProvider"/>
 
         <fileEditorProvider
-                implementation="com.codescene.jetbrains.fileeditor.documentation.CwfDocsFileEditorProvider"/>
+                implementation="com.codescene.jetbrains.platform.fileeditor.documentation.CwfDocsFileEditorProvider"/>
         <fileEditorProvider
-                implementation="com.codescene.jetbrains.fileeditor.ace.CwfAceFileEditorProvider"/>
+                implementation="com.codescene.jetbrains.platform.fileeditor.ace.CwfAceFileEditorProvider"/>
         <fileEditorProvider
-                implementation="com.codescene.jetbrains.fileeditor.ace.acknowledge.CwfAceAcknowledgeEditorProvider"/>
+                implementation="com.codescene.jetbrains.platform.fileeditor.ace.acknowledge.CwfAceAcknowledgeEditorProvider"/>
 
         <statusBarWidgetFactory
-                implementation="com.codescene.jetbrains.components.statusbar.AceStatusBarWidgetFactory"
+                implementation="com.codescene.jetbrains.platform.statusbar.AceStatusBarWidgetFactory"
                 id="AceStatusBarWidgetFactory"
         />
 
-        <iconProvider implementation="com.codescene.jetbrains.components.icon.CodeSceneFileIconProvider"/>
+        <iconProvider implementation="com.codescene.jetbrains.platform.icons.CodeSceneFileIconProvider"/>
     </extensions>
 
     <projectListeners>
-        <listener class="com.codescene.jetbrains.listeners.FileEditorLifecycleListener"
+        <listener class="com.codescene.jetbrains.platform.listeners.FileEditorLifecycleListener"
                   topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
     </projectListeners>
     <applicationListeners>
-        <listener class="com.codescene.jetbrains.listeners.CodeSceneDynamicPluginListener"
+        <listener class="com.codescene.jetbrains.platform.listeners.CodeSceneDynamicPluginListener"
                   topic="com.intellij.ide.plugins.DynamicPluginListener"/>
     </applicationListeners>
 </idea-plugin>

@@ -23,8 +23,6 @@ version = providers.gradleProperty("pluginVersion").get()
 
 val codeSceneExtensionAPIVersion = providers.gradleProperty("codeSceneExtensionAPIVersion").get()
 val codeSceneRepository = providers.gradleProperty("codeSceneRepository").get()
-val flexmarkVersion = providers.gradleProperty("flexmarkVersion").get()
-val reflectionsVersion = providers.gradleProperty("reflectionsVersion").get()
 val mockkVersion = providers.gradleProperty("mockkVersion").get()
 val kotlinxSerializationVersion = providers.gradleProperty("kotlinxSerializationVersion").get()
 val slf4jNopVersion = providers.gradleProperty("slf4jNopVersion").get()
@@ -55,9 +53,8 @@ repositories {
 
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
-    implementation("org.reflections:reflections:$reflectionsVersion")
+    implementation(project(":core"))
     implementation("codescene.extension:api:$codeSceneExtensionAPIVersion")
-    implementation("com.vladsch.flexmark:flexmark-all:$flexmarkVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
 
     testImplementation(libs.junit)
