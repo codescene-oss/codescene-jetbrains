@@ -8,6 +8,12 @@ import org.junit.Test
 
 class CodeSmellUtilsTest {
     @Test
+    fun `readGitignore returns empty list when project path is null`() {
+        val result = readGitignore(null)
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
     fun `readGitignore returns empty list when no file exists`() {
         val dir = Files.createTempDirectory("codescene-gitignore-missing")
         val result = readGitignore(dir.toString())

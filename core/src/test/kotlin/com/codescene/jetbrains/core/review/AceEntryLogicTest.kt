@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.core.review
 
 import com.codescene.data.ace.FnToRefactor
+import com.codescene.data.ace.PreflightResponse
 import com.codescene.jetbrains.core.TestLogger
 import com.codescene.jetbrains.core.models.CurrentAceViewData
 import com.codescene.jetbrains.core.models.RefactoringRequest
@@ -13,6 +14,7 @@ import com.codescene.jetbrains.core.testdoubles.InMemoryAceRefactorableFunctions
 import com.codescene.jetbrains.core.testdoubles.InMemoryFileSystem
 import com.codescene.jetbrains.core.testdoubles.InMemorySettingsProvider
 import com.codescene.jetbrains.core.util.AceEntryPoint
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -109,16 +111,18 @@ class AceEntryLogicTest {
 
     @Test
     fun `resolveRefactoringRequest returns null when function cannot be resolved`() {
-        val result =
-            resolveRefactoringRequest(
-                fileData = FileMetaType(fn = Fn("missing", RangeCamelCase(2, 1, 1, 1)), fileName = "a.kt"),
-                source = AceEntryPoint.RETRY,
-                fnToRefactor = null,
-                fileSystem = InMemoryFileSystem(mutableMapOf("a.kt" to "content")),
-                cache = InMemoryAceRefactorableFunctionsCache(),
-                logger = TestLogger,
-            )
+        val result = resolveRequest(fnToRefactor = null)
         assertNull(result)
+    }
+
+    @Test
+    fun `resolveRefactoringRequest uses provided function directly`() {
+        val provided = mockFn("provided", "body", 5, 8)
+
+        val result = resolveRequest(fnToRefactor = provided)
+
+        assertNotNull(result)
+        assertSame(provided, result?.function)
     }
 
     @Test
@@ -132,10 +136,7 @@ class AceEntryLogicTest {
     fun `resolveAceViewUpdateParams returns stale update when function body changed`() {
         val currentFn = mockFn("f", "old", 1, 2)
         val updatedFn = mockFn("f", "new", 1, 2)
-        val current = CurrentAceViewData("a.kt", currentFn, refactorResponse = null)
-        val entry = AceRefactorableFunctionCacheEntry(filePath = "a.kt", content = "c", result = listOf(updatedFn))
-
-        val result = resolveAceViewUpdateParams(current, entry)
+        val result = resolveViewUpdate(currentFn, updatedFn)
 
         assertNotNull(result)
         assertEquals(true, result?.stale)
@@ -154,10 +155,45 @@ class AceEntryLogicTest {
     }
 
     @Test
+    fun `resolveAceViewUpdateParams returns update when range changed but body is same`() {
+        val currentFn = mockFn("f", "same", 1, 2)
+        val updatedFn = mockFn("f", "same", 3, 4)
+        val result = resolveViewUpdate(currentFn, updatedFn)
+
+        assertNotNull(result)
+        assertEquals(false, result?.stale)
+        assertSame(updatedFn, result?.function)
+    }
+
+    @Test
     fun `shouldCheckRefactorableFunctions returns false when auto refactor disabled`() =
         runBlocking {
             val settings = InMemorySettingsProvider(CodeSceneGlobalSettings(enableAutoRefactor = false))
             val aceService = mockk<com.codescene.jetbrains.core.contracts.IAceService>(relaxed = true)
+
+            val result = shouldCheckRefactorableFunctions(settings, aceService, "kt")
+            assertEquals(false, result)
+        }
+
+    @Test
+    fun `shouldCheckRefactorableFunctions returns true when extension is supported by preflight`() =
+        runBlocking {
+            val settings = InMemorySettingsProvider(CodeSceneGlobalSettings(enableAutoRefactor = true))
+            val preflight = mockk<PreflightResponse>(relaxed = true)
+            every { preflight.fileTypes } returns listOf("kt", "java")
+            val aceService = mockk<com.codescene.jetbrains.core.contracts.IAceService>()
+            coEvery { aceService.runPreflight() } returns preflight
+
+            val result = shouldCheckRefactorableFunctions(settings, aceService, "kt")
+            assertEquals(true, result)
+        }
+
+    @Test
+    fun `shouldCheckRefactorableFunctions returns false when preflight is null`() =
+        runBlocking {
+            val settings = InMemorySettingsProvider(CodeSceneGlobalSettings(enableAutoRefactor = true))
+            val aceService = mockk<com.codescene.jetbrains.core.contracts.IAceService>()
+            coEvery { aceService.runPreflight() } returns null
 
             val result = shouldCheckRefactorableFunctions(settings, aceService, "kt")
             assertEquals(false, result)
@@ -175,5 +211,24 @@ class AceEntryLogicTest {
         every { fn.range.startLine } returns startLine
         every { fn.range.endLine } returns endLine
         return fn
+    }
+
+    private fun resolveRequest(fnToRefactor: FnToRefactor?): RefactoringRequest? =
+        resolveRefactoringRequest(
+            fileData = FileMetaType(fn = Fn("missing", RangeCamelCase(2, 1, 1, 1)), fileName = "a.kt"),
+            source = AceEntryPoint.RETRY,
+            fnToRefactor = fnToRefactor,
+            fileSystem = InMemoryFileSystem(mutableMapOf("a.kt" to "content")),
+            cache = InMemoryAceRefactorableFunctionsCache(),
+            logger = TestLogger,
+        )
+
+    private fun resolveViewUpdate(
+        currentFn: FnToRefactor,
+        updatedFn: FnToRefactor,
+    ): com.codescene.jetbrains.core.models.AceCwfParams? {
+        val current = CurrentAceViewData("a.kt", currentFn, refactorResponse = null)
+        val entry = AceRefactorableFunctionCacheEntry(filePath = "a.kt", content = "c", result = listOf(updatedFn))
+        return resolveAceViewUpdateParams(current, entry)
     }
 }

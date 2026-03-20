@@ -14,6 +14,38 @@ import org.junit.Test
 
 class CodeReviewerTest {
     @Test
+    fun `reviewFile cancels previous scheduled call for same path`() {
+        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), debounceDelayMs = 200)
+        val firstExecuted = AtomicBoolean(false)
+        val secondExecuted = CountDownLatch(1)
+        val firstError = AtomicReference<FailureType?>()
+
+        reviewer.reviewFile(
+            filePath = "a.kt",
+            timeout = 2000,
+            runWithProgress = { action -> action() },
+            performAction = {
+                firstExecuted.set(true)
+            },
+            onError = { type, _ -> firstError.set(type) },
+        )
+
+        reviewer.reviewFile(
+            filePath = "a.kt",
+            timeout = 2000,
+            runWithProgress = { action -> action() },
+            performAction = {
+                secondExecuted.countDown()
+            },
+            onError = { _, _ -> },
+        )
+
+        assertTrue(secondExecuted.await(2, TimeUnit.SECONDS))
+        assertEquals(false, firstExecuted.get())
+        assertEquals(FailureType.CANCELLED, firstError.get())
+    }
+
+    @Test
     fun `reviewFile executes action and invokes lifecycle callbacks`() {
         val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), debounceDelayMs = 10)
         val scheduled = AtomicBoolean(false)
@@ -40,25 +72,7 @@ class CodeReviewerTest {
 
     @Test
     fun `reviewFile reports timeout failures`() {
-        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), debounceDelayMs = 0)
-        val error = AtomicReference<FailureType?>()
-        val done = CountDownLatch(1)
-
-        reviewer.reviewFile(
-            filePath = "a.kt",
-            timeout = 50,
-            runWithProgress = { action -> action() },
-            performAction = {
-                delay(500)
-            },
-            onError = { type, _ ->
-                error.set(type)
-            },
-            onFinished = { done.countDown() },
-        )
-
-        assertTrue(done.await(2, TimeUnit.SECONDS))
-        assertEquals(FailureType.TIMED_OUT, error.get())
+        assertErrorType(FailureType.TIMED_OUT, timeout = 50) { delay(500) }
     }
 
     @Test
@@ -120,20 +134,28 @@ class CodeReviewerTest {
 
     @Test
     fun `reviewFile reports failed action exceptions`() {
+        assertErrorType(FailureType.FAILED, timeout = 1000) { error("boom") }
+    }
+
+    private fun assertErrorType(
+        expected: FailureType,
+        timeout: Long,
+        performAction: suspend () -> Unit,
+    ) {
         val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), debounceDelayMs = 0)
         val error = AtomicReference<FailureType?>()
         val done = CountDownLatch(1)
 
         reviewer.reviewFile(
             filePath = "a.kt",
-            timeout = 1000,
+            timeout = timeout,
             runWithProgress = { action -> action() },
-            performAction = { error("boom") },
+            performAction = performAction,
             onError = { type, _ -> error.set(type) },
             onFinished = { done.countDown() },
         )
 
         assertTrue(done.await(2, TimeUnit.SECONDS))
-        assertEquals(FailureType.FAILED, error.get())
+        assertEquals(expected, error.get())
     }
 }
