@@ -1,0 +1,42 @@
+package com.codescene.jetbrains.core.telemetry
+
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+class TelemetryEventDataTest {
+    @Test
+    fun `buildTelemetryEventData prefixes event name with editor type`() {
+        val result =
+            buildTelemetryEventData(
+                editorType = "JetBrains",
+                eventName = "open",
+                data = mapOf("k" to "v"),
+                ideInfo = "idea",
+                pluginVersion = "1.0.0",
+                deviceId = "device",
+            )
+
+        assertEquals("JetBrains/open", result.eventName)
+        assertEquals("idea", result.ideInfo)
+        assertEquals("1.0.0", result.pluginVersion)
+        assertEquals("device", result.deviceId)
+        assertEquals(mapOf("k" to "v"), result.additionalProperties)
+        assertEquals("", result.userId)
+    }
+
+    @Test
+    fun `buildTelemetryEventData respects dev mode flag`() {
+        val result =
+            buildTelemetryEventData(
+                editorType = "JB",
+                eventName = "evt",
+                data = emptyMap(),
+                ideInfo = "i",
+                pluginVersion = "p",
+                deviceId = "d",
+                isDevMode = true,
+            )
+
+        assertEquals(true, result.isDevMode)
+    }
+}
