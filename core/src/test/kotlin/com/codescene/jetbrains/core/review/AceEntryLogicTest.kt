@@ -45,10 +45,10 @@ class AceEntryLogicTest {
     }
 
     @Test
-    fun `resolveAceEntryPointCommand returns skip when feature disabled`() {
-        val settings = CodeSceneGlobalSettings(enableAutoRefactor = true, aceAcknowledged = true)
+    fun `resolveAceEntryPointCommand returns skip when auto refactor disabled`() {
+        val settings = CodeSceneGlobalSettings(enableAutoRefactor = false, aceAcknowledged = true)
         val request = RefactoringRequest("a.kt", null, mockFn("f", "body", 1, 2), AceEntryPoint.RETRY)
-        val result = resolveAceEntryPointCommand(settings, aceFeatureEnabled = false, request = request)
+        val result = resolveAceEntryPointCommand(settings, request = request)
         assertEquals(AceEntryCommand.Skip, result)
     }
 
@@ -57,7 +57,7 @@ class AceEntryLogicTest {
         val settings = CodeSceneGlobalSettings(enableAutoRefactor = true, aceAcknowledged = false)
         val fn = mockFn("f", "body", 1, 2)
         val request = RefactoringRequest("a.kt", null, fn, AceEntryPoint.RETRY)
-        val result = resolveAceEntryPointCommand(settings, aceFeatureEnabled = true, request = request)
+        val result = resolveAceEntryPointCommand(settings, request = request)
         assertEquals(AceEntryCommand.OpenAcknowledgement("a.kt", fn), result)
     }
 
@@ -65,7 +65,7 @@ class AceEntryLogicTest {
     fun `resolveAceEntryPointCommand returns start refactor when acknowledged`() {
         val settings = CodeSceneGlobalSettings(enableAutoRefactor = true, aceAcknowledged = true)
         val request = RefactoringRequest("a.kt", null, mockFn("f", "body", 1, 2), AceEntryPoint.RETRY, skipCache = true)
-        val result = resolveAceEntryPointCommand(settings, aceFeatureEnabled = true, request = request)
+        val result = resolveAceEntryPointCommand(settings, request = request)
         assertEquals(AceEntryCommand.StartRefactor(request, true), result)
     }
 

@@ -14,14 +14,10 @@ class AcePreflightOrchestrator(
     private val fetchPreflight: suspend (Boolean) -> TimedResult<PreflightResponse?>,
     private val onStatusChange: (AceStatus) -> Unit,
 ) {
-    suspend fun runPreflight(
-        aceFeatureEnabled: Boolean,
-        force: Boolean = false,
-    ): PreflightResponse? {
+    suspend fun runPreflight(force: Boolean = false): PreflightResponse? {
         val settings = settingsProvider.currentState()
         val decision =
             resolveAcePreflightDecision(
-                aceFeatureEnabled = aceFeatureEnabled,
                 autoRefactorEnabled = settings.enableAutoRefactor,
                 token = settings.aceAuthToken,
                 force = force,

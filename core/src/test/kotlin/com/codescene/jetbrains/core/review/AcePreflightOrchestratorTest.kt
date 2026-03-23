@@ -50,16 +50,8 @@ class AcePreflightOrchestratorTest {
     fun `runPreflight returns response when ace and auto-refactor enabled`() =
         runBlocking {
             val orchestrator = createOrchestrator()
-            val result = orchestrator.runPreflight(aceFeatureEnabled = true)
+            val result = orchestrator.runPreflight()
             assertNotNull(result)
-        }
-
-    @Test
-    fun `runPreflight returns null when ace feature disabled`() =
-        runBlocking {
-            val orchestrator = createOrchestrator()
-            val result = orchestrator.runPreflight(aceFeatureEnabled = false)
-            assertNull(result)
         }
 
     @Test
@@ -67,23 +59,15 @@ class AcePreflightOrchestratorTest {
         runBlocking {
             val settings = CodeSceneGlobalSettings(enableAutoRefactor = false, aceAuthToken = "token")
             val orchestrator = createOrchestrator(settings = settings)
-            val result = orchestrator.runPreflight(aceFeatureEnabled = true)
+            val result = orchestrator.runPreflight()
             assertNull(result)
-        }
-
-    @Test
-    fun `runPreflight sets DEACTIVATED status when skipped`() =
-        runBlocking {
-            val orchestrator = createOrchestrator()
-            orchestrator.runPreflight(aceFeatureEnabled = false)
-            assertEquals(AceStatus.DEACTIVATED, settingsProvider.currentState().aceStatus)
         }
 
     @Test
     fun `runPreflight does not bypass cache on normal run`() =
         runBlocking {
             val orchestrator = createOrchestrator()
-            orchestrator.runPreflight(aceFeatureEnabled = true, force = false)
+            orchestrator.runPreflight(force = false)
             assertEquals(false, fetchBypassCache)
         }
 
@@ -91,7 +75,7 @@ class AcePreflightOrchestratorTest {
     fun `runPreflight bypasses cache on forced run`() =
         runBlocking {
             val orchestrator = createOrchestrator()
-            orchestrator.runPreflight(aceFeatureEnabled = true, force = true)
+            orchestrator.runPreflight(force = true)
             assertEquals(true, fetchBypassCache)
         }
 
@@ -99,7 +83,7 @@ class AcePreflightOrchestratorTest {
     fun `runPreflight calls onStatusChange with SIGNED_IN on forced success with token`() =
         runBlocking {
             val orchestrator = createOrchestrator()
-            orchestrator.runPreflight(aceFeatureEnabled = true, force = true)
+            orchestrator.runPreflight(force = true)
             assertTrue(statusChanges.contains(AceStatus.SIGNED_IN))
         }
 
@@ -108,7 +92,7 @@ class AcePreflightOrchestratorTest {
         runBlocking {
             val settings = CodeSceneGlobalSettings(enableAutoRefactor = true, aceAuthToken = "")
             val orchestrator = createOrchestrator(settings = settings)
-            orchestrator.runPreflight(aceFeatureEnabled = true, force = true)
+            orchestrator.runPreflight(force = true)
             assertTrue(statusChanges.contains(AceStatus.SIGNED_OUT))
         }
 
@@ -119,7 +103,7 @@ class AcePreflightOrchestratorTest {
                 createOrchestrator(
                     fetchResult = { throw HttpTimeoutException("timeout") },
                 )
-            val result = orchestrator.runPreflight(aceFeatureEnabled = true)
+            val result = orchestrator.runPreflight()
             assertNull(result)
             assertTrue(statusChanges.contains(AceStatus.OFFLINE))
         }
@@ -131,7 +115,7 @@ class AcePreflightOrchestratorTest {
                 createOrchestrator(
                     fetchResult = { throw RuntimeException("fail") },
                 )
-            val result = orchestrator.runPreflight(aceFeatureEnabled = true)
+            val result = orchestrator.runPreflight()
             assertNull(result)
             assertTrue(statusChanges.contains(AceStatus.ERROR))
         }
@@ -143,7 +127,7 @@ class AcePreflightOrchestratorTest {
                 createOrchestrator(
                     fetchResult = { throw ConnectException("refused") },
                 )
-            val result = orchestrator.runPreflight(aceFeatureEnabled = true)
+            val result = orchestrator.runPreflight()
             assertNull(result)
             assertTrue(statusChanges.contains(AceStatus.OFFLINE))
         }

@@ -2,7 +2,6 @@ package com.codescene.jetbrains.platform.api
 
 import com.codescene.ExtensionAPI
 import com.codescene.ExtensionAPI.ReviewParams
-import com.codescene.jetbrains.core.flag.RuntimeFlags
 import com.codescene.jetbrains.core.review.CodeReviewer
 import com.codescene.jetbrains.core.review.ReviewOrchestrator
 import com.codescene.jetbrains.core.review.completeReviewAnalysis
@@ -82,10 +81,8 @@ class CodeReviewService(private val project: Project) : CodeSceneService() {
             serviceName = "$serviceImplementation - ${project.name}",
         )
 
-        if (RuntimeFlags.aceFeature) {
-            AceEntryOrchestrator.getInstance(
-                project,
-            ).checkContainsRefactorableFunctions(editor, result)
-        }
+        AceEntryOrchestrator.getInstance(
+            project,
+        ).checkContainsRefactorableFunctions(editor, result)
     }
 }

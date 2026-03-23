@@ -17,26 +17,9 @@ class RuntimeFlagsTest {
     }
 
     @Test
-    fun `aceFeature prefers system property when present`() {
-        withSystemProperty(Constants.ACE_FLAG, "true") {
-            assertEquals(true, RuntimeFlags.aceFeature)
-        }
-        withSystemProperty(Constants.ACE_FLAG, "false") {
-            assertEquals(false, RuntimeFlags.aceFeature)
-        }
-    }
-
-    @Test
     fun `isDevMode falls back to properties file when system property absent`() {
         withClearedSystemProperty(Constants.CWF_DEVMODE_FLAG) {
             assertEquals(expectedFlag("feature.cwf.devMode"), RuntimeFlags.isDevMode)
-        }
-    }
-
-    @Test
-    fun `aceFeature falls back to properties file when system property absent`() {
-        withClearedSystemProperty(Constants.ACE_FLAG) {
-            assertEquals(expectedFlag("feature.ace"), RuntimeFlags.aceFeature)
         }
     }
 

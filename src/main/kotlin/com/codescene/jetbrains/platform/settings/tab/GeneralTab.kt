@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.platform.settings.tab
 
-import com.codescene.jetbrains.core.flag.RuntimeFlags
 import com.codescene.jetbrains.core.models.settings.AceStatus
 import com.codescene.jetbrains.core.util.Constants.AI_PRINCIPLES_URL
 import com.codescene.jetbrains.core.util.Constants.CONTACT_URL
@@ -76,7 +75,7 @@ class GeneralTab : Configurable {
         JPanel().apply {
             layout = BorderLayout()
 
-            if (RuntimeFlags.aceFeature) add(getAceSection(), BorderLayout.NORTH)
+            add(getAceSection(), BorderLayout.NORTH)
             add(getMoreSection(), BorderLayout.CENTER)
         }
 

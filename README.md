@@ -169,7 +169,6 @@ If a property is not provided, it defaults to false.
 
 | Flag name           | Description                                                                        |
 | ------------------- | ---------------------------------------------------------------------------------- |
-| FEATURE_ACE         | Enables ACE.                                                                       |
 | FEATURE_CWF_DEVMODE | Allows easier debugging of CWF payloads, enables opening devtools in the webviews. |
 
 ## Project structure

@@ -62,7 +62,6 @@ class AceEntryOrchestratorTest {
         every {
             resolveAceEntryPointCommand(
                 settings = any(),
-                aceFeatureEnabled = any(),
                 request = any(),
             )
         } returns AceEntryCommand.StartRefactor(request, skipCache = true)
@@ -86,7 +85,6 @@ class AceEntryOrchestratorTest {
         every {
             resolveAceEntryPointCommand(
                 settings = any(),
-                aceFeatureEnabled = any(),
                 request = any(),
             )
         } returns AceEntryCommand.OpenAcknowledgement(request.filePath, function)
@@ -114,7 +112,6 @@ class AceEntryOrchestratorTest {
         every {
             resolveAceEntryPointCommand(
                 settings = any(),
-                aceFeatureEnabled = any(),
                 request = any(),
             )
         } returns AceEntryCommand.Skip

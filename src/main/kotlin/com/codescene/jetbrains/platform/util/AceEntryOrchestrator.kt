@@ -4,7 +4,6 @@ import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.ace.RefactoringOptions
 import com.codescene.data.review.Review
-import com.codescene.jetbrains.core.flag.RuntimeFlags
 import com.codescene.jetbrains.core.models.AceCwfParams
 import com.codescene.jetbrains.core.models.CurrentAceViewData
 import com.codescene.jetbrains.core.models.RefactoringRequest
@@ -79,7 +78,6 @@ class AceEntryOrchestrator(private val project: Project) {
         val command =
             resolveAceEntryPointCommand(
                 settings = settings,
-                aceFeatureEnabled = RuntimeFlags.aceFeature,
                 request = request,
             )
         when (command) {

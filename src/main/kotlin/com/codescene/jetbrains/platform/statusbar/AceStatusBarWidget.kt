@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.platform.statusbar
 
-import com.codescene.jetbrains.core.flag.RuntimeFlags
 import com.codescene.jetbrains.platform.listeners.AceStatusRefreshNotifier
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.platform.util.Log
@@ -63,7 +62,7 @@ internal class AceStatusBarWidgetFactory : StatusBarWidgetFactory {
 
     override fun getDisplayName(): String = ACE_STATUS
 
-    override fun isAvailable(project: Project): Boolean = RuntimeFlags.aceFeature
+    override fun isAvailable(project: Project): Boolean = true
 
     override fun canBeEnabledOn(statusBar: StatusBar): Boolean = true
 
