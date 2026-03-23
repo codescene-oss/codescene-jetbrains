@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlin)
     kotlin("plugin.serialization") version "2.2.0"
     alias(libs.plugins.ktlint)
+    jacoco
 }
 
 group = rootProject.group
@@ -44,6 +45,12 @@ val ktlintFailOnError =
     rootProject.providers.gradleProperty("ktlintFailOnError")
         .map(String::toBoolean)
         .orElse(false)
+
+tasks.jacocoTestReport {
+    reports {
+        xml.required.set(true)
+    }
+}
 
 ktlint {
     ignoreFailures.set(ktlintFailOnError.map { failOnError -> !failOnError })
