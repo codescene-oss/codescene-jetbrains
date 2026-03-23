@@ -8,24 +8,9 @@ import org.junit.Test
 
 class AcePreflightUtilsTest {
     @Test
-    fun `resolveAcePreflightDecision skips when feature disabled`() {
-        val result =
-            resolveAcePreflightDecision(
-                aceFeatureEnabled = false,
-                autoRefactorEnabled = true,
-                token = "token",
-                force = false,
-            )
-
-        assertEquals(false, result.shouldRun)
-        assertEquals(AceStatus.DEACTIVATED, result.skippedStatus)
-    }
-
-    @Test
     fun `resolveAcePreflightDecision skips when auto refactor disabled`() {
         val result =
             resolveAcePreflightDecision(
-                aceFeatureEnabled = true,
                 autoRefactorEnabled = false,
                 token = "token",
                 force = false,
@@ -39,7 +24,6 @@ class AcePreflightUtilsTest {
     fun `resolveAcePreflightDecision runs and includes success status when forced`() {
         val result =
             resolveAcePreflightDecision(
-                aceFeatureEnabled = true,
                 autoRefactorEnabled = true,
                 token = "token",
                 force = true,
@@ -53,7 +37,6 @@ class AcePreflightUtilsTest {
     fun `resolveAcePreflightDecision runs without success status when not forced`() {
         val result =
             resolveAcePreflightDecision(
-                aceFeatureEnabled = true,
                 autoRefactorEnabled = true,
                 token = "token",
                 force = false,

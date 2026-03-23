@@ -44,12 +44,11 @@ fun getStatusChangeMessage(
 fun shouldOpenAceWindow(requestDurationMs: Long): Boolean = requestDurationMs < 1500
 
 fun resolveAceEntryDecision(
-    aceFeatureEnabled: Boolean,
     autoRefactorEnabled: Boolean,
     acknowledged: Boolean,
 ): AceEntryDecision =
     when {
-        !aceFeatureEnabled || !autoRefactorEnabled -> AceEntryDecision(AceEntryAction.SKIP)
+        !autoRefactorEnabled -> AceEntryDecision(AceEntryAction.SKIP)
         acknowledged -> AceEntryDecision(AceEntryAction.START_REFACTOR)
         else -> AceEntryDecision(AceEntryAction.OPEN_ACKNOWLEDGEMENT)
     }

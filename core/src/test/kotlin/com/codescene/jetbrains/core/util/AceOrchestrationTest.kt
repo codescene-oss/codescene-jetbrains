@@ -39,23 +39,23 @@ class AceOrchestrationTest {
     }
 
     @Test
-    fun `resolveAceEntryDecision returns skip when feature disabled`() {
+    fun `resolveAceEntryDecision returns skip when auto refactor disabled`() {
         val decision =
-            resolveAceEntryDecision(aceFeatureEnabled = false, autoRefactorEnabled = true, acknowledged = true)
+            resolveAceEntryDecision(autoRefactorEnabled = false, acknowledged = true)
         assertEquals(AceEntryAction.SKIP, decision.action)
     }
 
     @Test
     fun `resolveAceEntryDecision returns acknowledgement when not acknowledged`() {
         val decision =
-            resolveAceEntryDecision(aceFeatureEnabled = true, autoRefactorEnabled = true, acknowledged = false)
+            resolveAceEntryDecision(autoRefactorEnabled = true, acknowledged = false)
         assertEquals(AceEntryAction.OPEN_ACKNOWLEDGEMENT, decision.action)
     }
 
     @Test
     fun `resolveAceEntryDecision returns start refactor when acknowledged`() {
         val decision =
-            resolveAceEntryDecision(aceFeatureEnabled = true, autoRefactorEnabled = true, acknowledged = true)
+            resolveAceEntryDecision(autoRefactorEnabled = true, acknowledged = true)
         assertEquals(AceEntryAction.START_REFACTOR, decision.action)
     }
 

@@ -83,5 +83,4 @@ object Constants {
     const val RETRY = "Retry ACE activation"
 
     const val CWF_DEVMODE_FLAG = "FEATURE_CWF_DEVMODE"
-    const val ACE_FLAG = "FEATURE_ACE"
 }

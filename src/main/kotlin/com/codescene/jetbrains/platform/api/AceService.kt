@@ -6,7 +6,6 @@ import com.codescene.data.ace.PreflightResponse
 import com.codescene.data.ace.RefactoringOptions
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.core.contracts.IAceService
-import com.codescene.jetbrains.core.flag.RuntimeFlags
 import com.codescene.jetbrains.core.models.AceCwfParams
 import com.codescene.jetbrains.core.review.AcePreflightOrchestrator
 import com.codescene.jetbrains.core.review.AceRefactorableFunctionCacheEntry
@@ -97,10 +96,7 @@ class AceService :
     }
 
     override suspend fun runPreflight(force: Boolean): PreflightResponse? =
-        preflightOrchestrator.runPreflight(
-            aceFeatureEnabled = RuntimeFlags.aceFeature,
-            force = force,
-        )
+        preflightOrchestrator.runPreflight(force = force)
 
     /**
      * Retrieves refactorable functions based on the full Review result.

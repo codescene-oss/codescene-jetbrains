@@ -81,12 +81,10 @@ sealed class AceEntryCommand {
 
 fun resolveAceEntryPointCommand(
     settings: CodeSceneGlobalSettings,
-    aceFeatureEnabled: Boolean,
     request: RefactoringRequest,
 ): AceEntryCommand {
     val decision =
         resolveAceEntryDecision(
-            aceFeatureEnabled = aceFeatureEnabled,
             autoRefactorEnabled = settings.enableAutoRefactor,
             acknowledged = settings.aceAcknowledged,
         )

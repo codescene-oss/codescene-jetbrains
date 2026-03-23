@@ -56,7 +56,7 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                         .comment(UiLabelsBundle.message("aceAuthTokenComment"))
                         .bindText(settings::aceAuthToken)
                 }
-            }.visible(RuntimeFlags.aceFeature)
+            }
 
             // TODO: verify naming of this section, currently just a placeholder
             groupRowsRange(UiLabelsBundle.message("cloudConnection")) {
