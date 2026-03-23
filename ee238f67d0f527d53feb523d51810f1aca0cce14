@@ -1,0 +1,25 @@
+core/build.gradle.kts
+  0ef1db2b543f20d0 5,49-54
+.github/workflows/build.yml
+  0ef1db2b543f20d0 131,147-149
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "ee238f67d0f527d53feb523d51810f1aca0cce14",
+  "prompts": {
+    "0ef1db2b543f20d0": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "d6764425-d50e-415e-9571-c2450eaaafbc",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 11,
+      "total_deletions": 2,
+      "accepted_lines": 11,
+      "overriden_lines": 0
+    }
+  }
+}
