@@ -5,7 +5,7 @@ else
 GRADLEW := ./gradlew
 endif
 
-.PHONY: install-cli check-bb build test format format-check delta iter 
+.PHONY: install-cli check-bb build test format format-check delta iter coverage-summary
 
 install-cli: check-bb
 	@$(BB) -f .github/install-cli.clj
@@ -37,5 +37,8 @@ format-check: check-bb
 
 delta: check-bb install-cli
 	@$(BB) -f .github/run-quiet.clj delta.log cs delta master --error-on-warnings
+
+coverage-summary: check-bb
+	@$(BB) -f .github/coverage-summary.clj
 
 iter: format-check delta build test 

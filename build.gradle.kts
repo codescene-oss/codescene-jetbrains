@@ -226,6 +226,30 @@ tasks {
     jacocoTestCoverageVerification {
         classDirectories.setFrom(named("instrumentCode").get().outputs.files)
     }
+
+    register<JacocoReport>("jacocoMergedReport") {
+        dependsOn(test, ":core:test")
+
+        val rootTestTask = test.get()
+        val coreTestTask = project(":core").tasks.named<Test>("test").get()
+
+        executionData(rootTestTask, coreTestTask)
+
+        val instrumentCodeTask = named("instrumentCode").get()
+        classDirectories.setFrom(
+            instrumentCodeTask.outputs.files,
+            project(":core").the<SourceSetContainer>()["main"].output,
+        )
+        sourceDirectories.setFrom(
+            sourceSets["main"].allSource,
+            project(":core").the<SourceSetContainer>()["main"].allSource,
+        )
+
+        reports {
+            xml.required.set(true)
+            html.required.set(true)
+        }
+    }
 }
 
 intellijPlatformTesting {
