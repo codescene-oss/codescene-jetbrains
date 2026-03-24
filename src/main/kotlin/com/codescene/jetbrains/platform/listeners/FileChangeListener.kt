@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.platform.listeners
 
+import com.codescene.jetbrains.core.review.hasRelevantFileChanges
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.AsyncFileListener
 import com.intellij.openapi.vfs.VirtualFile
@@ -16,7 +17,12 @@ class FileChangeListener(private val project: Project) : AsyncFileListener {
         val deleteEvents = events.filterIsInstance<VFileDeleteEvent>()
         val moveEvents = events.filterIsInstance<VFileMoveEvent>()
 
-        val hasRelevantEvents = renameEvents.isNotEmpty() || deleteEvents.isNotEmpty() || moveEvents.isNotEmpty()
+        val hasRelevantEvents =
+            hasRelevantFileChanges(
+                renameCount = renameEvents.size,
+                deleteCount = deleteEvents.size,
+                moveCount = moveEvents.size,
+            )
 
         if (!hasRelevantEvents) return null
 

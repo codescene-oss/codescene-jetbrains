@@ -17,6 +17,7 @@ import com.codescene.jetbrains.core.models.view.FunctionToRefactor
 import com.codescene.jetbrains.core.models.view.HomeData
 import com.codescene.jetbrains.core.util.Constants.DELTA_ANALYSIS_JOB
 import com.codescene.jetbrains.core.util.Constants.JOB_STATE_RUNNING
+import com.codescene.jetbrains.core.util.parseMessage
 
 class CodeHealthMonitorMapper {
     fun toCwfData(
@@ -39,6 +40,30 @@ class CodeHealthMonitorMapper {
                     autoRefactor = autoRefactorConfig,
                 ),
         )
+
+    fun toMessage(
+        deltaResults: List<Pair<String, DeltaCacheItem>>,
+        activeJobs: List<String>,
+        functionToRefactorResolver: (String, String, com.codescene.data.delta.FunctionFinding) -> FunctionToRefactor?,
+        autoRefactorConfig: AutoRefactorConfig,
+        pro: Boolean = true,
+        devmode: Boolean,
+    ): String =
+        parseMessage(
+            mapper = {
+                toCwfData(
+                    deltaResults = deltaResults,
+                    activeJobs = activeJobs,
+                    functionToRefactorResolver = functionToRefactorResolver,
+                    autoRefactorConfig = autoRefactorConfig,
+                    pro = pro,
+                    devmode = devmode,
+                )
+            },
+            serializer = CwfData.serializer(HomeData.serializer()),
+        )
+
+    fun hasNotification(deltaResults: List<Pair<String, DeltaCacheItem>>): Boolean = deltaResults.isNotEmpty()
 
     private fun getActiveJobs(activeJobs: List<String>) =
         activeJobs.map { job ->

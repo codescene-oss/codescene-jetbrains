@@ -2,13 +2,11 @@ package com.codescene.jetbrains.platform.webview.util
 
 import com.codescene.jetbrains.core.flag.RuntimeFlags
 import com.codescene.jetbrains.core.mapper.DocumentationMapper
-import com.codescene.jetbrains.core.models.CwfData
 import com.codescene.jetbrains.core.models.DocsEntryPoint
 import com.codescene.jetbrains.core.models.View
 import com.codescene.jetbrains.core.models.view.DocsData
+import com.codescene.jetbrains.core.telemetry.buildOpenDocsTelemetryData
 import com.codescene.jetbrains.core.util.TelemetryEvents
-import com.codescene.jetbrains.core.util.docNameMap
-import com.codescene.jetbrains.core.util.parseMessage
 import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.fileeditor.documentation.CWF_DOCS_DATA_KEY
@@ -59,14 +57,8 @@ private fun updateWebView(
     project: Project,
 ) {
     val mapper = DocumentationMapper()
-
     val messageHandler = CwfMessageHandler.getInstance(project)
-
-    val dataJson =
-        parseMessage(
-            mapper = { mapper.toCwfData(docsData, devmode = RuntimeFlags.isDevMode) },
-            serializer = CwfData.serializer(DocsData.serializer()),
-        )
+    val dataJson = mapper.toMessage(docsData, devmode = RuntimeFlags.isDevMode)
 
     messageHandler.postMessage(View.DOCS, dataJson, browser)
 }
@@ -98,9 +90,6 @@ private fun sendTelemetry(
 ) {
     CodeSceneApplicationServiceProvider.getInstance().telemetryService.logUsage(
         TelemetryEvents.OPEN_DOCS_PANEL,
-        mutableMapOf<String, Any>(
-            Pair("source", entryPoint.value),
-            Pair("category", docNameMap[docsData.docType] ?: ""),
-        ),
+        buildOpenDocsTelemetryData(docsData, entryPoint),
     )
 }

@@ -22,6 +22,11 @@ fun adjustIndentation(
     return adjustLines(newContentLines, shouldSkipAdditionalRepetition, targetIndent, newContentIndent)
 }
 
+fun adjustIndentationOrOriginal(
+    anchorFirstLineText: String?,
+    newContent: String,
+): String = anchorFirstLineText?.let { adjustIndentation(it, newContent) } ?: newContent
+
 fun adjustLines(
     newContentLines: List<String>,
     shouldSkipAdditionalRepetition: Boolean,

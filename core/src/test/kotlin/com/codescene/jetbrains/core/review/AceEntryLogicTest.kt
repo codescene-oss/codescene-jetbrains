@@ -3,6 +3,7 @@ package com.codescene.jetbrains.core.review
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.ace.PreflightResponse
 import com.codescene.jetbrains.core.TestLogger
+import com.codescene.jetbrains.core.models.AceCwfParams
 import com.codescene.jetbrains.core.models.CurrentAceViewData
 import com.codescene.jetbrains.core.models.RefactoringRequest
 import com.codescene.jetbrains.core.models.settings.AceStatus
@@ -174,6 +175,57 @@ class AceEntryLogicTest {
             val result = shouldCheckRefactorableFunctions(settings, aceService, "kt")
             assertEquals(false, result)
         }
+
+    @Test
+    fun `resolveAceResultAction opens window for quick refactoring results`() {
+        val params =
+            AceCwfParams(
+                filePath = "a.kt",
+                function = mockFn("f", "body", 1, 2),
+            )
+
+        val result = resolveAceResultAction(params, 500L)
+
+        assertEquals(AceResultAction.OpenWindow(params), result)
+    }
+
+    @Test
+    fun `resolveAceResultAction shows notification for slower refactoring results`() {
+        val params =
+            AceCwfParams(
+                filePath = "a.kt",
+                function = mockFn("f", "body", 1, 2),
+            )
+
+        val result = resolveAceResultAction(params, 5000L)
+
+        assertEquals(AceResultAction.ShowNotification(params), result)
+    }
+
+    @Test
+    fun `resolveAceErrorViewParams returns null when request is missing`() {
+        assertNull(resolveAceErrorViewParams(request = null, filePath = "a.kt", e = RuntimeException("401")))
+    }
+
+    @Test
+    fun `resolveAceErrorViewParams returns null when file path is missing`() {
+        val request = RefactoringRequest("a.kt", null, mockFn("f", "body", 1, 2), AceEntryPoint.RETRY)
+
+        assertNull(resolveAceErrorViewParams(request = request, filePath = null, e = RuntimeException("401")))
+    }
+
+    @Test
+    fun `resolveAceErrorViewParams maps request and exception to ACE view params`() {
+        val function = mockFn("f", "body", 1, 2)
+        val request = RefactoringRequest("a.kt", null, function, AceEntryPoint.RETRY)
+
+        val result = resolveAceErrorViewParams(request = request, filePath = "a.kt", e = RuntimeException("401"))
+
+        assertNotNull(result)
+        assertEquals("auth", result?.error)
+        assertSame(function, result?.function)
+        assertEquals("a.kt", result?.filePath)
+    }
 
     @Test
     fun `shouldCheckRefactorableFunctions returns true when extension is supported by preflight`() =

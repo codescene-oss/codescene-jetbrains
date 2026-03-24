@@ -201,6 +201,11 @@ class IndentationUtilsTest {
     }
 
     @Test
+    fun `adjustIndentation returns original content when anchor line is missing`() {
+        assertEquals("body", adjustIndentationOrOriginal(null, "body"))
+    }
+
+    @Test
     fun `adjustIndentation adjusts relative indent for multi-line snippet`() {
         assertEquals("    line1\n    line2", adjustIndentation("    outer", "  line1\n  line2"))
     }
