@@ -1,0 +1,43 @@
+core/src/test/kotlin/com/codescene/jetbrains/core/util/NotificationSpecsTest.kt
+  c31458d8829c1fbf 36-61
+src/main/kotlin/com/codescene/jetbrains/platform/api/CodeReviewService.kt
+  c31458d8829c1fbf 5,9,16,20,74-78
+core/src/main/kotlin/com/codescene/jetbrains/core/util/CwfThemeCssUtils.kt
+  c31458d8829c1fbf 21-39,53-69
+core/src/test/kotlin/com/codescene/jetbrains/core/util/CwfThemeCssUtilsTest.kt
+  c31458d8829c1fbf 8-48
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/StyleHelper.kt
+  c31458d8829c1fbf 3-4,64-69,71,84-85
+core/src/main/kotlin/com/codescene/jetbrains/core/review/AceDiffLogic.kt
+  c31458d8829c1fbf 1-30
+core/src/main/kotlin/com/codescene/jetbrains/core/util/NotificationSpecs.kt
+  c31458d8829c1fbf 10-14,20-32
+src/main/kotlin/com/codescene/jetbrains/platform/util/ShowAceDiff.kt
+  c31458d8829c1fbf 4-6,79,106-113
+src/main/kotlin/com/codescene/jetbrains/platform/api/CodeDeltaService.kt
+  c31458d8829c1fbf 7,10,16,20,87-91
+src/main/kotlin/com/codescene/jetbrains/platform/util/NotificationUtils.kt
+  c31458d8829c1fbf 9,128-138
+core/src/test/kotlin/com/codescene/jetbrains/core/review/AceDiffLogicTest.kt
+  c31458d8829c1fbf 1-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "255b035b8fc53b2707d164bf5ed93a8c3a5a9f18",
+  "prompts": {
+    "c31458d8829c1fbf": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "1b75c76a-bb77-46f1-b0a7-101d7d43d1a7",
+        "model": "gpt-5.4-medium"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 254,
+      "total_deletions": 59,
+      "accepted_lines": 252,
+      "overriden_lines": 0
+    }
+  }
+}
