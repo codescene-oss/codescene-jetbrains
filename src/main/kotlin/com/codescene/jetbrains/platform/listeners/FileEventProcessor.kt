@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.listeners
 
 import com.codescene.jetbrains.core.review.FileEventHandler
+import com.codescene.jetbrains.core.util.pathsAfterRename
 import com.codescene.jetbrains.platform.api.CodeDeltaService
 import com.codescene.jetbrains.platform.api.CodeReviewService
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
@@ -43,8 +44,8 @@ class FileEventProcessor(
 
     private fun handleRenameEvents(renameEvents: List<VFilePropertyChangeEvent>) {
         handleEvent(renameEvents, {
-            val newPath = "${it.file.parent.path}/${it.newValue}"
-            val oldPath = "${it.file.parent.path}/${it.oldValue}"
+            val parentPath = it.file.parent.path
+            val (oldPath, newPath) = pathsAfterRename(parentPath, it.oldValue.toString(), it.newValue.toString())
 
             reflectChangesOnReview(oldPath, newPath, it.file)
         })

@@ -64,4 +64,64 @@ class CodeSmellUtilsTest {
     fun `formatCodeSmellMessage omits parentheses when details are empty`() {
         assertEquals("Complex Method", formatCodeSmellMessage("Complex Method", ""))
     }
+
+    @Test
+    fun `isFileSupportedForAnalysis true for supported extension in project not gitignored`() {
+        assertTrue(
+            isFileSupportedForAnalysis(
+                extension = "java",
+                inProjectContent = true,
+                excludeGitignoreFiles = true,
+                ignoredByGitignore = false,
+            ),
+        )
+    }
+
+    @Test
+    fun `isFileSupportedForAnalysis false for unsupported extension`() {
+        assertFalse(
+            isFileSupportedForAnalysis(
+                extension = "unsupported_extension",
+                inProjectContent = true,
+                excludeGitignoreFiles = true,
+                ignoredByGitignore = false,
+            ),
+        )
+    }
+
+    @Test
+    fun `isFileSupportedForAnalysis false when gitignore excludes and setting enabled`() {
+        assertFalse(
+            isFileSupportedForAnalysis(
+                extension = "java",
+                inProjectContent = true,
+                excludeGitignoreFiles = true,
+                ignoredByGitignore = true,
+            ),
+        )
+    }
+
+    @Test
+    fun `isFileSupportedForAnalysis false when file not in project content`() {
+        assertFalse(
+            isFileSupportedForAnalysis(
+                extension = "java",
+                inProjectContent = false,
+                excludeGitignoreFiles = true,
+                ignoredByGitignore = false,
+            ),
+        )
+    }
+
+    @Test
+    fun `isFileSupportedForAnalysis true when gitignored but excludeGitignoreFiles false`() {
+        assertTrue(
+            isFileSupportedForAnalysis(
+                extension = "java",
+                inProjectContent = true,
+                excludeGitignoreFiles = false,
+                ignoredByGitignore = true,
+            ),
+        )
+    }
 }

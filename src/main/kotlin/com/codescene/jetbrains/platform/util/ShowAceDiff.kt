@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.util
 
 import com.codescene.jetbrains.core.models.shared.RangeCamelCase
+import com.codescene.jetbrains.core.util.replaceTextInRange
 import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.webview.util.getAceUserData
 import com.intellij.diff.DiffContentFactory
@@ -73,10 +74,7 @@ private fun getDiffRequest(
 
     val (originalText, offsetRange) = data
 
-    val newText =
-        StringBuilder(originalText).apply {
-            replace(offsetRange.first, offsetRange.last, refactoredCode)
-        }.toString()
+    val newText = replaceTextInRange(originalText, offsetRange, refactoredCode)
 
     val leftContent = factory.create(project, file)
     val rightContent = factory.create(project, newText)

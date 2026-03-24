@@ -63,6 +63,17 @@ fun readGitignore(projectPath: String?): List<String> {
 
 fun isSupportedLanguage(extension: String) = supportedLanguages.containsKey(extension)
 
+fun isFileSupportedForAnalysis(
+    extension: String?,
+    inProjectContent: Boolean,
+    excludeGitignoreFiles: Boolean,
+    ignoredByGitignore: Boolean,
+): Boolean {
+    val supportedExtension = extension?.let(::isSupportedLanguage) == true
+    val excludedByGitignore = excludeGitignoreFiles && ignoredByGitignore
+    return supportedExtension && !excludedByGitignore && inProjectContent
+}
+
 fun formatCodeSmellMessage(
     category: String,
     details: String,

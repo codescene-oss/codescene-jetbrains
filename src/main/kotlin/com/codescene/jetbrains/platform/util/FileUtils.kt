@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.platform.util
 
+import com.codescene.jetbrains.core.util.shouldCloseCwfDocTab
 import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
@@ -8,7 +9,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.LightVirtualFile
 
 object FileUtils {
-    private val cwfDocFileNames = setOf(UiLabelsBundle.message("codeSmellDocs"))
+    private val cwfDocBaseNames = setOf(UiLabelsBundle.message("codeSmellDocs"))
 
     /**
      * Opens a standalone documentation file (e.g., Code Health Monitor docs)
@@ -46,7 +47,7 @@ object FileUtils {
         val docWindow =
             editorManagerEx.windows
                 .firstOrNull { editorWindow ->
-                    editorWindow.fileList.any { cwfDocFileNames.contains(it.nameWithoutExtension) }
+                    editorWindow.fileList.any { cwfDocBaseNames.contains(it.nameWithoutExtension) }
                 }
 
         editorManagerEx.splitters.openInRightSplit(file, false)
@@ -60,5 +61,5 @@ object FileUtils {
     private fun shouldCloseFile(
         existing: LightVirtualFile,
         new: LightVirtualFile,
-    ) = existing != new && cwfDocFileNames.contains(existing.nameWithoutExtension)
+    ) = shouldCloseCwfDocTab(existing != new, existing.nameWithoutExtension, cwfDocBaseNames)
 }

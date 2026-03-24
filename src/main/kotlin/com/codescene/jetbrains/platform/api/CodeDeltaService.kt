@@ -6,9 +6,9 @@ import com.codescene.jetbrains.core.delta.adaptDeltaResult
 import com.codescene.jetbrains.core.delta.completeDeltaAnalysis
 import com.codescene.jetbrains.core.review.CodeReviewer
 import com.codescene.jetbrains.core.review.ReviewOrchestrator
+import com.codescene.jetbrains.core.util.CodeVisionApiCallTracker
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.editor.UIRefreshService
-import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.getTelemetryInfo
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
@@ -41,9 +41,9 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
             telemetryService = serviceProvider.telemetryService,
             progressService = serviceProvider.progressService,
             onApiCallComplete = { filePath ->
-                CodeSceneCodeVisionProvider.markApiCallComplete(
+                CodeVisionApiCallTracker.markApiCallComplete(
                     filePath,
-                    CodeSceneCodeVisionProvider.activeDeltaApiCalls,
+                    CodeVisionApiCallTracker.activeDeltaApiCalls,
                 )
             },
         )

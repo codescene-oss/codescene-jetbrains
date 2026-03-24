@@ -5,6 +5,7 @@ import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.jetbrains.core.review.CodeReviewer
 import com.codescene.jetbrains.core.review.ReviewOrchestrator
 import com.codescene.jetbrains.core.review.completeReviewAnalysis
+import com.codescene.jetbrains.core.util.CodeVisionApiCallTracker
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.editor.UIRefreshService
 import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionProvider
@@ -39,9 +40,9 @@ class CodeReviewService(private val project: Project) : CodeSceneService() {
             telemetryService = serviceProvider.telemetryService,
             progressService = serviceProvider.progressService,
             onApiCallComplete = { filePath ->
-                CodeSceneCodeVisionProvider.markApiCallComplete(
+                CodeVisionApiCallTracker.markApiCallComplete(
                     filePath,
-                    CodeSceneCodeVisionProvider.activeReviewApiCalls,
+                    CodeVisionApiCallTracker.activeReviewApiCalls,
                 )
             },
         )
