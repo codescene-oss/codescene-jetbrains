@@ -6,6 +6,7 @@ import com.codescene.jetbrains.core.models.CodeVisionCodeSmell
 import com.codescene.jetbrains.core.models.DocsEntryPoint
 import com.codescene.jetbrains.core.review.ReviewCacheQuery
 import com.codescene.jetbrains.core.util.CodeVisionAction
+import com.codescene.jetbrains.core.util.CodeVisionApiCallTracker
 import com.codescene.jetbrains.core.util.CodeVisionDecisionInput
 import com.codescene.jetbrains.core.util.getCodeSmellsByCategory
 import com.codescene.jetbrains.core.util.resolveCodeVisionDecision
@@ -28,21 +29,20 @@ import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
-import java.util.concurrent.ConcurrentHashMap
 
 @Suppress("UnstableApiUsage")
 abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
     companion object {
-        val activeReviewApiCalls: MutableSet<String> = ConcurrentHashMap.newKeySet()
+        val activeReviewApiCalls: MutableSet<String>
+            get() = CodeVisionApiCallTracker.activeReviewApiCalls
 
-        val activeDeltaApiCalls: MutableSet<String> = ConcurrentHashMap.newKeySet()
+        val activeDeltaApiCalls: MutableSet<String>
+            get() = CodeVisionApiCallTracker.activeDeltaApiCalls
 
         fun markApiCallComplete(
             filePath: String,
             apiCalls: MutableSet<String>,
-        ) {
-            apiCalls.remove(filePath)
-        }
+        ) = CodeVisionApiCallTracker.markApiCallComplete(filePath, apiCalls)
 
         fun getProviders(): List<String> =
             listOf(
@@ -86,8 +86,8 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
     ) {
         val filePath = editor.virtualFile.path
 
-        if (!isApiCallInProgressForFile(filePath, apiCalls)) {
-            markApiCallInProgress(filePath, apiCalls)
+        if (!CodeVisionApiCallTracker.isApiCallInProgressForFile(filePath, apiCalls)) {
+            CodeVisionApiCallTracker.markApiCallInProgress(filePath, apiCalls)
 
             action()
         }
@@ -173,16 +173,4 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
     ) {
         handleOpenDocs(editor, codeSmell, DocsEntryPoint.CODE_VISION)
     }
-
-    private fun markApiCallInProgress(
-        filePath: String,
-        apiCalls: MutableSet<String>,
-    ) {
-        apiCalls.add(filePath)
-    }
-
-    private fun isApiCallInProgressForFile(
-        filePath: String,
-        apiCalls: MutableSet<String>,
-    ) = apiCalls.contains(filePath)
 }

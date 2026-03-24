@@ -22,4 +22,12 @@ class PathUtilsTest {
         val result = getRelativePath("/home/user/project/src", "/home/user/project/test/Main.kt")
         assertEquals("..${File.separator}test${File.separator}Main.kt", result)
     }
+
+    @Test
+    fun `pathsAfterRename joins parent with old and new names`() {
+        val parent = "${File.separator}repo${File.separator}src"
+        val (oldPath, newPath) = pathsAfterRename(parent, "Old.kt", "New.kt")
+        assertEquals(File(parent, "Old.kt").path, oldPath)
+        assertEquals(File(parent, "New.kt").path, newPath)
+    }
 }

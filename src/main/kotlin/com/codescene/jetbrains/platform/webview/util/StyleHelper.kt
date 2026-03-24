@@ -1,5 +1,7 @@
 package com.codescene.jetbrains.platform.webview.util
 
+import com.codescene.jetbrains.core.util.CwfThemeCssInputs
+import com.codescene.jetbrains.core.util.buildCwfThemeCssVariables
 import com.codescene.jetbrains.core.util.parseScrollbarHex
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
@@ -14,24 +16,6 @@ class StyleHelper {
     companion object {
         fun getInstance(): StyleHelper = ApplicationManager.getApplication().getService(StyleHelper::class.java)
     }
-
-    private val opacityVariants =
-        mapOf(
-            1 to "03",
-            3 to "08",
-            7 to "12",
-            10 to "1A",
-            20 to "33",
-            30 to "4D",
-            40 to "66",
-            50 to "80",
-            60 to "99",
-            70 to "B3",
-            75 to "BF",
-            80 to "CC",
-            85 to "D9",
-            90 to "E6",
-        )
 
     private fun toHex(c: Color): String = "%02X%02X%02X".format(c.red, c.green, c.blue)
 
@@ -70,7 +54,6 @@ class StyleHelper {
 
             val defaultFont = UIManager.getFont("Label.font")
             val fontSize = defaultFont.size
-            val fontFamily = defaultFont.family
 
             val textFg = UIManager.getColor("Label.foreground")
             val linkFg = UIManager.getColor("Hyperlink.linkColor")
@@ -78,42 +61,20 @@ class StyleHelper {
             val buttonFg = JBColor.namedColor("Button.default.foreground")
             val buttonSecondaryBg = UIManager.getColor("Button.default.endBackground")
 
-            val textFgHex = toHex(textFg)
-            val linkFgHex = toHex(linkFg)
-            val buttonFgHex = toHex(buttonFg)
-            val buttonBgHex = toHex(buttonBg)
-            val editorBgHex = toHex(editorBackground)
-            val scrollbarThumbHex = getScrollbarHex()
-            val buttonSecondaryBgHex = toHex(buttonSecondaryBg)
-
-            val sb = StringBuilder()
-            sb.appendLine(":root {")
-            sb.appendLine("  --cs-theme-editor-background: #$editorBgHex;")
-            sb.appendLine("  --cs-theme-textLink-foreground: #$linkFgHex;")
-            sb.appendLine("  --cs-theme-foreground: #$textFgHex;")
-            sb.appendLine("  --cs-theme-panel-background: #$textFgHex;")
-            sb.appendLine("  --cs-theme-textCodeBlock-background: #$editorBgHex;")
-            sb.appendLine("  --cs-theme-scroll-bar-thumb: #$scrollbarThumbHex;")
-
-//            sb.appendLine("  --cs-theme-font-family: '$fontFamily', sans-serif;") TODO
-            sb.appendLine("  --cs-theme-font-size: ${fontSize}px;")
-            sb.appendLine("  --cs-theme-editor-font-family: '$editorFontFamily', monospace;")
-            sb.appendLine("  --cs-theme-editor-font-size: ${editorFontSize}px;")
-
-            sb.appendLine("  --cs-theme-button-foreground: #$buttonFgHex;")
-            sb.appendLine("  --cs-theme-button-background: #$buttonBgHex;")
-            sb.appendLine("  --cs-theme-button-secondaryForeground: #$buttonFgHex;")
-            sb.appendLine("  --cs-theme-button-secondaryBackground: #$buttonSecondaryBgHex;")
-
-            opacityVariants.forEach { (key, value) ->
-                sb.appendLine("  --cs-theme-button-foreground-$key: #$textFgHex$value;")
-                sb.appendLine("  --cs-theme-button-background-$key: #$buttonBgHex$value;")
-                sb.appendLine("  --cs-theme-foreground-$key: #$textFgHex$value;")
-                sb.appendLine("  --cs-theme-button-secondaryBackground-$key: #$buttonSecondaryBgHex$value;")
-            }
-
-            sb.appendLine("}")
-            sb.toString()
+            buildCwfThemeCssVariables(
+                CwfThemeCssInputs(
+                    textForegroundHex = toHex(textFg),
+                    linkForegroundHex = toHex(linkFg),
+                    buttonForegroundHex = toHex(buttonFg),
+                    buttonBackgroundHex = toHex(buttonBg),
+                    editorBackgroundHex = toHex(editorBackground),
+                    scrollbarThumbHex = getScrollbarHex(),
+                    buttonSecondaryBackgroundHex = toHex(buttonSecondaryBg),
+                    fontSizePx = fontSize,
+                    editorFontFamily = editorFontFamily,
+                    editorFontSizePx = editorFontSize,
+                ),
+            )
         } catch (e: Exception) {
             ""
         }

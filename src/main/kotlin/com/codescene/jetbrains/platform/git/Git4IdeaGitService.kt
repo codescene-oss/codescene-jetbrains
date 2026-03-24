@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.git
 
 import com.codescene.jetbrains.core.contracts.IGitService
+import com.codescene.jetbrains.core.util.parseBranchCreationCommitFromReflog
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.dvcs.repo.Repository
 import com.intellij.openapi.components.Service
@@ -52,15 +53,8 @@ class Git4IdeaGitService(val project: Project) : IGitService {
         return getCodeByCommit(gitRepository, file, commit)
     }
 
-    private fun getBranchCreationCommit(gitRepository: GitRepository): String? {
-        val reflog = getRefLog(project, gitRepository)
-
-        return reflog
-            ?.reversed()
-            ?.find { it.contains("created from", true) }
-            ?.split(" ")
-            ?.get(0)
-    }
+    private fun getBranchCreationCommit(gitRepository: GitRepository): String? =
+        getRefLog(project, gitRepository)?.let { parseBranchCreationCommitFromReflog(it) }
 
     private fun getRefLog(
         project: Project,

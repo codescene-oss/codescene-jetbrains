@@ -3,7 +3,7 @@ package com.codescene.jetbrains.platform.util
 import com.codescene.jetbrains.core.util.Constants.CODESCENE
 import com.codescene.jetbrains.core.util.formatCodeSmellMessage as coreFormatCodeSmellMessage
 import com.codescene.jetbrains.core.util.isExcludedByGitignore as coreIsExcludedByGitignore
-import com.codescene.jetbrains.core.util.isSupportedLanguage
+import com.codescene.jetbrains.core.util.isFileSupportedForAnalysis
 import com.codescene.jetbrains.core.util.readGitignore as coreReadGitignore
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
 import com.intellij.openapi.application.runReadAction
@@ -40,10 +40,14 @@ fun isFileSupported(
 
     val ignoredFiles = coreReadGitignore(project.basePath)
 
-    val isExcludedByGitignore = excludeGitignoreFiles && isExcludedByGitignore(virtualFile, ignoredFiles)
-    val supportedExtension = virtualFile.extension?.let(::isSupportedLanguage) == true
+    val ignoredByGitignore = isExcludedByGitignore(virtualFile, ignoredFiles)
 
-    return supportedExtension && !isExcludedByGitignore && isInProject
+    return isFileSupportedForAnalysis(
+        extension = virtualFile.extension,
+        inProjectContent = isInProject,
+        excludeGitignoreFiles = excludeGitignoreFiles,
+        ignoredByGitignore = ignoredByGitignore,
+    )
 }
 
 fun getTextRange(
