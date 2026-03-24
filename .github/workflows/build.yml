@@ -122,7 +122,7 @@ jobs:
 
       # Run tests and Lint check
       - name: Run Tests and Lint check
-        run: ./gradlew check jacocoTestReport -PktlintFailOnError=true
+        run: ./gradlew check jacocoMergedReport -PktlintFailOnError=true
 
       - name: Publish Test Results
         if: ${{ always() && !cancelled() }}
@@ -136,7 +136,7 @@ jobs:
         with:
           access-token: ${{ secrets.CODESCENE_CODE_COVERAGE_API_TOKEN }}
           project-url: "https://api.codescene.io/v2/projects/63256"
-          coverage-files: "**/build/reports/jacoco/test/jacocoTestReport.xml"
+          coverage-files: "build/reports/jacoco/jacocoMergedReport/jacocoMergedReport.xml"
 
       # Collect Tests Result of failed tests
       - name: Collect Tests Result

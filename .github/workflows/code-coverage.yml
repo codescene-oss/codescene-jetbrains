@@ -29,8 +29,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Run tests with coverage
-        run: ./gradlew fetchCwf test jacocoTestReport -PFEATURE_CWF_DEVMODE=${{ secrets.FEATURE_CWF_DEVMODE }}
+      - name: Run tests with merged coverage
+        run: ./gradlew fetchCwf jacocoMergedReport -PFEATURE_CWF_DEVMODE=${{ secrets.FEATURE_CWF_DEVMODE }}
 
       - name: Upload line coverage data
         if: always()
@@ -39,7 +39,7 @@ jobs:
           cs-token: ${{ secrets.CODESCENE_CODE_COVERAGE_API_TOKEN }}
           format: jacoco
           metric: line-coverage
-          file: ./build/reports/jacoco/test/jacocoTestReport.xml
+          file: ./build/reports/jacoco/jacocoMergedReport/jacocoMergedReport.xml
 
       - name: Upload branch coverage data
         if: always()
@@ -48,25 +48,7 @@ jobs:
           cs-token: ${{ secrets.CODESCENE_CODE_COVERAGE_API_TOKEN }}
           format: jacoco
           metric: branch-coverage
-          file: ./build/reports/jacoco/test/jacocoTestReport.xml
-
-      - name: Upload core line coverage data
-        if: always()
-        uses: ./.github/actions/upload-coverage
-        with:
-          cs-token: ${{ secrets.CODESCENE_CODE_COVERAGE_API_TOKEN }}
-          format: jacoco
-          metric: line-coverage
-          file: ./core/build/reports/jacoco/test/jacocoTestReport.xml
-
-      - name: Upload core branch coverage data
-        if: always()
-        uses: ./.github/actions/upload-coverage
-        with:
-          cs-token: ${{ secrets.CODESCENE_CODE_COVERAGE_API_TOKEN }}
-          format: jacoco
-          metric: branch-coverage
-          file: ./core/build/reports/jacoco/test/jacocoTestReport.xml
+          file: ./build/reports/jacoco/jacocoMergedReport/jacocoMergedReport.xml
 
   trigger-analysis:
     runs-on: ubuntu-24.04
