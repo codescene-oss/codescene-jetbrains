@@ -3,6 +3,7 @@ package com.codescene.jetbrains.core.settings
 import com.codescene.jetbrains.core.contracts.ISettingsChangeListener
 import com.codescene.jetbrains.core.models.settings.AceStatus
 import com.codescene.jetbrains.core.models.settings.CodeSceneGlobalSettings
+import com.codescene.jetbrains.core.util.Constants.CODESCENE_SERVER_URL
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Assert.assertEquals
@@ -20,6 +21,28 @@ class SettingsStateManagerTest {
         manager = SettingsStateManager()
         listener = mockk(relaxed = true)
         manager.addSettingsChangeListener(listener)
+    }
+
+    @Test
+    fun `new manager has default CodeSceneGlobalSettings`() {
+        val fresh = SettingsStateManager()
+        val s = fresh.getState()
+        assertEquals(CODESCENE_SERVER_URL, s.serverUrl)
+        assertTrue(s.enableCodeLenses)
+        assertTrue(s.enableAutoRefactor)
+        assertTrue(s.excludeGitignoreFiles)
+        assertFalse(s.previewCodeHealthGate)
+    }
+
+    @Test
+    fun `updateTelemetryConsent updates state and notifies listeners`() {
+        manager.updateTelemetryConsent(true)
+        assertTrue(manager.getState().telemetryConsentGiven)
+        verify(exactly = 1) { listener.onSettingsChanged(any(), any()) }
+
+        manager.updateTelemetryConsent(false)
+        assertFalse(manager.getState().telemetryConsentGiven)
+        verify(exactly = 2) { listener.onSettingsChanged(any(), any()) }
     }
 
     @Test

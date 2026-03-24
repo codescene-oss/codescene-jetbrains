@@ -1,8 +1,9 @@
 package com.codescene.jetbrains.platform.util
 
+import com.codescene.jetbrains.core.contracts.ISettingsProvider
 import com.codescene.jetbrains.core.util.Constants.CODESCENE
 import com.codescene.jetbrains.platform.UiLabelsBundle
-import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationGroupManager
@@ -25,7 +26,7 @@ class NotificationUtilsTest {
 
     private lateinit var mockProject: Project
     private lateinit var mockNotification: Notification
-    private lateinit var mockState: CodeSceneGlobalSettingsStore
+    private lateinit var mockSettingsProvider: ISettingsProvider
     private lateinit var mockNotificationGroup: NotificationGroup
 
     @Before
@@ -43,9 +44,11 @@ class NotificationUtilsTest {
         every { mockNotification.content } returns telemetryDesc
         every { mockNotification.type } returns NotificationType.INFORMATION
 
-        mockState = mockk<CodeSceneGlobalSettingsStore>(relaxed = true)
-        mockkObject(CodeSceneGlobalSettingsStore)
-        every { CodeSceneGlobalSettingsStore.getInstance() } returns mockState
+        mockSettingsProvider = mockk<ISettingsProvider>(relaxed = true)
+        val appServices = mockk<CodeSceneApplicationServiceProvider>()
+        every { appServices.settingsProvider } returns mockSettingsProvider
+        mockkObject(CodeSceneApplicationServiceProvider.Companion)
+        every { CodeSceneApplicationServiceProvider.getInstance() } returns appServices
 
         mockkStatic(NotificationGroupManager::class)
         every { NotificationGroupManager.getInstance().getNotificationGroup(CODESCENE) } returns mockNotificationGroup
@@ -83,7 +86,7 @@ class NotificationUtilsTest {
 
         val acceptEvent = mockk<AnActionEvent>(relaxed = true)
         acceptAction.actionPerformed(acceptEvent)
-        verify { mockState.updateTelemetryConsent(true) }
+        verify { mockSettingsProvider.updateTelemetryConsent(true) }
         verify { mockNotification.expire() }
 
         val ignoreEvent = mockk<AnActionEvent>(relaxed = true)

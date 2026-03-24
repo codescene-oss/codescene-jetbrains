@@ -4,6 +4,7 @@ import com.codescene.jetbrains.core.util.Constants.CODESCENE
 import com.codescene.jetbrains.core.util.formatCodeSmellMessage as coreFormatCodeSmellMessage
 import com.codescene.jetbrains.core.util.isExcludedByGitignore as coreIsExcludedByGitignore
 import com.codescene.jetbrains.core.util.isFileSupportedForAnalysis
+import com.codescene.jetbrains.core.util.linePairToOffsets
 import com.codescene.jetbrains.core.util.readGitignore as coreReadGitignore
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
 import com.intellij.openapi.application.runReadAction
@@ -54,9 +55,13 @@ fun getTextRange(
     range: Pair<Int, Int>,
     document: Document,
 ): TextRange {
-    val start = document.getLineStartOffset(range.first - 1)
-    val end = document.getLineEndOffset(range.second - 1)
-
+    val (start, end) =
+        linePairToOffsets(
+            range.first,
+            range.second,
+            document::getLineStartOffset,
+            document::getLineEndOffset,
+        )
     return TextRange(start, end)
 }
 
