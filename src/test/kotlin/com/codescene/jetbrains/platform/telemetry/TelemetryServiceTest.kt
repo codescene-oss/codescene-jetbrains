@@ -5,7 +5,6 @@ import com.codescene.jetbrains.core.models.settings.CodeSceneGlobalSettings
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
 import com.intellij.ide.plugins.IdeaPluginDescriptor
 import com.intellij.ide.plugins.PluginManagerCore
-import com.intellij.openapi.application.ApplicationInfo
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -37,23 +36,6 @@ class TelemetryServiceTest {
         service.logUsage("event-name", mapOf("key" to "value"))
 
         verify(exactly = 0) { ExtensionAPI.sendTelemetry(any()) }
-    }
-
-    @Test
-    fun `getIdeInfo formats application product name`() {
-        val appInfo = mockk<ApplicationInfo>()
-        every { appInfo.versionName } returns "IntelliJ IDEA"
-
-        mockkStatic(ApplicationInfo::class)
-        every { ApplicationInfo.getInstance() } returns appInfo
-
-        val service = TelemetryService()
-        val method = TelemetryService::class.java.getDeclaredMethod("getIdeInfo")
-        method.isAccessible = true
-
-        val result = method.invoke(service) as String
-
-        assertEquals("intellij_idea", result)
     }
 
     @Test

@@ -1,5 +1,7 @@
 package com.codescene.jetbrains.core.util
 
+import com.codescene.data.delta.Delta
+import com.codescene.data.review.Review
 import kotlin.math.abs
 
 data class HealthDetails(
@@ -32,6 +34,23 @@ data class HealthInformation(
     val change: String,
     val percentage: String = "",
 )
+
+fun resolveCodeHealthDescription(
+    deltaResult: Delta?,
+    review: Review?,
+): String? {
+    val hasChanged = deltaResult?.oldScore?.orElse(null) != deltaResult?.newScore?.orElse(null)
+
+    return when {
+        deltaResult != null && hasChanged -> {
+            val oldReviewScore = deltaResult.oldScore.orElse(null)
+            val newReviewScore = deltaResult.newScore.orElse(null)
+            getCodeHealth(HealthDetails(oldReviewScore, newReviewScore)).change
+        }
+        review?.score?.isPresent == true -> review.score.get().toString()
+        else -> "N/A".takeIf { review != null }
+    }
+}
 
 fun getCodeHealth(healthDetails: HealthDetails): HealthInformation {
     val newScore = healthDetails.newScore ?: "N/A"

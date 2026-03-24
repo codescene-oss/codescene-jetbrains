@@ -4,6 +4,7 @@ import com.codescene.jetbrains.core.contracts.ISettingsChangeListener
 import com.codescene.jetbrains.core.contracts.ISettingsProvider
 import com.codescene.jetbrains.core.models.settings.AceStatus
 import com.codescene.jetbrains.core.models.settings.CodeSceneGlobalSettings
+import com.codescene.jetbrains.core.settings.SettingsStateManager
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.State
@@ -14,63 +15,41 @@ import com.intellij.openapi.components.Storage
     storages = [Storage("codescene-settings.xml")],
 )
 class CodeSceneGlobalSettingsStore : PersistentStateComponent<CodeSceneGlobalSettings>, ISettingsProvider {
-    private var extensionSettingsState: CodeSceneGlobalSettings = CodeSceneGlobalSettings()
-    private val listeners = mutableSetOf<ISettingsChangeListener>()
+    private val stateManager = SettingsStateManager()
 
-    override fun getState(): CodeSceneGlobalSettings {
-        return extensionSettingsState
-    }
+    override fun getState(): CodeSceneGlobalSettings = stateManager.getState()
 
     override fun loadState(state: CodeSceneGlobalSettings) {
-        val oldState = extensionSettingsState.copy()
-        extensionSettingsState = state
-        notifyListeners(oldState, extensionSettingsState.copy())
+        stateManager.loadState(state)
     }
 
-    override fun currentState(): CodeSceneGlobalSettings = extensionSettingsState
+    override fun currentState(): CodeSceneGlobalSettings = stateManager.currentState()
 
     override fun updateTelemetryConsent(hasAccepted: Boolean) {
-        val oldState = extensionSettingsState.copy()
-        extensionSettingsState.telemetryConsentGiven = hasAccepted
-        notifyListeners(oldState, extensionSettingsState.copy())
-
+        stateManager.updateTelemetryConsent(hasAccepted)
         ApplicationManager.getApplication().invokeLater {
             ApplicationManager.getApplication().saveSettings()
         }
     }
 
     override fun updateAceStatus(status: AceStatus) {
-        val oldState = extensionSettingsState.copy()
-        extensionSettingsState.aceStatus = status
-        notifyListeners(oldState, extensionSettingsState.copy())
+        stateManager.updateAceStatus(status)
     }
 
     override fun updateAceAcknowledged(acknowledged: Boolean) {
-        val oldState = extensionSettingsState.copy()
-        extensionSettingsState.aceAcknowledged = acknowledged
-        notifyListeners(oldState, extensionSettingsState.copy())
+        stateManager.updateAceAcknowledged(acknowledged)
     }
 
     fun addSettingsChangeListener(listener: ISettingsChangeListener) {
-        listeners += listener
+        stateManager.addSettingsChangeListener(listener)
     }
 
     fun removeSettingsChangeListener(listener: ISettingsChangeListener) {
-        listeners -= listener
+        stateManager.removeSettingsChangeListener(listener)
     }
 
     fun notifyIfStateChanged(oldState: CodeSceneGlobalSettings) {
-        val newState = extensionSettingsState.copy()
-        if (oldState != newState) {
-            notifyListeners(oldState, newState)
-        }
-    }
-
-    private fun notifyListeners(
-        oldState: CodeSceneGlobalSettings,
-        newState: CodeSceneGlobalSettings,
-    ) {
-        listeners.forEach { it.onSettingsChanged(oldState, newState) }
+        stateManager.notifyIfStateChanged(oldState)
     }
 
     companion object {

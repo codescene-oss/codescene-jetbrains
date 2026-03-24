@@ -1,7 +1,7 @@
 package com.codescene.jetbrains.platform.util
 
 import com.codescene.jetbrains.core.contracts.ILogger
-import com.codescene.jetbrains.core.util.Constants.CODESCENE
+import com.codescene.jetbrains.core.util.formatLogMessage
 import com.intellij.openapi.diagnostic.Logger
 
 /**
@@ -27,28 +27,26 @@ object Log : ILogger {
     override fun info(
         message: String,
         service: String?,
-    ) = logger.info("$CODESCENE${getService(service)} - $message")
+    ) = logger.info(formatLogMessage(message, service))
 
     fun warn(message: String) = warn(message, "")
 
     override fun warn(
         message: String,
         service: String?,
-    ) = logger.warn("$CODESCENE${getService(service)} - $message")
+    ) = logger.warn(formatLogMessage(message, service))
 
     fun debug(message: String) = debug(message, "")
 
     override fun debug(
         message: String,
         service: String?,
-    ) = logger.debug("$CODESCENE${getService(service)} - $message")
+    ) = logger.debug(formatLogMessage(message, service))
 
     fun error(message: String) = error(message, "")
 
     override fun error(
         message: String,
         service: String?,
-    ) = logger.error("$CODESCENE${getService(service)} - $message")
-
-    private fun getService(service: String?) = if (!service.isNullOrEmpty()) " [$service]" else ""
+    ) = logger.error(formatLogMessage(message, service))
 }

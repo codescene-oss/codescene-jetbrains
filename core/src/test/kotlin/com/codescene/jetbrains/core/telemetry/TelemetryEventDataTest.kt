@@ -25,6 +25,11 @@ class TelemetryEventDataTest {
     }
 
     @Test
+    fun `normalizeIdeName formats application product name`() {
+        assertEquals("intellij_idea", normalizeIdeName("IntelliJ IDEA"))
+    }
+
+    @Test
     fun `buildTelemetryEventData respects dev mode flag`() {
         val result =
             buildTelemetryEventData(

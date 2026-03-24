@@ -1,5 +1,27 @@
 package com.codescene.jetbrains.core.util
 
+fun adjustIndentation(
+    anchorFirstLineText: String,
+    newContent: String,
+): String {
+    val targetIndent = anchorFirstLineText.takeWhile { it.isWhitespace() }
+
+    val newContentLines = newContent.split("\n")
+
+    val newContentIndent =
+        newContentLines
+            .filter { it.isNotBlank() }
+            .map { it.takeWhile { ch -> ch.isWhitespace() } }
+            .filter { it.isNotEmpty() }
+            .minByOrNull { it.length }
+            ?: ""
+
+    val newContentFirstNonBlankLine = newContentLines.firstOrNull { it.isNotBlank() } ?: return newContent
+    val shouldSkipAdditionalRepetition = newContentFirstNonBlankLine.firstOrNull()?.isWhitespace() ?: false
+
+    return adjustLines(newContentLines, shouldSkipAdditionalRepetition, targetIndent, newContentIndent)
+}
+
 fun adjustLines(
     newContentLines: List<String>,
     shouldSkipAdditionalRepetition: Boolean,

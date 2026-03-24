@@ -37,6 +37,15 @@ class CodeSmellUtilsTest {
     }
 
     @Test
+    fun `readGitignore returns lines from simple two line gitignore`() {
+        val dir = Files.createTempDirectory("codescene-gitignore-lines")
+        Files.writeString(dir.resolve(".gitignore"), ".kt\n.env")
+
+        val result = readGitignore(dir.toString())
+        assertEquals(listOf(".kt", ".env"), result)
+    }
+
+    @Test
     fun `isSupportedLanguage returns true for known extension`() {
         assertTrue(isSupportedLanguage("kt"))
     }

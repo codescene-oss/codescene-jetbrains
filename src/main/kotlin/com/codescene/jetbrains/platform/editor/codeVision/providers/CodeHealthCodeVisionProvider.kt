@@ -6,8 +6,7 @@ import com.codescene.jetbrains.core.delta.getCachedDelta
 import com.codescene.jetbrains.core.models.CodeVisionCodeSmell
 import com.codescene.jetbrains.core.models.DocsEntryPoint
 import com.codescene.jetbrains.core.util.Constants.GENERAL_CODE_HEALTH
-import com.codescene.jetbrains.core.util.HealthDetails
-import com.codescene.jetbrains.core.util.getCodeHealth
+import com.codescene.jetbrains.core.util.resolveCodeHealthDescription
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.platform.icons.CodeSceneIcons.CODE_HEALTH
@@ -43,25 +42,7 @@ internal class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
                 deltaCacheService = services.deltaCacheService,
             )
 
-        val deltaResult = cachedDelta.second
-        val hasChanged = deltaResult?.oldScore?.orElse(null) != deltaResult?.newScore?.orElse(null)
-
-        return when {
-            deltaResult != null && hasChanged -> {
-                val oldReviewScore = deltaResult.oldScore.orElse(null)
-                val newReviewScore = deltaResult.newScore.orElse(null)
-
-                getCodeHealth(HealthDetails(oldReviewScore, newReviewScore)).change
-            }
-
-            result?.score?.isPresent == true -> {
-                result.score.get().toString()
-            }
-
-            else -> {
-                "N/A".takeIf { result != null }
-            }
-        }
+        return resolveCodeHealthDescription(cachedDelta.second, result)
     }
 
     override fun getLenses(

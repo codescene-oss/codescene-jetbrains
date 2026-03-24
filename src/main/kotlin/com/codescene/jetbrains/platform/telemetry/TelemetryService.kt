@@ -5,6 +5,7 @@ import com.codescene.data.telemetry.TelemetryEvent
 import com.codescene.jetbrains.core.contracts.ITelemetryService
 import com.codescene.jetbrains.core.review.BaseService
 import com.codescene.jetbrains.core.telemetry.buildTelemetryEventData
+import com.codescene.jetbrains.core.telemetry.normalizeIdeName
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.platform.util.Log
@@ -72,12 +73,7 @@ class TelemetryService : BaseService(Log), Disposable, ITelemetryService {
 
     fun logUsage(eventName: String) = logUsage(eventName, emptyMap())
 
-    private fun getIdeInfo(): String {
-        val appInfo = ApplicationInfo.getInstance()
-        val productName = appInfo.versionName
-
-        return productName.lowercase().split(" ").joinToString(separator = "_")
-    }
+    private fun getIdeInfo(): String = normalizeIdeName(ApplicationInfo.getInstance().versionName)
 
     private fun getPluginVersion(): String =
         PluginManagerCore.getPlugin(PluginId.getId(CODESCENE_PLUGIN_ID))?.version ?: "unknown"

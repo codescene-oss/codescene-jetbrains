@@ -2,6 +2,128 @@ package com.codescene.jetbrains.core.util
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+
+@RunWith(Parameterized::class)
+class AdjustIndentationParameterizedTest(
+    private val lineIndent: String,
+    private val newContent: String,
+    private val expected: String,
+) {
+    companion object {
+        private const val LOC = "fun test(a: Boolean, b:Boolean) {"
+
+        @JvmStatic
+        @Parameterized.Parameters
+        fun data() =
+            listOf(
+                arrayOf(
+                    "    ",
+                    """
+fun test(a: Boolean, b:Boolean) {
+  println("Test")
+  if (a&&b) {
+    println("True")
+  }
+}
+""",
+                    """
+    fun test(a: Boolean, b:Boolean) {
+        println("Test")
+        if (a&&b) {
+            println("True")
+        }
+    }
+""",
+                ),
+                arrayOf(
+                    "    ",
+                    """
+    fun test(a: Boolean, b:Boolean) {
+        println("Test")
+        if (a&&b) {
+            println("True")
+        }
+    }
+""",
+                    """
+    fun test(a: Boolean, b:Boolean) {
+        println("Test")
+        if (a&&b) {
+            println("True")
+        }
+    }
+""",
+                ),
+                arrayOf(
+                    "    ",
+                    """
+fun test(a: Boolean, b:Boolean) {
+println("Test")
+if (a&&b) {
+println("True")
+}
+}
+""",
+                    """
+    fun test(a: Boolean, b:Boolean) {
+    println("Test")
+    if (a&&b) {
+    println("True")
+    }
+    }
+""",
+                ),
+                arrayOf(
+                    "  ",
+                    """
+fun test(a: Boolean, b:Boolean) {
+    println("Test")
+    if (a&&b) {
+        println("True")
+    }
+}
+""",
+                    """
+  fun test(a: Boolean, b:Boolean) {
+    println("Test")
+    if (a&&b) {
+      println("True")
+    }
+  }
+""",
+                ),
+                arrayOf(
+                    "  ",
+                    """
+    fun test(a: Boolean, b:Boolean) {
+        println("Test")
+        if (a&&b) {
+            println("True")
+        }
+    }
+""",
+                    """
+  fun test(a: Boolean, b:Boolean) {
+    println("Test")
+    if (a&&b) {
+      println("True")
+    }
+  }
+""",
+                ),
+                arrayOf("    ", "", ""),
+            )
+    }
+
+    @Test
+    fun `adjust indentation works as expected`() {
+        val anchorFirstLine = lineIndent + LOC
+        val result = adjustIndentation(anchorFirstLine, newContent)
+        assertEquals(expected, result)
+    }
+}
 
 class IndentationUtilsTest {
     @Test
@@ -66,5 +188,25 @@ class IndentationUtilsTest {
             )
 
         assertEquals("  first\n   second\n third", result)
+    }
+
+    @Test
+    fun `adjustIndentation returns newContent when newContent has only blank lines`() {
+        assertEquals("\n\n", adjustIndentation("  anchor", "\n\n"))
+    }
+
+    @Test
+    fun `adjustIndentation aligns unindented snippet to target line indent`() {
+        assertEquals("  body", adjustIndentation("  hello", "body"))
+    }
+
+    @Test
+    fun `adjustIndentation adjusts relative indent for multi-line snippet`() {
+        assertEquals("    line1\n    line2", adjustIndentation("    outer", "  line1\n  line2"))
+    }
+
+    @Test
+    fun `adjustIndentation preserves empty lines in snippet`() {
+        assertEquals("\ta\n\n\tb", adjustIndentation("\tbase", "a\n\nb"))
     }
 }

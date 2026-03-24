@@ -34,6 +34,36 @@ class AceUtilsTest {
         assertEquals(AceStatus.SIGNED_IN, resolveActivatedAceStatus("token"))
     }
 
+    @Test
+    fun `resolveAceStatusTooltip returns SIGNED_IN for signed in status`() {
+        assertEquals(Constants.SIGNED_IN, resolveAceStatusTooltip(AceStatus.SIGNED_IN))
+    }
+
+    @Test
+    fun `resolveAceStatusTooltip returns SIGNED_OUT for signed out status`() {
+        assertEquals(Constants.SIGNED_OUT, resolveAceStatusTooltip(AceStatus.SIGNED_OUT))
+    }
+
+    @Test
+    fun `resolveAceStatusTooltip returns DEACTIVATED for deactivated status`() {
+        assertEquals(Constants.DEACTIVATED, resolveAceStatusTooltip(AceStatus.DEACTIVATED))
+    }
+
+    @Test
+    fun `resolveAceStatusTooltip returns OUT_OF_CREDITS for out of credits status`() {
+        assertEquals(Constants.OUT_OF_CREDITS, resolveAceStatusTooltip(AceStatus.OUT_OF_CREDITS))
+    }
+
+    @Test
+    fun `resolveAceStatusTooltip returns RETRY for error status`() {
+        assertEquals(Constants.RETRY, resolveAceStatusTooltip(AceStatus.ERROR))
+    }
+
+    @Test
+    fun `resolveAceStatusTooltip returns RETRY for offline status`() {
+        assertEquals(Constants.RETRY, resolveAceStatusTooltip(AceStatus.OFFLINE))
+    }
+
     private fun mockFn(
         category: String,
         line: Int,
