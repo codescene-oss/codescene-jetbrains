@@ -50,6 +50,24 @@ jobs:
           metric: branch-coverage
           file: ./build/reports/jacoco/test/jacocoTestReport.xml
 
+      - name: Upload core line coverage data
+        if: always()
+        uses: ./.github/actions/upload-coverage
+        with:
+          cs-token: ${{ secrets.CODESCENE_CODE_COVERAGE_API_TOKEN }}
+          format: jacoco
+          metric: line-coverage
+          file: ./core/build/reports/jacoco/test/jacocoTestReport.xml
+
+      - name: Upload core branch coverage data
+        if: always()
+        uses: ./.github/actions/upload-coverage
+        with:
+          cs-token: ${{ secrets.CODESCENE_CODE_COVERAGE_API_TOKEN }}
+          format: jacoco
+          metric: branch-coverage
+          file: ./core/build/reports/jacoco/test/jacocoTestReport.xml
+
   trigger-analysis:
     runs-on: ubuntu-24.04
     needs: [code-coverage-data]
