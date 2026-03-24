@@ -6,6 +6,7 @@ import com.codescene.jetbrains.core.models.CodeVisionCodeSmell
 import com.codescene.jetbrains.core.review.ReviewCacheQuery
 import com.codescene.jetbrains.core.util.formatCodeSmellMessage
 import com.codescene.jetbrains.core.util.getRefactorableFunction
+import com.codescene.jetbrains.core.util.shouldAnnotateCodeSmells
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.editor.intentions.AceRefactorAction
 import com.codescene.jetbrains.platform.editor.intentions.ShowProblemIntentionAction
@@ -148,7 +149,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
     }
 
     override fun doAnnotate(collectedInfo: AnnotationContext): AnnotationContext? =
-        collectedInfo.takeIf { it.reviewCache != null || it.aceCache.isNotEmpty() }
+        collectedInfo.takeIf { shouldAnnotateCodeSmells(it.reviewCache, it.aceCache) }
 
     class AnnotationContext(val reviewCache: Review?, val aceCache: List<FnToRefactor>)
 }

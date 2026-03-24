@@ -2,6 +2,10 @@ package com.codescene.jetbrains.platform.util
 
 import com.codescene.jetbrains.core.models.AceCwfParams
 import com.codescene.jetbrains.core.util.Constants.CODESCENE
+import com.codescene.jetbrains.core.util.NotificationActionId
+import com.codescene.jetbrains.core.util.buildInfoNotificationSpec
+import com.codescene.jetbrains.core.util.buildRefactoringFinishedNotificationSpec
+import com.codescene.jetbrains.core.util.buildTelemetryConsentNotificationSpec
 import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.util.PlatformConstants.ACE_NOTIFICATION_GROUP
@@ -47,18 +51,18 @@ fun showNotification(params: NotificationParams) {
 }
 
 fun showTelemetryConsentNotification(project: Project?) {
+    val spec = buildTelemetryConsentNotificationSpec(UiLabelsBundle.message("telemetryDescription"))
     val params =
         NotificationParams(
             project,
             CODESCENE,
-            UiLabelsBundle.message("telemetryDescription"),
+            spec.message,
             CODESCENE,
-            listOf(
-                UiLabelsBundle.message("acceptButton") to { _, n ->
+            spec.toActions(
+                accept = { notification ->
                     CodeSceneApplicationServiceProvider.getInstance().settingsProvider.updateTelemetryConsent(true)
-                    n.expire()
+                    notification.expire()
                 },
-                UiLabelsBundle.message("closeButton") to { _, n -> n.expire() },
             ),
         )
 
@@ -70,19 +74,19 @@ fun showRefactoringFinishedNotification(
     params: AceCwfParams,
 ) {
     val project = editor.project!!
+    val spec = buildRefactoringFinishedNotificationSpec(params.function.name)
 
     val notification =
         NotificationParams(
             project,
             CODESCENE,
-            "Refactoring is ready for ${params.function.name}.",
+            spec.message,
             ACE_NOTIFICATION_GROUP,
-            listOf(
-                UiLabelsBundle.message("viewRefactoringResult") to { _, n ->
+            spec.toActions(
+                viewRefactoring = { notification ->
                     AceEntryOrchestrator.getInstance(project).handleOpenAceWindow(params, editor)
-                    n.expire()
+                    notification.expire()
                 },
-                UiLabelsBundle.message("dismissRefactoringResult") to { _, n -> n.expire() },
             ),
         )
 
@@ -93,13 +97,14 @@ fun showInfoNotification(
     message: String,
     project: Project,
 ) {
+    val spec = buildInfoNotificationSpec(message)
     val notification =
         NotificationParams(
             project,
             CODESCENE,
-            message,
+            spec.message,
             INFO_NOTIFICATION_GROUP,
-            listOf(UiLabelsBundle.message("dismissRefactoringResult") to { _, n -> n.expire() }),
+            spec.toActions(),
         )
 
     showNotification(notification)
@@ -114,3 +119,27 @@ fun showErrorNotification(
         .createNotification(message, NotificationType.ERROR)
         .notify(project)
 }
+
+private fun com.codescene.jetbrains.core.util.NotificationSpec.toActions(
+    accept: ((Notification) -> Unit)? = null,
+    viewRefactoring: ((Notification) -> Unit)? = null,
+): List<NotificationAction> =
+    actionIds.mapNotNull { actionId ->
+        when (actionId) {
+            NotificationActionId.ACCEPT_TELEMETRY ->
+                accept?.let { handler ->
+                    UiLabelsBundle.message("acceptButton") to { _, notification -> handler(notification) }
+                }
+
+            NotificationActionId.CLOSE ->
+                UiLabelsBundle.message("closeButton") to { _, notification -> notification.expire() }
+
+            NotificationActionId.DISMISS ->
+                UiLabelsBundle.message("dismissRefactoringResult") to { _, notification -> notification.expire() }
+
+            NotificationActionId.VIEW_REFACTORING_RESULT ->
+                viewRefactoring?.let { handler ->
+                    UiLabelsBundle.message("viewRefactoringResult") to { _, notification -> handler(notification) }
+                }
+        }
+    }

@@ -4,8 +4,9 @@ import com.codescene.ExtensionAPI
 import com.codescene.data.telemetry.TelemetryEvent
 import com.codescene.jetbrains.core.contracts.ITelemetryService
 import com.codescene.jetbrains.core.review.BaseService
-import com.codescene.jetbrains.core.telemetry.buildTelemetryEventData
+import com.codescene.jetbrains.core.telemetry.TelemetryRequest
 import com.codescene.jetbrains.core.telemetry.normalizeIdeName
+import com.codescene.jetbrains.core.telemetry.resolveTelemetryEventData
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.platform.util.Log
@@ -34,18 +35,19 @@ class TelemetryService : BaseService(Log), Disposable, ITelemetryService {
         eventName: String,
         eventData: Map<String, Any>,
     ) {
-        val isTelemetryEnabled = CodeSceneGlobalSettingsStore.getInstance().currentState().telemetryConsentGiven
-        if (!isTelemetryEnabled) return
-
         val eventInfo =
-            buildTelemetryEventData(
-                editorType = TELEMETRY_EDITOR_TYPE,
-                eventName = eventName,
-                data = eventData,
-                ideInfo = getIdeInfo(),
-                pluginVersion = getPluginVersion(),
-                deviceId = CodeSceneApplicationServiceProvider.getInstance().deviceIdStore.get(),
-            )
+            resolveTelemetryEventData(
+                consentGiven = CodeSceneGlobalSettingsStore.getInstance().currentState().telemetryConsentGiven,
+                request =
+                    TelemetryRequest(
+                        editorType = TELEMETRY_EDITOR_TYPE,
+                        eventName = eventName,
+                        data = eventData,
+                        ideInfo = getIdeInfo(),
+                        pluginVersion = getPluginVersion(),
+                        deviceId = CodeSceneApplicationServiceProvider.getInstance().deviceIdStore.get(),
+                    ),
+            ) ?: return
 
         val telemetryEvent =
             TelemetryEvent(

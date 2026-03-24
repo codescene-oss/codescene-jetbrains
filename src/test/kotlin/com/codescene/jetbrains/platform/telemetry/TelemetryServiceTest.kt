@@ -1,16 +1,11 @@
 package com.codescene.jetbrains.platform.telemetry
 
-import com.codescene.ExtensionAPI
-import com.codescene.jetbrains.core.models.settings.CodeSceneGlobalSettings
-import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
 import com.intellij.ide.plugins.IdeaPluginDescriptor
 import com.intellij.ide.plugins.PluginManagerCore
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mockk.verify
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -19,23 +14,6 @@ class TelemetryServiceTest {
     @After
     fun tearDown() {
         unmockkAll()
-    }
-
-    @Test
-    fun `logUsage does nothing when telemetry consent is not given`() {
-        val settingsStore = mockk<CodeSceneGlobalSettingsStore>()
-        every { settingsStore.currentState() } returns CodeSceneGlobalSettings(telemetryConsentGiven = false)
-
-        mockkObject(CodeSceneGlobalSettingsStore)
-        every { CodeSceneGlobalSettingsStore.getInstance() } returns settingsStore
-
-        mockkStatic(ExtensionAPI::class)
-        every { ExtensionAPI.sendTelemetry(any()) } returns 1
-
-        val service = TelemetryService()
-        service.logUsage("event-name", mapOf("key" to "value"))
-
-        verify(exactly = 0) { ExtensionAPI.sendTelemetry(any()) }
     }
 
     @Test

@@ -36,4 +36,33 @@ class FileChangePlanningTest {
             result,
         )
     }
+
+    @Test
+    fun `toRenameChange resolves old and new paths`() {
+        val result =
+            toRenameChange(
+                RenameChangeInput(
+                    parentPath = "src",
+                    oldName = "Old.kt",
+                    newName = "New.kt",
+                    affectedPath = "src/New.kt",
+                ),
+            )
+
+        assertEquals(FileChange.Rename("src/Old.kt", "src/New.kt", "src/New.kt"), result)
+    }
+
+    @Test
+    fun `toMoveChange preserves provided paths`() {
+        val result = toMoveChange(MoveChangeInput("old.kt", "new.kt", "new.kt"))
+
+        assertEquals(FileChange.Move("old.kt", "new.kt", "new.kt"), result)
+    }
+
+    @Test
+    fun `toDeleteChange preserves provided path`() {
+        val result = toDeleteChange(DeleteChangeInput("gone.kt", "gone.kt"))
+
+        assertEquals(FileChange.Delete("gone.kt", "gone.kt"), result)
+    }
 }

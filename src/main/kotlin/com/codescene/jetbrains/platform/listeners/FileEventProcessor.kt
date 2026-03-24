@@ -1,14 +1,19 @@
 package com.codescene.jetbrains.platform.listeners
 
+import com.codescene.jetbrains.core.review.DeleteChangeInput
 import com.codescene.jetbrains.core.review.FileCacheUpdate
 import com.codescene.jetbrains.core.review.FileChange
 import com.codescene.jetbrains.core.review.FileEventHandler
+import com.codescene.jetbrains.core.review.MoveChangeInput
+import com.codescene.jetbrains.core.review.RenameChangeInput
+import com.codescene.jetbrains.core.review.cancelPendingReviews
 import com.codescene.jetbrains.core.review.planFileReviewUpdates
-import com.codescene.jetbrains.core.util.pathsAfterRename
+import com.codescene.jetbrains.core.review.toDeleteChange
+import com.codescene.jetbrains.core.review.toMoveChange
+import com.codescene.jetbrains.core.review.toRenameChange
 import com.codescene.jetbrains.platform.api.CodeDeltaService
 import com.codescene.jetbrains.platform.api.CodeReviewService
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
-import com.codescene.jetbrains.platform.util.cancelPendingReviews
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.components.service
 import com.intellij.openapi.progress.ProgressManager
@@ -46,23 +51,44 @@ class FileEventProcessor(
     private fun handleRenameEvents(renameEvents: List<VFilePropertyChangeEvent>) {
         val changes =
             renameEvents.map {
-                val parentPath = it.file.parent.path
-                val (oldPath, newPath) = pathsAfterRename(parentPath, it.oldValue.toString(), it.newValue.toString())
-
-                FileChange.Rename(oldPath, newPath, it.file.path)
+                toRenameChange(
+                    RenameChangeInput(
+                        parentPath = it.file.parent.path,
+                        oldName = it.oldValue.toString(),
+                        newName = it.newValue.toString(),
+                        affectedPath = it.file.path,
+                    ),
+                )
             }
         val filesByAffectedPath = renameEvents.associate { it.file.path to it.file }
         applyChanges(changes, filesByAffectedPath)
     }
 
     private fun handleMoveEvents(moveEvents: List<VFileMoveEvent>) {
-        val changes = moveEvents.map { FileChange.Move(it.oldPath, it.newPath, it.file.path) }
+        val changes =
+            moveEvents.map {
+                toMoveChange(
+                    MoveChangeInput(
+                        oldPath = it.oldPath,
+                        newPath = it.newPath,
+                        affectedPath = it.file.path,
+                    ),
+                )
+            }
         val filesByAffectedPath = moveEvents.associate { it.file.path to it.file }
         applyChanges(changes, filesByAffectedPath)
     }
 
     private fun handleDeleteEvents(deleteEvents: List<VFileDeleteEvent>) {
-        val changes = deleteEvents.map { FileChange.Delete(it.file.path, it.file.path) }
+        val changes =
+            deleteEvents.map {
+                toDeleteChange(
+                    DeleteChangeInput(
+                        path = it.file.path,
+                        affectedPath = it.file.path,
+                    ),
+                )
+            }
         val filesByAffectedPath = deleteEvents.associate { it.file.path to it.file }
         applyChanges(changes, filesByAffectedPath)
     }
@@ -78,7 +104,11 @@ class FileEventProcessor(
                 ProgressManager.checkCanceled()
 
                 update.cancelPendingPath?.let(filesByAffectedPath::get)?.let {
-                    cancelPendingReviews(it, codeDeltaService, codeReviewService)
+                    cancelPendingReviews(
+                        filePath = it.path,
+                        cancelDelta = codeDeltaService::cancelFileReview,
+                        cancelReview = codeReviewService::cancelFileReview,
+                    )
                 }
 
                 applyCacheUpdate(update.cacheUpdate)

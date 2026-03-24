@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.settings.tab
 
 import com.codescene.jetbrains.core.models.settings.AceStatus
+import com.codescene.jetbrains.core.telemetry.buildOpenLinkTelemetryData
 import com.codescene.jetbrains.core.util.Constants.AI_PRINCIPLES_URL
 import com.codescene.jetbrains.core.util.Constants.CONTACT_URL
 import com.codescene.jetbrains.core.util.Constants.DOCUMENTATION_URL
@@ -237,7 +238,7 @@ class GeneralTab : Configurable {
 
                     TelemetryService.getInstance().logUsage(
                         TelemetryEvents.OPEN_LINK,
-                        mutableMapOf<String, Any>(Pair("url", uri)),
+                        buildOpenLinkTelemetryData(uri.toString()),
                     )
                 } catch (e: Exception) {
                     Log.warn("Unable to open link. Error message: ${e.message}")
