@@ -1,5 +1,10 @@
 package com.codescene.jetbrains.core.util
 
+import com.codescene.data.delta.Delta
+import com.codescene.data.review.Review
+import io.mockk.every
+import io.mockk.mockk
+import java.util.Optional
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -70,4 +75,39 @@ class CodeHealthUtilsTest {
         val result = getCodeHealth(HealthDetails(oldScore = 9.0, newScore = null))
         assertEquals(HealthInformation(change = "9.0 -> N/A", percentage = ""), result)
     }
+
+    @Test
+    fun `resolveCodeHealthDescription uses delta change when old and new scores differ`() {
+        val delta = mockDelta(oldScore = 6.0, newScore = 8.0)
+        val review = mockReview(score = 7.0)
+        val expected = getCodeHealth(HealthDetails(oldScore = 6.0, newScore = 8.0)).change
+        assertEquals(expected, resolveCodeHealthDescription(delta, review))
+    }
+
+    @Test
+    fun `resolveCodeHealthDescription uses review score when delta does not change score`() {
+        val delta = mockDelta(oldScore = 8.0, newScore = 8.0)
+        val review = mockReview(score = 9.0)
+        assertEquals("9.0", resolveCodeHealthDescription(delta, review))
+    }
+
+    @Test
+    fun `resolveCodeHealthDescription falls back to N_A when review exists without score and no changed delta`() {
+        val review = mockReview(score = null)
+        assertEquals("N/A", resolveCodeHealthDescription(null, review))
+    }
+
+    private fun mockReview(score: Double?): Review =
+        mockk {
+            every { this@mockk.score } returns Optional.ofNullable(score)
+        }
+
+    private fun mockDelta(
+        oldScore: Double,
+        newScore: Double,
+    ): Delta =
+        mockk {
+            every { this@mockk.oldScore } returns Optional.ofNullable(oldScore)
+            every { this@mockk.newScore } returns Optional.ofNullable(newScore)
+        }
 }

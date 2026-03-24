@@ -30,3 +30,5 @@ fun buildTelemetryEventData(
         additionalProperties = data,
     )
 }
+
+fun normalizeIdeName(productName: String): String = productName.lowercase().split(" ").joinToString(separator = "_")

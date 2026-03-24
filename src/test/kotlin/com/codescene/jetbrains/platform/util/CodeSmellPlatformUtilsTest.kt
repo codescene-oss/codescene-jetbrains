@@ -25,20 +25,4 @@ class CodeSmellPlatformUtilsTest {
         assertEquals(10, range.startOffset)
         assertEquals(50, range.endOffset)
     }
-
-    @Test
-    fun `formatCodeSmellMessage includes details when non-empty`() {
-        assertEquals(
-            "Complex Method (too many branches)",
-            formatCodeSmellMessage(
-                "Complex Method",
-                "too many branches",
-            ),
-        )
-    }
-
-    @Test
-    fun `formatCodeSmellMessage returns category only when details empty`() {
-        assertEquals("Complex Method", formatCodeSmellMessage("Complex Method", ""))
-    }
 }

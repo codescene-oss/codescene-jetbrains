@@ -1,9 +1,9 @@
 package com.codescene.jetbrains.platform.fs
 
 import com.codescene.jetbrains.core.contracts.IFileSystem
+import com.codescene.jetbrains.core.util.getRelativePath as coreGetRelativePath
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.vfs.LocalFileSystem
-import java.io.File
 
 @Service
 class VfsFileSystem : IFileSystem {
@@ -19,7 +19,5 @@ class VfsFileSystem : IFileSystem {
     override fun getRelativePath(
         basePath: String,
         filePath: String,
-    ): String {
-        return File(basePath).toPath().relativize(File(filePath).toPath()).toString()
-    }
+    ): String = coreGetRelativePath(basePath, filePath)
 }

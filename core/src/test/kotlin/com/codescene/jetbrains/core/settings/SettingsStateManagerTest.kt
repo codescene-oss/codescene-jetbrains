@@ -1,4 +1,4 @@
-package com.codescene.jetbrains.platform.settings
+package com.codescene.jetbrains.core.settings
 
 import com.codescene.jetbrains.core.contracts.ISettingsChangeListener
 import com.codescene.jetbrains.core.models.settings.AceStatus
@@ -11,69 +11,69 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-class CodeSceneGlobalSettingsStoreListenerTest {
-    private lateinit var store: CodeSceneGlobalSettingsStore
+class SettingsStateManagerTest {
+    private lateinit var manager: SettingsStateManager
     private lateinit var listener: ISettingsChangeListener
 
     @Before
     fun setUp() {
-        store = CodeSceneGlobalSettingsStore()
+        manager = SettingsStateManager()
         listener = mockk(relaxed = true)
-        store.addSettingsChangeListener(listener)
+        manager.addSettingsChangeListener(listener)
     }
 
     @Test
     fun `loadState notifies listeners with old and new state`() {
         val newState = CodeSceneGlobalSettings(serverUrl = "https://custom.example.com")
 
-        store.loadState(newState)
+        manager.loadState(newState)
 
         verify(exactly = 1) { listener.onSettingsChanged(any(), any()) }
-        assertEquals("https://custom.example.com", store.state.serverUrl)
+        assertEquals("https://custom.example.com", manager.getState().serverUrl)
     }
 
     @Test
     fun `removeSettingsChangeListener stops notifications`() {
-        store.removeSettingsChangeListener(listener)
+        manager.removeSettingsChangeListener(listener)
 
-        store.loadState(CodeSceneGlobalSettings(serverUrl = "https://other.com"))
+        manager.loadState(CodeSceneGlobalSettings(serverUrl = "https://other.com"))
 
         verify(exactly = 0) { listener.onSettingsChanged(any(), any()) }
     }
 
     @Test
     fun `updateAceStatus notifies listeners and updates state`() {
-        store.updateAceStatus(AceStatus.SIGNED_IN)
+        manager.updateAceStatus(AceStatus.SIGNED_IN)
 
-        assertEquals(AceStatus.SIGNED_IN, store.state.aceStatus)
+        assertEquals(AceStatus.SIGNED_IN, manager.getState().aceStatus)
         verify(exactly = 1) { listener.onSettingsChanged(any(), any()) }
     }
 
     @Test
     fun `updateAceAcknowledged notifies listeners and updates state`() {
-        assertFalse(store.state.aceAcknowledged)
+        assertFalse(manager.getState().aceAcknowledged)
 
-        store.updateAceAcknowledged(true)
+        manager.updateAceAcknowledged(true)
 
-        assertTrue(store.state.aceAcknowledged)
+        assertTrue(manager.getState().aceAcknowledged)
         verify(exactly = 1) { listener.onSettingsChanged(any(), any()) }
     }
 
     @Test
     fun `notifyIfStateChanged does nothing when state is unchanged`() {
-        val snapshot = store.currentState().copy()
+        val snapshot = manager.currentState().copy()
 
-        store.notifyIfStateChanged(snapshot)
+        manager.notifyIfStateChanged(snapshot)
 
         verify(exactly = 0) { listener.onSettingsChanged(any(), any()) }
     }
 
     @Test
     fun `notifyIfStateChanged fires when state has changed`() {
-        val snapshot = store.currentState().copy()
-        store.state.serverUrl = "https://changed.com"
+        val snapshot = manager.currentState().copy()
+        manager.getState().serverUrl = "https://changed.com"
 
-        store.notifyIfStateChanged(snapshot)
+        manager.notifyIfStateChanged(snapshot)
 
         verify(exactly = 1) { listener.onSettingsChanged(any(), any()) }
     }
@@ -81,9 +81,9 @@ class CodeSceneGlobalSettingsStoreListenerTest {
     @Test
     fun `multiple listeners all receive notifications`() {
         val second = mockk<ISettingsChangeListener>(relaxed = true)
-        store.addSettingsChangeListener(second)
+        manager.addSettingsChangeListener(second)
 
-        store.updateAceStatus(AceStatus.ERROR)
+        manager.updateAceStatus(AceStatus.ERROR)
 
         verify(exactly = 1) { listener.onSettingsChanged(any(), any()) }
         verify(exactly = 1) { second.onSettingsChanged(any(), any()) }

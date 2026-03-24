@@ -29,3 +29,12 @@ fun resolveActivatedAceStatus(token: String): AceStatus =
     } else {
         AceStatus.SIGNED_IN
     }
+
+fun resolveAceStatusTooltip(status: AceStatus): String =
+    when (status) {
+        AceStatus.SIGNED_IN -> Constants.SIGNED_IN
+        AceStatus.SIGNED_OUT -> Constants.SIGNED_OUT
+        AceStatus.DEACTIVATED -> Constants.DEACTIVATED
+        AceStatus.OUT_OF_CREDITS -> Constants.OUT_OF_CREDITS
+        AceStatus.ERROR, AceStatus.OFFLINE -> Constants.RETRY
+    }

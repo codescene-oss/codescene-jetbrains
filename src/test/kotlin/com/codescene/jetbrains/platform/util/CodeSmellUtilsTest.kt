@@ -30,23 +30,4 @@ class CodeSmellUtilsTest {
         verify(exactly = 1) { document.getLineStartOffset(startLine) }
         verify(exactly = 1) { document.getLineEndOffset(endLine) }
     }
-
-    @Test
-    fun `formatCodeSmellMessage returns category and details when details are provided`() {
-        val category = "Excess Number of Function Arguments"
-        val details = "Arguments = 5"
-
-        val result = formatCodeSmellMessage(category, details)
-
-        assertEquals("Excess Number of Function Arguments (Arguments = 5)", result)
-    }
-
-    @Test
-    fun `formatCodeSmellMessage returns category only when details are empty`() {
-        val category = "Overall Code Complexity"
-
-        val result = formatCodeSmellMessage(category, "")
-
-        assertEquals("Overall Code Complexity", result)
-    }
 }

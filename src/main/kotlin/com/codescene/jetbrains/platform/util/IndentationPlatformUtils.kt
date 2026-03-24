@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.platform.util
 
-import com.codescene.jetbrains.core.util.adjustLines
+import com.codescene.jetbrains.core.util.adjustIndentation as adjustIndentationFromAnchorLine
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.util.TextRange
 
@@ -27,22 +27,7 @@ fun adjustIndentation(
     if (start !in 0 until document.lineCount) return newContent
 
     val currentCodeFirstLine = getFirstLineText(start, document)
-    val targetIndent = currentCodeFirstLine.takeWhile { it.isWhitespace() }
-
-    val newContentLines = newContent.split("\n")
-
-    val newContentIndent =
-        newContentLines
-            .filter { it.isNotBlank() }
-            .map { it.takeWhile { ch -> ch.isWhitespace() } }
-            .filter { it.isNotEmpty() }
-            .minByOrNull { it.length }
-            ?: ""
-
-    val newContentFirstNonBlankLine = newContentLines.firstOrNull { it.isNotBlank() } ?: return newContent
-    val shouldSkipAdditionalRepetition = newContentFirstNonBlankLine.firstOrNull()?.isWhitespace() ?: false
-
-    return adjustLines(newContentLines, shouldSkipAdditionalRepetition, targetIndent, newContentIndent)
+    return adjustIndentationFromAnchorLine(currentCodeFirstLine, newContent)
 }
 
 private fun getFirstLineText(

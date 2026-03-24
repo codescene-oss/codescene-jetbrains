@@ -2,11 +2,7 @@ package com.codescene.jetbrains.platform.util
 
 import com.codescene.jetbrains.core.models.settings.AceStatus
 import com.codescene.jetbrains.core.util.Constants.CONTACT_US_ABOUT_ACE_URL
-import com.codescene.jetbrains.core.util.Constants.DEACTIVATED
-import com.codescene.jetbrains.core.util.Constants.OUT_OF_CREDITS
-import com.codescene.jetbrains.core.util.Constants.RETRY
-import com.codescene.jetbrains.core.util.Constants.SIGNED_IN
-import com.codescene.jetbrains.core.util.Constants.SIGNED_OUT
+import com.codescene.jetbrains.core.util.resolveAceStatusTooltip
 import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.actions.ShowSettingsAction
 import com.codescene.jetbrains.platform.api.AceService
@@ -35,13 +31,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 fun getStatusBarWidgetTooltip() =
-    when (CodeSceneGlobalSettingsStore.getInstance().currentState().aceStatus) {
-        AceStatus.SIGNED_IN -> SIGNED_IN
-        AceStatus.SIGNED_OUT -> SIGNED_OUT
-        AceStatus.DEACTIVATED -> DEACTIVATED
-        AceStatus.OUT_OF_CREDITS -> OUT_OF_CREDITS
-        AceStatus.ERROR, AceStatus.OFFLINE -> RETRY
-    }
+    resolveAceStatusTooltip(CodeSceneGlobalSettingsStore.getInstance().currentState().aceStatus)
 
 fun getStatusBarWidgetIcon(): Icon {
     val originalIcon = CODESCENE_TW
