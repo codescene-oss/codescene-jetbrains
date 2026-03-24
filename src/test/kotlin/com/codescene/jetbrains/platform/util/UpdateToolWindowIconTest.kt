@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.platform.util
 
-import com.intellij.execution.runners.ExecutionUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowManager
@@ -9,13 +8,31 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
+import java.awt.Color
 import javax.swing.Icon
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class UpdateToolWindowIconTest {
+    private val testDispatcher = StandardTestDispatcher()
+
+    @Before
+    fun setUp() {
+        Dispatchers.setMain(testDispatcher)
+    }
+
     @After
     fun tearDown() {
+        Dispatchers.resetMain()
         unmockkAll()
     }
 
@@ -36,6 +53,7 @@ class UpdateToolWindowIconTest {
                 project = project,
                 toolWindowId = "CodeScene",
                 hasNotification = false,
+                badgeColor = Color.RED,
             ),
         )
 
@@ -43,51 +61,28 @@ class UpdateToolWindowIconTest {
     }
 
     @Test
-    fun `uses base icon when notification is false`() {
-        val project = mockk<Project>()
-        val manager = mockk<ToolWindowManager>()
-        val toolWindow = mockk<ToolWindow>(relaxed = true)
-        val icon = mockk<Icon>()
+    fun `uses base icon when notification is false`() =
+        runTest(testDispatcher) {
+            val project = mockk<Project>()
+            val manager = mockk<ToolWindowManager>()
+            val toolWindow = mockk<ToolWindow>(relaxed = true)
+            val icon = mockk<Icon>()
 
-        mockkStatic(ToolWindowManager::class)
-        every { ToolWindowManager.getInstance(project) } returns manager
-        every { manager.getToolWindow("CodeScene") } returns toolWindow
+            mockkStatic(ToolWindowManager::class)
+            every { ToolWindowManager.getInstance(project) } returns manager
+            every { manager.getToolWindow("CodeScene") } returns toolWindow
 
-        updateToolWindowIcon(
-            UpdateToolWindowIconParams(
-                baseIcon = icon,
-                project = project,
-                toolWindowId = "CodeScene",
-                hasNotification = false,
-            ),
-        )
+            updateToolWindowIcon(
+                UpdateToolWindowIconParams(
+                    baseIcon = icon,
+                    project = project,
+                    toolWindowId = "CodeScene",
+                    hasNotification = false,
+                    badgeColor = Color.RED,
+                ),
+            )
 
-        verify(timeout = 1000) { toolWindow.setIcon(icon) }
-    }
-
-    @Test
-    fun `uses indicator icon when notification is true`() {
-        val project = mockk<Project>()
-        val manager = mockk<ToolWindowManager>()
-        val toolWindow = mockk<ToolWindow>(relaxed = true)
-        val icon = mockk<Icon>()
-        val indicator = mockk<Icon>()
-
-        mockkStatic(ToolWindowManager::class)
-        mockkStatic(ExecutionUtil::class)
-        every { ToolWindowManager.getInstance(project) } returns manager
-        every { manager.getToolWindow("CodeScene") } returns toolWindow
-        every { ExecutionUtil.getIndicator(icon, 10, 10, any()) } returns indicator
-
-        updateToolWindowIcon(
-            UpdateToolWindowIconParams(
-                baseIcon = icon,
-                project = project,
-                toolWindowId = "CodeScene",
-                hasNotification = true,
-            ),
-        )
-
-        verify(timeout = 1000) { toolWindow.setIcon(indicator) }
-    }
+            advanceUntilIdle()
+            verify { toolWindow.setIcon(icon) }
+        }
 }

@@ -24,6 +24,16 @@
                     "name": "String Heavy Function Arguments",
                     "weight": 0.0
                 }
+            ],
+            "thresholds": [
+                {
+                    "name": "function_lines_of_code_warning",
+                    "value": 200
+                },
+                {
+                    "name": "function_lines_of_code_alert",
+                    "value": 300
+                }
             ]
         },
         {

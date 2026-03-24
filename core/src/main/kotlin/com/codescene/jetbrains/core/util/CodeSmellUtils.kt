@@ -78,3 +78,14 @@ fun formatCodeSmellMessage(
     category: String,
     details: String,
 ): String = if (details.isNotEmpty()) "$category ($details)" else category
+
+fun linePairToOffsets(
+    startLineOneBased: Int,
+    endLineOneBased: Int,
+    lineStartOffset: (lineIndex0Based: Int) -> Int,
+    lineEndOffset: (lineIndex0Based: Int) -> Int,
+): Pair<Int, Int> {
+    val start = lineStartOffset(startLineOneBased - 1)
+    val end = lineEndOffset(endLineOneBased - 1)
+    return start to end
+}

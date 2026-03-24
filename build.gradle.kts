@@ -26,6 +26,7 @@ val codeSceneRepository = providers.gradleProperty("codeSceneRepository").get()
 val mockkVersion = providers.gradleProperty("mockkVersion").get()
 val kotlinxSerializationVersion = providers.gradleProperty("kotlinxSerializationVersion").get()
 val slf4jNopVersion = providers.gradleProperty("slf4jNopVersion").get()
+val kotlinxCoroutinesVersion = providers.gradleProperty("kotlinxCoroutinesVersion").get()
 
 // Set the JVM language level used to build the project.
 kotlin {
@@ -59,6 +60,7 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation("io.mockk:mockk:$mockkVersion")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinxCoroutinesVersion")
 
     // Provide a no-op SLF4J binding during tests to avoid "No binding found" errors.
     // Some libraries (e.g., MockK or IntelliJ SDK components) rely on SLF4J at runtime.
