@@ -1,0 +1,63 @@
+core/src/main/kotlin/com/codescene/jetbrains/core/mapper/CodeHealthMonitorMapper.kt
+  6fdb5f8ad55770bf 20,44-66
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/UpdateMonitor.kt
+  6fdb5f8ad55770bf 41-47,49-50,58
+src/main/kotlin/com/codescene/jetbrains/platform/listeners/FileEventProcessor.kt
+  6fdb5f8ad55770bf 3-4,6,47-50,52-55,59-61,65-67,70-72,75,77,80-82,84-85,90-94
+src/main/kotlin/com/codescene/jetbrains/platform/util/TelemetryInfo.kt
+  6fdb5f8ad55770bf 4,12-13
+core/src/test/kotlin/com/codescene/jetbrains/core/telemetry/TelemetryInfoResolverTest.kt
+  6fdb5f8ad55770bf 1-17
+core/src/main/kotlin/com/codescene/jetbrains/core/mapper/DocumentationMapper.kt
+  6fdb5f8ad55770bf 6,20-34
+src/main/kotlin/com/codescene/jetbrains/platform/listeners/FileChangeListener.kt
+  6fdb5f8ad55770bf 3,20-25
+core/src/main/kotlin/com/codescene/jetbrains/core/util/IndentationUtils.kt
+  6fdb5f8ad55770bf 25-29
+core/src/test/kotlin/com/codescene/jetbrains/core/mapper/CodeHealthMonitorMapperTest.kt
+  6fdb5f8ad55770bf 7,16,25,46-62,65,71,77,83,89,100,107,117,132,149,155,175,185,191,193,195-196,198-203,206-209,213-222
+core/src/main/kotlin/com/codescene/jetbrains/core/review/FileChangePlanning.kt
+  6fdb5f8ad55770bf 1-67
+src/main/kotlin/com/codescene/jetbrains/platform/util/IndentationPlatformUtils.kt
+  6fdb5f8ad55770bf 3,26,31-33
+core/src/test/kotlin/com/codescene/jetbrains/core/review/AceEntryLogicTest.kt
+  6fdb5f8ad55770bf 6,180-229
+core/src/test/kotlin/com/codescene/jetbrains/core/review/FileChangePlanningTest.kt
+  6fdb5f8ad55770bf 1-39
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/OpenDocs.kt
+  6fdb5f8ad55770bf 8,61,93
+core/src/main/kotlin/com/codescene/jetbrains/core/review/AceEntryLogic.kt
+  6fdb5f8ad55770bf 21,23,30-39,152-173
+src/main/kotlin/com/codescene/jetbrains/platform/util/AceEntryOrchestrator.kt
+  6fdb5f8ad55770bf 15,17-18,146-148,249-250,252
+core/src/main/kotlin/com/codescene/jetbrains/core/telemetry/DocsTelemetry.kt
+  6fdb5f8ad55770bf 1-14
+core/src/test/kotlin/com/codescene/jetbrains/core/util/IndentationUtilsTest.kt
+  6fdb5f8ad55770bf 204-207
+core/src/main/kotlin/com/codescene/jetbrains/core/telemetry/TelemetryInfoResolver.kt
+  6fdb5f8ad55770bf 1-8
+core/src/test/kotlin/com/codescene/jetbrains/core/telemetry/DocsTelemetryTest.kt
+  6fdb5f8ad55770bf 1-36
+core/src/test/kotlin/com/codescene/jetbrains/core/mapper/DocumentationMapperTest.kt
+  6fdb5f8ad55770bf 3,7,36-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "5652a3aa456d90802089647cc0a502c1070a21c6",
+  "prompts": {
+    "6fdb5f8ad55770bf": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "899d9a95-8669-4846-8391-527524146610",
+        "model": "gpt-5.4-medium"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 501,
+      "total_deletions": 331,
+      "accepted_lines": 472,
+      "overriden_lines": 0
+    }
+  }
+}
