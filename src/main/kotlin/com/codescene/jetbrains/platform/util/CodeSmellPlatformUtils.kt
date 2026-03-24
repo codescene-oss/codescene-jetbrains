@@ -1,7 +1,6 @@
 package com.codescene.jetbrains.platform.util
 
 import com.codescene.jetbrains.core.util.Constants.CODESCENE
-import com.codescene.jetbrains.core.util.formatCodeSmellMessage as coreFormatCodeSmellMessage
 import com.codescene.jetbrains.core.util.isExcludedByGitignore as coreIsExcludedByGitignore
 import com.codescene.jetbrains.core.util.isFileSupportedForAnalysis
 import com.codescene.jetbrains.core.util.linePairToOffsets
@@ -64,10 +63,3 @@ fun getTextRange(
         )
     return TextRange(start, end)
 }
-
-fun readGitignore(project: Project): List<String> = coreReadGitignore(project.basePath)
-
-fun formatCodeSmellMessage(
-    category: String,
-    details: String,
-): String = coreFormatCodeSmellMessage(category, details)

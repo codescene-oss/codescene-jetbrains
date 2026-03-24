@@ -18,6 +18,25 @@ private val cwfThemeOpacitySuffixes =
         90 to "E6",
     )
 
+data class RgbColor(
+    val red: Int,
+    val green: Int,
+    val blue: Int,
+)
+
+data class CwfThemeSourceInputs(
+    val textForeground: RgbColor,
+    val linkForeground: RgbColor,
+    val buttonForeground: RgbColor,
+    val buttonBackground: RgbColor,
+    val editorBackground: RgbColor,
+    val scrollbarThumbHex: String,
+    val buttonSecondaryBackground: RgbColor,
+    val fontSizePx: Int,
+    val editorFontFamily: String,
+    val editorFontSizePx: Int,
+)
+
 data class CwfThemeCssInputs(
     val textForegroundHex: String,
     val linkForegroundHex: String,
@@ -30,6 +49,24 @@ data class CwfThemeCssInputs(
     val editorFontFamily: String,
     val editorFontSizePx: Int,
 )
+
+fun toHex(color: RgbColor): String = "%02X%02X%02X".format(color.red, color.green, color.blue)
+
+fun buildCwfThemeCssVariables(inputs: CwfThemeSourceInputs): String =
+    buildCwfThemeCssVariables(
+        CwfThemeCssInputs(
+            textForegroundHex = toHex(inputs.textForeground),
+            linkForegroundHex = toHex(inputs.linkForeground),
+            buttonForegroundHex = toHex(inputs.buttonForeground),
+            buttonBackgroundHex = toHex(inputs.buttonBackground),
+            editorBackgroundHex = toHex(inputs.editorBackground),
+            scrollbarThumbHex = inputs.scrollbarThumbHex,
+            buttonSecondaryBackgroundHex = toHex(inputs.buttonSecondaryBackground),
+            fontSizePx = inputs.fontSizePx,
+            editorFontFamily = inputs.editorFontFamily,
+            editorFontSizePx = inputs.editorFontSizePx,
+        ),
+    )
 
 fun buildCwfThemeCssVariables(inputs: CwfThemeCssInputs): String {
     val textFg = inputs.textForegroundHex

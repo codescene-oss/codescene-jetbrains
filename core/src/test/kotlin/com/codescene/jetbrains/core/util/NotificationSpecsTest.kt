@@ -33,4 +33,30 @@ class NotificationSpecsTest {
         assertEquals("info", result.message)
         assertEquals(listOf(NotificationActionId.DISMISS), result.actionIds)
     }
+
+    @Test
+    fun `toActionSpecs maps telemetry actions to label keys`() {
+        val result = buildTelemetryConsentNotificationSpec("consent").toActionSpecs()
+
+        assertEquals(
+            listOf(
+                NotificationActionSpec(NotificationActionId.ACCEPT_TELEMETRY, "acceptButton"),
+                NotificationActionSpec(NotificationActionId.CLOSE, "closeButton"),
+            ),
+            result,
+        )
+    }
+
+    @Test
+    fun `toActionSpecs maps refactoring actions to label keys`() {
+        val result = buildRefactoringFinishedNotificationSpec("extractMethod").toActionSpecs()
+
+        assertEquals(
+            listOf(
+                NotificationActionSpec(NotificationActionId.VIEW_REFACTORING_RESULT, "viewRefactoringResult"),
+                NotificationActionSpec(NotificationActionId.DISMISS, "dismissRefactoringResult"),
+            ),
+            result,
+        )
+    }
 }

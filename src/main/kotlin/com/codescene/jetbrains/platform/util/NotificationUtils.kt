@@ -6,6 +6,7 @@ import com.codescene.jetbrains.core.util.NotificationActionId
 import com.codescene.jetbrains.core.util.buildInfoNotificationSpec
 import com.codescene.jetbrains.core.util.buildRefactoringFinishedNotificationSpec
 import com.codescene.jetbrains.core.util.buildTelemetryConsentNotificationSpec
+import com.codescene.jetbrains.core.util.toActionSpecs
 import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.util.PlatformConstants.ACE_NOTIFICATION_GROUP
@@ -124,22 +125,16 @@ private fun com.codescene.jetbrains.core.util.NotificationSpec.toActions(
     accept: ((Notification) -> Unit)? = null,
     viewRefactoring: ((Notification) -> Unit)? = null,
 ): List<NotificationAction> =
-    actionIds.mapNotNull { actionId ->
-        when (actionId) {
-            NotificationActionId.ACCEPT_TELEMETRY ->
-                accept?.let { handler ->
-                    UiLabelsBundle.message("acceptButton") to { _, notification -> handler(notification) }
-                }
+    toActionSpecs().mapNotNull { action ->
+        val handler =
+            when (action.id) {
+                NotificationActionId.ACCEPT_TELEMETRY -> accept
+                NotificationActionId.CLOSE -> { notification: Notification -> notification.expire() }
+                NotificationActionId.DISMISS -> { notification: Notification -> notification.expire() }
+                NotificationActionId.VIEW_REFACTORING_RESULT -> viewRefactoring
+            }
 
-            NotificationActionId.CLOSE ->
-                UiLabelsBundle.message("closeButton") to { _, notification -> notification.expire() }
-
-            NotificationActionId.DISMISS ->
-                UiLabelsBundle.message("dismissRefactoringResult") to { _, notification -> notification.expire() }
-
-            NotificationActionId.VIEW_REFACTORING_RESULT ->
-                viewRefactoring?.let { handler ->
-                    UiLabelsBundle.message("viewRefactoringResult") to { _, notification -> handler(notification) }
-                }
+        handler?.let {
+            UiLabelsBundle.message(action.labelKey) to { _, notification -> it(notification) }
         }
     }

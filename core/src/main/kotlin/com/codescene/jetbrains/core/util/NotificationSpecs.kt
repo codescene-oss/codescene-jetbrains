@@ -7,10 +7,29 @@ enum class NotificationActionId {
     VIEW_REFACTORING_RESULT,
 }
 
+data class NotificationActionSpec(
+    val id: NotificationActionId,
+    val labelKey: String,
+)
+
 data class NotificationSpec(
     val message: String,
     val actionIds: List<NotificationActionId>,
 )
+
+fun NotificationSpec.toActionSpecs(): List<NotificationActionSpec> =
+    actionIds.map { actionId ->
+        NotificationActionSpec(
+            id = actionId,
+            labelKey =
+                when (actionId) {
+                    NotificationActionId.ACCEPT_TELEMETRY -> "acceptButton"
+                    NotificationActionId.CLOSE -> "closeButton"
+                    NotificationActionId.DISMISS -> "dismissRefactoringResult"
+                    NotificationActionId.VIEW_REFACTORING_RESULT -> "viewRefactoringResult"
+                },
+        )
+    }
 
 fun buildTelemetryConsentNotificationSpec(message: String): NotificationSpec =
     NotificationSpec(
