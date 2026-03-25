@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.platform.util
 
-import com.codescene.jetbrains.core.util.adjustIndentation as adjustIndentationFromAnchorLine
+import com.codescene.jetbrains.core.util.adjustIndentationOrOriginal
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.util.TextRange
 
@@ -23,17 +23,14 @@ fun adjustIndentation(
     document: Document,
     start: Int,
     newContent: String,
-): String {
-    if (start !in 0 until document.lineCount) return newContent
-
-    val currentCodeFirstLine = getFirstLineText(start, document)
-    return adjustIndentationFromAnchorLine(currentCodeFirstLine, newContent)
-}
+): String = adjustIndentationOrOriginal(getFirstLineText(start, document), newContent)
 
 private fun getFirstLineText(
     start: Int,
     document: Document,
-): String {
+): String? {
+    if (start !in 0 until document.lineCount) return null
+
     val firstLineStartOffset = document.getLineStartOffset(start)
     val firstLineEndOffset = document.getLineEndOffset(start)
     return document.getText(TextRange(firstLineStartOffset, firstLineEndOffset))

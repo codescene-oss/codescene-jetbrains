@@ -8,14 +8,12 @@ import com.codescene.jetbrains.core.review.ReviewCacheQuery
 import com.codescene.jetbrains.core.util.CodeVisionAction
 import com.codescene.jetbrains.core.util.CodeVisionApiCallTracker
 import com.codescene.jetbrains.core.util.CodeVisionDecisionInput
+import com.codescene.jetbrains.core.util.defaultCodeVisionProviderIds
 import com.codescene.jetbrains.core.util.getCodeSmellsByCategory
 import com.codescene.jetbrains.core.util.resolveCodeVisionDecision
 import com.codescene.jetbrains.platform.api.CodeDeltaService
 import com.codescene.jetbrains.platform.api.CodeReviewService
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
-import com.codescene.jetbrains.platform.editor.codeVision.providers.AceCodeVisionProvider
-import com.codescene.jetbrains.platform.editor.codeVision.providers.AggregatedSmellCodeVisionProvider
-import com.codescene.jetbrains.platform.editor.codeVision.providers.CodeHealthCodeVisionProvider
 import com.codescene.jetbrains.platform.icons.CodeSceneIcons.CODE_SMELL
 import com.codescene.jetbrains.platform.util.getTextRange
 import com.codescene.jetbrains.platform.util.handleOpenDocs
@@ -44,12 +42,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
             apiCalls: MutableSet<String>,
         ) = CodeVisionApiCallTracker.markApiCallComplete(filePath, apiCalls)
 
-        fun getProviders(): List<String> =
-            listOf(
-                AggregatedSmellCodeVisionProvider::class.simpleName!!,
-                CodeHealthCodeVisionProvider::class.simpleName!!,
-                AceCodeVisionProvider::class.simpleName!!,
-            )
+        fun getProviders(): List<String> = defaultCodeVisionProviderIds
     }
 
     protected open fun categoriesForLenses(): List<String> = emptyList()

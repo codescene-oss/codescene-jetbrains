@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.webview.util
 
-import com.codescene.jetbrains.core.util.CwfThemeCssInputs
+import com.codescene.jetbrains.core.util.CwfThemeSourceInputs
+import com.codescene.jetbrains.core.util.RgbColor
 import com.codescene.jetbrains.core.util.buildCwfThemeCssVariables
 import com.codescene.jetbrains.core.util.parseScrollbarHex
 import com.intellij.openapi.application.ApplicationManager
@@ -16,8 +17,6 @@ class StyleHelper {
     companion object {
         fun getInstance(): StyleHelper = ApplicationManager.getApplication().getService(StyleHelper::class.java)
     }
-
-    private fun toHex(c: Color): String = "%02X%02X%02X".format(c.red, c.green, c.blue)
 
     /**
      * Generates a CSS string defining theme variables based on the current JetBrains IDE theme.
@@ -62,14 +61,14 @@ class StyleHelper {
             val buttonSecondaryBg = UIManager.getColor("Button.default.endBackground")
 
             buildCwfThemeCssVariables(
-                CwfThemeCssInputs(
-                    textForegroundHex = toHex(textFg),
-                    linkForegroundHex = toHex(linkFg),
-                    buttonForegroundHex = toHex(buttonFg),
-                    buttonBackgroundHex = toHex(buttonBg),
-                    editorBackgroundHex = toHex(editorBackground),
+                CwfThemeSourceInputs(
+                    textForeground = textFg.toRgbColor(),
+                    linkForeground = linkFg.toRgbColor(),
+                    buttonForeground = buttonFg.toRgbColor(),
+                    buttonBackground = buttonBg.toRgbColor(),
+                    editorBackground = editorBackground.toRgbColor(),
                     scrollbarThumbHex = getScrollbarHex(),
-                    buttonSecondaryBackgroundHex = toHex(buttonSecondaryBg),
+                    buttonSecondaryBackground = buttonSecondaryBg.toRgbColor(),
                     fontSizePx = fontSize,
                     editorFontFamily = editorFontFamily,
                     editorFontSizePx = editorFontSize,
@@ -82,3 +81,5 @@ class StyleHelper {
 
     private fun getScrollbarHex(): String = parseScrollbarHex(JBCefScrollbarsHelper.buildScrollbarsStyle())
 }
+
+private fun Color.toRgbColor(): RgbColor = RgbColor(red = red, green = green, blue = blue)

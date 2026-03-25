@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.platform.settings
 
+import com.codescene.jetbrains.core.telemetry.buildSettingsVisibilityTelemetryData
 import com.codescene.jetbrains.core.util.Constants.CODESCENE
 import com.codescene.jetbrains.core.util.TelemetryEvents
 import com.codescene.jetbrains.platform.settings.tab.AboutTab
@@ -42,7 +43,7 @@ class CodeSceneSettings : Composite, Configurable {
                 if (event.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
                     TelemetryService.getInstance().logUsage(
                         TelemetryEvents.SETTINGS_VISIBILITY,
-                        mutableMapOf<String, Any>(Pair("visible", this.isShowing)),
+                        buildSettingsVisibilityTelemetryData(this.isShowing),
                     )
                 }
             }

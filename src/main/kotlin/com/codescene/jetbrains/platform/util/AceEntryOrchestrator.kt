@@ -12,13 +12,14 @@ import com.codescene.jetbrains.core.models.shared.FileMetaType
 import com.codescene.jetbrains.core.review.AceEntryCommand
 import com.codescene.jetbrains.core.review.AceRefactorableFunctionCacheEntry
 import com.codescene.jetbrains.core.review.AceRefactorableFunctionCacheQuery
+import com.codescene.jetbrains.core.review.AceResultAction
 import com.codescene.jetbrains.core.review.resolveAceEntryPointCommand
+import com.codescene.jetbrains.core.review.resolveAceErrorViewParams
+import com.codescene.jetbrains.core.review.resolveAceResultAction
 import com.codescene.jetbrains.core.review.resolveAceStatusChange
 import com.codescene.jetbrains.core.review.resolveAceViewUpdateParams
 import com.codescene.jetbrains.core.review.resolveRefactoringRequest
 import com.codescene.jetbrains.core.util.AceEntryPoint
-import com.codescene.jetbrains.core.util.resolveAceErrorType
-import com.codescene.jetbrains.core.util.shouldOpenAceWindow
 import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.api.AceService
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
@@ -142,10 +143,9 @@ class AceEntryOrchestrator(private val project: Project) {
         requestDuration: Long,
         editor: Editor,
     ) {
-        if (shouldOpenAceWindow(requestDuration)) {
-            handleOpenAceWindow(params, editor)
-        } else {
-            showRefactoringFinishedNotification(editor, params)
+        when (val action = resolveAceResultAction(params, requestDuration)) {
+            is AceResultAction.OpenWindow -> handleOpenAceWindow(action.params, editor)
+            is AceResultAction.ShowNotification -> showRefactoringFinishedNotification(editor, action.params)
         }
     }
 
@@ -246,15 +246,10 @@ class AceEntryOrchestrator(private val project: Project) {
         request: RefactoringRequest?,
         e: Exception,
     ) {
-        val errorType = resolveAceErrorType(e)
-
-        if (request != null && editor != null) {
+        val params = resolveAceErrorViewParams(request, editor?.virtualFile?.path, e)
+        if (params != null) {
             openAceWindow(
-                AceCwfParams(
-                    error = errorType,
-                    function = request.function,
-                    filePath = editor.virtualFile.path,
-                ),
+                params,
                 project,
             )
         }

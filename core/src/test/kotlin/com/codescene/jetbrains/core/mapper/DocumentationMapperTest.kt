@@ -1,8 +1,10 @@
 package com.codescene.jetbrains.core.mapper
 
+import com.codescene.jetbrains.core.models.CwfMessage
 import com.codescene.jetbrains.core.models.View
 import com.codescene.jetbrains.core.models.shared.FileMetaType
 import com.codescene.jetbrains.core.models.view.DocsData
+import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -30,5 +32,16 @@ class DocumentationMapperTest {
         val result = mapper.toCwfData(docsData, pro = true, devmode = true)
         assertTrue(result.pro)
         assertTrue(result.devmode)
+    }
+
+    @Test
+    fun `toMessage wraps docs payload in CWF message`() {
+        val docsData = DocsData(docType = "docs_general_code_health", fileData = FileMetaType(fileName = "a.kt"))
+        val result = mapper.toMessage(docsData, devmode = true)
+
+        val parsed = Json.decodeFromString(CwfMessage.serializer(), result)
+        assertEquals("update-renderer", parsed.messageType)
+        assertTrue(result.contains("\"view\": \"docs\""))
+        assertTrue(result.contains("\"docs_general_code_health\""))
     }
 }

@@ -1,7 +1,9 @@
 package com.codescene.jetbrains.platform.util
 
 import com.codescene.jetbrains.core.models.shared.RangeCamelCase
-import com.codescene.jetbrains.core.util.replaceTextInRange
+import com.codescene.jetbrains.core.review.AceDiffContext
+import com.codescene.jetbrains.core.review.buildAceDiffText
+import com.codescene.jetbrains.core.review.resolveAceDiffContext
 import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.webview.util.getAceUserData
 import com.intellij.diff.DiffContentFactory
@@ -74,7 +76,7 @@ private fun getDiffRequest(
 
     val (originalText, offsetRange) = data
 
-    val newText = replaceTextInRange(originalText, offsetRange, refactoredCode)
+    val newText = buildAceDiffText(originalText, offsetRange, refactoredCode)
 
     val leftContent = factory.create(project, file)
     val rightContent = factory.create(project, newText)
@@ -101,19 +103,11 @@ private fun getDocumentContext(
     Pair(text, startOffset..endOffset)
 }
 
-private data class AceContext(val refactoredFilePath: String, val range: RangeCamelCase, val refactoredCode: String)
-
-private fun getAceContext(project: Project): AceContext? =
-    getAceUserData(project)?.aceData
-        ?.takeIf { it.fileData.fn?.range != null && it.aceResultData?.code != null }
-        ?.let { aceContext ->
-            val refactoredFilePath = aceContext.fileData.fileName
-            val range = aceContext.fileData.fn!!.range!!
-            val refactoredCode = aceContext.aceResultData!!.code
-
-            return AceContext(
-                refactoredFilePath,
-                range,
-                refactoredCode,
-            )
-        }
+private fun getAceContext(project: Project): AceDiffContext? =
+    getAceUserData(project)?.aceData?.let { aceContext ->
+        resolveAceDiffContext(
+            refactoredFilePath = aceContext.fileData.fileName,
+            range = aceContext.fileData.fn?.range,
+            refactoredCode = aceContext.aceResultData?.code,
+        )
+    }

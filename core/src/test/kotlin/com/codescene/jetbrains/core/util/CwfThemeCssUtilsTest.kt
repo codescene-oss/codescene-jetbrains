@@ -5,6 +5,48 @@ import org.junit.Test
 
 class CwfThemeCssUtilsTest {
     @Test
+    fun `toHex converts rgb color to hex`() {
+        assertEquals("0A14FF", toHex(RgbColor(10, 20, 255)))
+    }
+
+    @Test
+    fun `buildCwfThemeCssVariables accepts source inputs`() {
+        val css =
+            buildCwfThemeCssVariables(
+                CwfThemeSourceInputs(
+                    textForeground = RgbColor(17, 17, 17),
+                    linkForeground = RgbColor(34, 34, 34),
+                    buttonForeground = RgbColor(51, 51, 51),
+                    buttonBackground = RgbColor(68, 68, 68),
+                    editorBackground = RgbColor(85, 85, 85),
+                    scrollbarThumbHex = "66666666",
+                    buttonSecondaryBackground = RgbColor(119, 119, 119),
+                    fontSizePx = 12,
+                    editorFontFamily = "JetBrains Mono",
+                    editorFontSizePx = 13,
+                ),
+            )
+
+        assertEquals(
+            buildCwfThemeCssVariables(
+                CwfThemeCssInputs(
+                    textForegroundHex = "111111",
+                    linkForegroundHex = "222222",
+                    buttonForegroundHex = "333333",
+                    buttonBackgroundHex = "444444",
+                    editorBackgroundHex = "555555",
+                    scrollbarThumbHex = "66666666",
+                    buttonSecondaryBackgroundHex = "777777",
+                    fontSizePx = 12,
+                    editorFontFamily = "JetBrains Mono",
+                    editorFontSizePx = 13,
+                ),
+            ),
+            css,
+        )
+    }
+
+    @Test
     fun `buildCwfThemeCssVariables produces expected root block`() {
         val inputs =
             CwfThemeCssInputs(

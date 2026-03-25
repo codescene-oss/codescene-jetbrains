@@ -2,11 +2,8 @@ package com.codescene.jetbrains.platform.webview.util
 
 import com.codescene.jetbrains.core.flag.RuntimeFlags
 import com.codescene.jetbrains.core.mapper.CodeHealthMonitorMapper
-import com.codescene.jetbrains.core.models.CwfData
 import com.codescene.jetbrains.core.models.View
-import com.codescene.jetbrains.core.models.view.HomeData
 import com.codescene.jetbrains.core.review.AceRefactorableFunctionCacheQuery
-import com.codescene.jetbrains.core.util.parseMessage
 import com.codescene.jetbrains.core.util.resolveFunctionToRefactor
 import com.codescene.jetbrains.core.util.toAutoRefactorConfig
 import com.codescene.jetbrains.platform.api.CodeDeltaService
@@ -40,22 +37,17 @@ fun updateMonitor(project: Project) {
     val deltaResults = PlatformDeltaCacheService.getInstance(project).getAll()
     val activeJobs = CodeDeltaService.getInstance(project).activeReviewCalls.toList()
 
-    val dataJson =
-        parseMessage(
-            mapper = {
-                codeHealthMonitorMapper.toCwfData(
-                    deltaResults = deltaResults,
-                    activeJobs = activeJobs,
-                    functionToRefactorResolver = { filePath, contentSha, fn ->
-                        val cache = PlatformAceRefactorableFunctionsCacheService.getInstance(project)
-                        val candidates = cache.get(AceRefactorableFunctionCacheQuery(filePath, contentSha))
-                        resolveFunctionToRefactor(candidates, fn)
-                    },
-                    autoRefactorConfig = toAutoRefactorConfig(services.settingsProvider.currentState()),
-                    devmode = RuntimeFlags.isDevMode,
-                )
+    val update =
+        codeHealthMonitorMapper.buildUpdate(
+            deltaResults = deltaResults,
+            activeJobs = activeJobs,
+            functionToRefactorResolver = { filePath, contentSha, fn ->
+                val cache = PlatformAceRefactorableFunctionsCacheService.getInstance(project)
+                val candidates = cache.get(AceRefactorableFunctionCacheQuery(filePath, contentSha))
+                resolveFunctionToRefactor(candidates, fn)
             },
-            serializer = CwfData.serializer(HomeData.serializer()),
+            autoRefactorConfig = toAutoRefactorConfig(services.settingsProvider.currentState()),
+            devmode = RuntimeFlags.isDevMode,
         )
 
     updateToolWindowIcon(
@@ -63,8 +55,8 @@ fun updateMonitor(project: Project) {
             project = project,
             baseIcon = CODESCENE_TW,
             toolWindowId = "CodeScene",
-            hasNotification = deltaResults.isNotEmpty(),
+            hasNotification = update.hasNotification,
         ),
     )
-    CwfMessageHandler.getInstance(project).postMessage(View.HOME, dataJson)
+    CwfMessageHandler.getInstance(project).postMessage(View.HOME, update.message)
 }

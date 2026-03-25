@@ -4,17 +4,20 @@ import com.codescene.ExtensionAPI
 import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.jetbrains.core.delta.adaptDeltaResult
 import com.codescene.jetbrains.core.delta.completeDeltaAnalysis
+import com.codescene.jetbrains.core.models.TelemetryInfo
 import com.codescene.jetbrains.core.review.CodeReviewer
 import com.codescene.jetbrains.core.review.ReviewOrchestrator
+import com.codescene.jetbrains.core.telemetry.resolveTelemetryInfo
 import com.codescene.jetbrains.core.util.CodeVisionApiCallTracker
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.editor.UIRefreshService
 import com.codescene.jetbrains.platform.util.Log
-import com.codescene.jetbrains.platform.util.getTelemetryInfo
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -81,7 +84,11 @@ class CodeDeltaService(private val project: Project) : CodeSceneService() {
         val (rawResult, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview) }
         val delta = adaptDeltaResult(rawResult)
 
-        val telemetryInfo = getTelemetryInfo(editor.virtualFile)
+        val telemetryInfo =
+            ApplicationManager.getApplication().runReadAction<TelemetryInfo> {
+                val document = FileDocumentManager.getInstance().getDocument(editor.virtualFile)
+                resolveTelemetryInfo(document?.lineCount, editor.virtualFile.extension)
+            } ?: resolveTelemetryInfo(null, null)
         val result =
             completeDeltaAnalysis(
                 path = path,

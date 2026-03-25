@@ -1,6 +1,11 @@
 package com.codescene.jetbrains.core.mapper
 
+import com.codescene.data.review.Range
+import com.codescene.jetbrains.core.models.CodeVisionCodeSmell
+import com.codescene.jetbrains.core.util.Constants
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class DocsDataMapperTest {
@@ -27,15 +32,7 @@ class DocsDataMapperTest {
 
     @Test
     fun `toCodeSmellDocsData maps null functionName to empty string`() {
-        val input =
-            DocsCodeSmellInput(
-                category = "Cat",
-                functionName = null,
-                startLine = 1,
-                endLine = 2,
-                startColumn = 0,
-                endColumn = 0,
-            )
+        val input = docsCodeSmellInput(functionName = null, startLine = 1, endLine = 2)
         val result = toCodeSmellDocsData("a.kt", "type", input)
         assertEquals("", result.fileData.fn!!.name)
     }
@@ -55,15 +52,7 @@ class DocsDataMapperTest {
 
     @Test
     fun `toCodeSmellDocsData preserves zero ranges`() {
-        val input =
-            DocsCodeSmellInput(
-                category = "Cat",
-                functionName = "fn",
-                startLine = 0,
-                endLine = 0,
-                startColumn = 0,
-                endColumn = 0,
-            )
+        val input = docsCodeSmellInput(functionName = "fn", startLine = 0, endLine = 0)
         val result = toCodeSmellDocsData("a.kt", "type", input)
         assertEquals(0, result.fileData.fn!!.range!!.startLine)
         assertEquals(0, result.fileData.fn!!.range!!.endLine)
@@ -75,4 +64,57 @@ class DocsDataMapperTest {
         val result = toCodeSmellDocsData("a.kt", "type", input)
         assertEquals(false, result.autoRefactor.visible)
     }
+
+    @Test
+    fun `resolveGeneralDocsData returns docs data for known source`() {
+        val result = resolveGeneralDocsData(Constants.GENERAL_CODE_HEALTH)
+
+        assertNotNull(result)
+        assertEquals("docs_general_code_health", result?.docType)
+    }
+
+    @Test
+    fun `resolveGeneralDocsData returns null for unknown source`() {
+        assertNull(resolveGeneralDocsData("missing"))
+    }
+
+    @Test
+    fun `resolveCodeSmellDocsData returns docs data for known code smell`() {
+        val result =
+            resolveCodeSmellDocsData(
+                "src/a.kt",
+                CodeVisionCodeSmell(
+                    details = "details",
+                    category = "Complex Method",
+                    highlightRange = Range(5, 2, 15, 30),
+                    functionName = "myFn",
+                ),
+            )
+
+        assertNotNull(result)
+        assertEquals("docs_issues_complex_method", result?.docType)
+        assertEquals("src/a.kt", result?.fileData?.fileName)
+        assertEquals("myFn", result?.fileData?.fn?.name)
+    }
+
+    @Test
+    fun `resolveCodeSmellDocsData returns null for unknown code smell`() {
+        val result =
+            resolveCodeSmellDocsData(
+                "src/a.kt",
+                CodeVisionCodeSmell(
+                    details = "details",
+                    category = "Unknown",
+                    highlightRange = Range(1, 0, 1, 0),
+                ),
+            )
+
+        assertNull(result)
+    }
+
+    private fun docsCodeSmellInput(
+        functionName: String?,
+        startLine: Int,
+        endLine: Int,
+    ) = DocsCodeSmellInput("Cat", functionName, startLine, endLine, 0, 0)
 }
