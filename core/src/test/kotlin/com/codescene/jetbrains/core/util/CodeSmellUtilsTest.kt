@@ -67,61 +67,87 @@ class CodeSmellUtilsTest {
 
     @Test
     fun `isFileSupportedForAnalysis true for supported extension in project not gitignored`() {
-        assertTrue(
-            isFileSupportedForAnalysis(
-                extension = "java",
-                inProjectContent = true,
-                excludeGitignoreFiles = true,
-                ignoredByGitignore = false,
-            ),
+        assertFileSupported(
+            expected = true,
+            extension = "java",
+            inProjectContent = true,
+            excludeGitignoreFiles = true,
+            ignoredByGitignore = false,
         )
     }
 
     @Test
     fun `isFileSupportedForAnalysis false for unsupported extension`() {
-        assertFalse(
-            isFileSupportedForAnalysis(
-                extension = "unsupported_extension",
-                inProjectContent = true,
-                excludeGitignoreFiles = true,
-                ignoredByGitignore = false,
-            ),
+        assertFileSupported(
+            expected = false,
+            extension = "unsupported_extension",
+            inProjectContent = true,
+            excludeGitignoreFiles = true,
+            ignoredByGitignore = false,
         )
     }
 
     @Test
     fun `isFileSupportedForAnalysis false when gitignore excludes and setting enabled`() {
-        assertFalse(
-            isFileSupportedForAnalysis(
-                extension = "java",
-                inProjectContent = true,
-                excludeGitignoreFiles = true,
-                ignoredByGitignore = true,
-            ),
+        assertFileSupported(
+            expected = false,
+            extension = "java",
+            inProjectContent = true,
+            excludeGitignoreFiles = true,
+            ignoredByGitignore = true,
         )
     }
 
     @Test
     fun `isFileSupportedForAnalysis false when file not in project content`() {
-        assertFalse(
-            isFileSupportedForAnalysis(
-                extension = "java",
-                inProjectContent = false,
-                excludeGitignoreFiles = true,
-                ignoredByGitignore = false,
-            ),
+        assertFileSupported(
+            expected = false,
+            extension = "java",
+            inProjectContent = false,
+            excludeGitignoreFiles = true,
+            ignoredByGitignore = false,
         )
     }
 
     @Test
     fun `isFileSupportedForAnalysis true when gitignored but excludeGitignoreFiles false`() {
-        assertTrue(
-            isFileSupportedForAnalysis(
-                extension = "java",
-                inProjectContent = true,
-                excludeGitignoreFiles = false,
-                ignoredByGitignore = true,
-            ),
+        assertFileSupported(
+            expected = true,
+            extension = "java",
+            inProjectContent = true,
+            excludeGitignoreFiles = false,
+            ignoredByGitignore = true,
         )
+    }
+
+    @Test
+    fun `linePairToOffsets resolves one based line numbers to offsets`() {
+        val result =
+            linePairToOffsets(
+                startLineOneBased = 2,
+                endLineOneBased = 4,
+                lineStartOffset = { line -> line * 10 },
+                lineEndOffset = { line -> (line * 10) + 9 },
+            )
+
+        assertEquals(10 to 39, result)
+    }
+
+    private fun assertFileSupported(
+        expected: Boolean,
+        extension: String?,
+        inProjectContent: Boolean,
+        excludeGitignoreFiles: Boolean,
+        ignoredByGitignore: Boolean,
+    ) {
+        val result =
+            isFileSupportedForAnalysis(
+                extension = extension,
+                inProjectContent = inProjectContent,
+                excludeGitignoreFiles = excludeGitignoreFiles,
+                ignoredByGitignore = ignoredByGitignore,
+            )
+
+        assertEquals(expected, result)
     }
 }

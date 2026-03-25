@@ -210,6 +210,23 @@ class CodeHealthMonitorMapperTest {
     }
 
     @Test
+    fun `buildUpdate returns message and notification state`() {
+        val delta = createDelta(scoreChange = 1.0)
+        val result =
+            mapper.buildUpdate(
+                deltaResults = listOf("file.kt" to createCacheItem(delta)),
+                activeJobs = listOf("src/Main.kt"),
+                functionToRefactorResolver = noRefactorResolver,
+                autoRefactorConfig = autoRefactorConfig,
+                devmode = true,
+            )
+
+        assertTrue(result.message.contains("\"view\": \"home\""))
+        assertTrue(result.message.contains("\"src/Main.kt\""))
+        assertEquals(true, result.hasNotification)
+    }
+
+    @Test
     fun `hasNotification returns true when delta results exist`() {
         val delta = createDelta(scoreChange = 1.0)
         val deltaResults = listOf("file.kt" to createCacheItem(delta))

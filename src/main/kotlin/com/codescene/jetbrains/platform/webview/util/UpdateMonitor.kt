@@ -37,8 +37,8 @@ fun updateMonitor(project: Project) {
     val deltaResults = PlatformDeltaCacheService.getInstance(project).getAll()
     val activeJobs = CodeDeltaService.getInstance(project).activeReviewCalls.toList()
 
-    val dataJson =
-        codeHealthMonitorMapper.toMessage(
+    val update =
+        codeHealthMonitorMapper.buildUpdate(
             deltaResults = deltaResults,
             activeJobs = activeJobs,
             functionToRefactorResolver = { filePath, contentSha, fn ->
@@ -55,8 +55,8 @@ fun updateMonitor(project: Project) {
             project = project,
             baseIcon = CODESCENE_TW,
             toolWindowId = "CodeScene",
-            hasNotification = codeHealthMonitorMapper.hasNotification(deltaResults),
+            hasNotification = update.hasNotification,
         ),
     )
-    CwfMessageHandler.getInstance(project).postMessage(View.HOME, dataJson)
+    CwfMessageHandler.getInstance(project).postMessage(View.HOME, update.message)
 }

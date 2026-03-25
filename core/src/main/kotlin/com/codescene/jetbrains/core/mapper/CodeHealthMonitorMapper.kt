@@ -19,6 +19,11 @@ import com.codescene.jetbrains.core.util.Constants.DELTA_ANALYSIS_JOB
 import com.codescene.jetbrains.core.util.Constants.JOB_STATE_RUNNING
 import com.codescene.jetbrains.core.util.parseMessage
 
+data class CodeHealthMonitorUpdate(
+    val message: String,
+    val hasNotification: Boolean,
+)
+
 class CodeHealthMonitorMapper {
     fun toCwfData(
         deltaResults: List<Pair<String, DeltaCacheItem>>,
@@ -61,6 +66,27 @@ class CodeHealthMonitorMapper {
                 )
             },
             serializer = CwfData.serializer(HomeData.serializer()),
+        )
+
+    fun buildUpdate(
+        deltaResults: List<Pair<String, DeltaCacheItem>>,
+        activeJobs: List<String>,
+        functionToRefactorResolver: (String, String, com.codescene.data.delta.FunctionFinding) -> FunctionToRefactor?,
+        autoRefactorConfig: AutoRefactorConfig,
+        pro: Boolean = true,
+        devmode: Boolean,
+    ): CodeHealthMonitorUpdate =
+        CodeHealthMonitorUpdate(
+            message =
+                toMessage(
+                    deltaResults = deltaResults,
+                    activeJobs = activeJobs,
+                    functionToRefactorResolver = functionToRefactorResolver,
+                    autoRefactorConfig = autoRefactorConfig,
+                    pro = pro,
+                    devmode = devmode,
+                ),
+            hasNotification = hasNotification(deltaResults),
         )
 
     fun hasNotification(deltaResults: List<Pair<String, DeltaCacheItem>>): Boolean = deltaResults.isNotEmpty()
