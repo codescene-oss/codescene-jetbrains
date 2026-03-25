@@ -7,6 +7,7 @@ data class DeltaExecutionPlan(
 
 fun resolveDeltaExecutionPlan(
     baselineCode: String,
+    currentCode: String,
     currentScore: Double?,
     baselineScore: Double?,
 ): DeltaExecutionPlan =
@@ -15,7 +16,7 @@ fun resolveDeltaExecutionPlan(
         currentScore == null || baselineScore == null ->
             DeltaExecutionPlan(shouldRunDelta = true, shouldCacheEmptyDelta = false)
 
-        currentScore == baselineScore ->
+        baselineCode == currentCode ->
             DeltaExecutionPlan(shouldRunDelta = false, shouldCacheEmptyDelta = true)
 
         else -> DeltaExecutionPlan(shouldRunDelta = true, shouldCacheEmptyDelta = false)

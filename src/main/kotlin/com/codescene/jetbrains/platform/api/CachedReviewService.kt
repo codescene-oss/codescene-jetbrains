@@ -102,7 +102,7 @@ class CachedReviewService(
         val path = editor.virtualFile.path
         val baselineCode = serviceProvider.gitService.getBranchCreationCommitCode(path)
         val baselineScore = getBaselineScore(path, fileName, baselineCode)
-        val plan = resolveDeltaExecutionPlan(baselineCode, currentScore, baselineScore)
+        val plan = resolveDeltaExecutionPlan(baselineCode, currentCode, currentScore, baselineScore)
 
         if (plan.shouldCacheEmptyDelta) {
             serviceProvider.deltaCacheService.put(
