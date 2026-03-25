@@ -1,0 +1,27 @@
+core/src/test/kotlin/com/codescene/jetbrains/core/review/CachedReviewFlowTest.kt
+  8d130f478cf4b9fb 11-17,25-31,38-45,51-62
+core/src/main/kotlin/com/codescene/jetbrains/core/review/CachedReviewFlow.kt
+  8d130f478cf4b9fb 10,19
+src/main/kotlin/com/codescene/jetbrains/platform/api/CachedReviewService.kt
+  8d130f478cf4b9fb 105
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.19",
+  "base_commit_sha": "ac7b5ae630a9977667f098e3ce893870e5cae52c",
+  "prompts": {
+    "8d130f478cf4b9fb": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "9c7fbbb0-3480-4244-b2d7-29d09cc39edc",
+        "model": "gpt-5.4-medium"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 63,
+      "total_deletions": 30,
+      "accepted_lines": 39,
+      "overriden_lines": 0
+    }
+  }
+}
