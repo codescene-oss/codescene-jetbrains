@@ -1,0 +1,35 @@
+core/src/main/kotlin/com/codescene/jetbrains/core/util/CodeVisionProviderIds.kt
+  398ae4dd42d26e20 1-8
+core/src/test/kotlin/com/codescene/jetbrains/core/util/CodeSmellUtilsTest.kt
+  398ae4dd42d26e20 70-75,81-86,92-97,103-108,114-119,122-152
+core/src/test/kotlin/com/codescene/jetbrains/core/mapper/CodeHealthMonitorMapperTest.kt
+  398ae4dd42d26e20 213-228
+core/src/main/kotlin/com/codescene/jetbrains/core/mapper/CodeHealthMonitorMapper.kt
+  398ae4dd42d26e20 22-26,71-89
+core/src/test/kotlin/com/codescene/jetbrains/core/util/CodeVisionProviderIdsTest.kt
+  398ae4dd42d26e20 1-18
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/UpdateMonitor.kt
+  398ae4dd42d26e20 40-41,58,61
+src/main/kotlin/com/codescene/jetbrains/platform/editor/codeVision/CodeSceneCodeVisionProvider.kt
+  398ae4dd42d26e20 11,45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "feb27795db8385131fbfeb2aac07018e15ec8490",
+  "prompts": {
+    "398ae4dd42d26e20": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "350dc343-8427-4b3a-859e-0bf54cae8def",
+        "model": "gpt-5.4-medium"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 136,
+      "total_deletions": 48,
+      "accepted_lines": 136,
+      "overriden_lines": 0
+    }
+  }
+}
