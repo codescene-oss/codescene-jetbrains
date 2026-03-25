@@ -11,8 +11,7 @@ import com.codescene.jetbrains.core.review.planFileReviewUpdates
 import com.codescene.jetbrains.core.review.toDeleteChange
 import com.codescene.jetbrains.core.review.toMoveChange
 import com.codescene.jetbrains.core.review.toRenameChange
-import com.codescene.jetbrains.platform.api.CodeDeltaService
-import com.codescene.jetbrains.platform.api.CodeReviewService
+import com.codescene.jetbrains.platform.api.CachedReviewService
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.components.service
@@ -35,9 +34,12 @@ class FileEventProcessor(
 ) : AsyncFileListener.ChangeApplier {
     private val serviceProvider = CodeSceneProjectServiceProvider.getInstance(project)
     private val fileEventHandler =
-        FileEventHandler(serviceProvider.deltaCacheService, serviceProvider.reviewCacheService)
-    private val codeDeltaService = project.service<CodeDeltaService>()
-    private val codeReviewService = project.service<CodeReviewService>()
+        FileEventHandler(
+            serviceProvider.deltaCacheService,
+            serviceProvider.reviewCacheService,
+            serviceProvider.baselineReviewCacheService,
+        )
+    private val cachedReviewService = project.service<CachedReviewService>()
 
     override fun beforeVfsChange() {
         handleRenameEvents(renameEvents)
@@ -106,8 +108,8 @@ class FileEventProcessor(
                 update.cancelPendingPath?.let(filesByAffectedPath::get)?.let {
                     cancelPendingReviews(
                         filePath = it.path,
-                        cancelDelta = codeDeltaService::cancelFileReview,
-                        cancelReview = codeReviewService::cancelFileReview,
+                        cancelDelta = cachedReviewService::cancelFileReview,
+                        cancelReview = cachedReviewService::cancelFileReview,
                     )
                 }
 

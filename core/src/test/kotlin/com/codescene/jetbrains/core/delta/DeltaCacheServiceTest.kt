@@ -62,4 +62,15 @@ class DeltaCacheServiceTest {
         assertEquals(true, cachedResponse.first)
         assertEquals(deltaApiResponse, cachedResponse.second)
     }
+
+    @Test
+    fun `get returns cache hit for cached null delta`() {
+        deltaCacheService.put(DeltaCacheEntry(filePath, headCommitContent, currentFileContent, null))
+
+        val cachedResponse =
+            deltaCacheService.get(DeltaCacheQuery(filePath, headCommitContent, currentFileContent))
+
+        assertEquals(true, cachedResponse.first)
+        assertNull(cachedResponse.second)
+    }
 }

@@ -6,7 +6,7 @@ import com.codescene.jetbrains.core.models.View
 import com.codescene.jetbrains.core.review.AceRefactorableFunctionCacheQuery
 import com.codescene.jetbrains.core.util.resolveFunctionToRefactor
 import com.codescene.jetbrains.core.util.toAutoRefactorConfig
-import com.codescene.jetbrains.platform.api.CodeDeltaService
+import com.codescene.jetbrains.platform.api.CachedReviewService
 import com.codescene.jetbrains.platform.delta.PlatformDeltaCacheService
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.icons.CodeSceneIcons.CODESCENE_TW
@@ -35,7 +35,7 @@ fun updateMonitor(project: Project) {
 
     val services = CodeSceneProjectServiceProvider.getInstance(project)
     val deltaResults = PlatformDeltaCacheService.getInstance(project).getAll()
-    val activeJobs = CodeDeltaService.getInstance(project).activeReviewCalls.toList()
+    val activeJobs = CachedReviewService.getInstance(project).activeReviewCalls.toList()
 
     val update =
         codeHealthMonitorMapper.buildUpdate(

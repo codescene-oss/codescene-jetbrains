@@ -124,7 +124,7 @@ class AceEntryOrchestrator(private val project: Project) {
     suspend fun checkContainsRefactorableFunctions(
         editor: Editor,
         result: Review,
-    ) {
+    ): Boolean {
         val shouldCheck =
             com.codescene.jetbrains.core.review.shouldCheckRefactorableFunctions(
                 settingsProvider = appServices.settingsProvider,
@@ -132,10 +132,12 @@ class AceEntryOrchestrator(private val project: Project) {
                 fileExtension = editor.virtualFile.extension,
             )
 
-        if (shouldCheck) {
-            val aceParams = CodeParams(editor.document.text, editor.virtualFile.extension)
-            AceService.getInstance().getRefactorableFunctions(aceParams, result, editor)
+        if (!shouldCheck) {
+            return false
         }
+
+        val aceParams = CodeParams(editor.document.text, editor.virtualFile.extension)
+        return AceService.getInstance().getRefactorableFunctions(aceParams, result, editor)
     }
 
     fun handleRefactoringResult(
