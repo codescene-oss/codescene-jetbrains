@@ -308,10 +308,12 @@ class AceEntryOrchestrator(private val project: Project) {
     ) {
         val params = resolveAceErrorViewParams(request, editor?.virtualFile?.path, e)
         if (params != null) {
-            openAceWindow(
-                params,
-                project,
-            )
+            CoroutineScope(Dispatchers.Main).launch {
+                openAceWindow(
+                    params,
+                    project,
+                )
+            }
         }
     }
 }
