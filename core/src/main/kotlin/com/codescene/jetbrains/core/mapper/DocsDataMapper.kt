@@ -56,6 +56,7 @@ fun resolveCodeSmellDocsData(
     codeSmell: CodeVisionCodeSmell,
 ): DocsData? {
     val docType = nameDocMap[codeSmell.category] ?: return null
+    val range = codeSmell.functionRange ?: codeSmell.highlightRange
     return toCodeSmellDocsData(
         filePath = filePath,
         docType = docType,
@@ -63,10 +64,10 @@ fun resolveCodeSmellDocsData(
             DocsCodeSmellInput(
                 category = codeSmell.category,
                 functionName = codeSmell.functionName,
-                startLine = codeSmell.highlightRange.startLine,
-                endLine = codeSmell.highlightRange.endLine,
-                startColumn = codeSmell.highlightRange.startColumn,
-                endColumn = codeSmell.highlightRange.endColumn,
+                startLine = range.startLine,
+                endLine = range.endLine,
+                startColumn = range.startColumn,
+                endColumn = range.endColumn,
             ),
     )
 }

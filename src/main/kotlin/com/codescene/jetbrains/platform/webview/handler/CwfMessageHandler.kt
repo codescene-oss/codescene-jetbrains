@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.platform.webview.handler
 
+import com.codescene.data.ace.FnToRefactor
 import com.codescene.jetbrains.core.handler.ICwfActionHandler
 import com.codescene.jetbrains.core.handler.isUrlAllowed
 import com.codescene.jetbrains.core.handler.resolveApplyAction
@@ -20,6 +21,7 @@ import com.codescene.jetbrains.core.models.message.OpenDocsForFunction
 import com.codescene.jetbrains.core.models.message.RequestAndPresentRefactoring
 import com.codescene.jetbrains.core.models.shared.FileMetaType
 import com.codescene.jetbrains.core.util.AceEntryPoint
+import com.codescene.jetbrains.core.util.findMatchingRefactorableFunction
 import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
@@ -38,6 +40,7 @@ import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
@@ -91,6 +94,7 @@ class CwfMessageHandler(
             Json {
                 encodeDefaults = true
                 prettyPrint = true
+                ignoreUnknownKeys = true
             }
 
         val message = json.decodeFromString<CwfMessage>(request)
@@ -172,13 +176,48 @@ class CwfMessageHandler(
     }
 
     override fun handleRequestAndPresentRefactoring(request: RequestAndPresentRefactoring) {
+        val filePath = request.filePath ?: request.fileName
+        val fnToRefactor = resolveRequestedFunctionToRefactor(request, filePath)
         orchestrator.handleRefactoringFromCwf(
             FileMetaType(
                 fn = request.fn,
-                fileName = request.fileName,
+                fileName = filePath,
             ),
             AceEntryPoint.CODE_HEALTH_DETAILS,
+            fnToRefactor,
         )
+    }
+
+    private fun contentForAceCacheLookup(filePath: String): String? {
+        val virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return null
+        val document = FileDocumentManager.getInstance().getDocument(virtualFile)
+        return document?.text
+            ?: runCatching { services.fileSystem.readFile(filePath) }
+                .getOrElse { t ->
+                    Log.warn(
+                        "Failed to read file for ACE cache lookup: $filePath (${t.javaClass.simpleName}: ${t.message})",
+                        serviceName,
+                    )
+                    null
+                }
+    }
+
+    private fun resolveRequestedFunctionToRefactor(
+        request: RequestAndPresentRefactoring,
+        filePath: String,
+    ): FnToRefactor? {
+        val code = contentForAceCacheLookup(filePath) ?: return null
+        val candidates = services.aceRefactorableFunctionsCache.get(filePath, code)
+
+        val range = request.fn.range ?: request.range
+        val fnToRefactor =
+            findMatchingRefactorableFunction(
+                aceCache = candidates,
+                functionName = request.fn.name,
+                startLine = range?.startLine,
+                endLine = range?.endLine,
+            )
+        return fnToRefactor
     }
 
     override fun handleAcknowledged() {

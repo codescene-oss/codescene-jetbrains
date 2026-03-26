@@ -7,6 +7,7 @@ import com.codescene.jetbrains.core.models.View
 import com.codescene.jetbrains.core.models.view.DocsData
 import com.codescene.jetbrains.core.telemetry.buildOpenDocsTelemetryData
 import com.codescene.jetbrains.core.util.TelemetryEvents
+import com.codescene.jetbrains.core.util.toAutoRefactorConfig
 import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.fileeditor.documentation.CWF_DOCS_DATA_KEY
@@ -35,7 +36,7 @@ import kotlinx.coroutines.launch
  * - An **Intention Action** on a code smell or in the problems tab
  * - A **Code Vision annotation** on a code smell
  *
- * @param docsData The documentation data to be displayed in the webview.
+ * @param docsData Documentation payload; [DocsData.autoRefactor] is replaced from current IDE settings before display.
  * @param project The current project.
  * @param entryPoint The entry point from which the documentation was opened (for telemetry).
  */
@@ -44,11 +45,18 @@ fun openDocs(
     project: Project,
     entryPoint: DocsEntryPoint,
 ) {
+    val enriched =
+        docsData.copy(
+            autoRefactor =
+                toAutoRefactorConfig(
+                    CodeSceneApplicationServiceProvider.getInstance().settingsProvider.currentState(),
+                ),
+        )
     val existingBrowser = WebViewInitializer.getInstance(project).getBrowser(View.DOCS)
 
-    if (existingBrowser != null) updateWebView(docsData, existingBrowser, project) else openFile(docsData, project)
+    if (existingBrowser != null) updateWebView(enriched, existingBrowser, project) else openFile(enriched, project)
 
-    sendTelemetry(docsData, entryPoint)
+    sendTelemetry(enriched, entryPoint)
 }
 
 private fun updateWebView(
