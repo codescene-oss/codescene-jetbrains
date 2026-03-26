@@ -1,0 +1,23 @@
+core/src/test/kotlin/com/codescene/jetbrains/core/models/message/RequestAndPresentRefactoringTest.kt
+  7ce2eb21eced328d 1-90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.19",
+  "base_commit_sha": "e3eccf342075a61c3e07acccd360c8b1313dfbf5",
+  "prompts": {
+    "7ce2eb21eced328d": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "e9b28a95-7390-4d3a-9936-a049b485d1d1",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 90,
+      "total_deletions": 0,
+      "accepted_lines": 90,
+      "overriden_lines": 0
+    }
+  }
+}
