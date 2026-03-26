@@ -4,11 +4,14 @@ import com.codescene.jetbrains.core.models.CwfMessage
 import com.codescene.jetbrains.core.models.message.EditorMessages
 import com.codescene.jetbrains.core.models.message.LifecycleMessages
 import com.codescene.jetbrains.core.models.message.PanelMessages
+import io.mockk.capture
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 class CwfMessageRouterTest {
@@ -73,10 +76,24 @@ class CwfMessageRouterTest {
     @Test
     fun `routes docs and refactoring requests with valid payload`() {
         val docsPayload = json.parseToJsonElement("""{"docType":"x","fileName":"a.kt","fn":null}""")
+        val requestSlot = slot<com.codescene.jetbrains.core.models.message.RequestAndPresentRefactoring>()
         val reqPayload =
             json.parseToJsonElement(
                 """
-                {"fileName":"a.kt","fn":{"name":"f","range":{"endLine":1,"endColumn":1,"startLine":1,"startColumn":1}}}
+                {
+                  "fileName":"a.kt",
+                  "filePath":"a.kt",
+                  "source":"docs",
+                  "fn":{"name":"f","range":{"endLine":1,"endColumn":1,"startLine":1,"startColumn":1}},
+                  "range":{"endLine":1,"endColumn":1,"startLine":1,"startColumn":1},
+                  "fnToRefactor":{
+                    "name":"f",
+                    "body":"fun f() = 1",
+                    "file-type":"kotlin",
+                    "nippy-b64":"abc",
+                    "range":{"end-line":1,"end-column":1,"start-line":1,"start-column":1}
+                  }
+                }
                 """.trimIndent(),
             )
 
@@ -90,7 +107,12 @@ class CwfMessageRouterTest {
         )
 
         verify(exactly = 1) { handler.handleOpenDocs(any()) }
-        verify(exactly = 1) { handler.handleRequestAndPresentRefactoring(any()) }
+        verify(exactly = 1) { handler.handleRequestAndPresentRefactoring(capture(requestSlot)) }
+        assertEquals("a.kt", requestSlot.captured.filePath)
+        assertEquals("docs", requestSlot.captured.source)
+        assertNotNull(requestSlot.captured.fnToRefactor)
+        assertEquals("f", requestSlot.captured.fnToRefactor?.name)
+        assertEquals(1, requestSlot.captured.fnToRefactor?.range?.startLine)
     }
 
     @Test

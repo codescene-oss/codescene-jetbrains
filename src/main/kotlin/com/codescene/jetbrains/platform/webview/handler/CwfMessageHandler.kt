@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.platform.webview.handler
 
+import com.codescene.data.ace.FnToRefactor
 import com.codescene.jetbrains.core.handler.ICwfActionHandler
 import com.codescene.jetbrains.core.handler.isUrlAllowed
 import com.codescene.jetbrains.core.handler.resolveApplyAction
@@ -20,6 +21,7 @@ import com.codescene.jetbrains.core.models.message.OpenDocsForFunction
 import com.codescene.jetbrains.core.models.message.RequestAndPresentRefactoring
 import com.codescene.jetbrains.core.models.shared.FileMetaType
 import com.codescene.jetbrains.core.util.AceEntryPoint
+import com.codescene.jetbrains.core.util.findMatchingRefactorableFunction
 import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
@@ -91,6 +93,7 @@ class CwfMessageHandler(
             Json {
                 encodeDefaults = true
                 prettyPrint = true
+                ignoreUnknownKeys = true
             }
 
         val message = json.decodeFromString<CwfMessage>(request)
@@ -172,12 +175,31 @@ class CwfMessageHandler(
     }
 
     override fun handleRequestAndPresentRefactoring(request: RequestAndPresentRefactoring) {
+        val filePath = request.filePath ?: request.fileName
+        val fnToRefactor = resolveRequestedFunctionToRefactor(request, filePath)
         orchestrator.handleRefactoringFromCwf(
             FileMetaType(
                 fn = request.fn,
-                fileName = request.fileName,
+                fileName = filePath,
             ),
             AceEntryPoint.CODE_HEALTH_DETAILS,
+            fnToRefactor,
+        )
+    }
+
+    private fun resolveRequestedFunctionToRefactor(
+        request: RequestAndPresentRefactoring,
+        filePath: String,
+    ): FnToRefactor? {
+        val requested = request.fnToRefactor ?: return null
+        val code = services.fileSystem.readFile(filePath) ?: return null
+        val candidates = services.aceRefactorableFunctionsCache.get(filePath, code)
+
+        return findMatchingRefactorableFunction(
+            aceCache = candidates,
+            functionName = requested.name,
+            startLine = requested.range.startLine,
+            endLine = requested.range.endLine,
         )
     }
 
