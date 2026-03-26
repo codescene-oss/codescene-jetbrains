@@ -25,7 +25,11 @@ private fun resolveTextEditorForFilePath(
             LocalFileSystem.getInstance().findFileByPath(filePath)
                 ?: LocalFileSystem.getInstance().findFileByIoFile(File(filePath))
         if (virtualFile != null) {
-            return editorManager.openTextEditor(OpenFileDescriptor(project, virtualFile), true)
+            val opened =
+                editorManager.openTextEditor(OpenFileDescriptor(project, virtualFile), true)
+            if (opened != null) {
+                return opened
+            }
         }
     }
 

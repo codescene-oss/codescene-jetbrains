@@ -191,7 +191,15 @@ class CwfMessageHandler(
     private fun contentForAceCacheLookup(filePath: String): String? {
         val virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return null
         val document = FileDocumentManager.getInstance().getDocument(virtualFile)
-        return document?.text ?: services.fileSystem.readFile(filePath)
+        return document?.text
+            ?: runCatching { services.fileSystem.readFile(filePath) }
+                .getOrElse { t ->
+                    Log.warn(
+                        "Failed to read file for ACE cache lookup: $filePath (${t.javaClass.simpleName}: ${t.message})",
+                        serviceName,
+                    )
+                    null
+                }
     }
 
     private fun resolveRequestedFunctionToRefactor(
