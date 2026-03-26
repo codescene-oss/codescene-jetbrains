@@ -1,0 +1,27 @@
+src/main/kotlin/com/codescene/jetbrains/platform/api/CachedReviewService.kt
+  89a6ed03515fd9cb 3-4,12,15-16,35,129-144
+src/main/kotlin/com/codescene/jetbrains/platform/api/AceService.kt
+  89a6ed03515fd9cb 8,76-88
+core/src/test/kotlin/com/codescene/jetbrains/core/review/ExtensionApiFnToRefactorDeltaOverloadTest.kt
+  89a6ed03515fd9cb 1-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.19",
+  "base_commit_sha": "287706c43e5cf08e1806039657b7c682feab2f51",
+  "prompts": {
+    "89a6ed03515fd9cb": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "317c4964-af65-4841-82bf-4db55b7cb3fa",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 54,
+      "total_deletions": 2,
+      "accepted_lines": 54,
+      "overriden_lines": 0
+    }
+  }
+}
