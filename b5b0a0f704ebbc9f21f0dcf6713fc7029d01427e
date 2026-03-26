@@ -1,0 +1,38 @@
+src/main/kotlin/com/codescene/jetbrains/platform/util/EditorUtils.kt
+  45ef3b6daca13c9b 28-32
+src/main/kotlin/com/codescene/jetbrains/platform/webview/handler/CwfMessageHandler.kt
+  8f104de85a6bcabd 194-202
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.19",
+  "base_commit_sha": "b5b0a0f704ebbc9f21f0dcf6713fc7029d01427e",
+  "prompts": {
+    "45ef3b6daca13c9b": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "6b4b9dac-aef2-4a47-bef5-9f2da60ee696",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 5,
+      "total_deletions": 1,
+      "accepted_lines": 5,
+      "overriden_lines": 0
+    },
+    "8f104de85a6bcabd": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "c5a70ba8-dad4-4879-a849-3df49e410400",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 9,
+      "total_deletions": 1,
+      "accepted_lines": 9,
+      "overriden_lines": 0
+    }
+  }
+}
