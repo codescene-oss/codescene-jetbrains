@@ -1,0 +1,89 @@
+core/src/test/kotlin/com/codescene/jetbrains/core/models/message/RequestAndPresentRefactoringTest.kt
+  7ce2eb21eced328d 1-90
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/OpenDocs.kt
+  ab42ad1ec55c95ff 10,39,48-54,57,59
+  6fdb5f8ad55770bf 8,69,101
+src/main/kotlin/com/codescene/jetbrains/platform/util/EditorUtils.kt
+  3167de62c54ca67f 12,17,20,22-27,33-34,36-38,40-46,53-54,57,59
+  45ef3b6daca13c9b 28-32
+core/src/test/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouterTest.kt
+  3167de62c54ca67f 92,113
+src/main/kotlin/com/codescene/jetbrains/platform/webview/handler/CwfMessageHandler.kt
+  8f104de85a6bcabd 194-202
+  3167de62c54ca67f 43,191-193,203-204,209,212,217-219
+src/main/kotlin/com/codescene/jetbrains/platform/util/AceEntryOrchestrator.kt
+  6fdb5f8ad55770bf 18,157,309-310,312
+  3167de62c54ca67f 58-59,165-173,175-196,222-242,248
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "e124846ba904c6a3d0ac6782441e04008ec98eb7",
+  "prompts": {
+    "3167de62c54ca67f": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "6efea337-ab6b-46a0-aac7-52707cf2c548",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 78,
+      "total_deletions": 27,
+      "accepted_lines": 93,
+      "overriden_lines": 0
+    },
+    "45ef3b6daca13c9b": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "6b4b9dac-aef2-4a47-bef5-9f2da60ee696",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 5,
+      "total_deletions": 1,
+      "accepted_lines": 5,
+      "overriden_lines": 0
+    },
+    "7ce2eb21eced328d": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "e9b28a95-7390-4d3a-9936-a049b485d1d1",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 90,
+      "total_deletions": 0,
+      "accepted_lines": 90,
+      "overriden_lines": 0
+    },
+    "8f104de85a6bcabd": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "c5a70ba8-dad4-4879-a849-3df49e410400",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 9,
+      "total_deletions": 1,
+      "accepted_lines": 9,
+      "overriden_lines": 0
+    },
+    "ab42ad1ec55c95ff": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "bde33c8e-38f6-425d-b9df-f01845572657",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 50,
+      "total_deletions": 10,
+      "accepted_lines": 11,
+      "overriden_lines": 0
+    }
+  }
+}
