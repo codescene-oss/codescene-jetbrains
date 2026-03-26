@@ -1,12 +1,15 @@
 package com.codescene.jetbrains.platform.api
 
 import com.codescene.ExtensionAPI
+import com.codescene.ExtensionAPI.CacheParams
 import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.jetbrains.core.delta.DeltaAnalysisResult
 import com.codescene.jetbrains.core.delta.adaptDeltaResult
 import com.codescene.jetbrains.core.delta.completeDeltaAnalysis
 import com.codescene.jetbrains.core.models.TelemetryInfo
 import com.codescene.jetbrains.core.telemetry.resolveTelemetryInfo
+import com.codescene.jetbrains.core.util.resolveBaselineCliCacheFileName
+import com.codescene.jetbrains.core.util.resolveCliCacheFileName
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.application.ApplicationManager
@@ -39,10 +42,19 @@ class CodeDeltaService(private val project: Project) : com.codescene.jetbrains.c
         val path = editor.virtualFile.path
         val oldCode = gitService.getBranchCreationCommitCode(path)
         val currentCode = editor.document.text
+        val repoRelativePath = gitService.getRepoRelativePath(path)
+        val baselineReviewPath =
+            resolveBaselineCliCacheFileName(
+                filePath = path,
+                repoRelativePath = repoRelativePath,
+                commitSha = gitService.getBranchCreationCommitHash(path),
+            )
+        val currentReviewPath = resolveCliCacheFileName(path, repoRelativePath)
 
-        val oldReview = ReviewParams(path, oldCode)
-        val newReview = ReviewParams(path, currentCode)
-        val (rawResult, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview) }
+        val oldReview = ReviewParams(baselineReviewPath, oldCode)
+        val newReview = ReviewParams(currentReviewPath, currentCode)
+        val cacheParams = CacheParams(serviceProvider.cliCacheService.getCachePath())
+        val (rawResult, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview, cacheParams) }
         val delta = adaptDeltaResult(rawResult)
 
         val telemetryInfo =

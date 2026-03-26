@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.api
 
 import com.codescene.ExtensionAPI
+import com.codescene.ExtensionAPI.CacheParams
 import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.core.models.TelemetryInfo
@@ -8,6 +9,8 @@ import com.codescene.jetbrains.core.review.completeReviewAnalysis
 import com.codescene.jetbrains.core.telemetry.resolveTelemetryInfo
 import com.codescene.jetbrains.core.util.Constants.REVIEW
 import com.codescene.jetbrains.core.util.TelemetryEvents
+import com.codescene.jetbrains.core.util.resolveBaselineCliCacheFileName
+import com.codescene.jetbrains.core.util.resolveCliCacheFileName
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.components.Service
@@ -18,6 +21,7 @@ import com.intellij.openapi.project.Project
 @Service(Service.Level.PROJECT)
 class CodeReviewService(private val project: Project) : com.codescene.jetbrains.core.review.BaseService(Log) {
     private val serviceProvider = CodeSceneProjectServiceProvider.getInstance(project)
+    private val gitService = serviceProvider.gitService
     private val reviewCacheService = serviceProvider.reviewCacheService
     private val telemetryService = serviceProvider.telemetryService
 
@@ -27,8 +31,10 @@ class CodeReviewService(private val project: Project) : com.codescene.jetbrains.
 
     suspend fun performCodeReview(editor: Editor): Review? {
         val file = editor.virtualFile
+        val reviewPath = resolveCliCacheFileName(file.path, gitService.getRepoRelativePath(file.path))
         val review =
             review(
+                reviewPath = reviewPath,
                 path = file.path,
                 fileName = file.name,
                 code = editor.document.text,
@@ -41,7 +47,15 @@ class CodeReviewService(private val project: Project) : com.codescene.jetbrains.
         path: String,
         fileName: String,
         code: String,
-    ): Double? = review(path, fileName, code, cacheResult = false)?.score?.orElse(null)
+    ): Double? {
+        val reviewPath =
+            resolveBaselineCliCacheFileName(
+                filePath = path,
+                repoRelativePath = gitService.getRepoRelativePath(path),
+                commitSha = gitService.getBranchCreationCommitHash(path),
+            )
+        return review(reviewPath, path, fileName, code, cacheResult = false)?.score?.orElse(null)
+    }
 
     private fun logReviewTelemetry(
         elapsedMs: Long,
@@ -61,13 +75,15 @@ class CodeReviewService(private val project: Project) : com.codescene.jetbrains.
     }
 
     private suspend fun review(
+        reviewPath: String,
         path: String,
         fileName: String,
         code: String,
         cacheResult: Boolean,
     ): Review? {
-        val params = ReviewParams(path, code)
-        val (result, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.review(params) }
+        val params = ReviewParams(reviewPath, code)
+        val cacheParams = CacheParams(serviceProvider.cliCacheService.getCachePath())
+        val (result, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.review(params, cacheParams) }
         result ?: return null
 
         val serviceName = "${this::class.java.simpleName} - ${project.name}"
