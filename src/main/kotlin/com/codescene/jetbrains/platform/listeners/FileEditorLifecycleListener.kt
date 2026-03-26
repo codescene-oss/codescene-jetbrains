@@ -1,8 +1,7 @@
 package com.codescene.jetbrains.platform.listeners
 
 import com.codescene.jetbrains.core.review.cancelPendingReviews
-import com.codescene.jetbrains.platform.api.CodeDeltaService
-import com.codescene.jetbrains.platform.api.CodeReviewService
+import com.codescene.jetbrains.platform.api.CachedReviewService
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
@@ -15,8 +14,8 @@ class FileEditorLifecycleListener : FileEditorManagerListener {
     ) {
         cancelPendingReviews(
             filePath = file.path,
-            cancelDelta = source.project.service<CodeDeltaService>()::cancelFileReview,
-            cancelReview = source.project.service<CodeReviewService>()::cancelFileReview,
+            cancelDelta = source.project.service<CachedReviewService>()::cancelFileReview,
+            cancelReview = source.project.service<CachedReviewService>()::cancelFileReview,
         )
     }
 }

@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.di
 
 import com.codescene.jetbrains.core.contracts.IAceRefactorableFunctionsCache
+import com.codescene.jetbrains.core.contracts.IBaselineReviewCacheService
 import com.codescene.jetbrains.core.contracts.IDeltaCacheService
 import com.codescene.jetbrains.core.contracts.IEditorService
 import com.codescene.jetbrains.core.contracts.IFileSystem
@@ -11,6 +12,7 @@ import com.codescene.jetbrains.core.contracts.IReviewCacheService
 import com.codescene.jetbrains.core.contracts.ISettingsProvider
 import com.codescene.jetbrains.core.contracts.ITelemetryService
 import com.codescene.jetbrains.core.contracts.IUIRefreshService
+import com.codescene.jetbrains.platform.api.CachedReviewService
 import com.codescene.jetbrains.platform.delta.PlatformDeltaCacheService
 import com.codescene.jetbrains.platform.editor.IntelliJEditorService
 import com.codescene.jetbrains.platform.editor.UIRefreshService
@@ -18,6 +20,7 @@ import com.codescene.jetbrains.platform.git.Git4IdeaGitService
 import com.codescene.jetbrains.platform.notifications.IntelliJNotificationService
 import com.codescene.jetbrains.platform.progress.IntelliJProgressService
 import com.codescene.jetbrains.platform.review.PlatformAceRefactorableFunctionsCacheService
+import com.codescene.jetbrains.platform.review.PlatformBaselineReviewCacheService
 import com.codescene.jetbrains.platform.review.PlatformReviewCacheService
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -40,12 +43,16 @@ class CodeSceneProjectServiceProvider(
     }
     val notificationService: INotificationService by lazy { project.service<IntelliJNotificationService>() }
     val reviewCacheService: IReviewCacheService by lazy { project.service<PlatformReviewCacheService>() }
+    val baselineReviewCacheService: IBaselineReviewCacheService by lazy {
+        project.service<PlatformBaselineReviewCacheService>()
+    }
     val deltaCacheService: IDeltaCacheService by lazy { project.service<PlatformDeltaCacheService>() }
     val aceRefactorableFunctionsCache: IAceRefactorableFunctionsCache by lazy {
         project.service<PlatformAceRefactorableFunctionsCacheService>()
     }
     val uiRefreshService: IUIRefreshService by lazy { project.service<UIRefreshService>() }
     val progressService: IProgressService by lazy { project.service<IntelliJProgressService>() }
+    val cachedReviewService: CachedReviewService by lazy { project.service<CachedReviewService>() }
 
     companion object {
         fun getInstance(project: Project): CodeSceneProjectServiceProvider =

@@ -16,12 +16,9 @@ import com.codescene.jetbrains.core.util.Constants.ACE
 import com.codescene.jetbrains.core.util.TelemetryEvents
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
-import com.codescene.jetbrains.platform.editor.UIRefreshService
-import com.codescene.jetbrains.platform.editor.codeVision.providers.AceCodeVisionProvider
 import com.codescene.jetbrains.platform.util.AceEntryOrchestrator
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.RefactoringParams
-import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -42,7 +39,6 @@ class AceService :
     private val settingsProvider = appServiceProvider.settingsProvider
     private val telemetryService = appServiceProvider.telemetryService
     private val refactoringScope = CoroutineScope(Dispatchers.IO)
-    private val refactorableFunctionsScope = CoroutineScope(Dispatchers.IO)
     private val serviceImplementation: String = this::class.java.simpleName
     private val preflightOrchestrator: AcePreflightOrchestrator by lazy {
         AcePreflightOrchestrator(
@@ -104,18 +100,18 @@ class AceService :
      * The Review result provides all refactorable functions in a file. This is a more comprehensive analysis
      * compared to the *Delta review*.
      */
-    fun getRefactorableFunctions(
+    suspend fun getRefactorableFunctions(
         params: CodeParams,
         review: Review,
         editor: Editor,
-    ) {
+    ): Boolean {
         val codeSmells = review.fileLevelCodeSmells + review.functionLevelCodeSmells.flatMap { it.codeSmells }
         Log.debug(
             "Getting refactorable functions for ${editor.virtualFile.path} based on review with $codeSmells...",
             serviceImplementation,
         )
 
-        refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, codeSmells) }
+        return refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, codeSmells) }
     }
 
     fun refactor(
@@ -160,10 +156,10 @@ class AceService :
         }
     }
 
-    private fun refactorableFunctionsHandler(
+    private suspend fun refactorableFunctionsHandler(
         editor: Editor,
         getFunctions: () -> List<com.codescene.data.ace.FnToRefactor>,
-    ) {
+    ): Boolean {
         val project = editor.project!!
         val path = editor.virtualFile.path
         val projectServiceProvider = CodeSceneProjectServiceProvider.getInstance(project)
@@ -173,28 +169,20 @@ class AceService :
                 cache = projectServiceProvider.aceRefactorableFunctionsCache,
             )
 
-        refactorableFunctionsScope.launch {
-            val result =
-                orchestrator.fetchAndCache(
-                    filePath = path,
-                    content = editor.document.text,
-                    serviceName = "$serviceImplementation - ${project.name}",
-                    getFunctions = { runWithClassLoaderChange { getFunctions() } },
-                )
+        val result =
+            orchestrator.fetchAndCache(
+                filePath = path,
+                content = editor.document.text,
+                serviceName = "$serviceImplementation - ${project.name}",
+                getFunctions = { runWithClassLoaderChange { getFunctions() } },
+            )
 
-            val entry = AceRefactorableFunctionCacheEntry(result.filePath, result.content, result.functions)
-            AceEntryOrchestrator.getInstance(project).updateCurrentAceView(entry)
-
-            if (result.functions.isNotEmpty()) {
-                val uiService = project.service<UIRefreshService>()
-                uiService.refreshUI(editor, listOf(AceCodeVisionProvider::class.simpleName!!))
-                updateMonitor(project)
-            }
-        }
+        val entry = AceRefactorableFunctionCacheEntry(result.filePath, result.content, result.functions)
+        AceEntryOrchestrator.getInstance(project).updateCurrentAceView(entry)
+        return result.functions.isNotEmpty()
     }
 
     override fun dispose() {
-        refactorableFunctionsScope.cancel()
         refactoringScope.cancel()
     }
 }

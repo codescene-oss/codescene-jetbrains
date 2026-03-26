@@ -11,8 +11,7 @@ import com.codescene.jetbrains.core.util.CodeVisionDecisionInput
 import com.codescene.jetbrains.core.util.defaultCodeVisionProviderIds
 import com.codescene.jetbrains.core.util.getCodeSmellsByCategory
 import com.codescene.jetbrains.core.util.resolveCodeVisionDecision
-import com.codescene.jetbrains.platform.api.CodeDeltaService
-import com.codescene.jetbrains.platform.api.CodeReviewService
+import com.codescene.jetbrains.platform.api.CachedReviewService
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.icons.CodeSceneIcons.CODE_SMELL
 import com.codescene.jetbrains.platform.util.getTextRange
@@ -113,15 +112,9 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
                 ),
             )
 
-        if (decision.needsDeltaApiCall) {
-            triggerApiCall(editor, activeDeltaApiCalls) {
-                project.service<CodeDeltaService>().review(editor)
-            }
-        }
-
-        if (decision.needsReviewApiCall) {
+        if (decision.needsDeltaApiCall || decision.needsReviewApiCall) {
             triggerApiCall(editor, activeReviewApiCalls) {
-                project.service<CodeReviewService>().review(editor)
+                project.service<CachedReviewService>().review(editor)
             }
         }
 
