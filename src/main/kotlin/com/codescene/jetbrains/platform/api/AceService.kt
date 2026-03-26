@@ -131,6 +131,20 @@ class AceService :
         )
 
         refactoringScope.launch {
+            val orchestrator = AceEntryOrchestrator.getInstance(project)
+            orchestrator.clearPendingAceUpdate()
+            if (editor != null) {
+                orchestrator.openAceWindowAndAwaitBrowser(
+                    params =
+                        AceCwfParams(
+                            filePath = request.filePath,
+                            function = request.function,
+                            loading = true,
+                        ),
+                    editor = editor,
+                )
+            }
+
             withBackgroundProgress(project, "Refactoring ${request.function.name}...", cancellable = false) {
                 try {
                     val result =
@@ -144,10 +158,11 @@ class AceService :
                             AceCwfParams(
                                 filePath = request.filePath,
                                 function = request.function,
+                                loading = false,
                                 refactorResponse = result.response,
                             )
-                        val orchestrator = AceEntryOrchestrator.getInstance(project)
-                        orchestrator.handleRefactoringResult(refactoredFunction, result.elapsedMs, editor)
+                        orchestrator.queuePendingAceUpdate(refactoredFunction)
+                        orchestrator.handleRefactoringResult(refactoredFunction, editor)
                     }
                 } catch (e: Exception) {
                     AceEntryOrchestrator.getInstance(project).openAceErrorView(editor, request, e)

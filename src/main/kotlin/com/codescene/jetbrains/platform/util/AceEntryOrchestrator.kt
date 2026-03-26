@@ -7,15 +7,14 @@ import com.codescene.data.review.Review
 import com.codescene.jetbrains.core.models.AceCwfParams
 import com.codescene.jetbrains.core.models.CurrentAceViewData
 import com.codescene.jetbrains.core.models.RefactoringRequest
+import com.codescene.jetbrains.core.models.View
 import com.codescene.jetbrains.core.models.settings.AceStatus
 import com.codescene.jetbrains.core.models.shared.FileMetaType
 import com.codescene.jetbrains.core.review.AceEntryCommand
 import com.codescene.jetbrains.core.review.AceRefactorableFunctionCacheEntry
 import com.codescene.jetbrains.core.review.AceRefactorableFunctionCacheQuery
-import com.codescene.jetbrains.core.review.AceResultAction
 import com.codescene.jetbrains.core.review.resolveAceEntryPointCommand
 import com.codescene.jetbrains.core.review.resolveAceErrorViewParams
-import com.codescene.jetbrains.core.review.resolveAceResultAction
 import com.codescene.jetbrains.core.review.resolveAceStatusChange
 import com.codescene.jetbrains.core.review.resolveAceViewUpdateParams
 import com.codescene.jetbrains.core.review.resolveRefactoringRequest
@@ -25,6 +24,7 @@ import com.codescene.jetbrains.platform.api.AceService
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.review.PlatformAceRefactorableFunctionsCacheService
+import com.codescene.jetbrains.platform.webview.WebViewInitializer
 import com.codescene.jetbrains.platform.webview.util.OpenAceAcknowledgementParams
 import com.codescene.jetbrains.platform.webview.util.getAceUserData
 import com.codescene.jetbrains.platform.webview.util.openAceAcknowledgeView
@@ -37,7 +37,10 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 data class RefactoringParams(
     val project: Project,
@@ -49,6 +52,8 @@ data class RefactoringParams(
 class AceEntryOrchestrator(private val project: Project) {
     private val services get() = CodeSceneProjectServiceProvider.getInstance(project)
     private val appServices get() = CodeSceneApplicationServiceProvider.getInstance()
+
+    @Volatile private var pendingAceUpdate: AceCwfParams? = null
 
     companion object {
         fun getInstance(project: Project): AceEntryOrchestrator = project.service<AceEntryOrchestrator>()
@@ -142,13 +147,9 @@ class AceEntryOrchestrator(private val project: Project) {
 
     fun handleRefactoringResult(
         params: AceCwfParams,
-        requestDuration: Long,
         editor: Editor,
     ) {
-        when (val action = resolveAceResultAction(params, requestDuration)) {
-            is AceResultAction.OpenWindow -> handleOpenAceWindow(action.params, editor)
-            is AceResultAction.ShowNotification -> showRefactoringFinishedNotification(editor, action.params)
-        }
+        handleOpenAceWindow(params, editor)
     }
 
     fun handleOpenAceWindow(
@@ -157,6 +158,37 @@ class AceEntryOrchestrator(private val project: Project) {
     ) {
         CoroutineScope(Dispatchers.Main).launch {
             openAceWindow(params, editor.project!!)
+        }
+    }
+
+    suspend fun openAceWindowAndAwaitBrowser(
+        params: AceCwfParams,
+        editor: Editor,
+    ) {
+        withContext(Dispatchers.Main) {
+            openAceWindow(params, editor.project!!)
+        }
+
+        withTimeoutOrNull(2000) {
+            while (WebViewInitializer.getInstance(project).getBrowser(View.ACE) == null) {
+                delay(25)
+            }
+        }
+    }
+
+    fun queuePendingAceUpdate(params: AceCwfParams) {
+        pendingAceUpdate = params
+    }
+
+    fun clearPendingAceUpdate() {
+        pendingAceUpdate = null
+    }
+
+    fun handleAceViewInitialized() {
+        val pending = pendingAceUpdate ?: return
+        pendingAceUpdate = null
+        CoroutineScope(Dispatchers.Main).launch {
+            openAceWindow(pending, project)
         }
     }
 

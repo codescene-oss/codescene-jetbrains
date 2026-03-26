@@ -257,6 +257,7 @@ class CwfMessageHandler(
 
     override fun handleInit(payload: String?) {
         if (payload == View.HOME.value) updateMonitor(project)
+        if (payload == View.ACE.value) orchestrator.handleAceViewInitialized()
     }
 
     override fun handleOpenDocs(docsForFunction: OpenDocsForFunction) {

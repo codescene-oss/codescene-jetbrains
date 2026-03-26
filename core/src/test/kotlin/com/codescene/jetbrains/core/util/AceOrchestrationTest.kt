@@ -29,16 +29,6 @@ class AceOrchestrationTest {
     }
 
     @Test
-    fun `shouldOpenAceWindow returns true below threshold`() {
-        assertEquals(true, shouldOpenAceWindow(1499))
-    }
-
-    @Test
-    fun `shouldOpenAceWindow returns false at threshold and above`() {
-        assertEquals(false, shouldOpenAceWindow(1500))
-    }
-
-    @Test
     fun `resolveAceEntryDecision returns skip when auto refactor disabled`() {
         val decision =
             resolveAceEntryDecision(autoRefactorEnabled = false, acknowledged = true)
