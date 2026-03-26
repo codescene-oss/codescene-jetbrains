@@ -75,6 +75,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
                                 category = codeSmell.category,
                                 highlightRange = codeSmell.highlightRange,
                                 functionName = functionSmell.function,
+                                functionRange = functionSmell.range,
                             )
                         }
                 }

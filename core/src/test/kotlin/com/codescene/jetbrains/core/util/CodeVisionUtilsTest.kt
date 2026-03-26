@@ -1,6 +1,8 @@
 package com.codescene.jetbrains.core.util
 
 import com.codescene.data.review.CodeSmell
+import com.codescene.data.review.Function
+import com.codescene.data.review.Range
 import com.codescene.data.review.Review
 import io.mockk.every
 import io.mockk.mockk
@@ -18,6 +20,18 @@ class CodeVisionUtilsTest {
         every { smell.details } returns details
         every { smell.highlightRange } returns mockk(relaxed = true)
         return smell
+    }
+
+    private fun createFunctionLevelSmell(
+        functionName: String,
+        range: Range,
+        codeSmells: List<CodeSmell>,
+    ): Function {
+        val function = mockk<Function>(relaxed = true)
+        every { function.function } returns functionName
+        every { function.range } returns range
+        every { function.codeSmells } returns codeSmells
+        return function
     }
 
     @Test
@@ -60,6 +74,7 @@ class CodeVisionUtilsTest {
         val result = getCodeSmellsByCategory(review, "Cat")
         assertEquals(1, result.size)
         assertEquals(null, result[0].functionName)
+        assertEquals(null, result[0].functionRange)
     }
 
     @Test
@@ -100,5 +115,24 @@ class CodeVisionUtilsTest {
 
         val result = getCodeSmellsByCategory(review, "Cat")
         assertEquals("important detail", result[0].details)
+    }
+
+    @Test
+    fun `sets function range for function level smells`() {
+        val review = mockk<Review>(relaxed = true)
+        val functionRange = Range(3, 1, 30, 1)
+        every { review.fileLevelCodeSmells } returns emptyList()
+        every { review.functionLevelCodeSmells } returns
+            listOf(
+                createFunctionLevelSmell(
+                    functionName = "myFn",
+                    range = functionRange,
+                    codeSmells = listOf(createCodeSmell("Complex Method")),
+                ),
+            )
+
+        val result = getCodeSmellsByCategory(review, "Complex Method")
+        assertEquals(1, result.size)
+        assertEquals(functionRange, result[0].functionRange)
     }
 }

@@ -7,4 +7,5 @@ data class CodeVisionCodeSmell(
     val category: String,
     val highlightRange: Range,
     val functionName: String? = null,
+    val functionRange: Range? = null,
 )

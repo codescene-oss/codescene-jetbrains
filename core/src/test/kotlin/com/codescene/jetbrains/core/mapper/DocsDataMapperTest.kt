@@ -88,6 +88,7 @@ class DocsDataMapperTest {
                     category = "Complex Method",
                     highlightRange = Range(5, 2, 15, 30),
                     functionName = "myFn",
+                    functionRange = Range(2, 1, 20, 10),
                 ),
             )
 
@@ -95,6 +96,26 @@ class DocsDataMapperTest {
         assertEquals("docs_issues_complex_method", result?.docType)
         assertEquals("src/a.kt", result?.fileData?.fileName)
         assertEquals("myFn", result?.fileData?.fn?.name)
+        assertEquals(2, result?.fileData?.fn?.range?.startLine)
+        assertEquals(20, result?.fileData?.fn?.range?.endLine)
+    }
+
+    @Test
+    fun `resolveCodeSmellDocsData falls back to highlight range when function range is missing`() {
+        val result =
+            resolveCodeSmellDocsData(
+                "src/a.kt",
+                CodeVisionCodeSmell(
+                    details = "details",
+                    category = "Complex Method",
+                    highlightRange = Range(5, 2, 15, 30),
+                    functionName = "myFn",
+                ),
+            )
+
+        assertNotNull(result)
+        assertEquals(5, result?.fileData?.fn?.range?.startLine)
+        assertEquals(15, result?.fileData?.fn?.range?.endLine)
     }
 
     @Test

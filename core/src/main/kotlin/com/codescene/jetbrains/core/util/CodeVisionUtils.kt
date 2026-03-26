@@ -27,6 +27,7 @@ fun getCodeSmellsByCategory(
                     .map { smell ->
                         CodeVisionCodeSmell(
                             functionName = function.function,
+                            functionRange = function.range,
                             details = smell.details,
                             category = smell.category,
                             highlightRange = smell.highlightRange,
