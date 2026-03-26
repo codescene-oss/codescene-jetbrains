@@ -7,10 +7,10 @@ import com.codescene.data.ace.PreflightResponse
 import com.codescene.data.ace.RefactoringOptions
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.core.contracts.IAceService
-import com.codescene.jetbrains.core.models.AceCwfParams
 import com.codescene.jetbrains.core.review.AcePreflightOrchestrator
 import com.codescene.jetbrains.core.review.AceRefactorableFunctionCacheEntry
 import com.codescene.jetbrains.core.review.AceRefactoringOrchestrator
+import com.codescene.jetbrains.core.review.AceRefactoringRunCoordinator
 import com.codescene.jetbrains.core.review.BaseService
 import com.codescene.jetbrains.core.review.RefactorableFunctionsOrchestrator
 import com.codescene.jetbrains.core.util.Constants.ACE
@@ -24,11 +24,9 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
-import com.intellij.platform.ide.progress.withBackgroundProgress
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Service
@@ -40,53 +38,11 @@ class AceService :
     private val settingsProvider = appServiceProvider.settingsProvider
     private val telemetryService = appServiceProvider.telemetryService
     private val refactoringScope = CoroutineScope(Dispatchers.IO)
+    private val refactorRunCoordinator = AceRefactoringRunCoordinator()
+    private val refactorLaunchCoordinator = AceRefactorLaunchCoordinator(refactoringScope, refactorRunCoordinator)
     private val serviceImplementation: String = this::class.java.simpleName
-    private val preflightOrchestrator: AcePreflightOrchestrator by lazy {
-        AcePreflightOrchestrator(
-            settingsProvider = settingsProvider,
-            logger = Log,
-            serviceName = serviceImplementation,
-            fetchPreflight = { bypassCache ->
-                withContext(Dispatchers.IO) {
-                    runWithClassLoaderChange { ExtensionAPI.preflight(bypassCache) }
-                }
-            },
-            onStatusChange = { status -> AceEntryOrchestrator.handleAceStatusChange(status) },
-        )
-    }
-    private val refactoringOrchestrator: AceRefactoringOrchestrator by lazy {
-        AceRefactoringOrchestrator(
-            logger = Log,
-            serviceName = serviceImplementation,
-            executeRefactor = { request, options ->
-                runWithClassLoaderChange {
-                    ExtensionAPI.refactor(request.function, options)
-                }
-            },
-            getToken = { settingsProvider.currentState().aceAuthToken },
-            onStatusChange = { status -> AceEntryOrchestrator.handleAceStatusChange(status) },
-            onRequested = { request ->
-                telemetryService.logUsage(
-                    TelemetryEvents.ACE_REFACTOR_REQUESTED,
-                    mutableMapOf(
-                        Pair("source", request.source),
-                        Pair("skipCache", request.skipCache),
-                    ),
-                )
-            },
-            onPerformance = { request, elapsedMs ->
-                telemetryService.logUsage(
-                    TelemetryEvents.ANALYSIS_PERFORMANCE,
-                    mutableMapOf(
-                        Pair("type", ACE),
-                        Pair("elapsedMs", elapsedMs),
-                        Pair("loc", request.function.body.lines().size),
-                        Pair("language", request.language ?: ""),
-                    ),
-                )
-            },
-        )
-    }
+    private val preflightOrchestrator: AcePreflightOrchestrator by lazy { buildPreflightOrchestrator() }
+    private val refactoringOrchestrator: AceRefactoringOrchestrator by lazy { buildRefactoringOrchestrator() }
 
     companion object {
         fun getInstance(): AceService = service<AceService>()
@@ -132,44 +88,15 @@ class AceService :
             serviceImplementation,
         )
 
-        refactoringScope.launch {
-            val orchestrator = AceEntryOrchestrator.getInstance(project)
-            orchestrator.clearPendingAceUpdate()
-            if (editor != null) {
-                orchestrator.openAceWindowAndAwaitBrowser(
-                    params =
-                        AceCwfParams(
-                            filePath = request.filePath,
-                            function = request.function,
-                            loading = true,
-                        ),
-                    editor = editor,
-                )
-            }
-
-            withBackgroundProgress(project, "Refactoring ${request.function.name}...", cancellable = false) {
-                try {
-                    val result =
-                        refactoringOrchestrator.runRefactor(
-                            request = request.copy(skipCache = effectiveOptions.skipCache.orElse(request.skipCache)),
-                            options = effectiveOptions,
-                        )
-
-                    if (result != null && editor != null) {
-                        val refactoredFunction =
-                            AceCwfParams(
-                                filePath = request.filePath,
-                                function = request.function,
-                                loading = false,
-                                refactorResponse = result.response,
-                            )
-                        orchestrator.queuePendingAceUpdate(refactoredFunction)
-                        orchestrator.handleRefactoringResult(refactoredFunction, editor)
-                    }
-                } catch (e: Exception) {
-                    AceEntryOrchestrator.getInstance(project).openAceErrorView(editor, request, e)
-                }
-            }
+        refactorLaunchCoordinator.startRefactor { gen ->
+            runAceRefactorJob(
+                gen = gen,
+                launchCoordinator = refactorLaunchCoordinator,
+                runCoordinator = refactorRunCoordinator,
+                refactoringOrchestrator = refactoringOrchestrator,
+                params = params,
+                effectiveOptions = effectiveOptions,
+            )
         }
     }
 
@@ -202,4 +129,50 @@ class AceService :
     override fun dispose() {
         refactoringScope.cancel()
     }
+
+    private fun buildPreflightOrchestrator(): AcePreflightOrchestrator =
+        AcePreflightOrchestrator(
+            settingsProvider = settingsProvider,
+            logger = Log,
+            serviceName = serviceImplementation,
+            fetchPreflight = { bypassCache ->
+                withContext(Dispatchers.IO) {
+                    runWithClassLoaderChange { ExtensionAPI.preflight(bypassCache) }
+                }
+            },
+            onStatusChange = { status -> AceEntryOrchestrator.handleAceStatusChange(status) },
+        )
+
+    private fun buildRefactoringOrchestrator(): AceRefactoringOrchestrator =
+        AceRefactoringOrchestrator(
+            logger = Log,
+            serviceName = serviceImplementation,
+            executeRefactor = { request, options ->
+                runWithClassLoaderChange {
+                    ExtensionAPI.refactor(request.function, options)
+                }
+            },
+            getToken = { settingsProvider.currentState().aceAuthToken },
+            onStatusChange = { status -> AceEntryOrchestrator.handleAceStatusChange(status) },
+            onRequested = { request ->
+                telemetryService.logUsage(
+                    TelemetryEvents.ACE_REFACTOR_REQUESTED,
+                    mutableMapOf(
+                        Pair("source", request.source),
+                        Pair("skipCache", request.skipCache),
+                    ),
+                )
+            },
+            onPerformance = { request, elapsedMs ->
+                telemetryService.logUsage(
+                    TelemetryEvents.ANALYSIS_PERFORMANCE,
+                    mutableMapOf(
+                        Pair("type", ACE),
+                        Pair("elapsedMs", elapsedMs),
+                        Pair("loc", request.function.body.lines().size),
+                        Pair("language", request.language ?: ""),
+                    ),
+                )
+            },
+        )
 }
