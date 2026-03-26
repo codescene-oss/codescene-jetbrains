@@ -1,0 +1,57 @@
+src/main/kotlin/com/codescene/jetbrains/platform/util/AceEntryOrchestrator.kt
+  3167de62c54ca67f 183-203,209
+core/src/test/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouterTest.kt
+  3167de62c54ca67f 92,113
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/OpenDocs.kt
+  ab42ad1ec55c95ff 10,39,48-54,57,59
+src/main/kotlin/com/codescene/jetbrains/platform/util/EditorUtils.kt
+  3167de62c54ca67f 12,17,20,22-30,32-34,36-42,49-50,53,55
+src/main/kotlin/com/codescene/jetbrains/platform/webview/handler/CwfMessageHandler.kt
+  3167de62c54ca67f 43,191-196,201,204,209-211
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.19",
+  "base_commit_sha": "63942a40540143e1580ea5a2f484e544df01f4cc",
+  "prompts": {
+    "3167de62c54ca67f": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "6efea337-ab6b-46a0-aac7-52707cf2c548",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 78,
+      "total_deletions": 27,
+      "accepted_lines": 70,
+      "overriden_lines": 2
+    },
+    "3bce15e09647fb1b": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a62052d7-5b63-482d-99cc-089f874dddd9",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "ab42ad1ec55c95ff": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "bde33c8e-38f6-425d-b9df-f01845572657",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 50,
+      "total_deletions": 10,
+      "accepted_lines": 44,
+      "overriden_lines": 0
+    }
+  }
+}
