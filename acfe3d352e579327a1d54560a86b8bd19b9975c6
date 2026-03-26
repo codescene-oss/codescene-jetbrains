@@ -1,0 +1,49 @@
+core/src/test/kotlin/com/codescene/jetbrains/core/review/AceRefactoringRunCoordinatorTest.kt
+  f3c24d9a1f965d01 1-17
+src/main/kotlin/com/codescene/jetbrains/platform/api/AceRefactorLaunchCoordinator.kt
+  f3c24d9a1f965d01 1-47,49,51
+src/main/kotlin/com/codescene/jetbrains/platform/api/AceRefactorWorkflow.kt
+  f3c24d9a1f965d01 1-56
+src/main/kotlin/com/codescene/jetbrains/platform/api/AceService.kt
+  f3c24d9a1f965d01 13,41-42,44-45,91-99,132-177
+src/main/kotlin/com/codescene/jetbrains/platform/util/AceEntryOrchestrator.kt
+  9b7a92dd0f4c757b 311-316
+  3167de62c54ca67f 58-59,165-173,175-196,222-242,248
+core/src/main/kotlin/com/codescene/jetbrains/core/review/AceRefactoringRunCoordinator.kt
+  f3c24d9a1f965d01 1-11
+src/main/kotlin/com/codescene/jetbrains/platform/api/AceRefactorBackgroundProgress.kt
+  f3c24d9a1f965d01 1-137
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "acfe3d352e579327a1d54560a86b8bd19b9975c6",
+  "prompts": {
+    "9b7a92dd0f4c757b": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "c9630563-eead-49d5-9488-358566d12c99",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 4,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    },
+    "f3c24d9a1f965d01": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "225bf6e5-8ef0-4ae9-a72d-831b6a412ad2",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 287,
+      "total_deletions": 172,
+      "accepted_lines": 330,
+      "overriden_lines": 0
+    }
+  }
+}
