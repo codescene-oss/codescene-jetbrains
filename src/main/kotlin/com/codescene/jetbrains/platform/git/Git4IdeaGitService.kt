@@ -19,6 +19,12 @@ import git4idea.repo.GitRepositoryManager
 class Git4IdeaGitService(val project: Project) : IGitService {
     private val service = "${this::class.java.simpleName} - ${project.name}"
 
+    private data class RepositoryContext(
+        val file: VirtualFile,
+        val repository: GitRepository,
+        val relativePath: String,
+    )
+
     companion object {
         fun getInstance(project: Project): Git4IdeaGitService = project.service<Git4IdeaGitService>()
     }
@@ -35,23 +41,30 @@ class Git4IdeaGitService(val project: Project) : IGitService {
      *         in a detached HEAD state.
      */
     override fun getBranchCreationCommitCode(filePath: String): String {
-        val file = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return ""
-        val gitRepository =
-            GitRepositoryManager.getInstance(project).getRepositoryForFile(file) ?: run {
-                Log.debug("File ${file.path} is not part of a Git repository.", service)
-                return ""
-            }
+        val context = getRepositoryContext(filePath) ?: return ""
 
-        if (gitRepository.state == Repository.State.DETACHED) return ""
+        if (context.repository.state == Repository.State.DETACHED) return ""
 
         val commit =
-            getBranchCreationCommit(gitRepository) ?: run {
-                Log.debug("Could not retrieve branch creation commit for ${file.path}", service)
+            getBranchCreationCommit(context.repository) ?: run {
+                Log.debug("Could not retrieve branch creation commit for ${context.file.path}", service)
                 return ""
             }
 
-        return getCodeByCommit(gitRepository, file, commit)
+        return getCodeByCommit(context.repository, context.relativePath, commit)
     }
+
+    override fun getBranchCreationCommitHash(filePath: String): String? {
+        val context = getRepositoryContext(filePath) ?: return null
+
+        if (context.repository.state == Repository.State.DETACHED) {
+            return null
+        }
+
+        return getBranchCreationCommit(context.repository)
+    }
+
+    override fun getRepoRelativePath(filePath: String): String? = getRepositoryContext(filePath)?.relativePath
 
     private fun getBranchCreationCommit(gitRepository: GitRepository): String? =
         getRefLog(project, gitRepository)?.let { parseBranchCreationCommitFromReflog(it) }
@@ -76,17 +89,9 @@ class Git4IdeaGitService(val project: Project) : IGitService {
 
     private fun getCodeByCommit(
         gitRepository: GitRepository,
-        file: VirtualFile,
+        relativePath: String,
         commit: String,
     ): String {
-        val repositoryRoot = gitRepository.root.path
-        val relativePath = file.path.substringAfter("$repositoryRoot/")
-
-        if (!file.path.startsWith(repositoryRoot)) {
-            Log.warn("File ${file.path} is not within the repository root $repositoryRoot.")
-            return ""
-        }
-
         val handler =
             GitLineHandler(project, gitRepository.root, GitCommand.SHOW).apply {
                 addParameters("$commit:$relativePath")
@@ -99,5 +104,23 @@ class Git4IdeaGitService(val project: Project) : IGitService {
                 return ""
             }
         }
+    }
+
+    private fun getRepositoryContext(filePath: String): RepositoryContext? {
+        val file = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return null
+        val repository =
+            GitRepositoryManager.getInstance(project).getRepositoryForFile(file) ?: run {
+                Log.debug("File ${file.path} is not part of a Git repository.", service)
+                return null
+            }
+
+        val repositoryRoot = repository.root.path
+        if (!file.path.startsWith("$repositoryRoot/")) {
+            Log.warn("File ${file.path} is not within the repository root $repositoryRoot.")
+            return null
+        }
+
+        val relativePath = file.path.substringAfter("$repositoryRoot/")
+        return RepositoryContext(file, repository, relativePath)
     }
 }

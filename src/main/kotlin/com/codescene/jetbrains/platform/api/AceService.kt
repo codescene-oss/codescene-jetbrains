@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.api
 
 import com.codescene.ExtensionAPI
+import com.codescene.ExtensionAPI.CacheParams
 import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.data.ace.PreflightResponse
 import com.codescene.data.ace.RefactoringOptions
@@ -102,6 +103,7 @@ class AceService :
      */
     suspend fun getRefactorableFunctions(
         params: CodeParams,
+        cacheParams: CacheParams,
         review: Review,
         editor: Editor,
     ): Boolean {
@@ -111,7 +113,7 @@ class AceService :
             serviceImplementation,
         )
 
-        return refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, codeSmells) }
+        return refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, cacheParams, codeSmells) }
     }
 
     fun refactor(

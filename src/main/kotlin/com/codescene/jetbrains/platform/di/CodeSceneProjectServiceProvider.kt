@@ -21,6 +21,7 @@ import com.codescene.jetbrains.platform.notifications.IntelliJNotificationServic
 import com.codescene.jetbrains.platform.progress.IntelliJProgressService
 import com.codescene.jetbrains.platform.review.PlatformAceRefactorableFunctionsCacheService
 import com.codescene.jetbrains.platform.review.PlatformBaselineReviewCacheService
+import com.codescene.jetbrains.platform.review.PlatformCliCacheService
 import com.codescene.jetbrains.platform.review.PlatformReviewCacheService
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -46,6 +47,7 @@ class CodeSceneProjectServiceProvider(
     val baselineReviewCacheService: IBaselineReviewCacheService by lazy {
         project.service<PlatformBaselineReviewCacheService>()
     }
+    val cliCacheService: PlatformCliCacheService by lazy { project.service<PlatformCliCacheService>() }
     val deltaCacheService: IDeltaCacheService by lazy { project.service<PlatformDeltaCacheService>() }
     val aceRefactorableFunctionsCache: IAceRefactorableFunctionsCache by lazy {
         project.service<PlatformAceRefactorableFunctionsCacheService>()
