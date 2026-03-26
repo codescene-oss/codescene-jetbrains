@@ -177,32 +177,6 @@ class AceEntryLogicTest {
         }
 
     @Test
-    fun `resolveAceResultAction opens window for quick refactoring results`() {
-        val params =
-            AceCwfParams(
-                filePath = "a.kt",
-                function = mockFn("f", "body", 1, 2),
-            )
-
-        val result = resolveAceResultAction(params, 500L)
-
-        assertEquals(AceResultAction.OpenWindow(params), result)
-    }
-
-    @Test
-    fun `resolveAceResultAction shows notification for slower refactoring results`() {
-        val params =
-            AceCwfParams(
-                filePath = "a.kt",
-                function = mockFn("f", "body", 1, 2),
-            )
-
-        val result = resolveAceResultAction(params, 5000L)
-
-        assertEquals(AceResultAction.ShowNotification(params), result)
-    }
-
-    @Test
     fun `resolveAceErrorViewParams returns null when request is missing`() {
         assertNull(resolveAceErrorViewParams(request = null, filePath = "a.kt", e = RuntimeException("401")))
     }

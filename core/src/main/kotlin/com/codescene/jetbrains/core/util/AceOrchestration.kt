@@ -41,8 +41,6 @@ fun getStatusChangeMessage(
         AceStatus.DEACTIVATED -> null
     }
 
-fun shouldOpenAceWindow(requestDurationMs: Long): Boolean = requestDurationMs < 1500
-
 fun resolveAceEntryDecision(
     autoRefactorEnabled: Boolean,
     acknowledged: Boolean,

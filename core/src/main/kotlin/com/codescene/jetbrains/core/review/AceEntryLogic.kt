@@ -20,22 +20,11 @@ import com.codescene.jetbrains.core.util.getStatusChangeMessage
 import com.codescene.jetbrains.core.util.resolveAceEntryDecision
 import com.codescene.jetbrains.core.util.resolveAceErrorType
 import com.codescene.jetbrains.core.util.resolveAceViewState
-import com.codescene.jetbrains.core.util.shouldOpenAceWindow
 
 data class AceStatusChangeResult(
     val shouldNotify: Boolean,
     val message: AceStatusMessage? = null,
 )
-
-sealed class AceResultAction {
-    data class OpenWindow(
-        val params: AceCwfParams,
-    ) : AceResultAction()
-
-    data class ShowNotification(
-        val params: AceCwfParams,
-    ) : AceResultAction()
-}
 
 fun resolveAceStatusChange(
     settingsProvider: ISettingsProvider,
@@ -149,16 +138,6 @@ fun resolveAceViewUpdateParams(
         function = state.functionToRefactor ?: currentAceData.functionToRefactor,
     )
 }
-
-fun resolveAceResultAction(
-    params: AceCwfParams,
-    requestDurationMs: Long,
-): AceResultAction =
-    if (shouldOpenAceWindow(requestDurationMs)) {
-        AceResultAction.OpenWindow(params)
-    } else {
-        AceResultAction.ShowNotification(params)
-    }
 
 fun resolveAceErrorViewParams(
     request: RefactoringRequest?,
