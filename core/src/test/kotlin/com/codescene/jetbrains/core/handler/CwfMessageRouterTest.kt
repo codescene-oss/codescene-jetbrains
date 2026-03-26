@@ -4,7 +4,6 @@ import com.codescene.jetbrains.core.models.CwfMessage
 import com.codescene.jetbrains.core.models.message.EditorMessages
 import com.codescene.jetbrains.core.models.message.LifecycleMessages
 import com.codescene.jetbrains.core.models.message.PanelMessages
-import io.mockk.capture
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
@@ -90,8 +89,7 @@ class CwfMessageRouterTest {
                     "name":"f",
                     "body":"fun f() = 1",
                     "file-type":"kotlin",
-                    "nippy-b64":"abc",
-                    "range":{"end-line":1,"end-column":1,"start-line":1,"start-column":1}
+                    "nippy-b64":"abc"
                   }
                 }
                 """.trimIndent(),
@@ -112,7 +110,7 @@ class CwfMessageRouterTest {
         assertEquals("docs", requestSlot.captured.source)
         assertNotNull(requestSlot.captured.fnToRefactor)
         assertEquals("f", requestSlot.captured.fnToRefactor?.name)
-        assertEquals(1, requestSlot.captured.fnToRefactor?.range?.startLine)
+        assertEquals(1, requestSlot.captured.fn.range?.startLine)
     }
 
     @Test

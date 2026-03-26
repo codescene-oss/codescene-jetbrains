@@ -180,12 +180,33 @@ class AceEntryOrchestrator(private val project: Project) {
         source: AceEntryPoint,
         fnToRefactor: FnToRefactor? = null,
     ) {
+        if (fnToRefactor != null) {
+            ApplicationManager.getApplication().invokeLater {
+                val editor = getSelectedTextEditor(project, fileData.fileName)
+                val language = editor?.virtualFile?.extension
+                handleAceEntryPoint(
+                    RefactoringParams(
+                        project = project,
+                        editor = editor,
+                        request =
+                            RefactoringRequest(
+                                filePath = fileData.fileName,
+                                language = language,
+                                function = fnToRefactor,
+                                source = source,
+                            ),
+                    ),
+                )
+            }
+            return
+        }
+
         ApplicationManager.getApplication().executeOnPooledThread {
             val request =
                 resolveRefactoringRequest(
                     fileData = fileData,
                     source = source,
-                    fnToRefactor = fnToRefactor,
+                    fnToRefactor = null,
                     fileSystem = services.fileSystem,
                     cache = services.aceRefactorableFunctionsCache,
                     logger = appServices.logger,

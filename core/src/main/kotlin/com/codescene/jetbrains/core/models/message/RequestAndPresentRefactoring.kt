@@ -1,7 +1,6 @@
 package com.codescene.jetbrains.core.models.message
 
 import com.codescene.jetbrains.core.models.shared.Fn
-import com.codescene.jetbrains.core.models.shared.Range
 import com.codescene.jetbrains.core.models.shared.RangeCamelCase
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -22,5 +21,4 @@ data class RequestFnToRefactor(
     val body: String,
     @SerialName("file-type") val fileType: String,
     @SerialName("nippy-b64") val nippyB64: String? = null,
-    val range: Range,
 )

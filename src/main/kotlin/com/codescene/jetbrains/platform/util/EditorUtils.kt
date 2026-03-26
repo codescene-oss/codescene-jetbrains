@@ -9,31 +9,51 @@ import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import java.io.File
+import javax.swing.SwingUtilities
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+
+private fun resolveTextEditorForFilePath(
+    project: Project,
+    filePath: String,
+    source: String,
+): Editor? {
+    val editorManager = FileEditorManager.getInstance(project)
+    if (filePath.isNotBlank()) {
+        val virtualFile =
+            LocalFileSystem.getInstance().findFileByPath(filePath)
+                ?: LocalFileSystem.getInstance().findFileByIoFile(File(filePath))
+        if (virtualFile != null) {
+            return editorManager.openTextEditor(OpenFileDescriptor(project, virtualFile), true)
+        }
+    }
+
+    val openEditor =
+        editorManager.allEditors.firstOrNull { filePath.isNotBlank() && it.file.path == filePath }
+            ?: editorManager.allEditors.firstOrNull()
+
+    if (editorManager.selectedTextEditor == null && openEditor != null) {
+        Log.debug("Selected editor was null, opening file: ${openEditor.file.path}", source)
+        editorManager.openFile(openEditor.file, true, true)
+    }
+
+    return editorManager.selectedTextEditor
+}
 
 fun getSelectedTextEditor(
     project: Project,
     filePath: String,
     source: String = "",
 ): Editor? {
-    var result: Editor? = null
-
-    ApplicationManager.getApplication().invokeAndWait {
-        val editorManager = FileEditorManager.getInstance(project)
-        val openEditor =
-            editorManager.allEditors.firstOrNull { it.file.path == filePath }
-                ?: editorManager.allEditors.firstOrNull()
-
-        if (editorManager.selectedTextEditor == null && openEditor != null) {
-            Log.debug("Selected editor was null, opening file: ${openEditor.file.path}", source)
-            editorManager.openFile(openEditor.file, true, true)
-        }
-
-        result = editorManager.selectedTextEditor
+    if (SwingUtilities.isEventDispatchThread()) {
+        return resolveTextEditorForFilePath(project, filePath, source)
     }
 
+    var result: Editor? = null
+    ApplicationManager.getApplication().invokeAndWait {
+        result = resolveTextEditorForFilePath(project, filePath, source)
+    }
     return result
 }
 

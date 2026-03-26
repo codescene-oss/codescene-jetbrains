@@ -40,6 +40,7 @@ import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
@@ -187,20 +188,28 @@ class CwfMessageHandler(
         )
     }
 
+    private fun contentForAceCacheLookup(filePath: String): String? {
+        val virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return null
+        val document = FileDocumentManager.getInstance().getDocument(virtualFile)
+        return document?.text ?: services.fileSystem.readFile(filePath)
+    }
+
     private fun resolveRequestedFunctionToRefactor(
         request: RequestAndPresentRefactoring,
         filePath: String,
     ): FnToRefactor? {
-        val requested = request.fnToRefactor ?: return null
-        val code = services.fileSystem.readFile(filePath) ?: return null
+        val code = contentForAceCacheLookup(filePath) ?: return null
         val candidates = services.aceRefactorableFunctionsCache.get(filePath, code)
 
-        return findMatchingRefactorableFunction(
-            aceCache = candidates,
-            functionName = requested.name,
-            startLine = requested.range.startLine,
-            endLine = requested.range.endLine,
-        )
+        val range = request.fn.range ?: request.range
+        val fnToRefactor =
+            findMatchingRefactorableFunction(
+                aceCache = candidates,
+                functionName = request.fn.name,
+                startLine = range?.startLine,
+                endLine = range?.endLine,
+            )
+        return fnToRefactor
     }
 
     override fun handleAcknowledged() {
