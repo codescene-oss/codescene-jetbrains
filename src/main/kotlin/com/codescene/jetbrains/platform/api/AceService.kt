@@ -5,6 +5,7 @@ import com.codescene.ExtensionAPI.CacheParams
 import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.data.ace.PreflightResponse
 import com.codescene.data.ace.RefactoringOptions
+import com.codescene.data.delta.Delta
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.core.contracts.IAceService
 import com.codescene.jetbrains.core.review.AcePreflightOrchestrator
@@ -70,6 +71,19 @@ class AceService :
         )
 
         return refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, cacheParams, codeSmells) }
+    }
+
+    suspend fun getRefactorableFunctions(
+        params: CodeParams,
+        cacheParams: CacheParams,
+        delta: Delta,
+        editor: Editor,
+    ): Boolean {
+        Log.debug(
+            "Getting refactorable functions for ${editor.virtualFile.path} based on delta...",
+            serviceImplementation,
+        )
+        return refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, cacheParams, delta) }
     }
 
     fun refactor(
