@@ -91,6 +91,7 @@ class AceService :
         refactorLaunchCoordinator.startRefactor { gen ->
             runAceRefactorJob(
                 gen = gen,
+                launchCoordinator = refactorLaunchCoordinator,
                 runCoordinator = refactorRunCoordinator,
                 refactoringOrchestrator = refactoringOrchestrator,
                 params = params,
