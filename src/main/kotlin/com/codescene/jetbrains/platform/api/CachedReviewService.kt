@@ -1,5 +1,7 @@
 package com.codescene.jetbrains.platform.api
 
+import com.codescene.ExtensionAPI.CacheParams
+import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.jetbrains.core.delta.DeltaCacheEntry
 import com.codescene.jetbrains.core.review.BaselineReviewCacheEntry
 import com.codescene.jetbrains.core.review.BaselineReviewCacheQuery
@@ -7,8 +9,11 @@ import com.codescene.jetbrains.core.review.CodeReviewer
 import com.codescene.jetbrains.core.review.ReviewCacheQuery
 import com.codescene.jetbrains.core.review.ReviewOrchestrator
 import com.codescene.jetbrains.core.review.resolveDeltaExecutionPlan
+import com.codescene.jetbrains.core.review.shouldCheckRefactorableFunctions
 import com.codescene.jetbrains.core.review.shouldRefreshAfterReviewFlow
 import com.codescene.jetbrains.core.util.CodeVisionApiCallTracker
+import com.codescene.jetbrains.core.util.resolveCliCacheFileName
+import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.editor.UIRefreshService
 import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionProvider
@@ -27,6 +32,7 @@ class CachedReviewService(
     private val project: Project,
 ) : CodeSceneService() {
     private val serviceProvider = CodeSceneProjectServiceProvider.getInstance(project)
+    private val applicationServiceProvider = CodeSceneApplicationServiceProvider.getInstance()
     private val reviewService = project.service<CodeReviewService>()
     private val deltaService = project.service<CodeDeltaService>()
     private val uiRefreshService = project.service<UIRefreshService>()
@@ -86,7 +92,8 @@ class CachedReviewService(
             } else {
                 false
             }
-        val deltaHandled = handleDelta(editor, fileName, currentCode, review.score.orElse(null))
+        val deltaHandled =
+            handleDelta(editor, fileName, currentCode, review.score.orElse(null), reviewMiss)
 
         if (shouldRefreshAfterReviewFlow(reviewMiss, deltaHandled.didHandleDelta, aceUpdated)) {
             uiRefreshService.refreshUI(editor, CodeSceneCodeVisionProvider.getProviders())
@@ -98,6 +105,7 @@ class CachedReviewService(
         fileName: String,
         currentCode: String,
         currentScore: Double?,
+        reviewMiss: Boolean,
     ): DeltaHandlingResult {
         val path = editor.virtualFile.path
         val baselineCode = serviceProvider.gitService.getBranchCreationCommitCode(path)
@@ -120,8 +128,23 @@ class CachedReviewService(
             return DeltaHandlingResult(didHandleDelta = false)
         }
 
-        // When JetBrains supports delta-backed fns-to-refactor, invoke it here after delta analysis.
-        deltaService.performDeltaAnalysis(editor)
+        val deltaResult = deltaService.performDeltaAnalysis(editor)
+        val delta = deltaResult.delta
+        if (delta != null &&
+            !reviewMiss &&
+            shouldCheckRefactorableFunctions(
+                applicationServiceProvider.settingsProvider,
+                applicationServiceProvider.aceService,
+                editor.virtualFile.extension,
+            )
+        ) {
+            val filePath = editor.virtualFile.path
+            val cliFileName =
+                resolveCliCacheFileName(filePath, serviceProvider.gitService.getRepoRelativePath(filePath))
+            val aceParams = CodeParams(currentCode, cliFileName)
+            val cacheParams = CacheParams(serviceProvider.cliCacheService.getCachePath())
+            AceService.getInstance().getRefactorableFunctions(aceParams, cacheParams, delta, editor)
+        }
         return DeltaHandlingResult(didHandleDelta = true)
     }
 
