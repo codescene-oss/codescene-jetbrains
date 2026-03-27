@@ -19,6 +19,7 @@ class CodeReviewerTest {
         val firstExecuted = AtomicBoolean(false)
         val secondExecuted = CountDownLatch(1)
         val firstError = AtomicReference<FailureType?>()
+        val firstErrorObserved = CountDownLatch(1)
 
         reviewer.reviewFile(
             filePath = "a.kt",
@@ -27,7 +28,10 @@ class CodeReviewerTest {
             performAction = {
                 firstExecuted.set(true)
             },
-            onError = { type, _ -> firstError.set(type) },
+            onError = { type, _ ->
+                firstError.set(type)
+                firstErrorObserved.countDown()
+            },
         )
 
         reviewer.reviewFile(
@@ -41,6 +45,7 @@ class CodeReviewerTest {
         )
 
         assertTrue(secondExecuted.await(2, TimeUnit.SECONDS))
+        assertTrue(firstErrorObserved.await(2, TimeUnit.SECONDS))
         assertEquals(false, firstExecuted.get())
         assertEquals(FailureType.CANCELLED, firstError.get())
     }
