@@ -40,7 +40,7 @@ data class CwfData<T>(
     val view: String,
     val data: T? = null,
     val ideType: String = IDE_TYPE,
-    val featureFlags: List<String> = listOf("jobs"),
+    val featureFlags: List<String> = listOf("jobs", "ace-status-indicator"),
     /**
      * Determines whether additional features for certain WebViews will be shown.
      * Will depend on auth.

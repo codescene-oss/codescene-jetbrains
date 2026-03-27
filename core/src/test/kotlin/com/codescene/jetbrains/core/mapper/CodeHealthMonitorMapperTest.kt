@@ -79,6 +79,13 @@ class CodeHealthMonitorMapperTest {
     }
 
     @Test
+    fun `toCwfData includes ace-status-indicator feature flag`() {
+        val result = toCwfData()
+        assertTrue(result.featureFlags.contains("jobs"))
+        assertTrue(result.featureFlags.contains("ace-status-indicator"))
+    }
+
+    @Test
     fun `toCwfData sets signedIn to true`() {
         val result = toCwfData()
         assertTrue(result.data!!.signedIn)

@@ -10,4 +10,5 @@ data class AutoRefactorConfig(
     val visible: Boolean = false,
     // Disable the visible button if visible: true
     val disabled: Boolean = true,
+    val aceStatus: AceStatusType = AceStatusType(status = "disabled", hasToken = false),
 )
