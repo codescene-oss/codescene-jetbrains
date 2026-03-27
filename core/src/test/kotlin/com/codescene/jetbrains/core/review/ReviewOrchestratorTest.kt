@@ -4,12 +4,15 @@ import com.codescene.jetbrains.core.TestLogger
 import com.codescene.jetbrains.core.contracts.IProgressService
 import com.codescene.jetbrains.core.testdoubles.RecordingTelemetryService
 import com.codescene.jetbrains.core.util.TelemetryEvents
+import java.util.Collections
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -19,13 +22,21 @@ class ReviewOrchestratorTest {
     private lateinit var telemetry: RecordingTelemetryService
     private lateinit var progressMessages: MutableList<String>
     private lateinit var apiCallCompletePaths: MutableList<String>
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private lateinit var scopeJob: Job
+    private lateinit var scope: CoroutineScope
 
     @Before
     fun setUp() {
         telemetry = RecordingTelemetryService()
-        progressMessages = mutableListOf()
-        apiCallCompletePaths = mutableListOf()
+        progressMessages = Collections.synchronizedList(mutableListOf())
+        apiCallCompletePaths = Collections.synchronizedList(mutableListOf())
+        scopeJob = Job()
+        scope = CoroutineScope(Dispatchers.Default + scopeJob)
+    }
+
+    @After
+    fun tearDown() {
+        scopeJob.cancel()
     }
 
     private fun createOrchestrator(
@@ -218,25 +229,33 @@ class ReviewOrchestratorTest {
     @Test
     fun `dispose clears all active reviews`() {
         val orchestrator = createOrchestrator()
+        val enteredA = CountDownLatch(1)
+        val enteredB = CountDownLatch(1)
 
         orchestrator.reviewFile(
             filePath = "a.kt",
             fileName = "a.kt",
             serviceName = "Test",
             isCodeReview = true,
-            performAction = { delay(2000) },
+            performAction = {
+                enteredA.countDown()
+                delay(2000)
+            },
         )
         orchestrator.reviewFile(
             filePath = "b.kt",
             fileName = "b.kt",
             serviceName = "Test",
             isCodeReview = true,
-            performAction = { delay(2000) },
+            performAction = {
+                enteredB.countDown()
+                delay(2000)
+            },
         )
 
-        Thread.sleep(50)
+        assertTrue(enteredA.await(30, TimeUnit.SECONDS))
+        assertTrue(enteredB.await(30, TimeUnit.SECONDS))
         orchestrator.dispose()
-        Thread.sleep(50)
         assertTrue(orchestrator.activeFilePaths().isEmpty())
     }
 
