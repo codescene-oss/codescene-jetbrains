@@ -6,11 +6,13 @@ import com.codescene.jetbrains.core.testdoubles.RecordingTelemetryService
 import com.codescene.jetbrains.core.util.TelemetryEvents
 import java.util.Collections
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.ExecutorCoroutineDispatcher
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import org.junit.After
 import org.junit.Assert.assertFalse
@@ -22,7 +24,7 @@ class ReviewOrchestratorTest {
     private lateinit var telemetry: RecordingTelemetryService
     private lateinit var progressMessages: MutableList<String>
     private lateinit var apiCallCompletePaths: MutableList<String>
-    private lateinit var scopeJob: Job
+    private lateinit var testDispatcher: ExecutorCoroutineDispatcher
     private lateinit var scope: CoroutineScope
 
     @Before
@@ -30,13 +32,13 @@ class ReviewOrchestratorTest {
         telemetry = RecordingTelemetryService()
         progressMessages = Collections.synchronizedList(mutableListOf())
         apiCallCompletePaths = Collections.synchronizedList(mutableListOf())
-        scopeJob = Job()
-        scope = CoroutineScope(Dispatchers.Default + scopeJob)
+        testDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+        scope = CoroutineScope(testDispatcher + SupervisorJob())
     }
 
     @After
     fun tearDown() {
-        scopeJob.cancel()
+        testDispatcher.close()
     }
 
     private fun createOrchestrator(
