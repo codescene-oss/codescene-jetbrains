@@ -3,6 +3,7 @@ package com.codescene.jetbrains.platform.api
 import com.codescene.ExtensionAPI.CacheParams
 import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.jetbrains.core.delta.DeltaCacheEntry
+import com.codescene.jetbrains.core.delta.DeltaCacheQuery
 import com.codescene.jetbrains.core.review.BaselineReviewCacheEntry
 import com.codescene.jetbrains.core.review.BaselineReviewCacheQuery
 import com.codescene.jetbrains.core.review.CodeReviewer
@@ -66,6 +67,15 @@ class CachedReviewService(
         }
     }
 
+    fun reviewFromCodeVision(
+        editor: Editor,
+        debounceDelayMs: Long?,
+    ) {
+        reviewFile(editor, debounceDelayMs = debounceDelayMs) {
+            performCachedReview(editor)
+        }
+    }
+
     override fun onReviewScheduled(filePath: String) {
         updateMonitor(project)
     }
@@ -84,7 +94,18 @@ class CachedReviewService(
 
         val cachedReview = serviceProvider.reviewCacheService.get(ReviewCacheQuery(currentCode, path))
         val reviewMiss = cachedReview == null
-        val review = cachedReview ?: reviewService.performCodeReview(editor) ?: return
+        var review = cachedReview
+        if (review == null) {
+            review = reviewService.performCodeReview(editor)
+        }
+        if (review == null) {
+            val f = path.substringAfterLast('/')
+            Log.debug("cached review no result file=$f len=${currentCode.length}", "CodeSceneCachedReview")
+            return
+        }
+
+        val f = path.substringAfterLast('/')
+        Log.debug("cached review file=$f reviewMiss=$reviewMiss len=${currentCode.length}", "CodeSceneCachedReview")
 
         val aceUpdated =
             if (reviewMiss) {
@@ -128,7 +149,33 @@ class CachedReviewService(
             return DeltaHandlingResult(didHandleDelta = false)
         }
 
+        if (!reviewMiss) {
+            val query = DeltaCacheQuery(path, baselineCode, currentCode)
+            val (deltaHit, _) = serviceProvider.deltaCacheService.get(query)
+            if (deltaHit) {
+                val df = path.substringAfterLast('/')
+                Log.debug(
+                    "handleDelta hit skip file=$df baseLen=${baselineCode.length}",
+                    "CodeSceneCachedReview",
+                )
+                serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(path, false)
+                return DeltaHandlingResult(didHandleDelta = false)
+            }
+            val df = path.substringAfterLast('/')
+            Log.debug(
+                "handleDelta miss cachedReview file=$df baseLen=${baselineCode.length}",
+                "CodeSceneCachedReview",
+            )
+        }
+
         val deltaResult = deltaService.performDeltaAnalysis(editor)
+        serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(path, reviewMiss)
+        val df2 = path.substringAfterLast('/')
+        Log.debug(
+            "handleDelta done file=$df2 reviewMiss=$reviewMiss " +
+                "deltaNull=${deltaResult.delta == null}",
+            "CodeSceneCachedReview",
+        )
         val delta = deltaResult.delta
         if (delta != null &&
             !reviewMiss &&

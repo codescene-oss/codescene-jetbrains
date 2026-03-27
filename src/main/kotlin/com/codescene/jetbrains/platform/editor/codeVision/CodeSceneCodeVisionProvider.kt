@@ -14,6 +14,7 @@ import com.codescene.jetbrains.core.util.resolveCodeVisionDecision
 import com.codescene.jetbrains.platform.api.CachedReviewService
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.icons.CodeSceneIcons.CODE_SMELL
+import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.getTextRange
 import com.codescene.jetbrains.platform.util.handleOpenDocs
 import com.codescene.jetbrains.platform.util.isFileSupported
@@ -112,9 +113,23 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
                 ),
             )
 
+        val shortPath = editor.virtualFile.path.substringAfterLast('/')
+        Log.debug(
+            "code vision file=$shortPath hasReview=${cachedReview != null} hasDelta=${cachedDelta.first} " +
+                "monitor=${settings.codeHealthMonitorEnabled} needsReview=${decision.needsReviewApiCall} " +
+                "needsDelta=${decision.needsDeltaApiCall} action=${decision.action} " +
+                "lenDoc=${document.text.length}",
+            "CodeSceneCodeVision",
+        )
+
         if (decision.needsDeltaApiCall || decision.needsReviewApiCall) {
+            val debounceMs = if (decision.needsReviewApiCall) null else 0L
             triggerApiCall(editor, activeReviewApiCalls) {
-                project.service<CachedReviewService>().review(editor)
+                Log.debug(
+                    "code vision scheduling review file=$shortPath debounceOverride=$debounceMs",
+                    "CodeSceneCodeVision",
+                )
+                project.service<CachedReviewService>().reviewFromCodeVision(editor, debounceMs)
             }
         }
 

@@ -10,6 +10,11 @@ interface IDeltaCacheService {
 
     fun put(entry: DeltaCacheEntry)
 
+    fun setIncludeInCodeHealthMonitor(
+        filePath: String,
+        include: Boolean,
+    )
+
     fun invalidate(filePath: String)
 
     fun updateKey(

@@ -29,7 +29,7 @@ class ReviewOrchestratorTest {
 
     private fun createOrchestrator(debounceDelayMs: Long = 0) =
         ReviewOrchestrator(
-            codeReviewer = CodeReviewer(scope, debounceDelayMs = debounceDelayMs),
+            codeReviewer = CodeReviewer(scope, defaultDebounceDelayMs = debounceDelayMs),
             scope = scope,
             logger = TestLogger,
             telemetryService = telemetry,

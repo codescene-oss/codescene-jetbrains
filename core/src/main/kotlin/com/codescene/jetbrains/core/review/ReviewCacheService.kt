@@ -20,6 +20,8 @@ data class ReviewCacheEntry(
     val response: Review,
 )
 
+private const val REVIEW_CACHE_LOG = "CodeSceneReviewCache"
+
 open class ReviewCacheService(
     log: ILogger,
 ) : CacheService<ReviewCacheQuery, ReviewCacheEntry, ReviewCacheItem, Review>(log) {
@@ -29,7 +31,22 @@ open class ReviewCacheService(
         val hash = DigestUtils.sha256Hex(fileContents)
 
         val apiResponse = cache[filePath]?.response
-        val cacheHit = cache.containsKey(filePath) && cache[filePath]?.fileContents == hash
+        val storedHash = cache[filePath]?.fileContents
+        val cacheHit = cache.containsKey(filePath) && storedHash == hash
+
+        if (!cacheHit) {
+            val shortPath = filePath.substringAfterLast('/')
+            val reason =
+                when {
+                    !cache.containsKey(filePath) -> "no_entry"
+                    else -> "content_hash_mismatch"
+                }
+            log.debug(
+                "review cache miss file=$shortPath reason=$reason qHash=${hash.take(8)} " +
+                    "sHash=${storedHash?.take(8)} lenContent=${fileContents.length}",
+                REVIEW_CACHE_LOG,
+            )
+        }
 
         return if (cacheHit) apiResponse else null
     }

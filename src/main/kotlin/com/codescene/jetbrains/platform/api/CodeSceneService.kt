@@ -26,6 +26,7 @@ abstract class CodeSceneService :
     protected fun reviewFile(
         editor: Editor,
         timeout: Long = 60_000,
+        debounceDelayMs: Long? = null,
         performAction: suspend () -> Unit,
     ) {
         val filePath = editor.virtualFile.path
@@ -38,6 +39,7 @@ abstract class CodeSceneService :
             serviceName = serviceName,
             isCodeReview = isCodeReview(),
             timeout = timeout,
+            debounceDelayMs = debounceDelayMs,
             performAction = performAction,
             onScheduled = { onReviewScheduled(filePath) },
             onFinished = { onReviewFinished(filePath) },
