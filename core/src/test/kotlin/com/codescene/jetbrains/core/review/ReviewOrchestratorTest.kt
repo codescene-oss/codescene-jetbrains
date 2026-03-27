@@ -28,24 +28,31 @@ class ReviewOrchestratorTest {
         apiCallCompletePaths = mutableListOf()
     }
 
-    private fun createOrchestrator(debounceDelayMs: Long = 0) =
-        ReviewOrchestrator(
-            codeReviewer = CodeReviewer(scope, defaultDebounceDelayMs = debounceDelayMs),
-            scope = scope,
-            logger = TestLogger,
-            telemetryService = telemetry,
-            progressService =
-                object : IProgressService {
-                    override suspend fun <T> runWithProgress(
-                        title: String,
-                        action: suspend () -> T,
-                    ): T {
-                        progressMessages.add(title)
-                        return action()
-                    }
-                },
-            onApiCallComplete = { apiCallCompletePaths.add(it) },
-        )
+    private fun createOrchestrator(
+        debounceDelayMs: Long = 0,
+        progressLatch: CountDownLatch? = null,
+        apiCallLatch: CountDownLatch? = null,
+    ) = ReviewOrchestrator(
+        codeReviewer = CodeReviewer(scope, defaultDebounceDelayMs = debounceDelayMs),
+        scope = scope,
+        logger = TestLogger,
+        telemetryService = telemetry,
+        progressService =
+            object : IProgressService {
+                override suspend fun <T> runWithProgress(
+                    title: String,
+                    action: suspend () -> T,
+                ): T {
+                    progressMessages.add(title)
+                    progressLatch?.countDown()
+                    return action()
+                }
+            },
+        onApiCallComplete = {
+            apiCallCompletePaths.add(it)
+            apiCallLatch?.countDown()
+        },
+    )
 
     @Test
     fun `reviewFile executes action and calls onFinished`() {
@@ -235,7 +242,8 @@ class ReviewOrchestratorTest {
 
     @Test
     fun `error on failure shows progress suffix`() {
-        val orchestrator = createOrchestrator()
+        val progressLatch = CountDownLatch(2)
+        val orchestrator = createOrchestrator(progressLatch = progressLatch)
         val done = CountDownLatch(1)
 
         orchestrator.reviewFile(
@@ -248,7 +256,7 @@ class ReviewOrchestratorTest {
         )
 
         assertTrue(done.await(30, TimeUnit.SECONDS))
-        Thread.sleep(200)
+        assertTrue(progressLatch.await(30, TimeUnit.SECONDS))
         assertTrue(progressMessages.any { it.contains("Failed") })
     }
 
@@ -272,7 +280,8 @@ class ReviewOrchestratorTest {
 
     @Test
     fun `onFinished is null-safe`() {
-        val orchestrator = createOrchestrator()
+        val apiCallLatch = CountDownLatch(1)
+        val orchestrator = createOrchestrator(apiCallLatch = apiCallLatch)
         val executed = CountDownLatch(1)
 
         orchestrator.reviewFile(
@@ -285,7 +294,7 @@ class ReviewOrchestratorTest {
         )
 
         assertTrue(executed.await(30, TimeUnit.SECONDS))
-        Thread.sleep(300)
+        assertTrue(apiCallLatch.await(30, TimeUnit.SECONDS))
         assertTrue(apiCallCompletePaths.contains("a.kt"))
     }
 }
