@@ -1,14 +1,20 @@
 package com.codescene.jetbrains.core.review
 
 import com.codescene.jetbrains.core.TestLogger
+import com.codescene.jetbrains.core.contracts.IProgressService
 import com.codescene.jetbrains.core.testdoubles.RecordingTelemetryService
 import com.codescene.jetbrains.core.util.TelemetryEvents
+import java.util.Collections
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExecutorCoroutineDispatcher
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
+import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -18,33 +24,48 @@ class ReviewOrchestratorTest {
     private lateinit var telemetry: RecordingTelemetryService
     private lateinit var progressMessages: MutableList<String>
     private lateinit var apiCallCompletePaths: MutableList<String>
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private lateinit var testDispatcher: ExecutorCoroutineDispatcher
+    private lateinit var scope: CoroutineScope
 
     @Before
     fun setUp() {
         telemetry = RecordingTelemetryService()
-        progressMessages = mutableListOf()
-        apiCallCompletePaths = mutableListOf()
+        progressMessages = Collections.synchronizedList(mutableListOf())
+        apiCallCompletePaths = Collections.synchronizedList(mutableListOf())
+        testDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+        scope = CoroutineScope(testDispatcher + SupervisorJob())
     }
 
-    private fun createOrchestrator(debounceDelayMs: Long = 0) =
-        ReviewOrchestrator(
-            codeReviewer = CodeReviewer(scope, defaultDebounceDelayMs = debounceDelayMs),
-            scope = scope,
-            logger = TestLogger,
-            telemetryService = telemetry,
-            progressService =
-                object : com.codescene.jetbrains.core.contracts.IProgressService {
-                    override suspend fun <T> runWithProgress(
-                        title: String,
-                        action: suspend () -> T,
-                    ): T {
-                        progressMessages.add(title)
-                        return action()
-                    }
-                },
-            onApiCallComplete = { apiCallCompletePaths.add(it) },
-        )
+    @After
+    fun tearDown() {
+        testDispatcher.close()
+    }
+
+    private fun createOrchestrator(
+        debounceDelayMs: Long = 0,
+        progressLatch: CountDownLatch? = null,
+        apiCallLatch: CountDownLatch? = null,
+    ) = ReviewOrchestrator(
+        codeReviewer = CodeReviewer(scope, defaultDebounceDelayMs = debounceDelayMs),
+        scope = scope,
+        logger = TestLogger,
+        telemetryService = telemetry,
+        progressService =
+            object : IProgressService {
+                override suspend fun <T> runWithProgress(
+                    title: String,
+                    action: suspend () -> T,
+                ): T {
+                    progressMessages.add(title)
+                    progressLatch?.countDown()
+                    return action()
+                }
+            },
+        onApiCallComplete = {
+            apiCallCompletePaths.add(it)
+            apiCallLatch?.countDown()
+        },
+    )
 
     @Test
     fun `reviewFile executes action and calls onFinished`() {
@@ -61,8 +82,8 @@ class ReviewOrchestratorTest {
             onFinished = { finished.countDown() },
         )
 
-        assertTrue(executed.await(2, TimeUnit.SECONDS))
-        assertTrue(finished.await(2, TimeUnit.SECONDS))
+        assertTrue(executed.await(30, TimeUnit.SECONDS))
+        assertTrue(finished.await(30, TimeUnit.SECONDS))
         assertTrue(apiCallCompletePaths.contains("a.kt"))
     }
 
@@ -80,7 +101,7 @@ class ReviewOrchestratorTest {
             onFinished = { done.countDown() },
         )
 
-        assertTrue(done.await(2, TimeUnit.SECONDS))
+        assertTrue(done.await(30, TimeUnit.SECONDS))
         assertTrue(progressMessages.any { it.contains("Reviewing file a.kt") })
     }
 
@@ -98,7 +119,7 @@ class ReviewOrchestratorTest {
             onFinished = { done.countDown() },
         )
 
-        assertTrue(done.await(2, TimeUnit.SECONDS))
+        assertTrue(done.await(30, TimeUnit.SECONDS))
         assertTrue(progressMessages.any { it.contains("Updating monitor") })
     }
 
@@ -118,7 +139,7 @@ class ReviewOrchestratorTest {
             onFinished = { done.countDown() },
         )
 
-        assertTrue(done.await(2, TimeUnit.SECONDS))
+        assertTrue(done.await(30, TimeUnit.SECONDS))
         assertTrue(scheduled.get())
     }
 
@@ -137,8 +158,7 @@ class ReviewOrchestratorTest {
             onFinished = { done.countDown() },
         )
 
-        assertTrue(done.await(3, TimeUnit.SECONDS))
-        Thread.sleep(100)
+        assertTrue(done.await(30, TimeUnit.SECONDS))
         assertTrue(telemetry.events.any { it.name == TelemetryEvents.REVIEW_OR_DELTA_TIMEOUT })
     }
 
@@ -156,8 +176,7 @@ class ReviewOrchestratorTest {
             onFinished = { done.countDown() },
         )
 
-        assertTrue(done.await(2, TimeUnit.SECONDS))
-        Thread.sleep(100)
+        assertTrue(done.await(30, TimeUnit.SECONDS))
         assertFalse(telemetry.events.any { it.name == TelemetryEvents.REVIEW_OR_DELTA_TIMEOUT })
     }
 
@@ -177,7 +196,7 @@ class ReviewOrchestratorTest {
             },
         )
 
-        assertTrue(entered.await(1, TimeUnit.SECONDS))
+        assertTrue(entered.await(30, TimeUnit.SECONDS))
         assertTrue(orchestrator.cancel("a.kt", "Test"))
         assertTrue(apiCallCompletePaths.contains("a.kt"))
     }
@@ -204,7 +223,7 @@ class ReviewOrchestratorTest {
             },
         )
 
-        assertTrue(entered.await(1, TimeUnit.SECONDS))
+        assertTrue(entered.await(30, TimeUnit.SECONDS))
         assertTrue(orchestrator.activeFilePaths().contains("a.kt"))
         orchestrator.dispose()
     }
@@ -212,31 +231,40 @@ class ReviewOrchestratorTest {
     @Test
     fun `dispose clears all active reviews`() {
         val orchestrator = createOrchestrator()
+        val enteredA = CountDownLatch(1)
+        val enteredB = CountDownLatch(1)
 
         orchestrator.reviewFile(
             filePath = "a.kt",
             fileName = "a.kt",
             serviceName = "Test",
             isCodeReview = true,
-            performAction = { delay(2000) },
+            performAction = {
+                enteredA.countDown()
+                delay(2000)
+            },
         )
         orchestrator.reviewFile(
             filePath = "b.kt",
             fileName = "b.kt",
             serviceName = "Test",
             isCodeReview = true,
-            performAction = { delay(2000) },
+            performAction = {
+                enteredB.countDown()
+                delay(2000)
+            },
         )
 
-        Thread.sleep(50)
+        assertTrue(enteredA.await(30, TimeUnit.SECONDS))
+        assertTrue(enteredB.await(30, TimeUnit.SECONDS))
         orchestrator.dispose()
-        Thread.sleep(50)
         assertTrue(orchestrator.activeFilePaths().isEmpty())
     }
 
     @Test
     fun `error on failure shows progress suffix`() {
-        val orchestrator = createOrchestrator()
+        val progressLatch = CountDownLatch(2)
+        val orchestrator = createOrchestrator(progressLatch = progressLatch)
         val done = CountDownLatch(1)
 
         orchestrator.reviewFile(
@@ -248,8 +276,8 @@ class ReviewOrchestratorTest {
             onFinished = { done.countDown() },
         )
 
-        assertTrue(done.await(2, TimeUnit.SECONDS))
-        Thread.sleep(200)
+        assertTrue(done.await(30, TimeUnit.SECONDS))
+        assertTrue(progressLatch.await(30, TimeUnit.SECONDS))
         assertTrue(progressMessages.any { it.contains("Failed") })
     }
 
@@ -267,13 +295,14 @@ class ReviewOrchestratorTest {
             onFinished = { done.countDown() },
         )
 
-        assertTrue(done.await(2, TimeUnit.SECONDS))
+        assertTrue(done.await(30, TimeUnit.SECONDS))
         assertTrue(apiCallCompletePaths.contains("test.kt"))
     }
 
     @Test
     fun `onFinished is null-safe`() {
-        val orchestrator = createOrchestrator()
+        val apiCallLatch = CountDownLatch(1)
+        val orchestrator = createOrchestrator(apiCallLatch = apiCallLatch)
         val executed = CountDownLatch(1)
 
         orchestrator.reviewFile(
@@ -285,8 +314,8 @@ class ReviewOrchestratorTest {
             onFinished = null,
         )
 
-        assertTrue(executed.await(2, TimeUnit.SECONDS))
-        Thread.sleep(300)
+        assertTrue(executed.await(30, TimeUnit.SECONDS))
+        assertTrue(apiCallLatch.await(30, TimeUnit.SECONDS))
         assertTrue(apiCallCompletePaths.contains("a.kt"))
     }
 }
