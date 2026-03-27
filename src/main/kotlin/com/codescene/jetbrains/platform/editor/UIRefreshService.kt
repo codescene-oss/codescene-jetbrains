@@ -14,6 +14,7 @@ import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.psi.PsiFile
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -71,9 +72,7 @@ class UIRefreshService(
                     ApplicationManager
                         .getApplication()
                         .runWriteAction<Unit, RuntimeException> {
-                            DaemonCodeAnalyzer
-                                .getInstance(project)
-                                .restart(psiFile)
+                            restartDaemon(psiFile)
                         }
                 } catch (e: Exception) {
                     Log.warn("Failed to refresh annotations for file: ${psiFile.name}. Error: ${e.message}")
@@ -98,6 +97,18 @@ class UIRefreshService(
         val file = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return null
         return FileEditorManager.getInstance(project).getEditors(file).firstNotNullOfOrNull { editor ->
             (editor as? TextEditor)?.editor
+        }
+    }
+
+    private fun restartDaemon(psiFile: PsiFile) {
+        val analyzer = DaemonCodeAnalyzer.getInstance(project)
+        try {
+            analyzer.javaClass
+                .getMethod("restart", PsiFile::class.java, Any::class.java)
+                .invoke(analyzer, psiFile, "CodeScene annotation refresh")
+        } catch (_: NoSuchMethodException) {
+            @Suppress("DEPRECATION")
+            analyzer.restart(psiFile)
         }
     }
 }
