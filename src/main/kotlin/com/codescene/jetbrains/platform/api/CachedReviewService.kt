@@ -92,7 +92,8 @@ class CachedReviewService(
             } else {
                 false
             }
-        val deltaHandled = handleDelta(editor, fileName, currentCode, review.score.orElse(null))
+        val deltaHandled =
+            handleDelta(editor, fileName, currentCode, review.score.orElse(null), reviewMiss)
 
         if (shouldRefreshAfterReviewFlow(reviewMiss, deltaHandled.didHandleDelta, aceUpdated)) {
             uiRefreshService.refreshUI(editor, CodeSceneCodeVisionProvider.getProviders())
@@ -104,6 +105,7 @@ class CachedReviewService(
         fileName: String,
         currentCode: String,
         currentScore: Double?,
+        reviewMiss: Boolean,
     ): DeltaHandlingResult {
         val path = editor.virtualFile.path
         val baselineCode = serviceProvider.gitService.getBranchCreationCommitCode(path)
@@ -129,6 +131,7 @@ class CachedReviewService(
         val deltaResult = deltaService.performDeltaAnalysis(editor)
         val delta = deltaResult.delta
         if (delta != null &&
+            !reviewMiss &&
             shouldCheckRefactorableFunctions(
                 applicationServiceProvider.settingsProvider,
                 applicationServiceProvider.aceService,
@@ -138,7 +141,7 @@ class CachedReviewService(
             val filePath = editor.virtualFile.path
             val cliFileName =
                 resolveCliCacheFileName(filePath, serviceProvider.gitService.getRepoRelativePath(filePath))
-            val aceParams = CodeParams(editor.document.text, cliFileName)
+            val aceParams = CodeParams(currentCode, cliFileName)
             val cacheParams = CacheParams(serviceProvider.cliCacheService.getCachePath())
             AceService.getInstance().getRefactorableFunctions(aceParams, cacheParams, delta, editor)
         }
