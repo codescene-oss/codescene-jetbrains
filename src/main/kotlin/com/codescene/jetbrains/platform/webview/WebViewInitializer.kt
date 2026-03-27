@@ -20,7 +20,9 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @Service(Service.Level.PROJECT)
-class WebViewInitializer : LafManagerListener {
+class WebViewInitializer(
+    private val project: Project,
+) : LafManagerListener {
     private val browsers = mutableMapOf<View, JBCefBrowser>()
 
     companion object {
@@ -36,11 +38,13 @@ class WebViewInitializer : LafManagerListener {
         id: View,
         browser: JBCefBrowser,
     ) {
+        CwfWebviewLifecycle.getInstance(project).resetForNewBrowser(id)
         browsers[id] = browser
     }
 
     fun unregisterBrowser(id: View) {
         browsers.remove(id)
+        CwfWebviewLifecycle.getInstance(project).resetForNewBrowser(id)
     }
 
     fun getBrowser(view: View): JBCefBrowser? = browsers[view]

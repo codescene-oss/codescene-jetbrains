@@ -32,7 +32,10 @@ import com.codescene.jetbrains.platform.util.closeWindow
 import com.codescene.jetbrains.platform.util.replaceCodeSnippet
 import com.codescene.jetbrains.platform.util.showAceDiff
 import com.codescene.jetbrains.platform.util.showInfoNotification
+import com.codescene.jetbrains.platform.webview.CwfWebviewLifecycle
 import com.codescene.jetbrains.platform.webview.WebViewInitializer
+import com.codescene.jetbrains.platform.webview.util.aceAcknowledgeRefreshMessage
+import com.codescene.jetbrains.platform.webview.util.docsRefreshMessage
 import com.codescene.jetbrains.platform.webview.util.getAceAcknowledgeUserData
 import com.codescene.jetbrains.platform.webview.util.getAceUserData
 import com.codescene.jetbrains.platform.webview.util.openDocs
@@ -132,6 +135,19 @@ class CwfMessageHandler(
      *                for the given `view` is looked up via [WebViewInitializer].
      */
     fun postMessage(
+        view: View,
+        message: String,
+        browser: JBCefBrowser? = null,
+    ) {
+        val lifecycle = CwfWebviewLifecycle.getInstance(project)
+        if (lifecycle.isInitialized(view)) {
+            postMessageDirect(view, message, browser)
+            return
+        }
+        lifecycle.offerOutboundMessage(view, message)
+    }
+
+    fun postMessageDirect(
         view: View,
         message: String,
         browser: JBCefBrowser? = null,
@@ -295,8 +311,42 @@ class CwfMessageHandler(
     }
 
     override fun handleInit(payload: String?) {
-        if (payload == View.HOME.value) updateMonitor(project)
-        if (payload == View.ACE.value) orchestrator.handleAceViewInitialized()
+        val lifecycle = CwfWebviewLifecycle.getInstance(project)
+        val webViews = WebViewInitializer.getInstance(project)
+        when (payload) {
+            View.HOME.value -> {
+                lifecycle.setInitialized(View.HOME, true)
+                lifecycle.takePendingHome()
+                updateMonitor(project)
+            }
+            View.ACE.value -> {
+                lifecycle.setInitialized(View.ACE, true)
+                val browser = webViews.getBrowser(View.ACE)
+                for (queued in lifecycle.drainAceQueue()) {
+                    postMessageDirect(View.ACE, queued, browser)
+                }
+                orchestrator.handleAceViewInitialized()
+            }
+            View.DOCS.value -> {
+                lifecycle.setInitialized(View.DOCS, true)
+                val stalePending = lifecycle.takePendingDocs()
+                val browser = webViews.getBrowser(View.DOCS)
+                val message = docsRefreshMessage(project) ?: stalePending
+                if (message != null) {
+                    postMessageDirect(View.DOCS, message, browser)
+                }
+            }
+            View.ACE_ACKNOWLEDGE.value -> {
+                lifecycle.setInitialized(View.ACE_ACKNOWLEDGE, true)
+                val stalePending = lifecycle.takePendingAck()
+                val browser = webViews.getBrowser(View.ACE_ACKNOWLEDGE)
+                val message = aceAcknowledgeRefreshMessage(project) ?: stalePending
+                if (message != null) {
+                    postMessageDirect(View.ACE_ACKNOWLEDGE, message, browser)
+                }
+            }
+            else -> Unit
+        }
     }
 
     override fun handleOpenDocs(docsForFunction: OpenDocsForFunction) {
