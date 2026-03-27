@@ -26,7 +26,7 @@ class DeltaAnalysisOrchestrationTest {
     }
 
     @Test
-    fun `completeDeltaAnalysis invalidates cache and does not refresh ui for null delta`() {
+    fun `completeDeltaAnalysis caches null delta and does not refresh ui for null delta`() {
         val telemetry = RecordingTelemetryService()
         val cache = InMemoryDeltaCacheService()
         val warm = mockk<Delta>(relaxed = true)
@@ -49,7 +49,7 @@ class DeltaAnalysisOrchestrationTest {
         assertEquals(false, result.shouldRefreshUi)
         assertNull(result.delta)
         val cached = cache.get(DeltaCacheQuery("a.kt", "old", "new"))
-        assertEquals(false, cached.first)
+        assertEquals(true, cached.first)
         assertNull(cached.second)
         assertEquals(TelemetryEvents.ANALYSIS_PERFORMANCE, telemetry.events.single().name)
     }

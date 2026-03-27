@@ -27,6 +27,7 @@ class ReviewOrchestrator(
         serviceName: String,
         isCodeReview: Boolean,
         timeout: Long = 60_000,
+        debounceDelayMs: Long? = null,
         performAction: suspend () -> Unit,
         onScheduled: (() -> Unit)? = null,
         onFinished: (() -> Unit)? = null,
@@ -35,6 +36,7 @@ class ReviewOrchestrator(
         codeReviewer.reviewFile(
             filePath = filePath,
             timeout = timeout,
+            debounceDelayMs = debounceDelayMs,
             runWithProgress = { action ->
                 progressService.runWithProgress(progressMessage) { action() }
             },

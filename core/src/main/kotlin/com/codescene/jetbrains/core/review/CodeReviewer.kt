@@ -13,19 +13,22 @@ import kotlinx.coroutines.withTimeout
 
 class CodeReviewer(
     private val scope: CoroutineScope,
-    private val debounceDelayMs: Long = TimeUnit.SECONDS.toMillis(3),
+    private val defaultDebounceDelayMs: Long = TimeUnit.SECONDS.toMillis(3),
 ) {
     private val activeCalls = ConcurrentHashMap<String, Job>()
 
     fun reviewFile(
         filePath: String,
         timeout: Long = 60_000,
+        debounceDelayMs: Long? = null,
         runWithProgress: suspend (suspend () -> Unit) -> Unit,
         performAction: suspend () -> Unit,
         onError: (FailureType, String?) -> Unit,
         onScheduled: (() -> Unit)? = null,
         onFinished: (() -> Unit)? = null,
     ) {
+        val delayBeforeRun = debounceDelayMs ?: defaultDebounceDelayMs
+
         activeCalls[filePath]?.cancel()
 
         lateinit var job: Job
@@ -34,7 +37,7 @@ class CodeReviewer(
                 try {
                     withTimeout(timeout) {
                         runWithProgress {
-                            delay(debounceDelayMs)
+                            delay(delayBeforeRun)
                             performAction()
                         }
                     }

@@ -13,7 +13,9 @@ import com.intellij.openapi.diagnostic.Logger
  *
  * To view debug logs specifically, enable the appropriate debug settings
  * in the IDE by navigating to Help > Diagnostic Tools > Debug Log Settings
- * and adding the logger path, e.g., `#com.codescene.jetbrains.util.Log`.
+ * and adding the logger path, e.g., `#com.codescene.jetbrains.platform.util.Log`.
+ * CodeScene debug lines are tagged with a service suffix such as CodeSceneCodeVision,
+ * CodeSceneDeltaCache, CodeSceneReviewCache, or CodeSceneCachedReview (filter in idea.log).
  * Make sure to filter by all types of logs in the console, not just warnings.
  *
  * @see <a href="https://www.jetbrains.com/help/idea/setting-log-options.html#add_log">IntelliJ Logging Documentation</a>

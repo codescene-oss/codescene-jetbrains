@@ -27,18 +27,16 @@ class Git4IdeaGitService(val project: Project) : IGitService {
 
     companion object {
         fun getInstance(project: Project): Git4IdeaGitService = project.service<Git4IdeaGitService>()
+
+        private val MAIN_BRANCH_NAMES =
+            listOf("main", "master", "develop", "trunk", "dev")
     }
 
     /**
-     * Retrieves the baseline commit for the branch by identifying the branch creation commit.
-     * This allows for a more accurate comparison over the branch's lifecycle.
-     *
-     * Note: This approach relies on the local Git reflog, meaning it will not work
-     * if the reflog has been deleted or if history was rewritten.
-     *
-     * @param file The file for which to retrieve the baseline commit code.
-     * @return The code content from the branch creation commit, or an empty string if not found or repository is
-     *         in a detached HEAD state.
+     * Resolves baseline file content for delta analysis, aligned with VS / VS Code:
+     * - On a main-line branch (main, master, develop, trunk, dev): **HEAD** commit.
+     * - On a feature branch: **merge-base** with the first resolvable main-line ref (local name, then `origin/<name>`).
+     * - Fallback: branch-creation commit from the current branch’s reflog (same as the previous JetBrains-only behavior).
      */
     override fun getBranchCreationCommitCode(filePath: String): String {
         val context = getRepositoryContext(filePath) ?: return ""
@@ -46,8 +44,8 @@ class Git4IdeaGitService(val project: Project) : IGitService {
         if (context.repository.state == Repository.State.DETACHED) return ""
 
         val commit =
-            getBranchCreationCommit(context.repository) ?: run {
-                Log.debug("Could not retrieve branch creation commit for ${context.file.path}", service)
+            getBaselineCommitSha(context.repository) ?: run {
+                Log.debug("Could not retrieve baseline commit for ${context.file.path}", service)
                 return ""
             }
 
@@ -61,12 +59,80 @@ class Git4IdeaGitService(val project: Project) : IGitService {
             return null
         }
 
-        return getBranchCreationCommit(context.repository)
+        return getBaselineCommitSha(context.repository)
     }
 
     override fun getRepoRelativePath(filePath: String): String? = getRepositoryContext(filePath)?.relativePath
 
-    private fun getBranchCreationCommit(gitRepository: GitRepository): String? =
+    private fun isMainLineBranch(branchName: String): Boolean =
+        MAIN_BRANCH_NAMES.any { it.equals(branchName, ignoreCase = true) }
+
+    private fun getBaselineCommitSha(gitRepository: GitRepository): String? {
+        val branchName = gitRepository.currentBranchName ?: return null
+
+        if (isMainLineBranch(branchName)) {
+            return resolveHeadCommitSha(gitRepository)
+        }
+
+        val mergeBase = findMergeBaseWithMain(gitRepository, branchName)
+        if (!mergeBase.isNullOrBlank()) {
+            return mergeBase.trim()
+        }
+
+        return getBranchCreationCommitFromReflog(gitRepository)
+    }
+
+    private fun resolveHeadCommitSha(gitRepository: GitRepository): String? {
+        val handler =
+            GitLineHandler(project, gitRepository.root, GitCommand.REV_PARSE).apply {
+                addParameters("HEAD")
+            }
+        return Git.getInstance().runCommand(handler).let { result ->
+            if (result.success() && result.output.isNotEmpty()) {
+                result.output.first().trim()
+            } else {
+                null
+            }
+        }
+    }
+
+    private fun findMergeBaseWithMain(
+        gitRepository: GitRepository,
+        currentBranchName: String,
+    ): String? {
+        for (mainName in MAIN_BRANCH_NAMES) {
+            val refsToTry =
+                listOf(
+                    mainName,
+                    "origin/$mainName",
+                )
+            for (ref in refsToTry) {
+                val mergeBase = runMergeBase(gitRepository, currentBranchName, ref)
+                if (!mergeBase.isNullOrBlank()) {
+                    return mergeBase.trim()
+                }
+            }
+        }
+        return null
+    }
+
+    private fun runMergeBase(
+        gitRepository: GitRepository,
+        rev1: String,
+        rev2: String,
+    ): String? {
+        val handler =
+            GitLineHandler(project, gitRepository.root, GitCommand.MERGE_BASE).apply {
+                addParameters(rev1, rev2)
+            }
+        val result = Git.getInstance().runCommand(handler)
+        if (!result.success()) {
+            return null
+        }
+        return result.output.firstOrNull()?.trim()?.takeIf { it.isNotEmpty() }
+    }
+
+    private fun getBranchCreationCommitFromReflog(gitRepository: GitRepository): String? =
         getRefLog(project, gitRepository)?.let { parseBranchCreationCommitFromReflog(it) }
 
     private fun getRefLog(
@@ -99,12 +165,14 @@ class Git4IdeaGitService(val project: Project) : IGitService {
 
         Git.getInstance().runCommand(handler).let {
             if (it.success()) {
-                return it.output.joinToString("\n")
+                return normalizeVcsLineSeparators(it.output.joinToString("\n"))
             } else {
                 return ""
             }
         }
     }
+
+    private fun normalizeVcsLineSeparators(text: String): String = text.replace("\r\n", "\n").replace('\r', '\n')
 
     private fun getRepositoryContext(filePath: String): RepositoryContext? {
         val file = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return null

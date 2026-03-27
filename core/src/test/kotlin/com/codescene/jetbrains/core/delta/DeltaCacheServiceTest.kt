@@ -2,6 +2,7 @@ package com.codescene.jetbrains.core.delta
 
 import com.codescene.data.delta.Delta
 import com.codescene.jetbrains.core.TestLogger
+import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -72,5 +73,73 @@ class DeltaCacheServiceTest {
 
         assertEquals(true, cachedResponse.first)
         assertNull(cachedResponse.second)
+    }
+
+    @Test
+    fun `getAll excludes unchanged code with zero score change`() {
+        val delta = mockk<Delta>()
+        every { delta.scoreChange } returns 0.0
+        deltaCacheService.put(DeltaCacheEntry(filePath, "same", "same", delta))
+
+        assertEquals(0, deltaCacheService.getAll().size)
+    }
+
+    @Test
+    fun `getAll includes code change with zero score change`() {
+        val delta = mockk<Delta>()
+        every { delta.scoreChange } returns 0.0
+        deltaCacheService.put(DeltaCacheEntry(filePath, headCommitContent, currentFileContent, delta))
+
+        val all = deltaCacheService.getAll()
+        assertEquals(1, all.size)
+        assertEquals(filePath, all[0].first)
+    }
+
+    @Test
+    fun `getAll includes score change when head and current content match`() {
+        val delta = mockk<Delta>()
+        every { delta.scoreChange } returns -0.5
+        deltaCacheService.put(DeltaCacheEntry(filePath, "same", "same", delta))
+
+        val all = deltaCacheService.getAll()
+        assertEquals(1, all.size)
+        assertEquals(filePath, all[0].first)
+    }
+
+    @Test
+    fun `getAll excludes null delta response`() {
+        deltaCacheService.put(DeltaCacheEntry(filePath, headCommitContent, currentFileContent, null))
+
+        assertEquals(0, deltaCacheService.getAll().size)
+    }
+
+    @Test
+    fun `getAll excludes entries with includeInCodeHealthMonitor false`() {
+        val delta = mockk<Delta>()
+        every { delta.scoreChange } returns 1.0
+        deltaCacheService.put(
+            DeltaCacheEntry(
+                filePath,
+                headCommitContent,
+                currentFileContent,
+                delta,
+                includeInCodeHealthMonitor = false,
+            ),
+        )
+
+        assertEquals(0, deltaCacheService.getAll().size)
+    }
+
+    @Test
+    fun `setIncludeInCodeHealthMonitor toggles getAll visibility`() {
+        val delta = mockk<Delta>()
+        every { delta.scoreChange } returns 1.0
+        deltaCacheService.put(DeltaCacheEntry(filePath, headCommitContent, currentFileContent, delta))
+
+        assertEquals(1, deltaCacheService.getAll().size)
+
+        deltaCacheService.setIncludeInCodeHealthMonitor(filePath, false)
+
+        assertEquals(0, deltaCacheService.getAll().size)
     }
 }

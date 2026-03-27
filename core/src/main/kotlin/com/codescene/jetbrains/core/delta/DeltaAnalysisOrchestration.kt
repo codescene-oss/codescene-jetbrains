@@ -52,7 +52,7 @@ fun completeDeltaAnalysis(
 
     if (delta == null) {
         logger.info("Received null response from $CODESCENE delta API.", serviceName)
-        deltaCacheService.invalidate(path)
+        deltaCacheService.put(DeltaCacheEntry(path, oldCode, currentCode, null))
         return DeltaAnalysisResult(delta = null, shouldRefreshUi = false)
     }
 

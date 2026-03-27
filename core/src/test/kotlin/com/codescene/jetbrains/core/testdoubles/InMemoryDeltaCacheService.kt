@@ -17,6 +17,13 @@ class InMemoryDeltaCacheService : IDeltaCacheService {
         delegate.put(entry)
     }
 
+    override fun setIncludeInCodeHealthMonitor(
+        filePath: String,
+        include: Boolean,
+    ) {
+        delegate.setIncludeInCodeHealthMonitor(filePath, include)
+    }
+
     override fun invalidate(filePath: String) {
         delegate.invalidate(filePath)
     }
