@@ -40,6 +40,12 @@ jobs:
       changelog: ${{ steps.properties.outputs.changelog }}
       pluginVerifierHomeDir: ${{ steps.properties.outputs.pluginVerifierHomeDir }}
     steps:
+      - name: Maximize Build Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          large-packages: true
+
       # Check out the current repository
       - name: Fetch Sources
         uses: actions/checkout@v4
@@ -58,6 +64,10 @@ jobs:
       # Setup Gradle
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-home-cache-excludes: |
+            caches/modules-2/files-2.1/idea/**
+            caches/**/transforms/**
 
       # Set environment variables
       - name: Export Properties
@@ -103,6 +113,12 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
+      - name: Maximize Build Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          large-packages: true
+
       # Check out the current repository
       - name: Fetch Sources
         uses: actions/checkout@v4
@@ -119,6 +135,11 @@ jobs:
       # Setup Gradle
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
+          gradle-home-cache-excludes: |
+            caches/modules-2/files-2.1/idea/**
+            caches/**/transforms/**
 
       # Run tests and Lint check
       - name: Run Tests and Lint check
@@ -175,6 +196,11 @@ jobs:
       # Setup Gradle
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
+          gradle-home-cache-excludes: |
+            caches/modules-2/files-2.1/idea/**
+            caches/**/transforms/**
 
       # Cache Plugin Verifier IDEs
       - name: Setup Plugin Verifier IDEs Cache
