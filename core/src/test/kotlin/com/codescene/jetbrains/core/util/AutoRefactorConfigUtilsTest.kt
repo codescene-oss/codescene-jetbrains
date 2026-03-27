@@ -1,7 +1,10 @@
 package com.codescene.jetbrains.core.util
 
+import com.codescene.jetbrains.core.models.settings.AceStatus
 import com.codescene.jetbrains.core.models.settings.CodeSceneGlobalSettings
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AutoRefactorConfigUtilsTest {
@@ -26,5 +29,65 @@ class AutoRefactorConfigUtilsTest {
     fun `toAutoRefactorConfig disabled is true when token is blank`() {
         val result = toAutoRefactorConfig(CodeSceneGlobalSettings(aceAuthToken = "   "))
         assertEquals(true, result.disabled)
+    }
+
+    @Test
+    fun `mapAceStatusToCwfString maps signed in and signed out to enabled`() {
+        assertEquals("enabled", mapAceStatusToCwfString(AceStatus.SIGNED_IN))
+        assertEquals("enabled", mapAceStatusToCwfString(AceStatus.SIGNED_OUT))
+    }
+
+    @Test
+    fun `mapAceStatusToCwfString maps deactivated to disabled`() {
+        assertEquals("disabled", mapAceStatusToCwfString(AceStatus.DEACTIVATED))
+    }
+
+    @Test
+    fun `mapAceStatusToCwfString maps error and out of credits to error`() {
+        assertEquals("error", mapAceStatusToCwfString(AceStatus.ERROR))
+        assertEquals("error", mapAceStatusToCwfString(AceStatus.OUT_OF_CREDITS))
+    }
+
+    @Test
+    fun `mapAceStatusToCwfString maps offline to offline`() {
+        assertEquals("offline", mapAceStatusToCwfString(AceStatus.OFFLINE))
+    }
+
+    @Test
+    fun `toAutoRefactorConfig aceStatus hasToken true when token present`() {
+        val result =
+            toAutoRefactorConfig(
+                CodeSceneGlobalSettings(
+                    aceStatus = AceStatus.SIGNED_IN,
+                    aceAuthToken = "tok",
+                ),
+            )
+        assertTrue(result.aceStatus.hasToken)
+        assertEquals("enabled", result.aceStatus.status)
+    }
+
+    @Test
+    fun `toAutoRefactorConfig aceStatus hasToken false when token blank`() {
+        val result =
+            toAutoRefactorConfig(
+                CodeSceneGlobalSettings(
+                    aceStatus = AceStatus.SIGNED_OUT,
+                    aceAuthToken = "",
+                ),
+            )
+        assertFalse(result.aceStatus.hasToken)
+        assertEquals("enabled", result.aceStatus.status)
+    }
+
+    @Test
+    fun `toAutoRefactorConfig aceStatus reflects deactivated`() {
+        val result =
+            toAutoRefactorConfig(
+                CodeSceneGlobalSettings(
+                    aceStatus = AceStatus.DEACTIVATED,
+                    aceAuthToken = "tok",
+                ),
+            )
+        assertEquals("disabled", result.aceStatus.status)
     }
 }
