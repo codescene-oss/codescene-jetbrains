@@ -1,0 +1,23 @@
+.github/workflows/build.yml
+  7eafd27bcc2d648c 43-48,67-70,116-121,138-142,199-203
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "d47ee0ae53e905a84e06d0f0274e9084468fc3cb",
+  "prompts": {
+    "7eafd27bcc2d648c": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "ed10dada-16b9-4c2f-aff3-5b5afe670ede",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 26,
+      "total_deletions": 0,
+      "accepted_lines": 26,
+      "overriden_lines": 0
+    }
+  }
+}
