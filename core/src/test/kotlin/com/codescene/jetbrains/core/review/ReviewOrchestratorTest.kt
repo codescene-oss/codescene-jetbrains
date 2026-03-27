@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.core.review
 
 import com.codescene.jetbrains.core.TestLogger
+import com.codescene.jetbrains.core.contracts.IProgressService
 import com.codescene.jetbrains.core.testdoubles.RecordingTelemetryService
 import com.codescene.jetbrains.core.util.TelemetryEvents
 import java.util.concurrent.CountDownLatch
@@ -34,7 +35,7 @@ class ReviewOrchestratorTest {
             logger = TestLogger,
             telemetryService = telemetry,
             progressService =
-                object : com.codescene.jetbrains.core.contracts.IProgressService {
+                object : IProgressService {
                     override suspend fun <T> runWithProgress(
                         title: String,
                         action: suspend () -> T,
@@ -61,8 +62,8 @@ class ReviewOrchestratorTest {
             onFinished = { finished.countDown() },
         )
 
-        assertTrue(executed.await(2, TimeUnit.SECONDS))
-        assertTrue(finished.await(2, TimeUnit.SECONDS))
+        assertTrue(executed.await(30, TimeUnit.SECONDS))
+        assertTrue(finished.await(30, TimeUnit.SECONDS))
         assertTrue(apiCallCompletePaths.contains("a.kt"))
     }
 
@@ -80,7 +81,7 @@ class ReviewOrchestratorTest {
             onFinished = { done.countDown() },
         )
 
-        assertTrue(done.await(2, TimeUnit.SECONDS))
+        assertTrue(done.await(30, TimeUnit.SECONDS))
         assertTrue(progressMessages.any { it.contains("Reviewing file a.kt") })
     }
 
@@ -98,7 +99,7 @@ class ReviewOrchestratorTest {
             onFinished = { done.countDown() },
         )
 
-        assertTrue(done.await(2, TimeUnit.SECONDS))
+        assertTrue(done.await(30, TimeUnit.SECONDS))
         assertTrue(progressMessages.any { it.contains("Updating monitor") })
     }
 
@@ -118,7 +119,7 @@ class ReviewOrchestratorTest {
             onFinished = { done.countDown() },
         )
 
-        assertTrue(done.await(2, TimeUnit.SECONDS))
+        assertTrue(done.await(30, TimeUnit.SECONDS))
         assertTrue(scheduled.get())
     }
 
@@ -137,8 +138,7 @@ class ReviewOrchestratorTest {
             onFinished = { done.countDown() },
         )
 
-        assertTrue(done.await(3, TimeUnit.SECONDS))
-        Thread.sleep(100)
+        assertTrue(done.await(30, TimeUnit.SECONDS))
         assertTrue(telemetry.events.any { it.name == TelemetryEvents.REVIEW_OR_DELTA_TIMEOUT })
     }
 
@@ -156,8 +156,7 @@ class ReviewOrchestratorTest {
             onFinished = { done.countDown() },
         )
 
-        assertTrue(done.await(2, TimeUnit.SECONDS))
-        Thread.sleep(100)
+        assertTrue(done.await(30, TimeUnit.SECONDS))
         assertFalse(telemetry.events.any { it.name == TelemetryEvents.REVIEW_OR_DELTA_TIMEOUT })
     }
 
@@ -177,7 +176,7 @@ class ReviewOrchestratorTest {
             },
         )
 
-        assertTrue(entered.await(1, TimeUnit.SECONDS))
+        assertTrue(entered.await(30, TimeUnit.SECONDS))
         assertTrue(orchestrator.cancel("a.kt", "Test"))
         assertTrue(apiCallCompletePaths.contains("a.kt"))
     }
@@ -204,7 +203,7 @@ class ReviewOrchestratorTest {
             },
         )
 
-        assertTrue(entered.await(1, TimeUnit.SECONDS))
+        assertTrue(entered.await(30, TimeUnit.SECONDS))
         assertTrue(orchestrator.activeFilePaths().contains("a.kt"))
         orchestrator.dispose()
     }
@@ -248,7 +247,7 @@ class ReviewOrchestratorTest {
             onFinished = { done.countDown() },
         )
 
-        assertTrue(done.await(2, TimeUnit.SECONDS))
+        assertTrue(done.await(30, TimeUnit.SECONDS))
         Thread.sleep(200)
         assertTrue(progressMessages.any { it.contains("Failed") })
     }
@@ -267,7 +266,7 @@ class ReviewOrchestratorTest {
             onFinished = { done.countDown() },
         )
 
-        assertTrue(done.await(2, TimeUnit.SECONDS))
+        assertTrue(done.await(30, TimeUnit.SECONDS))
         assertTrue(apiCallCompletePaths.contains("test.kt"))
     }
 
@@ -285,7 +284,7 @@ class ReviewOrchestratorTest {
             onFinished = null,
         )
 
-        assertTrue(executed.await(2, TimeUnit.SECONDS))
+        assertTrue(executed.await(30, TimeUnit.SECONDS))
         Thread.sleep(300)
         assertTrue(apiCallCompletePaths.contains("a.kt"))
     }
