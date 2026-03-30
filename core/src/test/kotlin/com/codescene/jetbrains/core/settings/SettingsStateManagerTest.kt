@@ -31,6 +31,8 @@ class SettingsStateManagerTest {
         assertTrue(s.enableCodeLenses)
         assertTrue(s.enableAutoRefactor)
         assertFalse(s.previewCodeHealthGate)
+        assertTrue(s.telemetryConsentGiven)
+        assertFalse(s.telemetryNoticeShown)
     }
 
     @Test
@@ -41,6 +43,17 @@ class SettingsStateManagerTest {
 
         manager.updateTelemetryConsent(false)
         assertFalse(manager.getState().telemetryConsentGiven)
+        verify(exactly = 2) { listener.onSettingsChanged(any(), any()) }
+    }
+
+    @Test
+    fun `updateTelemetryNoticeShown updates state and notifies listeners`() {
+        manager.updateTelemetryNoticeShown(true)
+        assertTrue(manager.getState().telemetryNoticeShown)
+        verify(exactly = 1) { listener.onSettingsChanged(any(), any()) }
+
+        manager.updateTelemetryNoticeShown(false)
+        assertFalse(manager.getState().telemetryNoticeShown)
         verify(exactly = 2) { listener.onSettingsChanged(any(), any()) }
     }
 

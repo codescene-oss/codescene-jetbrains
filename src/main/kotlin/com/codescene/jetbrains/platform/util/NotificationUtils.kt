@@ -3,7 +3,7 @@ package com.codescene.jetbrains.platform.util
 import com.codescene.jetbrains.core.util.Constants.CODESCENE
 import com.codescene.jetbrains.core.util.NotificationActionId
 import com.codescene.jetbrains.core.util.buildInfoNotificationSpec
-import com.codescene.jetbrains.core.util.buildTelemetryConsentNotificationSpec
+import com.codescene.jetbrains.core.util.buildTelemetryNoticeNotificationSpec
 import com.codescene.jetbrains.core.util.toActionSpecs
 import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
@@ -14,6 +14,7 @@ import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 
 data class NotificationParams(
@@ -47,17 +48,18 @@ fun showNotification(params: NotificationParams) {
     notification.notify(project)
 }
 
-fun showTelemetryConsentNotification(project: Project?) {
-    val spec = buildTelemetryConsentNotificationSpec(UiLabelsBundle.message("telemetryDescription"))
+fun showTelemetryNoticeNotification(project: Project?) {
+    CodeSceneApplicationServiceProvider.getInstance().settingsProvider.updateTelemetryNoticeShown(true)
+    val spec = buildTelemetryNoticeNotificationSpec(UiLabelsBundle.message("telemetryNoticeMessage"))
     val params =
         NotificationParams(
             project,
             CODESCENE,
             spec.message,
-            CODESCENE,
+            INFO_NOTIFICATION_GROUP,
             spec.toActions(
-                accept = { notification ->
-                    CodeSceneApplicationServiceProvider.getInstance().settingsProvider.updateTelemetryConsent(true)
+                openSettings = { notification ->
+                    ShowSettingsUtil.getInstance().showSettingsDialog(project, CODESCENE)
                     notification.expire()
                 },
             ),
@@ -94,13 +96,13 @@ fun showErrorNotification(
 }
 
 private fun com.codescene.jetbrains.core.util.NotificationSpec.toActions(
-    accept: ((Notification) -> Unit)? = null,
+    openSettings: ((Notification) -> Unit)? = null,
     viewRefactoring: ((Notification) -> Unit)? = null,
 ): List<NotificationAction> =
     toActionSpecs().mapNotNull { action ->
         val handler =
             when (action.id) {
-                NotificationActionId.ACCEPT_TELEMETRY -> accept
+                NotificationActionId.OPEN_SETTINGS -> openSettings
                 NotificationActionId.CLOSE -> { notification: Notification -> notification.expire() }
                 NotificationActionId.DISMISS -> { notification: Notification -> notification.expire() }
                 NotificationActionId.VIEW_REFACTORING_RESULT -> viewRefactoring

@@ -10,7 +10,7 @@ import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionPro
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.refreshAceUi
-import com.codescene.jetbrains.platform.util.showTelemetryConsentNotification
+import com.codescene.jetbrains.platform.util.showTelemetryNoticeNotification
 import com.intellij.ide.plugins.IdeaPluginDescriptor
 import com.intellij.ide.plugins.PluginInstaller
 import com.intellij.ide.plugins.PluginStateListener
@@ -31,12 +31,16 @@ class ProjectStartupActivity : ProjectActivity {
         val disposable = project as Disposable
         val settingsStore = CodeSceneGlobalSettingsStore.getInstance()
 
-        val consentGiven = settingsStore.currentState().telemetryConsentGiven
+        val noticeShown = settingsStore.currentState().telemetryNoticeShown
+        val telemetryEnabled = settingsStore.currentState().telemetryConsentGiven
+        val noticeStatus = if (noticeShown) "" else "not "
+        val telemetryStatus = if (telemetryEnabled) "enabled" else "disabled"
+        Log.info(
+            "Telemetry notice ${noticeStatus}shown, telemetry $telemetryStatus",
+            "${this::class.simpleName} - ${project.name}",
+        )
 
-        val status = if (consentGiven) "" else "not "
-        Log.info("Telemetry consent ${status}given", "${this::class.simpleName} - ${project.name}")
-
-        if (!consentGiven) showTelemetryConsentNotification(project)
+        if (!noticeShown) showTelemetryNoticeNotification(project)
 
         val listener =
             ISettingsChangeListener { oldState, newState ->
@@ -83,7 +87,10 @@ class ProjectStartupActivity : ProjectActivity {
 
                 override fun uninstall(descriptor: IdeaPluginDescriptor) {
                     Log.info("Plugin uninstalled: ${descriptor.pluginId} ${descriptor.version}")
-                    CodeSceneGlobalSettingsStore.getInstance().updateTelemetryConsent(false)
+                    CodeSceneGlobalSettingsStore.getInstance().apply {
+                        updateTelemetryConsent(false)
+                        updateTelemetryNoticeShown(false)
+                    }
                 }
             },
         )

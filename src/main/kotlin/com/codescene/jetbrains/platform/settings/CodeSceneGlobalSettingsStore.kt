@@ -32,6 +32,13 @@ class CodeSceneGlobalSettingsStore : PersistentStateComponent<CodeSceneGlobalSet
         }
     }
 
+    override fun updateTelemetryNoticeShown(shown: Boolean) {
+        stateManager.updateTelemetryNoticeShown(shown)
+        ApplicationManager.getApplication().invokeLater {
+            ApplicationManager.getApplication().saveSettings()
+        }
+    }
+
     override fun updateAceStatus(status: AceStatus) {
         stateManager.updateAceStatus(status)
     }

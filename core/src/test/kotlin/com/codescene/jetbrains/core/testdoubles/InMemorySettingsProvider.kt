@@ -13,6 +13,10 @@ class InMemorySettingsProvider(
         settings = settings.copy(telemetryConsentGiven = hasAccepted)
     }
 
+    override fun updateTelemetryNoticeShown(shown: Boolean) {
+        settings = settings.copy(telemetryNoticeShown = shown)
+    }
+
     override fun updateAceStatus(status: AceStatus) {
         settings.aceStatus = status
     }

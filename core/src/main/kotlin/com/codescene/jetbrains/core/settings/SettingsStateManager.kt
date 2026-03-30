@@ -24,6 +24,12 @@ class SettingsStateManager {
         notifyListeners(oldState, extensionSettingsState.copy())
     }
 
+    fun updateTelemetryNoticeShown(shown: Boolean) {
+        val oldState = extensionSettingsState.copy()
+        extensionSettingsState.telemetryNoticeShown = shown
+        notifyListeners(oldState, extensionSettingsState.copy())
+    }
+
     fun updateAceStatus(status: AceStatus) {
         val oldState = extensionSettingsState.copy()
         extensionSettingsState.aceStatus = status
