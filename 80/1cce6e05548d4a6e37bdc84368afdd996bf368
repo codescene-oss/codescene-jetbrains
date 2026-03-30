@@ -1,0 +1,146 @@
+src/main/kotlin/com/codescene/jetbrains/platform/listeners/CodeSceneDynamicPluginListener.kt
+  3e4de89eadb63878 5,16-23
+  82382c724d7c7b2b 6,12-15,24
+core/src/main/kotlin/com/codescene/jetbrains/core/util/TelemetryEvents.kt
+  82382c724d7c7b2b 5-6
+core/src/main/kotlin/com/codescene/jetbrains/core/models/message/CodeHealthDetailsSelection.kt
+  82382c724d7c7b2b 1-15
+core/src/main/kotlin/com/codescene/jetbrains/core/contracts/ITelemetryService.kt
+  82382c724d7c7b2b 2,7-12
+core/src/test/kotlin/com/codescene/jetbrains/core/telemetry/MonitorDeltaTelemetryTest.kt
+  01bdf8e1f1593b25 1-74,76-81,83-102
+  3e4de89eadb63878 75,82
+core/src/test/kotlin/com/codescene/jetbrains/core/models/message/CodeHealthDetailsSelectionTest.kt
+  01bdf8e1f1593b25 1-39
+src/main/kotlin/com/codescene/jetbrains/platform/api/AceRefactorBackgroundProgress.kt
+  82382c724d7c7b2b 98,100,103,111,138-139
+  3e4de89eadb63878 99,118-119
+core/src/test/kotlin/com/codescene/jetbrains/core/contracts/ITelemetryServiceTest.kt
+  01bdf8e1f1593b25 1-50
+src/main/kotlin/com/codescene/jetbrains/platform/telemetry/GlobalUncaughtErrorTelemetry.kt
+  82382c724d7c7b2b 1-6,9-13,15-24,26,31
+  3e4de89eadb63878 7-8,14,25,27-30
+core/src/main/kotlin/com/codescene/jetbrains/core/models/CurrentAceViewData.kt
+  82382c724d7c7b2b 10-11
+src/main/kotlin/com/codescene/jetbrains/platform/webview/handler/CwfMessageHandler.kt
+  82382c724d7c7b2b 2,19-20,26,63,72,75-76,78,98,105,113,115,117-118,125-126,151-152,159,164-166,173,182,184-185,195-196,204,207-209,222-223,230,238,240-241,243,245,248,254,256-257,262-267,274-275,277-284,286,297,299,301-302,304-305,307,310,313-319,324-325,327-334,336,338-339,359-362,381-382,385-404,407-408,411,415-416,423-424,429,433,438
+src/main/kotlin/com/codescene/jetbrains/platform/api/CodeDeltaService.kt
+  82382c724d7c7b2b 14
+core/src/main/kotlin/com/codescene/jetbrains/core/handler/ICwfActionHandler.kt
+  82382c724d7c7b2b 2-4,8,11,13,15,17,19,21,23,25,27,29,31,33,35-38
+src/main/kotlin/com/codescene/jetbrains/platform/listeners/FileEditorLifecycleListener.kt
+  82382c724d7c7b2b 4-5,7,25-30,33
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/OpenAceAcknowledgeView.kt
+  82382c724d7c7b2b 13,37,51,58-61,98,130
+core/src/test/kotlin/com/codescene/jetbrains/core/review/AceEntryLogicTest.kt
+  82382c724d7c7b2b 62,202-203
+src/main/kotlin/com/codescene/jetbrains/platform/listeners/ProjectStartupActivity.kt
+  82382c724d7c7b2b 2,5,12-13,31,34-37,40,42-44,46-53,57,68,70,95,99-100,103-105,107-108,115
+  3e4de89eadb63878 23,38-39,41,45
+core/src/main/kotlin/com/codescene/jetbrains/core/review/CacheService.kt
+  82382c724d7c7b2b 21
+src/main/kotlin/com/codescene/jetbrains/platform/telemetry/TelemetryService.kt
+  82382c724d7c7b2b 2,6,9,12,24,29,33,36-37,41-42,57,66,68-73,75,84-87,89-95,97-106,108,111,114-137
+  3e4de89eadb63878 96
+core/src/main/kotlin/com/codescene/jetbrains/core/review/AceEntryLogic.kt
+  82382c724d7c7b2b 80-84,99-100,144-145,160-161
+src/main/kotlin/com/codescene/jetbrains/platform/listeners/CodeSceneToolWindowTelemetry.kt
+  82382c724d7c7b2b 1-42
+core/src/test/kotlin/com/codescene/jetbrains/core/telemetry/UnhandledErrorTelemetryTest.kt
+  01bdf8e1f1593b25 1-17,19,21-22,25-26
+  3e4de89eadb63878 18,20,23-24
+src/main/kotlin/com/codescene/jetbrains/platform/fileeditor/ace/CwfAceFileEditorProvider.kt
+  82382c724d7c7b2b 16-17
+src/main/kotlin/com/codescene/jetbrains/platform/api/CodeReviewService.kt
+  82382c724d7c7b2b 15
+  3e4de89eadb63878 112-117
+core/src/main/kotlin/com/codescene/jetbrains/core/models/RefactoringRequest.kt
+  82382c724d7c7b2b 5,13
+core/src/test/kotlin/com/codescene/jetbrains/core/handler/CwfActionLogicTest.kt
+  82382c724d7c7b2b 101-103,106-107
+src/main/kotlin/com/codescene/jetbrains/platform/telemetry/CodeHealthMonitorTelemetryState.kt
+  82382c724d7c7b2b 1-15
+core/src/main/kotlin/com/codescene/jetbrains/core/telemetry/UnhandledErrorTelemetry.kt
+  82382c724d7c7b2b 1-8,15-16
+  3e4de89eadb63878 9-14
+src/main/kotlin/com/codescene/jetbrains/platform/util/AceEntryOrchestrator.kt
+  82382c724d7c7b2b 97-98,111,118,222,301-302
+core/src/test/kotlin/com/codescene/jetbrains/core/testdoubles/RecordingTelemetryService.kt
+  82382c724d7c7b2b 2,4-5,8,12,14-30
+core/src/main/kotlin/com/codescene/jetbrains/core/models/AceCwfParams.kt
+  82382c724d7c7b2b 13-14
+src/main/kotlin/com/codescene/jetbrains/platform/api/AceRefactorWorkflow.kt
+  82382c724d7c7b2b 31-32
+core/src/main/kotlin/com/codescene/jetbrains/core/handler/CwfActionLogic.kt
+  82382c724d7c7b2b 2,9,17,22,28,35-37,42,44-45,47,56-57,62-84,88-101,103-110,114-120,122-130,133
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/OpenDocs.kt
+  82382c724d7c7b2b 92,99-100,104-106
+src/main/kotlin/com/codescene/jetbrains/platform/delta/PlatformDeltaCacheService.kt
+  82382c724d7c7b2b 2,4,6-10,15,17-20,22-34,36-38,42-63
+  3e4de89eadb63878 35,39-41
+core/src/main/kotlin/com/codescene/jetbrains/core/models/message/Messages.kt
+  82382c724d7c7b2b 23-24
+src/main/kotlin/com/codescene/jetbrains/platform/telemetry/StatsCollectorService.kt
+  82382c724d7c7b2b 6,8,10-12,15-17,20-23,25-27,29-31,38-56,58-59,68-69
+  3e4de89eadb63878 60-67
+src/main/kotlin/com/codescene/jetbrains/platform/api/AceService.kt
+  82382c724d7c7b2b 21,175,177-178,180,191
+  3e4de89eadb63878 156,168,192-202
+core/src/main/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouter.kt
+  82382c724d7c7b2b 2,4-5,15,24-25,28-29,33-34,37-38,41,43,45-46,49-50,53-54,57-58,61-62,65-66,69-70,73,75,77-78,81,83,85-102,105,107
+core/src/main/kotlin/com/codescene/jetbrains/core/telemetry/MonitorDeltaTelemetry.kt
+  82382c724d7c7b2b 1-5,11-19,21-26,28
+  3e4de89eadb63878 6-10,20,27
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/OpenAceWindow.kt
+  82382c724d7c7b2b 58-59,61,66,78,85,88-95,105-107,113-121,127,133-142,151,155-164,167-173
+core/src/test/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouterTest.kt
+  01bdf8e1f1593b25 2,4-5,17,21-22,25,27-28,33-34,37,39-40,45-46,51-52,60,68-69,76-77,99-101,103-105,107-108,117-148,150-151
+core/src/main/kotlin/com/codescene/jetbrains/core/delta/DeltaCacheService.kt
+  82382c724d7c7b2b 81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "801cce6e05548d4a6e37bdc84368afdd996bf368",
+  "prompts": {
+    "01bdf8e1f1593b25": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "6e5bc1d7-e2e0-4ea6-8e6f-59820f5e7b25",
+        "model": "gpt-5.4-medium"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 254,
+      "total_deletions": 0,
+      "accepted_lines": 276,
+      "overriden_lines": 0
+    },
+    "3e4de89eadb63878": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "c7e44aca-7f6a-46d1-ba77-13cec7e7c556",
+        "model": "gpt-5.4-medium"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 81,
+      "total_deletions": 33,
+      "accepted_lines": 76,
+      "overriden_lines": 0
+    },
+    "82382c724d7c7b2b": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "55c50160-24d2-4d47-ae76-b01213b13a8a",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 604,
+      "total_deletions": 74,
+      "accepted_lines": 764,
+      "overriden_lines": 0
+    }
+  }
+}
