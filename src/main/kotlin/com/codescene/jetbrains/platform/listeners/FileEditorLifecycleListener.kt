@@ -2,6 +2,7 @@ package com.codescene.jetbrains.platform.listeners
 
 import com.codescene.jetbrains.core.review.cancelPendingReviews
 import com.codescene.jetbrains.platform.api.CachedReviewService
+import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
@@ -12,10 +13,14 @@ class FileEditorLifecycleListener : FileEditorManagerListener {
         source: FileEditorManager,
         file: VirtualFile,
     ) {
+        val project = source.project
         cancelPendingReviews(
             filePath = file.path,
-            cancelDelta = source.project.service<CachedReviewService>()::cancelFileReview,
-            cancelReview = source.project.service<CachedReviewService>()::cancelFileReview,
+            cancelDelta = project.service<CachedReviewService>()::cancelFileReview,
+            cancelReview = project.service<CachedReviewService>()::cancelFileReview,
         )
+        if (!project.isDisposed) {
+            updateMonitor(project)
+        }
     }
 }

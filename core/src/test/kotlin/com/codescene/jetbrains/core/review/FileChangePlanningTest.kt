@@ -17,7 +17,7 @@ class FileChangePlanningTest {
     }
 
     @Test
-    fun `planFileReviewUpdates maps rename move and delete operations`() {
+    fun `planFileReviewUpdates maps rename move and delete to distinct cache updates`() {
         val result =
             planFileReviewUpdates(
                 listOf(
@@ -30,7 +30,7 @@ class FileChangePlanningTest {
         assertEquals(
             listOf(
                 FileReviewUpdate("src/New.kt", FileCacheUpdate.Rename("src/Old.kt", "src/New.kt")),
-                FileReviewUpdate("b.kt", FileCacheUpdate.Rename("a.kt", "b.kt")),
+                FileReviewUpdate("b.kt", FileCacheUpdate.Move("a.kt", "b.kt")),
                 FileReviewUpdate("gone.kt", FileCacheUpdate.Delete("gone.kt")),
             ),
             result,

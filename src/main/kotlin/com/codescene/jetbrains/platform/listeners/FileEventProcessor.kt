@@ -1,7 +1,6 @@
 package com.codescene.jetbrains.platform.listeners
 
 import com.codescene.jetbrains.core.review.DeleteChangeInput
-import com.codescene.jetbrains.core.review.FileCacheUpdate
 import com.codescene.jetbrains.core.review.FileChange
 import com.codescene.jetbrains.core.review.FileEventHandler
 import com.codescene.jetbrains.core.review.MoveChangeInput
@@ -113,16 +112,9 @@ class FileEventProcessor(
                     )
                 }
 
-                applyCacheUpdate(update.cacheUpdate)
+                fileEventHandler.handleFileCacheUpdate(update.cacheUpdate)
                 updateMonitor(project)
             }
-        }
-    }
-
-    private fun applyCacheUpdate(update: FileCacheUpdate) {
-        when (update) {
-            is FileCacheUpdate.Rename -> fileEventHandler.handleRename(update.oldPath, update.newPath)
-            is FileCacheUpdate.Delete -> fileEventHandler.handleDelete(update.path)
         }
     }
 }

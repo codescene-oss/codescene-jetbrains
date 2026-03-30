@@ -32,4 +32,12 @@ class FileEventHandler(
         reviewCache.updateKey(oldPath, newPath)
         baselineReviewCache.updateKey(oldPath, newPath)
     }
+
+    fun handleFileCacheUpdate(update: FileCacheUpdate) {
+        when (update) {
+            is FileCacheUpdate.Rename -> handleRename(update.oldPath, update.newPath)
+            is FileCacheUpdate.Move -> handleMove(update.oldPath, update.newPath)
+            is FileCacheUpdate.Delete -> handleDelete(update.path)
+        }
+    }
 }

@@ -36,4 +36,28 @@ class FileEventHandlerTest {
         verify(exactly = 1) { reviewCache.updateKey("old.kt", "new.kt") }
         verify(exactly = 1) { baselineReviewCache.updateKey("old.kt", "new.kt") }
     }
+
+    @Test
+    fun `handleFileCacheUpdate routes Rename to updateKey on all caches`() {
+        handler.handleFileCacheUpdate(FileCacheUpdate.Rename("a.kt", "b.kt"))
+        verify(exactly = 1) { deltaCache.updateKey("a.kt", "b.kt") }
+        verify(exactly = 1) { reviewCache.updateKey("a.kt", "b.kt") }
+        verify(exactly = 1) { baselineReviewCache.updateKey("a.kt", "b.kt") }
+    }
+
+    @Test
+    fun `handleFileCacheUpdate routes Move to updateKey on all caches`() {
+        handler.handleFileCacheUpdate(FileCacheUpdate.Move("x.kt", "y.kt"))
+        verify(exactly = 1) { deltaCache.updateKey("x.kt", "y.kt") }
+        verify(exactly = 1) { reviewCache.updateKey("x.kt", "y.kt") }
+        verify(exactly = 1) { baselineReviewCache.updateKey("x.kt", "y.kt") }
+    }
+
+    @Test
+    fun `handleFileCacheUpdate routes Delete to invalidate on all caches`() {
+        handler.handleFileCacheUpdate(FileCacheUpdate.Delete("z.kt"))
+        verify(exactly = 1) { deltaCache.invalidate("z.kt") }
+        verify(exactly = 1) { reviewCache.invalidate("z.kt") }
+        verify(exactly = 1) { baselineReviewCache.invalidate("z.kt") }
+    }
 }
