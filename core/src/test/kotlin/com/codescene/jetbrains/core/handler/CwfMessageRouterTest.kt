@@ -11,12 +11,14 @@ import io.mockk.slot
 import io.mockk.verify
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 class CwfMessageRouterTest {
-    private val json = Json
+    private val json = Json { ignoreUnknownKeys = true }
     private val handler = mockk<ICwfActionHandler>(relaxed = true)
 
     @Test
@@ -60,7 +62,7 @@ class CwfMessageRouterTest {
 
         verify(exactly = 1) { handler.handleClose() }
         verify(exactly = 1) { handler.handleRetry() }
-        verify(exactly = 1) { handler.handleCopy() }
+        verify(exactly = 1) { handler.handleCopy(null) }
         verify(exactly = 1) { handler.handleApply() }
         verify(exactly = 1) { handler.handleReject() }
         verify(exactly = 1) { handler.handleAcknowledged() }
@@ -149,8 +151,38 @@ class CwfMessageRouterTest {
     }
 
     @Test
+    fun `routes copy code with payload`() {
+        val payload = buildJsonObject { put("code", "snippet from cwf") }
+        val ok = routeCwfMessage(CwfMessage(PanelMessages.COPY_CODE.value, payload), handler, json)
+        assertEquals(true, ok)
+        verify(exactly = 1) { handler.handleCopy("snippet from cwf") }
+    }
+
+    @Test
+    fun `routes copy code with extra keys in payload`() {
+        val payload =
+            json.parseToJsonElement(
+                """{"code":"x","fn":{"name":"f","range":{"startLine":1,"endColumn":0,"endLine":1,"startColumn":0}}}""",
+            )
+        val ok = routeCwfMessage(CwfMessage(PanelMessages.COPY_CODE.value, payload), handler, json)
+        assertEquals(true, ok)
+        verify(exactly = 1) { handler.handleCopy("x") }
+    }
+
+    @Test
     fun `returns false for unknown message`() {
         val ok = routeCwfMessage(CwfMessage("unknown", null), handler, json)
         assertEquals(false, ok)
+    }
+
+    @Test
+    fun `handleCopy default parameter is used when argument omitted`() {
+        val h = mockk<ICwfActionHandler>(relaxed = true)
+        invokeHandleCopyWithDefault(h)
+        verify(exactly = 1) { h.handleCopy(null) }
+    }
+
+    private fun invokeHandleCopyWithDefault(handler: ICwfActionHandler) {
+        handler.handleCopy()
     }
 }

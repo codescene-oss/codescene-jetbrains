@@ -64,6 +64,7 @@ class AceMapperTest {
 
         val response = mockk<RefactorResponse>(relaxed = true)
         every { response.code } returns "refactored code"
+        every { response.declarations } returns Optional.empty()
         every { response.traceId } returns "trace-123"
         every { response.confidence } returns confidence
         every { response.creditsInfo } returns Optional.of(creditsInfo)
@@ -155,6 +156,16 @@ class AceMapperTest {
         assertEquals("summary", aceResult.reasons[0].summary)
         assertEquals(listOf("smell1"), aceResult.refactoringProperties.addedCodeSmells)
         assertEquals(listOf("smell2"), aceResult.refactoringProperties.removedCodeSmells)
+        assertNull(aceResult.declarations)
+    }
+
+    @Test
+    fun `toCwfData maps declarations when present`() {
+        val response = createRefactorResponse()
+        every { response.declarations } returns Optional.of("void foo();")
+        val input = AceMapperInput(filePath = "a.kt", function = createFnToRefactor(), refactorResponse = response)
+        val result = mapper.toCwfData(input, devmode = false)
+        assertEquals("void foo();", result.data!!.aceResultData!!.declarations)
     }
 
     @Test
