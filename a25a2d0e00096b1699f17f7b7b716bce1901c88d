@@ -1,0 +1,41 @@
+core/src/test/kotlin/com/codescene/jetbrains/core/handler/CwfActionLogicTest.kt
+  af96c9d71a7f3dfe 81-97
+core/src/main/kotlin/com/codescene/jetbrains/core/handler/CwfActionLogic.kt
+  af96c9d71a7f3dfe 38-41,43-49
+core/src/main/kotlin/com/codescene/jetbrains/core/mapper/AceMapper.kt
+  af96c9d71a7f3dfe 48
+core/src/main/kotlin/com/codescene/jetbrains/core/handler/ICwfActionHandler.kt
+  af96c9d71a7f3dfe 24
+core/src/main/kotlin/com/codescene/jetbrains/core/models/view/AceViewData.kt
+  af96c9d71a7f3dfe 31
+core/src/test/kotlin/com/codescene/jetbrains/core/mapper/AceMapperTest.kt
+  af96c9d71a7f3dfe 67,159-168
+core/src/main/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouter.kt
+  af96c9d71a7f3dfe 6,57-61
+src/main/kotlin/com/codescene/jetbrains/platform/webview/handler/CwfMessageHandler.kt
+  af96c9d71a7f3dfe 303,306
+core/src/main/kotlin/com/codescene/jetbrains/core/models/message/CopyCodePayload.kt
+  af96c9d71a7f3dfe 1-8
+core/src/test/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouterTest.kt
+  af96c9d71a7f3dfe 14-15,21,65,154-171
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "a25a2d0e00096b1699f17f7b7b716bce1901c88d",
+  "prompts": {
+    "af96c9d71a7f3dfe": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "c1ac715b-8cd0-49a9-bca3-7fa96b98e3c1",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 84,
+      "total_deletions": 13,
+      "accepted_lines": 82,
+      "overriden_lines": 0
+    }
+  }
+}
