@@ -1,0 +1,23 @@
+src/main/kotlin/com/codescene/jetbrains/platform/listeners/FileEditorLifecycleListener.kt
+  86d83fae0dd5a9cb 22-24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "032c0ab2157a55c86e135666dabd70e19eebb686",
+  "prompts": {
+    "86d83fae0dd5a9cb": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "652b7715-c9e0-46de-ae02-bf022279c3c1",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 1,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    }
+  }
+}
