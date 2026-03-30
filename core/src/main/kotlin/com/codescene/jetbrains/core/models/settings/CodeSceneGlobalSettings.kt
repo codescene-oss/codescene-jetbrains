@@ -23,7 +23,8 @@ data class CodeSceneGlobalSettings(
     var serverUrl: String = CODESCENE_SERVER_URL,
     var aceAcknowledged: Boolean = false,
     var previewCodeHealthGate: Boolean = false,
-    var telemetryConsentGiven: Boolean = false,
+    var telemetryConsentGiven: Boolean = true,
+    var telemetryNoticeShown: Boolean = false,
     var aceStatus: AceStatus = AceStatus.DEACTIVATED,
     var enableCodeLenses: Boolean = true,
     var enableAutoRefactor: Boolean = true,
@@ -32,4 +33,9 @@ data class CodeSceneGlobalSettings(
     // TODO delete this after the integration with core is complete.
     val codeHealthMonitorEnabled: Boolean = true,
     var monitorTreeSortOption: MonitorTreeSortOptions = MonitorTreeSortOptions.SCORE_ASCENDING,
-)
+    var version: Int? = null,
+) {
+    companion object {
+        const val CURRENT_SETTINGS_VERSION = 1
+    }
+}

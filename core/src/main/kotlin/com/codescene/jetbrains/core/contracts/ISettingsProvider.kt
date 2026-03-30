@@ -8,6 +8,8 @@ interface ISettingsProvider {
 
     fun updateTelemetryConsent(hasAccepted: Boolean)
 
+    fun updateTelemetryNoticeShown(shown: Boolean)
+
     fun updateAceStatus(status: AceStatus)
 
     fun updateAceAcknowledged(acknowledged: Boolean)

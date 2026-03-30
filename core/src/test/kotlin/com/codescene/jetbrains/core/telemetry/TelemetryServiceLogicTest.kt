@@ -10,6 +10,27 @@ class TelemetryServiceLogicTest {
         val result =
             resolveTelemetryEventData(
                 consentGiven = false,
+                noticeDisplayed = true,
+                request =
+                    TelemetryRequest(
+                        editorType = "JetBrains",
+                        eventName = "open",
+                        data = mapOf("key" to "value"),
+                        ideInfo = "idea",
+                        pluginVersion = "1.0.0",
+                        deviceId = "device",
+                    ),
+            )
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `resolveTelemetryEventData returns null when notice has not been displayed`() {
+        val result =
+            resolveTelemetryEventData(
+                consentGiven = true,
+                noticeDisplayed = false,
                 request =
                     TelemetryRequest(
                         editorType = "JetBrains",
@@ -29,6 +50,7 @@ class TelemetryServiceLogicTest {
         val result =
             resolveTelemetryEventData(
                 consentGiven = true,
+                noticeDisplayed = true,
                 request =
                     TelemetryRequest(
                         editorType = "JetBrains",

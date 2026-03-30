@@ -5,12 +5,12 @@ import org.junit.Test
 
 class NotificationSpecsTest {
     @Test
-    fun `buildTelemetryConsentNotificationSpec contains consent actions`() {
-        val result = buildTelemetryConsentNotificationSpec("consent")
+    fun `buildTelemetryNoticeNotificationSpec contains notice actions`() {
+        val result = buildTelemetryNoticeNotificationSpec("notice")
 
-        assertEquals("consent", result.message)
+        assertEquals("notice", result.message)
         assertEquals(
-            listOf(NotificationActionId.ACCEPT_TELEMETRY, NotificationActionId.CLOSE),
+            listOf(NotificationActionId.OPEN_SETTINGS, NotificationActionId.DISMISS),
             result.actionIds,
         )
     }
@@ -35,13 +35,13 @@ class NotificationSpecsTest {
     }
 
     @Test
-    fun `toActionSpecs maps telemetry actions to label keys`() {
-        val result = buildTelemetryConsentNotificationSpec("consent").toActionSpecs()
+    fun `toActionSpecs maps telemetry notice actions to label keys`() {
+        val result = buildTelemetryNoticeNotificationSpec("notice").toActionSpecs()
 
         assertEquals(
             listOf(
-                NotificationActionSpec(NotificationActionId.ACCEPT_TELEMETRY, "acceptButton"),
-                NotificationActionSpec(NotificationActionId.CLOSE, "closeButton"),
+                NotificationActionSpec(NotificationActionId.OPEN_SETTINGS, "openSettingsButton"),
+                NotificationActionSpec(NotificationActionId.DISMISS, "dismissRefactoringResult"),
             ),
             result,
         )

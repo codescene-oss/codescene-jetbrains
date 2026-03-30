@@ -35,9 +35,11 @@ class TelemetryService : BaseService(Log), Disposable, ITelemetryService {
         eventName: String,
         eventData: Map<String, Any>,
     ) {
+        val settings = CodeSceneGlobalSettingsStore.getInstance().currentState()
         val eventInfo =
             resolveTelemetryEventData(
-                consentGiven = CodeSceneGlobalSettingsStore.getInstance().currentState().telemetryConsentGiven,
+                consentGiven = settings.telemetryConsentGiven,
+                noticeDisplayed = settings.telemetryNoticeShown,
                 request =
                     TelemetryRequest(
                         editorType = TELEMETRY_EDITOR_TYPE,

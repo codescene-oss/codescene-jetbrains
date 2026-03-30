@@ -1,7 +1,7 @@
 package com.codescene.jetbrains.core.util
 
 enum class NotificationActionId {
-    ACCEPT_TELEMETRY,
+    OPEN_SETTINGS,
     CLOSE,
     DISMISS,
     VIEW_REFACTORING_RESULT,
@@ -23,7 +23,7 @@ fun NotificationSpec.toActionSpecs(): List<NotificationActionSpec> =
             id = actionId,
             labelKey =
                 when (actionId) {
-                    NotificationActionId.ACCEPT_TELEMETRY -> "acceptButton"
+                    NotificationActionId.OPEN_SETTINGS -> "openSettingsButton"
                     NotificationActionId.CLOSE -> "closeButton"
                     NotificationActionId.DISMISS -> "dismissRefactoringResult"
                     NotificationActionId.VIEW_REFACTORING_RESULT -> "viewRefactoringResult"
@@ -31,10 +31,10 @@ fun NotificationSpec.toActionSpecs(): List<NotificationActionSpec> =
         )
     }
 
-fun buildTelemetryConsentNotificationSpec(message: String): NotificationSpec =
+fun buildTelemetryNoticeNotificationSpec(message: String): NotificationSpec =
     NotificationSpec(
         message = message,
-        actionIds = listOf(NotificationActionId.ACCEPT_TELEMETRY, NotificationActionId.CLOSE),
+        actionIds = listOf(NotificationActionId.OPEN_SETTINGS, NotificationActionId.DISMISS),
     )
 
 fun buildRefactoringFinishedNotificationSpec(functionName: String): NotificationSpec =

@@ -31,6 +31,39 @@ class SettingsStateManagerTest {
         assertTrue(s.enableCodeLenses)
         assertTrue(s.enableAutoRefactor)
         assertFalse(s.previewCodeHealthGate)
+        assertTrue(s.telemetryConsentGiven)
+        assertFalse(s.telemetryNoticeShown)
+        assertEquals(CodeSceneGlobalSettings.CURRENT_SETTINGS_VERSION, s.version)
+    }
+
+    @Test
+    fun `loadState with null version migrates telemetry consent off and sets version`() {
+        val legacy =
+            CodeSceneGlobalSettings(
+                telemetryConsentGiven = true,
+                telemetryNoticeShown = true,
+                version = null,
+            )
+
+        manager.loadState(legacy)
+
+        val loaded = manager.getState()
+        assertFalse(loaded.telemetryConsentGiven)
+        assertTrue(loaded.telemetryNoticeShown)
+        assertEquals(CodeSceneGlobalSettings.CURRENT_SETTINGS_VERSION, loaded.version)
+    }
+
+    @Test
+    fun `loadState with version skips telemetry migration`() {
+        val persisted =
+            CodeSceneGlobalSettings(
+                telemetryConsentGiven = true,
+                version = CodeSceneGlobalSettings.CURRENT_SETTINGS_VERSION,
+            )
+
+        manager.loadState(persisted)
+
+        assertTrue(manager.getState().telemetryConsentGiven)
     }
 
     @Test
@@ -41,6 +74,17 @@ class SettingsStateManagerTest {
 
         manager.updateTelemetryConsent(false)
         assertFalse(manager.getState().telemetryConsentGiven)
+        verify(exactly = 2) { listener.onSettingsChanged(any(), any()) }
+    }
+
+    @Test
+    fun `updateTelemetryNoticeShown updates state and notifies listeners`() {
+        manager.updateTelemetryNoticeShown(true)
+        assertTrue(manager.getState().telemetryNoticeShown)
+        verify(exactly = 1) { listener.onSettingsChanged(any(), any()) }
+
+        manager.updateTelemetryNoticeShown(false)
+        assertFalse(manager.getState().telemetryNoticeShown)
         verify(exactly = 2) { listener.onSettingsChanged(any(), any()) }
     }
 
