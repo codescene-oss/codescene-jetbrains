@@ -300,10 +300,10 @@ class CwfMessageHandler(
         closeWindow(UiLabelsBundle.message("ace"), project)
     }
 
-    override fun handleCopy() {
+    override fun handleCopy(codeFromPayload: String?) {
         val panel = getAceUserData(project)
         val aceData = panel?.aceData
-        val action = resolveCopyAction(aceData)
+        val action = resolveCopyAction(aceData, codeFromPayload, panel?.clientTraceId)
 
         if (action != null) {
             appServices.clipboardService.copyToClipboard(action.code)

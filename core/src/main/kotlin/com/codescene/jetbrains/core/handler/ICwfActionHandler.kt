@@ -21,7 +21,7 @@ interface ICwfActionHandler {
 
     fun handleRetry()
 
-    fun handleCopy()
+    fun handleCopy(codeFromPayload: String? = null)
 
     fun handleApply()
 

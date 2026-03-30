@@ -78,6 +78,24 @@ class CwfActionLogicTest {
     }
 
     @Test
+    fun `resolveCopyAction prefers payload code over stored`() {
+        val action = resolveCopyAction(buildAceData(code = "stored"), codeFromPayload = "from cwf")
+        assertEquals(CopyAction("from cwf", "trace-1"), action)
+    }
+
+    @Test
+    fun `resolveCopyAction uses payload when stored code empty`() {
+        val action = resolveCopyAction(buildAceData(code = ""), codeFromPayload = "only payload")
+        assertEquals(CopyAction("only payload", "trace-1"), action)
+    }
+
+    @Test
+    fun `resolveCopyAction uses client trace when no result data`() {
+        val action = resolveCopyAction(null, codeFromPayload = "code", clientTraceId = "client-t")
+        assertEquals(CopyAction("code", "client-t"), action)
+    }
+
+    @Test
     fun `isUrlAllowed validates allowed domain and non blank`() {
         assertEquals(true, isUrlAllowed("https://codescene.io/docs/page"))
         assertEquals(false, isUrlAllowed("https://example.com"))

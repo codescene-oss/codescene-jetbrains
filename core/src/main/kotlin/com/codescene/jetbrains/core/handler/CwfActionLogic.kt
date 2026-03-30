@@ -35,12 +35,18 @@ fun resolveApplyAction(aceData: AceData?): ApplyAction? {
     )
 }
 
-fun resolveCopyAction(aceData: AceData?): CopyAction? {
-    val resultData = aceData?.aceResultData ?: return null
-    val code = resultData.code
-    if (code.isNullOrEmpty()) return null
-
-    return CopyAction(code = code, traceId = resultData.traceId)
+fun resolveCopyAction(
+    aceData: AceData?,
+    codeFromPayload: String? = null,
+    clientTraceId: String? = null,
+): CopyAction? {
+    val resultData = aceData?.aceResultData
+    val code =
+        codeFromPayload?.takeIf { it.isNotBlank() }
+            ?: resultData?.code?.takeIf { it.isNotEmpty() }
+            ?: return null
+    val traceId = resultData?.traceId ?: clientTraceId.orEmpty()
+    return CopyAction(code = code, traceId = traceId)
 }
 
 fun isUrlAllowed(url: String): Boolean = url.isNotBlank() && ALLOWED_DOMAINS.any { url.startsWith(it) }

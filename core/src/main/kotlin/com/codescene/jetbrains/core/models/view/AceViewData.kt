@@ -28,6 +28,7 @@ data class RefactoringProperties(
 @Serializable
 data class RefactorResponse(
     val code: String,
+    val declarations: String? = null,
     val metadata: Metadata,
     val reasons: List<Reason>,
     val confidence: Confidence,

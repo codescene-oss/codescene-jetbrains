@@ -3,6 +3,7 @@ package com.codescene.jetbrains.core.handler
 import com.codescene.jetbrains.core.models.CwfMessage
 import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionDeselected
 import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionSelected
+import com.codescene.jetbrains.core.models.message.CopyCodePayload
 import com.codescene.jetbrains.core.models.message.EditorMessages
 import com.codescene.jetbrains.core.models.message.GotoFunctionLocation
 import com.codescene.jetbrains.core.models.message.LifecycleMessages
@@ -53,7 +54,11 @@ fun routeCwfMessage(
         }
 
         PanelMessages.COPY_CODE.value -> {
-            handler.handleCopy()
+            val payload =
+                message.payload?.let {
+                    json.decodeFromJsonElement(CopyCodePayload.serializer(), it)
+                }
+            handler.handleCopy(payload?.code)
         }
 
         PanelMessages.APPLY.value -> {

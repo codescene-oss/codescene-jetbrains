@@ -45,6 +45,7 @@ class AceMapper {
                         if (params.refactorResponse != null) {
                             com.codescene.jetbrains.core.models.view.RefactorResponse(
                                 code = params.refactorResponse.code,
+                                declarations = params.refactorResponse.declarations.orElse(null),
                                 metadata = Metadata(cached = false),
                                 traceId = params.refactorResponse.traceId,
                                 confidence = getConfidence(params.refactorResponse),
