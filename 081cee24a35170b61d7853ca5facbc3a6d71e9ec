@@ -1,0 +1,25 @@
+core/src/test/kotlin/com/codescene/jetbrains/core/models/message/CopyCodePayloadTest.kt
+  6679a383b83cefaf 1-30
+core/src/test/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouterTest.kt
+  6679a383b83cefaf 177-187
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "081cee24a35170b61d7853ca5facbc3a6d71e9ec",
+  "prompts": {
+    "6679a383b83cefaf": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a8931a39-3726-4b09-891c-41c4725e18b4",
+        "model": "default"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 43,
+      "total_deletions": 2,
+      "accepted_lines": 41,
+      "overriden_lines": 0
+    }
+  }
+}
