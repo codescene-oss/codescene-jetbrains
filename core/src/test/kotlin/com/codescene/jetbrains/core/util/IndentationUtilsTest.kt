@@ -214,4 +214,18 @@ class IndentationUtilsTest {
     fun `adjustIndentation preserves empty lines in snippet`() {
         assertEquals("\ta\n\n\tb", adjustIndentation("\tbase", "a\n\nb"))
     }
+
+    @Test
+    fun `adjustIndentation preserves original indentation for top level declarations`() {
+        val content =
+            """
+int test() {
+    if (flag) {
+        return 1;
+    }
+    return 0;
+}
+"""
+        assertEquals(content, adjustIndentation("int test() {", content))
+    }
 }

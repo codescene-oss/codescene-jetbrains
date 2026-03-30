@@ -5,6 +5,7 @@ fun adjustIndentation(
     newContent: String,
 ): String {
     val targetIndent = anchorFirstLineText.takeWhile { it.isWhitespace() }
+    if (targetIndent.isEmpty()) return newContent
 
     val newContentLines = newContent.split("\n")
 
