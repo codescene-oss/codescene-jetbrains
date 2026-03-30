@@ -6,9 +6,11 @@ object UnhandledErrorTelemetry {
     private const val MAX_ERRORS = 5
     private val sentCount = AtomicInteger(0)
 
-    fun canSend(): Boolean = sentCount.get() < MAX_ERRORS
-
-    fun recordSent() {
-        sentCount.incrementAndGet()
+    fun trySend(): Boolean {
+        while (true) {
+            val current = sentCount.get()
+            if (current >= MAX_ERRORS) return false
+            if (sentCount.compareAndSet(current, current + 1)) return true
+        }
     }
 }

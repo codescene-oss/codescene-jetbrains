@@ -32,13 +32,13 @@ class PlatformDeltaCacheService(
         if (!current.visibleInCodeHealthMonitor()) return
 
         val visible = CodeHealthMonitorTelemetryState.getInstance(project).toolWindowVisible
-        val (scoreChange, nIssues, nRefactorable) = monitorMetricsForDelta(delta)
+        val metrics = monitorMetricsForDelta(delta)
         val payload =
             mutableMapOf<String, Any>(
                 "visible" to visible,
-                "scoreChange" to scoreChange,
-                "nIssues" to nIssues,
-                "nRefactorableFunctions" to nRefactorable,
+                "scoreChange" to metrics.scoreChange,
+                "nIssues" to metrics.nIssues,
+                "nRefactorableFunctions" to metrics.nRefactorable,
             )
         val event =
             if (wasVisible) {

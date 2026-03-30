@@ -57,5 +57,14 @@ class StatsCollectorService :
 
     override fun dispose() {
         scheduler.shutdown()
+        try {
+            if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                scheduler.shutdownNow()
+                scheduler.awaitTermination(5, TimeUnit.SECONDS)
+            }
+        } catch (_: InterruptedException) {
+            scheduler.shutdownNow()
+            Thread.currentThread().interrupt()
+        }
     }
 }

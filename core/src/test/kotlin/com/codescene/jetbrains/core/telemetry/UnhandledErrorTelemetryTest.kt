@@ -15,14 +15,12 @@ class UnhandledErrorTelemetryTest {
     }
 
     @Test
-    fun `canSend stops after max number of recorded errors`() {
+    fun `trySend stops after max number of recorded errors`() {
         repeat(4) {
-            assertTrue(UnhandledErrorTelemetry.canSend())
-            UnhandledErrorTelemetry.recordSent()
+            assertTrue(UnhandledErrorTelemetry.trySend())
         }
 
-        assertTrue(UnhandledErrorTelemetry.canSend())
-        UnhandledErrorTelemetry.recordSent()
-        assertFalse(UnhandledErrorTelemetry.canSend())
+        assertTrue(UnhandledErrorTelemetry.trySend())
+        assertFalse(UnhandledErrorTelemetry.trySend())
     }
 }

@@ -72,14 +72,14 @@ class MonitorDeltaTelemetryTest {
                     ),
             )
 
-        assertEquals(Triple(-1.5, 4, 1), monitorMetricsForDelta(delta))
+        assertEquals(DeltaMetrics(-1.5, 4, 1), monitorMetricsForDelta(delta))
     }
 
     @Test
     fun `monitorMetricsForDelta falls back to zeros for missing values`() {
         val delta = mockDelta(scoreChange = null, fileLevelFindings = null, functionLevelFindings = null)
 
-        assertEquals(Triple(0.0, 0, 0), monitorMetricsForDelta(delta))
+        assertEquals(DeltaMetrics(0.0, 0, 0), monitorMetricsForDelta(delta))
     }
 
     private fun mockDelta(

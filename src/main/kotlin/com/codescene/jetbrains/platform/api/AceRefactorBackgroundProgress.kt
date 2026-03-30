@@ -96,6 +96,7 @@ private fun runAceRefactorBlocking(
 ) {
     try {
         val skipUsed = effectiveOptions.skipCache.orElse(request.skipCache)
+        effectiveOptions.setSkipCache(skipUsed)
         val requestForRun = request.copy(skipCache = skipUsed)
         val result =
             refactoringOrchestrator.runRefactor(
@@ -114,7 +115,8 @@ private fun runAceRefactorBlocking(
         if (!runCoordinator.isLatest(gen) || indicator.isCanceled) {
             return
         }
-        AceEntryOrchestrator.getInstance(project).openAceErrorView(editor, request, e)
+        val requestForRun = request.copy(skipCache = effectiveOptions.skipCache.orElse(request.skipCache))
+        AceEntryOrchestrator.getInstance(project).openAceErrorView(editor, requestForRun, e)
     }
 }
 

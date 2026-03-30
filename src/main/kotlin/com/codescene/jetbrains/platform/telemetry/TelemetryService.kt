@@ -93,8 +93,7 @@ class TelemetryService : BaseService(Log), Disposable, ITelemetryService {
     ) {
         val settings = CodeSceneGlobalSettingsStore.getInstance().currentState()
         if (!settings.telemetryConsentGiven || !settings.telemetryNoticeShown) return
-        if (!UnhandledErrorTelemetry.canSend()) return
-        UnhandledErrorTelemetry.recordSent()
+        if (!UnhandledErrorTelemetry.trySend()) return
         val payload =
             buildMap<String, Any> {
                 put("name", throwable::class.java.name)

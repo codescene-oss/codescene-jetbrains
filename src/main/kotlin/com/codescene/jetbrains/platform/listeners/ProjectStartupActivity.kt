@@ -20,6 +20,7 @@ import com.intellij.ide.plugins.PluginStateListener
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.util.Disposer
@@ -34,10 +35,14 @@ class ProjectStartupActivity : ProjectActivity {
         try {
             runStartup(project)
         } catch (e: Exception) {
+            if (e is ProcessCanceledException) {
+                throw e
+            }
+            val errorMessage = e.message?.takeIf { it.isNotBlank() } ?: e::class.java.name.ifBlank { e.toString() }
             try {
                 TelemetryService.getInstance().logUsage(
                     TelemetryEvents.ON_ACTIVATE_EXTENSION_ERROR,
-                    mapOf("errorMessage" to (e.message ?: "")),
+                    mapOf("errorMessage" to errorMessage),
                 )
             } catch (_: Exception) {
             }
