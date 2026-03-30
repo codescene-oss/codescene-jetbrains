@@ -11,9 +11,10 @@ data class TelemetryRequest(
 
 fun resolveTelemetryEventData(
     consentGiven: Boolean,
+    noticeDisplayed: Boolean,
     request: TelemetryRequest,
 ): TelemetryEventData? {
-    if (!consentGiven) return null
+    if (!consentGiven || !noticeDisplayed) return null
 
     return buildTelemetryEventData(
         editorType = request.editorType,

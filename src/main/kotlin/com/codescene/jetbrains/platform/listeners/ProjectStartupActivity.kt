@@ -31,16 +31,18 @@ class ProjectStartupActivity : ProjectActivity {
         val disposable = project as Disposable
         val settingsStore = CodeSceneGlobalSettingsStore.getInstance()
 
-        val noticeShown = settingsStore.currentState().telemetryNoticeShown
-        val telemetryEnabled = settingsStore.currentState().telemetryConsentGiven
-        val noticeStatus = if (noticeShown) "" else "not "
-        val telemetryStatus = if (telemetryEnabled) "enabled" else "disabled"
+        val settings = settingsStore.currentState()
+        val noticeDisplayed = settings.telemetryNoticeShown
+        val telemetryConsent = settings.telemetryConsentGiven
+        val noticeStatus = if (noticeDisplayed) "" else "not "
+        val telemetryStatus =
+            if (telemetryConsent && noticeDisplayed) "enabled" else "disabled"
         Log.info(
-            "Telemetry notice ${noticeStatus}shown, telemetry $telemetryStatus",
+            "Telemetry notice ${noticeStatus}displayed, telemetry $telemetryStatus",
             "${this::class.simpleName} - ${project.name}",
         )
 
-        if (!noticeShown) showTelemetryNoticeNotification(project)
+        if (!noticeDisplayed) showTelemetryNoticeNotification(project)
 
         val listener =
             ISettingsChangeListener { oldState, newState ->

@@ -27,7 +27,12 @@ data class NotificationParams(
 
 typealias NotificationAction = Pair<String, (AnActionEvent, Notification) -> Unit>
 
-fun showNotification(params: NotificationParams) {
+private val telemetryNoticeNotificationLock = Any()
+
+fun showNotification(
+    params: NotificationParams,
+    afterNotify: (() -> Unit)? = null,
+) {
     val (project, title, message, group, actions) = params
 
     val notification =
@@ -46,26 +51,32 @@ fun showNotification(params: NotificationParams) {
     }
 
     notification.notify(project)
+    afterNotify?.invoke()
 }
 
 fun showTelemetryNoticeNotification(project: Project?) {
-    CodeSceneApplicationServiceProvider.getInstance().settingsProvider.updateTelemetryNoticeShown(true)
-    val spec = buildTelemetryNoticeNotificationSpec(UiLabelsBundle.message("telemetryNoticeMessage"))
-    val params =
-        NotificationParams(
-            project,
-            CODESCENE,
-            spec.message,
-            INFO_NOTIFICATION_GROUP,
-            spec.toActions(
-                openSettings = { notification ->
-                    ShowSettingsUtil.getInstance().showSettingsDialog(project, CODESCENE)
-                    notification.expire()
-                },
-            ),
-        )
+    val settingsProvider = CodeSceneApplicationServiceProvider.getInstance().settingsProvider
+    synchronized(telemetryNoticeNotificationLock) {
+        if (settingsProvider.currentState().telemetryNoticeShown) return
+        val spec = buildTelemetryNoticeNotificationSpec(UiLabelsBundle.message("telemetryNoticeMessage"))
+        val params =
+            NotificationParams(
+                project,
+                CODESCENE,
+                spec.message,
+                INFO_NOTIFICATION_GROUP,
+                spec.toActions(
+                    openSettings = { notification ->
+                        ShowSettingsUtil.getInstance().showSettingsDialog(project, CODESCENE)
+                        notification.expire()
+                    },
+                ),
+            )
 
-    showNotification(params)
+        showNotification(params) {
+            settingsProvider.updateTelemetryNoticeShown(true)
+        }
+    }
 }
 
 fun showInfoNotification(
