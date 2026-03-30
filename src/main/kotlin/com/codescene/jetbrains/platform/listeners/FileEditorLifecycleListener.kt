@@ -19,6 +19,8 @@ class FileEditorLifecycleListener : FileEditorManagerListener {
             cancelDelta = project.service<CachedReviewService>()::cancelFileReview,
             cancelReview = project.service<CachedReviewService>()::cancelFileReview,
         )
-        updateMonitor(project)
+        if (!project.isDisposed) {
+            updateMonitor(project)
+        }
     }
 }
