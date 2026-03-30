@@ -33,4 +33,9 @@ data class CodeSceneGlobalSettings(
     // TODO delete this after the integration with core is complete.
     val codeHealthMonitorEnabled: Boolean = true,
     var monitorTreeSortOption: MonitorTreeSortOptions = MonitorTreeSortOptions.SCORE_ASCENDING,
-)
+    var version: Int? = null,
+) {
+    companion object {
+        const val CURRENT_SETTINGS_VERSION = 1
+    }
+}

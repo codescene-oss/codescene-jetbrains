@@ -5,14 +5,23 @@ import com.codescene.jetbrains.core.models.settings.AceStatus
 import com.codescene.jetbrains.core.models.settings.CodeSceneGlobalSettings
 
 class SettingsStateManager {
-    private var extensionSettingsState: CodeSceneGlobalSettings = CodeSceneGlobalSettings()
+    private var extensionSettingsState: CodeSceneGlobalSettings =
+        CodeSceneGlobalSettings(version = CodeSceneGlobalSettings.CURRENT_SETTINGS_VERSION)
     private val listeners = mutableSetOf<ISettingsChangeListener>()
 
     fun getState(): CodeSceneGlobalSettings = extensionSettingsState
 
     fun loadState(state: CodeSceneGlobalSettings) {
         val oldState = extensionSettingsState.copy()
-        extensionSettingsState = state
+        extensionSettingsState =
+            if (state.version == null) {
+                state.copy(
+                    telemetryConsentGiven = false,
+                    version = CodeSceneGlobalSettings.CURRENT_SETTINGS_VERSION,
+                )
+            } else {
+                state
+            }
         notifyListeners(oldState, extensionSettingsState.copy())
     }
 

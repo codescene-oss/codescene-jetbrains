@@ -33,6 +33,37 @@ class SettingsStateManagerTest {
         assertFalse(s.previewCodeHealthGate)
         assertTrue(s.telemetryConsentGiven)
         assertFalse(s.telemetryNoticeShown)
+        assertEquals(CodeSceneGlobalSettings.CURRENT_SETTINGS_VERSION, s.version)
+    }
+
+    @Test
+    fun `loadState with null version migrates telemetry consent off and sets version`() {
+        val legacy =
+            CodeSceneGlobalSettings(
+                telemetryConsentGiven = true,
+                telemetryNoticeShown = true,
+                version = null,
+            )
+
+        manager.loadState(legacy)
+
+        val loaded = manager.getState()
+        assertFalse(loaded.telemetryConsentGiven)
+        assertTrue(loaded.telemetryNoticeShown)
+        assertEquals(CodeSceneGlobalSettings.CURRENT_SETTINGS_VERSION, loaded.version)
+    }
+
+    @Test
+    fun `loadState with version skips telemetry migration`() {
+        val persisted =
+            CodeSceneGlobalSettings(
+                telemetryConsentGiven = true,
+                version = CodeSceneGlobalSettings.CURRENT_SETTINGS_VERSION,
+            )
+
+        manager.loadState(persisted)
+
+        assertTrue(manager.getState().telemetryConsentGiven)
     }
 
     @Test
