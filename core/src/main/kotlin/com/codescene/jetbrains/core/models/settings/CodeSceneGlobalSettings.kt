@@ -22,7 +22,6 @@ enum class MonitorTreeSortOptions {
 data class CodeSceneGlobalSettings(
     var serverUrl: String = CODESCENE_SERVER_URL,
     var aceAcknowledged: Boolean = false,
-    var excludeGitignoreFiles: Boolean = true,
     var previewCodeHealthGate: Boolean = false,
     var telemetryConsentGiven: Boolean = false,
     var aceStatus: AceStatus = AceStatus.DEACTIVATED,

@@ -30,7 +30,6 @@ class SettingsStateManagerTest {
         assertEquals(CODESCENE_SERVER_URL, s.serverUrl)
         assertTrue(s.enableCodeLenses)
         assertTrue(s.enableAutoRefactor)
-        assertTrue(s.excludeGitignoreFiles)
         assertFalse(s.previewCodeHealthGate)
     }
 

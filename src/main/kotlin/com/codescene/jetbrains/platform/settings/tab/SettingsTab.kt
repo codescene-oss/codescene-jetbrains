@@ -27,12 +27,6 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                     .comment(UiLabelsBundle.message("enableCodeLensesComment"))
             }
 
-            row {
-                checkBox(UiLabelsBundle.message("gitignore"))
-                    .bindSelected(settings::excludeGitignoreFiles)
-                    .comment(UiLabelsBundle.message("gitignoreComment"))
-            }
-
             groupRowsRange(UiLabelsBundle.message("ace")) {
                 row {
                     checkBox("Ace acknowledged")

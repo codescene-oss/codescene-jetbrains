@@ -71,7 +71,6 @@ class CodeSmellUtilsTest {
             expected = true,
             extension = "java",
             inProjectContent = true,
-            excludeGitignoreFiles = true,
             ignoredByGitignore = false,
         )
     }
@@ -82,18 +81,16 @@ class CodeSmellUtilsTest {
             expected = false,
             extension = "unsupported_extension",
             inProjectContent = true,
-            excludeGitignoreFiles = true,
             ignoredByGitignore = false,
         )
     }
 
     @Test
-    fun `isFileSupportedForAnalysis false when gitignore excludes and setting enabled`() {
+    fun `isFileSupportedForAnalysis false when gitignore excludes`() {
         assertFileSupported(
             expected = false,
             extension = "java",
             inProjectContent = true,
-            excludeGitignoreFiles = true,
             ignoredByGitignore = true,
         )
     }
@@ -104,19 +101,7 @@ class CodeSmellUtilsTest {
             expected = false,
             extension = "java",
             inProjectContent = false,
-            excludeGitignoreFiles = true,
             ignoredByGitignore = false,
-        )
-    }
-
-    @Test
-    fun `isFileSupportedForAnalysis true when gitignored but excludeGitignoreFiles false`() {
-        assertFileSupported(
-            expected = true,
-            extension = "java",
-            inProjectContent = true,
-            excludeGitignoreFiles = false,
-            ignoredByGitignore = true,
         )
     }
 
@@ -137,14 +122,12 @@ class CodeSmellUtilsTest {
         expected: Boolean,
         extension: String?,
         inProjectContent: Boolean,
-        excludeGitignoreFiles: Boolean,
         ignoredByGitignore: Boolean,
     ) {
         val result =
             isFileSupportedForAnalysis(
                 extension = extension,
                 inProjectContent = inProjectContent,
-                excludeGitignoreFiles = excludeGitignoreFiles,
                 ignoredByGitignore = ignoredByGitignore,
             )
 

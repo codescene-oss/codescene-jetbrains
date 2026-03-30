@@ -1,11 +1,9 @@
 package com.codescene.jetbrains.platform.util
 
-import com.codescene.jetbrains.core.util.Constants.CODESCENE
 import com.codescene.jetbrains.core.util.isExcludedByGitignore as coreIsExcludedByGitignore
 import com.codescene.jetbrains.core.util.isFileSupportedForAnalysis
 import com.codescene.jetbrains.core.util.linePairToOffsets
 import com.codescene.jetbrains.core.util.readGitignore as coreReadGitignore
-import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.project.Project
@@ -21,7 +19,7 @@ private fun isExcludedByGitignore(
         .also { isExcluded ->
             if (isExcluded) {
                 Log.debug(
-                    "File ${file.name} is excluded from analysis due to $CODESCENE gitignore settings.",
+                    "File ${file.name} is excluded from analysis due to .gitignore.",
                 )
             }
         }
@@ -30,8 +28,6 @@ fun isFileSupported(
     project: Project,
     virtualFile: VirtualFile,
 ): Boolean {
-    val excludeGitignoreFiles = CodeSceneGlobalSettingsStore.getInstance().currentState().excludeGitignoreFiles
-
     val isInProject =
         runReadAction {
             val fileIndex = ProjectFileIndex.getInstance(project)
@@ -45,7 +41,6 @@ fun isFileSupported(
     return isFileSupportedForAnalysis(
         extension = virtualFile.extension,
         inProjectContent = isInProject,
-        excludeGitignoreFiles = excludeGitignoreFiles,
         ignoredByGitignore = ignoredByGitignore,
     )
 }

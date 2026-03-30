@@ -66,12 +66,10 @@ fun isSupportedLanguage(extension: String) = supportedLanguages.containsKey(exte
 fun isFileSupportedForAnalysis(
     extension: String?,
     inProjectContent: Boolean,
-    excludeGitignoreFiles: Boolean,
     ignoredByGitignore: Boolean,
 ): Boolean {
     val supportedExtension = extension?.let(::isSupportedLanguage) == true
-    val excludedByGitignore = excludeGitignoreFiles && ignoredByGitignore
-    return supportedExtension && !excludedByGitignore && inProjectContent
+    return supportedExtension && !ignoredByGitignore && inProjectContent
 }
 
 fun formatCodeSmellMessage(
