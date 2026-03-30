@@ -77,7 +77,11 @@ sealed class AceEntryCommand {
 
     data class StartRefactor(val request: RefactoringRequest, val skipCache: Boolean) : AceEntryCommand()
 
-    data class OpenAcknowledgement(val filePath: String, val function: FnToRefactor) : AceEntryCommand()
+    data class OpenAcknowledgement(
+        val filePath: String,
+        val function: FnToRefactor,
+        val source: AceEntryPoint,
+    ) : AceEntryCommand()
 }
 
 fun resolveAceEntryPointCommand(
@@ -92,7 +96,8 @@ fun resolveAceEntryPointCommand(
     return when (decision.action) {
         AceEntryAction.SKIP -> AceEntryCommand.Skip
         AceEntryAction.START_REFACTOR -> AceEntryCommand.StartRefactor(request, request.skipCache)
-        AceEntryAction.OPEN_ACKNOWLEDGEMENT -> AceEntryCommand.OpenAcknowledgement(request.filePath, request.function)
+        AceEntryAction.OPEN_ACKNOWLEDGEMENT ->
+            AceEntryCommand.OpenAcknowledgement(request.filePath, request.function, request.source)
     }
 }
 
@@ -136,6 +141,8 @@ fun resolveAceViewUpdateParams(
         refactorResponse = currentAceData.refactorResponse,
         filePath = currentAceData.filePath,
         function = state.functionToRefactor ?: currentAceData.functionToRefactor,
+        clientTraceId = currentAceData.clientTraceId,
+        skipCache = currentAceData.skipCache,
     )
 }
 
@@ -150,5 +157,7 @@ fun resolveAceErrorViewParams(
         error = resolveAceErrorType(e),
         function = request.function,
         filePath = filePath,
+        clientTraceId = request.traceId,
+        skipCache = request.skipCache,
     )
 }

@@ -96,8 +96,12 @@ private fun sendTelemetry(
     docsData: DocsData,
     entryPoint: DocsEntryPoint,
 ) {
-    CodeSceneApplicationServiceProvider.getInstance().telemetryService.logUsage(
+    val telemetry = CodeSceneApplicationServiceProvider.getInstance().telemetryService
+    telemetry.logUsage(
         TelemetryEvents.OPEN_DOCS_PANEL,
         buildOpenDocsTelemetryData(docsData, entryPoint),
     )
+    if (entryPoint == DocsEntryPoint.CODE_HEALTH_DETAILS) {
+        telemetry.logUsage(TelemetryEvents.OPEN_CODE_HEALTH_DOCS)
+    }
 }

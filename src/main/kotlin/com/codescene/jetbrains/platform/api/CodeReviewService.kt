@@ -12,6 +12,7 @@ import com.codescene.jetbrains.core.util.TelemetryEvents
 import com.codescene.jetbrains.core.util.resolveBaselineCliCacheFileName
 import com.codescene.jetbrains.core.util.resolveCliCacheFileName
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
+import com.codescene.jetbrains.platform.telemetry.StatsCollectorService
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -109,6 +110,7 @@ class CodeReviewService(private val project: Project) : com.codescene.jetbrains.
                 serviceName = serviceName,
             )
         }
+        StatsCollectorService.getInstance().recordAnalysis(fileName, elapsedMs.toDouble())
 
         return result
     }

@@ -16,11 +16,14 @@ import com.codescene.jetbrains.core.handler.toDocsData
 import com.codescene.jetbrains.core.models.CwfMessage
 import com.codescene.jetbrains.core.models.DocsEntryPoint
 import com.codescene.jetbrains.core.models.View
+import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionDeselected
+import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionSelected
 import com.codescene.jetbrains.core.models.message.GotoFunctionLocation
 import com.codescene.jetbrains.core.models.message.OpenDocsForFunction
 import com.codescene.jetbrains.core.models.message.RequestAndPresentRefactoring
 import com.codescene.jetbrains.core.models.shared.FileMetaType
 import com.codescene.jetbrains.core.util.AceEntryPoint
+import com.codescene.jetbrains.core.util.TelemetryEvents
 import com.codescene.jetbrains.core.util.findMatchingRefactorableFunction
 import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
@@ -237,6 +240,7 @@ class CwfMessageHandler(
     }
 
     override fun handleAcknowledged() {
+        services.telemetryService.logUsage(TelemetryEvents.ACE_INFO_ACKNOWLEDGED)
         services.settingsProvider.updateAceAcknowledged(true)
 
         val data = getAceAcknowledgeUserData(project)
@@ -255,7 +259,12 @@ class CwfMessageHandler(
         showAceDiff(project).thenAccept { success ->
             if (success) {
                 Log.info("Shown diff for file successfully.", serviceName)
-                telemetryForShowDiff(success)?.let {
+                val panel = getAceUserData(project)
+                telemetryForShowDiff(
+                    success = success,
+                    clientTraceId = panel?.clientTraceId,
+                    skipCache = panel?.skipCache ?: false,
+                )?.let {
                     services.telemetryService.logUsage(it.eventName, it.data)
                 }
             } else {
@@ -265,8 +274,14 @@ class CwfMessageHandler(
     }
 
     override fun handleApply() {
-        val aceData = getAceUserData(project)?.aceData
-        val applyTelemetry = telemetryForApply(aceData)
+        val panel = getAceUserData(project)
+        val aceData = panel?.aceData
+        val applyTelemetry =
+            telemetryForApply(
+                aceData = aceData,
+                clientTraceId = panel?.clientTraceId,
+                skipCache = panel?.skipCache ?: false,
+            )
         services.telemetryService.logUsage(applyTelemetry.eventName, applyTelemetry.data)
 
         val action = resolveApplyAction(aceData)
@@ -286,7 +301,8 @@ class CwfMessageHandler(
     }
 
     override fun handleCopy() {
-        val aceData = getAceUserData(project)?.aceData
+        val panel = getAceUserData(project)
+        val aceData = panel?.aceData
         val action = resolveCopyAction(aceData)
 
         if (action != null) {
@@ -295,7 +311,12 @@ class CwfMessageHandler(
             Log.info("Copied refactored code to clipboard.", serviceName)
             showInfoNotification(UiLabelsBundle.message("copiedToClipboard"), project)
 
-            val event = telemetryForCopy(action)
+            val event =
+                telemetryForCopy(
+                    action = action,
+                    clientTraceId = panel?.clientTraceId,
+                    skipCache = panel?.skipCache ?: false,
+                )
             services.telemetryService.logUsage(event.eventName, event.data)
         } else {
             Log.warn("Unable to copy refactored code to clipboard.", serviceName)
@@ -303,8 +324,14 @@ class CwfMessageHandler(
     }
 
     override fun handleReject() {
-        val aceData = getAceUserData(project)?.aceData
-        val event = telemetryForReject(aceData)
+        val panel = getAceUserData(project)
+        val aceData = panel?.aceData
+        val event =
+            telemetryForReject(
+                aceData = aceData,
+                clientTraceId = panel?.clientTraceId,
+                skipCache = panel?.skipCache ?: false,
+            )
         services.telemetryService.logUsage(event.eventName, event.data)
 
         closeWindow(UiLabelsBundle.message("ace"), project)
@@ -329,6 +356,10 @@ class CwfMessageHandler(
             }
             View.DOCS.value -> {
                 lifecycle.setInitialized(View.DOCS, true)
+                services.telemetryService.logUsage(
+                    TelemetryEvents.DETAILS_VISIBILITY,
+                    mapOf("visible" to true),
+                )
                 val stalePending = lifecycle.takePendingDocs()
                 val browser = webViews.getBrowser(View.DOCS)
                 val message = docsRefreshMessage(project) ?: stalePending
@@ -351,6 +382,24 @@ class CwfMessageHandler(
 
     override fun handleOpenDocs(docsForFunction: OpenDocsForFunction) {
         openDocs(toDocsData(docsForFunction), project, DocsEntryPoint.CODE_HEALTH_DETAILS)
+    }
+
+    override fun handleCodeHealthDetailsFunctionSelected(payload: CodeHealthDetailsFunctionSelected) {
+        services.telemetryService.logUsage(
+            TelemetryEvents.DETAILS_FUNCTION_SELECTED,
+            mapOf(
+                "visible" to payload.visible,
+                "isRefactoringSupported" to payload.isRefactoringSupported,
+                "nIssues" to payload.nIssues,
+            ),
+        )
+    }
+
+    override fun handleCodeHealthDetailsFunctionDeselected(payload: CodeHealthDetailsFunctionDeselected) {
+        services.telemetryService.logUsage(
+            TelemetryEvents.DETAILS_FUNCTION_DESELECTED,
+            mapOf("visible" to payload.visible),
+        )
     }
 
     override fun handleGotoFunctionLocation(location: GotoFunctionLocation) {

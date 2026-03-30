@@ -60,26 +60,73 @@ data class CwfTelemetryEvent(
     val data: Map<String, Any> = emptyMap(),
 )
 
-fun telemetryForApply(aceData: AceData?): CwfTelemetryEvent =
+private fun effectiveRefactorTraceId(
+    aceData: AceData?,
+    clientTraceId: String?,
+): String =
+    when {
+        !clientTraceId.isNullOrBlank() -> clientTraceId
+        else -> aceData?.aceResultData?.traceId ?: ""
+    }
+
+private fun refactorTelemetryData(
+    traceId: String,
+    skipCache: Boolean,
+): MutableMap<String, Any> =
+    mutableMapOf(
+        "traceId" to traceId,
+        "skipCache" to skipCache,
+    )
+
+fun telemetryForApply(
+    aceData: AceData?,
+    clientTraceId: String?,
+    skipCache: Boolean,
+): CwfTelemetryEvent =
     CwfTelemetryEvent(
         TelemetryEvents.ACE_REFACTOR_APPLIED,
-        mutableMapOf(Pair("traceId", aceData?.aceResultData?.traceId ?: "")),
+        refactorTelemetryData(effectiveRefactorTraceId(aceData, clientTraceId), skipCache),
     )
 
-fun telemetryForCopy(action: CopyAction): CwfTelemetryEvent =
-    CwfTelemetryEvent(
+fun telemetryForCopy(
+    action: CopyAction,
+    clientTraceId: String?,
+    skipCache: Boolean,
+): CwfTelemetryEvent {
+    val traceId =
+        when {
+            !clientTraceId.isNullOrBlank() -> clientTraceId
+            else -> action.traceId
+        }
+    return CwfTelemetryEvent(
         TelemetryEvents.ACE_COPY_CODE,
-        mutableMapOf(Pair("traceId", action.traceId)),
+        refactorTelemetryData(traceId, skipCache),
     )
+}
 
-fun telemetryForReject(aceData: AceData?): CwfTelemetryEvent =
+fun telemetryForReject(
+    aceData: AceData?,
+    clientTraceId: String?,
+    skipCache: Boolean,
+): CwfTelemetryEvent =
     CwfTelemetryEvent(
         TelemetryEvents.ACE_REFACTOR_REJECTED,
-        mutableMapOf(Pair("traceId", aceData?.aceResultData?.traceId ?: "")),
+        refactorTelemetryData(effectiveRefactorTraceId(aceData, clientTraceId), skipCache),
     )
 
-fun telemetryForShowDiff(success: Boolean): CwfTelemetryEvent? =
-    if (success) CwfTelemetryEvent(TelemetryEvents.ACE_DIFF_SHOWN) else null
+fun telemetryForShowDiff(
+    success: Boolean,
+    clientTraceId: String?,
+    skipCache: Boolean,
+): CwfTelemetryEvent? =
+    if (success) {
+        CwfTelemetryEvent(
+            TelemetryEvents.ACE_DIFF_SHOWN,
+            refactorTelemetryData(clientTraceId ?: "", skipCache),
+        )
+    } else {
+        null
+    }
 
 fun telemetryForOpenUrl(url: String): CwfTelemetryEvent =
     CwfTelemetryEvent(TelemetryEvents.OPEN_LINK, mutableMapOf(Pair("url", url)))

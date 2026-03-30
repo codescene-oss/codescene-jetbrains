@@ -18,6 +18,7 @@ import com.codescene.jetbrains.core.util.Constants.ACE
 import com.codescene.jetbrains.core.util.TelemetryEvents
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
+import com.codescene.jetbrains.platform.telemetry.StatsCollectorService
 import com.codescene.jetbrains.platform.util.AceEntryOrchestrator
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.RefactoringParams
@@ -171,9 +172,10 @@ class AceService :
             onRequested = { request ->
                 telemetryService.logUsage(
                     TelemetryEvents.ACE_REFACTOR_REQUESTED,
-                    mutableMapOf(
-                        Pair("source", request.source),
-                        Pair("skipCache", request.skipCache),
+                    mapOf(
+                        "source" to request.source.value,
+                        "skipCache" to request.skipCache,
+                        "traceId" to request.traceId,
                     ),
                 )
             },
@@ -186,6 +188,10 @@ class AceService :
                         Pair("loc", request.function.body.lines().size),
                         Pair("language", request.language ?: ""),
                     ),
+                )
+                StatsCollectorService.getInstance().recordAnalysis(
+                    request.filePath.substringAfterLast('/', request.filePath),
+                    elapsedMs.toDouble(),
                 )
             },
         )

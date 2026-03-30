@@ -68,7 +68,7 @@ fun openAceWindow(
 
     if (existingBrowser != null) updateWebView(params, existingBrowser, project) else openFile(params, project)
 
-    params.refactorResponse?.let { sendTelemetry(it) }
+    params.refactorResponse?.let { sendTelemetry(it, params.clientTraceId, params.skipCache) }
 }
 
 private fun updateWebView(
@@ -85,7 +85,14 @@ private fun updateWebView(
         )
 
     mapAceCwfData(params).data?.let {
-        updateUserData(it, params.function, params.refactorResponse, project)
+        updateUserData(
+            it,
+            params.function,
+            params.refactorResponse,
+            project,
+            params.clientTraceId,
+            params.skipCache,
+        )
     }
     messageHandler.postMessage(View.ACE, dataJson, browser)
 }
@@ -95,6 +102,8 @@ private fun updateUserData(
     function: FnToRefactor,
     refactoring: RefactorResponse?,
     project: Project,
+    clientTraceId: String?,
+    skipCache: Boolean,
 ) {
     val fileEditor =
         FileEditorManager.getInstance(project)
@@ -102,7 +111,13 @@ private fun updateUserData(
             .firstOrNull { it.file.name == UiLabelsBundle.message("ace") }
     (fileEditor?.file as? LightVirtualFile)?.putUserData(
         CWF_ACE_DATA_KEY,
-        CwfAceFileEditorProviderData(data, function, refactoring),
+        CwfAceFileEditorProviderData(
+            aceData = data,
+            functionToRefactor = function,
+            refactorResponse = refactoring,
+            clientTraceId = clientTraceId,
+            skipCache = skipCache,
+        ),
     )
 }
 
@@ -115,7 +130,16 @@ private fun openFile(
 
     val fileName = UiLabelsBundle.message("ace")
     val file = LightVirtualFile(fileName)
-    file.putUserData(CWF_ACE_DATA_KEY, CwfAceFileEditorProviderData(aceData, params.function, params.refactorResponse))
+    file.putUserData(
+        CWF_ACE_DATA_KEY,
+        CwfAceFileEditorProviderData(
+            aceData = aceData,
+            functionToRefactor = params.function,
+            refactorResponse = params.refactorResponse,
+            clientTraceId = params.clientTraceId,
+            skipCache = params.skipCache,
+        ),
+    )
 
     CoroutineScope(Dispatchers.Main).launch {
         val editor = getSelectedTextEditor(project, "", "${this::class.simpleName} - ${project.name}")
@@ -128,12 +152,23 @@ private fun openFile(
     }
 }
 
-private fun sendTelemetry(refactoring: RefactorResponse) {
+private fun sendTelemetry(
+    refactoring: RefactorResponse,
+    clientTraceId: String?,
+    skipCache: Boolean,
+) {
+    val traceId =
+        when {
+            !clientTraceId.isNullOrBlank() -> clientTraceId
+            else -> refactoring.traceId
+        }
     CodeSceneApplicationServiceProvider.getInstance().telemetryService.logUsage(
         TelemetryEvents.ACE_REFACTOR_PRESENTED,
-        mutableMapOf(
-            Pair("confidence", refactoring.confidence.level),
-            Pair("isCached", refactoring.metadata.cached ?: false),
+        mapOf(
+            "confidence" to refactoring.confidence.level,
+            "isCached" to (refactoring.metadata.cached ?: false),
+            "traceId" to traceId,
+            "skipCache" to skipCache,
         ),
     )
 }

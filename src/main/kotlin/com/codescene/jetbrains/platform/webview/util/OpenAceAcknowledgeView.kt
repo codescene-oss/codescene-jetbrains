@@ -10,6 +10,7 @@ import com.codescene.jetbrains.core.models.shared.FileMetaType
 import com.codescene.jetbrains.core.models.shared.Fn
 import com.codescene.jetbrains.core.models.shared.RangeCamelCase
 import com.codescene.jetbrains.core.models.view.AceAcknowledgeData
+import com.codescene.jetbrains.core.util.AceEntryPoint
 import com.codescene.jetbrains.core.util.TelemetryEvents
 import com.codescene.jetbrains.core.util.parseMessage
 import com.codescene.jetbrains.core.util.toAutoRefactorConfig
@@ -33,6 +34,7 @@ data class OpenAceAcknowledgementParams(
     val filePath: String,
     val project: Project,
     val fnToRefactor: FnToRefactor,
+    val source: AceEntryPoint,
 )
 
 private val ackMapper = AceAcknowledgementMapper()
@@ -53,7 +55,10 @@ fun openAceAcknowledgeView(params: OpenAceAcknowledgementParams) {
 
     if (existingBrowser != null) updateWebView(params, existingBrowser) else openFile(params)
 
-    CodeSceneApplicationServiceProvider.getInstance().telemetryService.logUsage(TelemetryEvents.ACE_INFO_PRESENTED)
+    CodeSceneApplicationServiceProvider.getInstance().telemetryService.logUsage(
+        TelemetryEvents.ACE_INFO_PRESENTED,
+        mapOf("source" to params.source.value),
+    )
 }
 
 private fun updateWebView(

@@ -2,12 +2,15 @@ package com.codescene.jetbrains.platform.listeners
 
 import com.codescene.jetbrains.core.contracts.ISettingsChangeListener
 import com.codescene.jetbrains.core.util.SettingsChangeAction
+import com.codescene.jetbrains.core.util.TelemetryEvents
 import com.codescene.jetbrains.core.util.resolveSettingsChangeActions
 import com.codescene.jetbrains.platform.api.AceService
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.editor.UIRefreshService
 import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.platform.telemetry.TelemetryService
+import com.codescene.jetbrains.platform.telemetry.installGlobalUncaughtErrorTelemetry
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.refreshAceUi
 import com.codescene.jetbrains.platform.util.showTelemetryNoticeNotification
@@ -27,6 +30,22 @@ import kotlinx.coroutines.launch
 
 class ProjectStartupActivity : ProjectActivity {
     override suspend fun execute(project: Project) {
+        installGlobalUncaughtErrorTelemetry()
+        try {
+            runStartup(project)
+        } catch (e: Exception) {
+            try {
+                TelemetryService.getInstance().logUsage(
+                    TelemetryEvents.ON_ACTIVATE_EXTENSION_ERROR,
+                    mapOf("errorMessage" to (e.message ?: "")),
+                )
+            } catch (_: Exception) {
+            }
+            throw e
+        }
+    }
+
+    private suspend fun runStartup(project: Project) {
         CodeSceneApplicationServiceProvider.getInstance().deviceIdStore.get()
         val disposable = project as Disposable
         val settingsStore = CodeSceneGlobalSettingsStore.getInstance()
@@ -76,6 +95,8 @@ class ProjectStartupActivity : ProjectActivity {
 
         addStateListener()
         VirtualFileManager.getInstance().addAsyncFileListener(FileChangeListener(project), disposable)
+
+        registerCodeSceneToolWindowTelemetry(project, disposable)
 
         AceService.getInstance().runPreflight(true)
     }

@@ -7,4 +7,6 @@ data class CurrentAceViewData(
     val filePath: String,
     val functionToRefactor: FnToRefactor,
     val refactorResponse: RefactorResponse?,
+    val clientTraceId: String? = null,
+    val skipCache: Boolean = false,
 )

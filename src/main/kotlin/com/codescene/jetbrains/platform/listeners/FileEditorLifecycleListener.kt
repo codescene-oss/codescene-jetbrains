@@ -1,7 +1,10 @@
 package com.codescene.jetbrains.platform.listeners
 
 import com.codescene.jetbrains.core.review.cancelPendingReviews
+import com.codescene.jetbrains.core.util.TelemetryEvents
+import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.api.CachedReviewService
+import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -19,6 +22,12 @@ class FileEditorLifecycleListener : FileEditorManagerListener {
             cancelDelta = project.service<CachedReviewService>()::cancelFileReview,
             cancelReview = project.service<CachedReviewService>()::cancelFileReview,
         )
+        if (file.name == UiLabelsBundle.message("codeSmellDocs")) {
+            CodeSceneProjectServiceProvider.getInstance(project).telemetryService.logUsage(
+                TelemetryEvents.DETAILS_VISIBILITY,
+                mapOf("visible" to false),
+            )
+        }
         if (!project.isDisposed) {
             updateMonitor(project)
         }

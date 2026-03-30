@@ -59,7 +59,7 @@ class AceEntryLogicTest {
         val fn = mockFn("f", "body", 1, 2)
         val request = RefactoringRequest("a.kt", null, fn, AceEntryPoint.RETRY)
         val result = resolveAceEntryPointCommand(settings, request = request)
-        assertEquals(AceEntryCommand.OpenAcknowledgement("a.kt", fn), result)
+        assertEquals(AceEntryCommand.OpenAcknowledgement("a.kt", fn, AceEntryPoint.RETRY), result)
     }
 
     @Test
@@ -199,6 +199,8 @@ class AceEntryLogicTest {
         assertEquals("auth", result?.error)
         assertSame(function, result?.function)
         assertEquals("a.kt", result?.filePath)
+        assertEquals(request.traceId, result?.clientTraceId)
+        assertEquals(false, result?.skipCache)
     }
 
     @Test
