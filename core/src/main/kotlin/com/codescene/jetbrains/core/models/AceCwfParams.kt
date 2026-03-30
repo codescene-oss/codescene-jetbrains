@@ -10,4 +10,6 @@ data class AceCwfParams(
     val stale: Boolean = false,
     val loading: Boolean = false,
     val refactorResponse: RefactorResponse? = null,
+    val clientTraceId: String? = null,
+    val skipCache: Boolean = false,
 )

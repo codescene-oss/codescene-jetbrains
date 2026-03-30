@@ -94,7 +94,8 @@ class AceEntryOrchestrator(private val project: Project) {
                 val options = createRefactoringOptions(command.skipCache)
                 AceService.getInstance().refactor(params, options)
             }
-            is AceEntryCommand.OpenAcknowledgement -> handleOpenAceAcknowledgement(editor, command.function)
+            is AceEntryCommand.OpenAcknowledgement ->
+                handleOpenAceAcknowledgement(editor, command.function, command.source)
         }
     }
 
@@ -107,12 +108,14 @@ class AceEntryOrchestrator(private val project: Project) {
     fun handleOpenAceAcknowledgement(
         editor: Editor,
         function: FnToRefactor,
+        source: AceEntryPoint,
     ) {
         openAceAcknowledgeView(
             OpenAceAcknowledgementParams(
                 project = editor.project!!,
                 fnToRefactor = function,
                 filePath = editor.virtualFile.path,
+                source = source,
             ),
         )
     }
@@ -295,6 +298,8 @@ class AceEntryOrchestrator(private val project: Project) {
                 filePath = filePath,
                 functionToRefactor = platformData.functionToRefactor,
                 refactorResponse = platformData.refactorResponse,
+                clientTraceId = platformData.clientTraceId,
+                skipCache = platformData.skipCache,
             )
 
         val params = resolveAceViewUpdateParams(currentAceData, entry)

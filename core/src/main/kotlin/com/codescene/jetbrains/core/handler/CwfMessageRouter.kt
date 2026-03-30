@@ -1,6 +1,8 @@
 package com.codescene.jetbrains.core.handler
 
 import com.codescene.jetbrains.core.models.CwfMessage
+import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionDeselected
+import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionSelected
 import com.codescene.jetbrains.core.models.message.EditorMessages
 import com.codescene.jetbrains.core.models.message.GotoFunctionLocation
 import com.codescene.jetbrains.core.models.message.LifecycleMessages
@@ -80,6 +82,22 @@ fun routeCwfMessage(
                     json.decodeFromJsonElement(RequestAndPresentRefactoring.serializer(), it)
                 } ?: return false
             handler.handleRequestAndPresentRefactoring(request)
+        }
+
+        PanelMessages.CODE_HEALTH_DETAILS_FUNCTION_SELECTED.value -> {
+            val payload =
+                message.payload?.let {
+                    json.decodeFromJsonElement(CodeHealthDetailsFunctionSelected.serializer(), it)
+                } ?: return false
+            handler.handleCodeHealthDetailsFunctionSelected(payload)
+        }
+
+        PanelMessages.CODE_HEALTH_DETAILS_FUNCTION_DESELECTED.value -> {
+            val payload =
+                message.payload?.let {
+                    json.decodeFromJsonElement(CodeHealthDetailsFunctionDeselected.serializer(), it)
+                } ?: return false
+            handler.handleCodeHealthDetailsFunctionDeselected(payload)
         }
 
         else -> {

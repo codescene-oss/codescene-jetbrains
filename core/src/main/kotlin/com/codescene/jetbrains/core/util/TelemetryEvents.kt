@@ -2,6 +2,8 @@ package com.codescene.jetbrains.core.util
 
 object TelemetryEvents {
     const val ON_ACTIVATE_EXTENSION = "on_activate_extension"
+    const val ON_ACTIVATE_EXTENSION_ERROR = "on_activate_extension_error"
+    const val UNHANDLED_ERROR = "unhandled_error"
 
     const val OPEN_CODE_HEALTH_DOCS = "open_code_health_docs"
     const val OPEN_DOCS_PANEL = "open_interactive_docs_panel"

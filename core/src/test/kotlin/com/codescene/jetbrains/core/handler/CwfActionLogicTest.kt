@@ -98,13 +98,13 @@ class CwfActionLogicTest {
     @Test
     fun `telemetry helpers create expected events`() {
         val aceData = buildAceData(code = "x")
-        assertEquals(TelemetryEvents.ACE_REFACTOR_APPLIED, telemetryForApply(aceData).eventName)
-        assertEquals(TelemetryEvents.ACE_REFACTOR_REJECTED, telemetryForReject(aceData).eventName)
-        assertEquals(TelemetryEvents.ACE_COPY_CODE, telemetryForCopy(CopyAction("x", "t")).eventName)
+        assertEquals(TelemetryEvents.ACE_REFACTOR_APPLIED, telemetryForApply(aceData, null, false).eventName)
+        assertEquals(TelemetryEvents.ACE_REFACTOR_REJECTED, telemetryForReject(aceData, null, false).eventName)
+        assertEquals(TelemetryEvents.ACE_COPY_CODE, telemetryForCopy(CopyAction("x", "t"), null, false).eventName)
         assertEquals(TelemetryEvents.OPEN_LINK, telemetryForOpenUrl("https://codescene.io").eventName)
         assertEquals(TelemetryEvents.OPEN_SETTINGS, telemetryForOpenSettings().eventName)
-        assertEquals(TelemetryEvents.ACE_DIFF_SHOWN, telemetryForShowDiff(true)?.eventName)
-        assertNull(telemetryForShowDiff(false))
+        assertEquals(TelemetryEvents.ACE_DIFF_SHOWN, telemetryForShowDiff(true, null, false)?.eventName)
+        assertNull(telemetryForShowDiff(false, null, false))
     }
 
     private fun buildAceData(

@@ -18,7 +18,7 @@ abstract class CacheService<Q, E, V, R>(
 
     abstract fun put(entry: E)
 
-    fun invalidate(filePath: String) {
+    open fun invalidate(filePath: String) {
         cache[filePath]?.let {
             cache.remove(filePath)
             log.debug("[$cacheImplementation] entry for key $filePath has been invalidated.")

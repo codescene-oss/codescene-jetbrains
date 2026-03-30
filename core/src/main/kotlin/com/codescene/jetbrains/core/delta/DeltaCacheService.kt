@@ -78,7 +78,7 @@ open class DeltaCacheService(
         return isCacheHitOrNotStale to apiResponse
     }
 
-    override fun put(entry: DeltaCacheEntry) {
+    open override fun put(entry: DeltaCacheEntry) {
         val headHash = DigestUtils.sha256Hex(entry.headContent)
         val currentContentHash = DigestUtils.sha256Hex(entry.currentFileContent)
 

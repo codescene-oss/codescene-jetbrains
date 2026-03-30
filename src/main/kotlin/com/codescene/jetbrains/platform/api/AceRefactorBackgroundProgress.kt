@@ -95,9 +95,12 @@ private fun runAceRefactorBlocking(
     entryOrchestrator: AceEntryOrchestrator,
 ) {
     try {
+        val skipUsed = effectiveOptions.skipCache.orElse(request.skipCache)
+        effectiveOptions.setSkipCache(skipUsed)
+        val requestForRun = request.copy(skipCache = skipUsed)
         val result =
             refactoringOrchestrator.runRefactor(
-                request = request.copy(skipCache = effectiveOptions.skipCache.orElse(request.skipCache)),
+                request = requestForRun,
                 options = effectiveOptions,
             )
 
@@ -105,14 +108,15 @@ private fun runAceRefactorBlocking(
             return
         }
 
-        presentAceRefactorResult(result, editor, request, entryOrchestrator)
+        presentAceRefactorResult(result, editor, requestForRun, entryOrchestrator)
     } catch (_: ProcessCanceledException) {
         return
     } catch (e: Exception) {
         if (!runCoordinator.isLatest(gen) || indicator.isCanceled) {
             return
         }
-        AceEntryOrchestrator.getInstance(project).openAceErrorView(editor, request, e)
+        val requestForRun = request.copy(skipCache = effectiveOptions.skipCache.orElse(request.skipCache))
+        AceEntryOrchestrator.getInstance(project).openAceErrorView(editor, requestForRun, e)
     }
 }
 
@@ -131,6 +135,8 @@ private fun presentAceRefactorResult(
             function = request.function,
             loading = false,
             refactorResponse = result.response,
+            clientTraceId = request.traceId,
+            skipCache = request.skipCache,
         )
     entryOrchestrator.queuePendingAceUpdate(refactoredFunction)
     entryOrchestrator.handleRefactoringResult(refactoredFunction, editor)

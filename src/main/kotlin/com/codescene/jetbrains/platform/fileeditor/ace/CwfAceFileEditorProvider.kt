@@ -13,6 +13,8 @@ data class CwfAceFileEditorProviderData(
     val aceData: AceData?,
     val functionToRefactor: FnToRefactor,
     val refactorResponse: RefactorResponse?,
+    val clientTraceId: String? = null,
+    val skipCache: Boolean = false,
 )
 
 val CWF_ACE_DATA_KEY: Key<CwfAceFileEditorProviderData> = Key.create("codescene.ace.data")

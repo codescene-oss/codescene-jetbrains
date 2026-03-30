@@ -28,6 +28,8 @@ internal suspend fun runAceRefactorJob(
                     filePath = request.filePath,
                     function = request.function,
                     loading = true,
+                    clientTraceId = request.traceId,
+                    skipCache = request.skipCache,
                 ),
             editor = editor,
         )

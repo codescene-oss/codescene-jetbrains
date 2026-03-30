@@ -11,6 +11,7 @@ import com.codescene.jetbrains.core.telemetry.resolveTelemetryInfo
 import com.codescene.jetbrains.core.util.resolveBaselineCliCacheFileName
 import com.codescene.jetbrains.core.util.resolveCliCacheFileName
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
+import com.codescene.jetbrains.platform.telemetry.StatsCollectorService
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
@@ -56,6 +57,7 @@ class CodeDeltaService(private val project: Project) : com.codescene.jetbrains.c
         val cacheParams = CacheParams(serviceProvider.cliCacheService.getCachePath())
         val (rawResult, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview, cacheParams) }
         val delta = adaptDeltaResult(rawResult)
+        StatsCollectorService.getInstance().recordAnalysis(editor.virtualFile.name, elapsedMs.toDouble())
 
         val telemetryInfo =
             ApplicationManager.getApplication().runReadAction<TelemetryInfo> {

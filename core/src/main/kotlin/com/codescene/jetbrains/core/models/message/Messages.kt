@@ -20,6 +20,8 @@ enum class PanelMessages(val value: String) {
     ACKNOWLEDGED("acknowledged"),
     OPEN_DOCS_FOR_FUNCTION("open-docs-for-function"),
     REQUEST_AND_PRESENT_REFACTORING("request-and-present-refactoring"),
+    CODE_HEALTH_DETAILS_FUNCTION_SELECTED("code-health-details-function-selected"),
+    CODE_HEALTH_DETAILS_FUNCTION_DESELECTED("code-health-details-function-deselected"),
 }
 
 enum class EditorMessages(val value: String) {

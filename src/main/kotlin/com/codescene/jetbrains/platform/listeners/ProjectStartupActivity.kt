@@ -2,12 +2,15 @@ package com.codescene.jetbrains.platform.listeners
 
 import com.codescene.jetbrains.core.contracts.ISettingsChangeListener
 import com.codescene.jetbrains.core.util.SettingsChangeAction
+import com.codescene.jetbrains.core.util.TelemetryEvents
 import com.codescene.jetbrains.core.util.resolveSettingsChangeActions
 import com.codescene.jetbrains.platform.api.AceService
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.editor.UIRefreshService
 import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.platform.telemetry.TelemetryService
+import com.codescene.jetbrains.platform.telemetry.installGlobalUncaughtErrorTelemetry
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.refreshAceUi
 import com.codescene.jetbrains.platform.util.showTelemetryNoticeNotification
@@ -17,6 +20,7 @@ import com.intellij.ide.plugins.PluginStateListener
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.util.Disposer
@@ -27,6 +31,26 @@ import kotlinx.coroutines.launch
 
 class ProjectStartupActivity : ProjectActivity {
     override suspend fun execute(project: Project) {
+        installGlobalUncaughtErrorTelemetry()
+        try {
+            runStartup(project)
+        } catch (e: Exception) {
+            if (e is ProcessCanceledException) {
+                throw e
+            }
+            val errorMessage = e.message?.takeIf { it.isNotBlank() } ?: e::class.java.name.ifBlank { e.toString() }
+            try {
+                TelemetryService.getInstance().logUsage(
+                    TelemetryEvents.ON_ACTIVATE_EXTENSION_ERROR,
+                    mapOf("errorMessage" to errorMessage),
+                )
+            } catch (_: Exception) {
+            }
+            throw e
+        }
+    }
+
+    private suspend fun runStartup(project: Project) {
         CodeSceneApplicationServiceProvider.getInstance().deviceIdStore.get()
         val disposable = project as Disposable
         val settingsStore = CodeSceneGlobalSettingsStore.getInstance()
@@ -76,6 +100,8 @@ class ProjectStartupActivity : ProjectActivity {
 
         addStateListener()
         VirtualFileManager.getInstance().addAsyncFileListener(FileChangeListener(project), disposable)
+
+        registerCodeSceneToolWindowTelemetry(project, disposable)
 
         AceService.getInstance().runPreflight(true)
     }

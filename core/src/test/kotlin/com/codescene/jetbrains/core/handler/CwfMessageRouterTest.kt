@@ -1,6 +1,8 @@
 package com.codescene.jetbrains.core.handler
 
 import com.codescene.jetbrains.core.models.CwfMessage
+import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionDeselected
+import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionSelected
 import com.codescene.jetbrains.core.models.message.EditorMessages
 import com.codescene.jetbrains.core.models.message.LifecycleMessages
 import com.codescene.jetbrains.core.models.message.PanelMessages
@@ -111,6 +113,39 @@ class CwfMessageRouterTest {
         assertNotNull(requestSlot.captured.fnToRefactor)
         assertEquals("f", requestSlot.captured.fnToRefactor?.name)
         assertEquals(1, requestSlot.captured.fn.range?.startLine)
+    }
+
+    @Test
+    fun `routes code health details selection messages with valid payloads`() {
+        val selectedPayload =
+            json.parseToJsonElement("""{"visible":true,"isRefactoringSupported":false,"nIssues":3}""")
+        val deselectedPayload = json.parseToJsonElement("""{"visible":false}""")
+        val selectedSlot = slot<CodeHealthDetailsFunctionSelected>()
+        val deselectedSlot = slot<CodeHealthDetailsFunctionDeselected>()
+
+        assertEquals(
+            true,
+            routeCwfMessage(
+                CwfMessage(PanelMessages.CODE_HEALTH_DETAILS_FUNCTION_SELECTED.value, selectedPayload),
+                handler,
+                json,
+            ),
+        )
+        assertEquals(
+            true,
+            routeCwfMessage(
+                CwfMessage(PanelMessages.CODE_HEALTH_DETAILS_FUNCTION_DESELECTED.value, deselectedPayload),
+                handler,
+                json,
+            ),
+        )
+
+        verify(exactly = 1) { handler.handleCodeHealthDetailsFunctionSelected(capture(selectedSlot)) }
+        verify(exactly = 1) { handler.handleCodeHealthDetailsFunctionDeselected(capture(deselectedSlot)) }
+        assertEquals(true, selectedSlot.captured.visible)
+        assertEquals(false, selectedSlot.captured.isRefactoringSupported)
+        assertEquals(3, selectedSlot.captured.nIssues)
+        assertEquals(false, deselectedSlot.captured.visible)
     }
 
     @Test

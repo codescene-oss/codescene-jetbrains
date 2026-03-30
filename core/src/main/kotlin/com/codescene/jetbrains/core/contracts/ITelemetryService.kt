@@ -5,4 +5,9 @@ interface ITelemetryService {
         eventName: String,
         eventData: Map<String, Any> = emptyMap(),
     )
+
+    fun logUnhandledError(
+        throwable: Throwable,
+        extraData: Map<String, Any> = emptyMap(),
+    )
 }
