@@ -1,0 +1,63 @@
+src/main/kotlin/com/codescene/jetbrains/platform/webview/handler/CwfMessageHandler.kt
+  82382c724d7c7b2b 2,19-20,26,63,72,75-76,78,98,105,113,115,117-118,125-126,151-152,159,164-166,173,182,184-185,195-196,204,207-209,222-223,230,238,240-241,243,245,248,254,256-257,262-267,274-275,277-284,286,297,299,301-302,304-305,307,310,313-319,324-325,327-334,336,338-339,359-362,381-382,385-404,407-408,411,415-416,423-424,429,433,438
+  af96c9d71a7f3dfe 303,306
+core/src/main/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouter.kt
+  82382c724d7c7b2b 2,4-5,16,25-26,29-30,34-35,38-39,42,44,46-47,50-51,54-55,57-58,62-63,66-67,70-71,74-75,78,80,82-83,86,88,90-107,110,112
+  af96c9d71a7f3dfe 6,59-61
+core/src/test/kotlin/com/codescene/jetbrains/core/handler/CwfActionLogicTest.kt
+  af96c9d71a7f3dfe 2,20,22,25-27,35-37,41-43,47,54-56,66-68,72-74,78-98,103-105,110,114-116,126-127,143
+  82382c724d7c7b2b 119-121,124-125
+core/src/test/kotlin/com/codescene/jetbrains/core/mapper/AceMapperTest.kt
+  af96c9d71a7f3dfe 2,13,16,29,34-35,40,46,51,55,60,64,67,74-76,79,81-83,89-91,94,97-99,103,109-111,114,116-118,121,123-125,128,130-132,135,137-139,141-144,159-171,173-176,182
+core/src/main/kotlin/com/codescene/jetbrains/core/models/message/CopyCodePayload.kt
+  af96c9d71a7f3dfe 1-8
+core/src/main/kotlin/com/codescene/jetbrains/core/handler/CwfActionLogic.kt
+  82382c724d7c7b2b 2,9,17,22,28,35-37,50-51,53,62-63,68-69,71-87,89-90,94-107,109-113,115-116,120-126,128-136,139
+  af96c9d71a7f3dfe 38-41,43-49,70,88,114
+core/src/main/kotlin/com/codescene/jetbrains/core/handler/ICwfActionHandler.kt
+  82382c724d7c7b2b 2-4,8,11,13,15,17,19,21,23,25,27,29,31,33,35-38
+  af96c9d71a7f3dfe 24
+core/src/main/kotlin/com/codescene/jetbrains/core/models/view/AceViewData.kt
+  af96c9d71a7f3dfe 31
+core/src/test/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouterTest.kt
+  01bdf8e1f1593b25 2,4-5,19,23-24,27,29-30,35-36,39,41-42,47-48,53-54,62,70-71,78-79,101-103,105-107,109-110,119-150,152-153,160-161,171-172,177-178,184
+  af96c9d71a7f3dfe 14-15,21,31-32,34,43-44,46,52,65,69,75,77,84,100,118,151,154-159,162-170,176,183,187
+  6679a383b83cefaf 179-182,185-186
+core/src/main/kotlin/com/codescene/jetbrains/core/mapper/AceMapper.kt
+  af96c9d71a7f3dfe 48
+core/src/test/kotlin/com/codescene/jetbrains/core/models/message/CopyCodePayloadTest.kt
+  6679a383b83cefaf 1-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "7d5e220c64de57564401ee4e9c86ff28523dc289",
+  "prompts": {
+    "6679a383b83cefaf": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a8931a39-3726-4b09-891c-41c4725e18b4",
+        "model": "default"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 43,
+      "total_deletions": 2,
+      "accepted_lines": 36,
+      "overriden_lines": 0
+    },
+    "af96c9d71a7f3dfe": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "c1ac715b-8cd0-49a9-bca3-7fa96b98e3c1",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 84,
+      "total_deletions": 13,
+      "accepted_lines": 189,
+      "overriden_lines": 0
+    }
+  }
+}
