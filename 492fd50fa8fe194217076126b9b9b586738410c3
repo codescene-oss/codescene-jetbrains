@@ -1,0 +1,47 @@
+src/main/kotlin/com/codescene/jetbrains/platform/listeners/CodeSceneDynamicPluginListener.kt
+  3e4de89eadb63878 5,16-23
+src/main/kotlin/com/codescene/jetbrains/platform/delta/PlatformDeltaCacheService.kt
+  3e4de89eadb63878 35,39-41
+src/main/kotlin/com/codescene/jetbrains/platform/telemetry/StatsCollectorService.kt
+  3e4de89eadb63878 60-68
+src/main/kotlin/com/codescene/jetbrains/platform/api/AceRefactorBackgroundProgress.kt
+  3e4de89eadb63878 99,118-119
+src/main/kotlin/com/codescene/jetbrains/platform/telemetry/GlobalUncaughtErrorTelemetry.kt
+  3e4de89eadb63878 7-8,14-15,24-30
+core/src/main/kotlin/com/codescene/jetbrains/core/telemetry/MonitorDeltaTelemetry.kt
+  3e4de89eadb63878 6-11,20,27
+src/main/kotlin/com/codescene/jetbrains/platform/api/AceService.kt
+  3e4de89eadb63878 192-202
+src/main/kotlin/com/codescene/jetbrains/platform/api/CodeReviewService.kt
+  3e4de89eadb63878 113-117
+core/src/main/kotlin/com/codescene/jetbrains/core/telemetry/UnhandledErrorTelemetry.kt
+  3e4de89eadb63878 9-14
+src/main/kotlin/com/codescene/jetbrains/platform/telemetry/TelemetryService.kt
+  3e4de89eadb63878 96
+src/main/kotlin/com/codescene/jetbrains/platform/listeners/ProjectStartupActivity.kt
+  3e4de89eadb63878 23,38-41,45
+core/src/test/kotlin/com/codescene/jetbrains/core/telemetry/MonitorDeltaTelemetryTest.kt
+  3e4de89eadb63878 75,82
+core/src/test/kotlin/com/codescene/jetbrains/core/telemetry/UnhandledErrorTelemetryTest.kt
+  3e4de89eadb63878 18,20,23-24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "492fd50fa8fe194217076126b9b9b586738410c3",
+  "prompts": {
+    "3e4de89eadb63878": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "c7e44aca-7f6a-46d1-ba77-13cec7e7c556",
+        "model": "gpt-5.4-medium"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 81,
+      "total_deletions": 33,
+      "accepted_lines": 80,
+      "overriden_lines": 0
+    }
+  }
+}
