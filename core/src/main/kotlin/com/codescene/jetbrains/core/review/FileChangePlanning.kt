@@ -29,6 +29,11 @@ sealed class FileCacheUpdate {
         val newPath: String,
     ) : FileCacheUpdate()
 
+    data class Move(
+        val oldPath: String,
+        val newPath: String,
+    ) : FileCacheUpdate()
+
     data class Delete(
         val path: String,
     ) : FileCacheUpdate()
@@ -85,7 +90,7 @@ fun planFileReviewUpdates(changes: List<FileChange>): List<FileReviewUpdate> =
             is FileChange.Move ->
                 FileReviewUpdate(
                     cancelPendingPath = change.affectedPath,
-                    cacheUpdate = FileCacheUpdate.Rename(change.oldPath, change.newPath),
+                    cacheUpdate = FileCacheUpdate.Move(change.oldPath, change.newPath),
                 )
 
             is FileChange.Delete ->
