@@ -29,6 +29,15 @@ internal class AceRefactorLaunchCoordinator(
         }
     }
 
+    fun cancelActiveRefactor() {
+        synchronized(lock) {
+            activeProgressSlot.getAndSet(null)?.indicator?.cancel()
+            activeJob?.cancel()
+            activeJob = null
+            runCoordinator.nextGeneration()
+        }
+    }
+
     fun attachRefactorProgress(
         generation: Long,
         indicator: ProgressIndicator?,

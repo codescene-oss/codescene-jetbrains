@@ -115,6 +115,10 @@ class AceService :
         }
     }
 
+    fun cancelActiveRefactor() {
+        refactorLaunchCoordinator.cancelActiveRefactor()
+    }
+
     private suspend fun refactorableFunctionsHandler(
         editor: Editor,
         getFunctions: () -> List<com.codescene.data.ace.FnToRefactor>,

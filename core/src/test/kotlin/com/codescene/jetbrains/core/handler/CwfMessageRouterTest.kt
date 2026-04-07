@@ -54,6 +54,7 @@ class CwfMessageRouterTest {
     @Test
     fun `routes simple panel actions`() {
         assertEquals(true, routeCwfMessage(CwfMessage(PanelMessages.CLOSE.value), handler, json))
+        assertEquals(true, routeCwfMessage(CwfMessage(PanelMessages.CANCEL.value), handler, json))
         assertEquals(true, routeCwfMessage(CwfMessage(PanelMessages.RETRY.value), handler, json))
         assertEquals(true, routeCwfMessage(CwfMessage(PanelMessages.COPY_CODE.value), handler, json))
         assertEquals(true, routeCwfMessage(CwfMessage(PanelMessages.APPLY.value), handler, json))
@@ -61,6 +62,7 @@ class CwfMessageRouterTest {
         assertEquals(true, routeCwfMessage(CwfMessage(PanelMessages.ACKNOWLEDGED.value), handler, json))
 
         verify(exactly = 1) { handler.handleClose() }
+        verify(exactly = 1) { handler.handleCancel() }
         verify(exactly = 1) { handler.handleRetry() }
         verify(exactly = 1) { handler.handleCopy(null) }
         verify(exactly = 1) { handler.handleApply() }

@@ -26,6 +26,7 @@ import com.codescene.jetbrains.core.util.AceEntryPoint
 import com.codescene.jetbrains.core.util.TelemetryEvents
 import com.codescene.jetbrains.core.util.findMatchingRefactorableFunction
 import com.codescene.jetbrains.platform.UiLabelsBundle
+import com.codescene.jetbrains.platform.api.AceService
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.util.AceEntryOrchestrator
@@ -191,6 +192,12 @@ class CwfMessageHandler(
      * See: **CS-5323**
      */
     override fun handleClose() {
+        closeWindow(UiLabelsBundle.message("ace"), project)
+    }
+
+    override fun handleCancel() {
+        AceService.getInstance().cancelActiveRefactor()
+        orchestrator.clearPendingAceUpdate()
         closeWindow(UiLabelsBundle.message("ace"), project)
     }
 
