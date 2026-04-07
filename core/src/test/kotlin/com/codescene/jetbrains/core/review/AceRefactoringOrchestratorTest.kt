@@ -3,19 +3,19 @@ package com.codescene.jetbrains.core.review
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.ace.RefactorResponse
 import com.codescene.data.ace.RefactoringOptions
+import com.codescene.jetbrains.core.TestLogger
 import com.codescene.jetbrains.core.models.RefactoringRequest
 import com.codescene.jetbrains.core.models.settings.AceStatus
-import com.codescene.jetbrains.core.TestLogger
 import com.codescene.jetbrains.core.util.AceEntryPoint
 import io.mockk.every
 import io.mockk.mockk
 import java.lang.reflect.InvocationTargetException
 import java.net.ConnectException
 import java.net.http.HttpTimeoutException
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
