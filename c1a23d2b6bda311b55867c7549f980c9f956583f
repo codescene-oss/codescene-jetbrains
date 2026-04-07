@@ -1,0 +1,23 @@
+core/src/test/kotlin/com/codescene/jetbrains/core/review/AceRefactoringOrchestratorTest.kt
+  431e3b5387004ecd 6,15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "c1a23d2b6bda311b55867c7549f980c9f956583f",
+  "prompts": {
+    "431e3b5387004ecd": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "5b7dd89c-9b98-45b9-8906-ae185c46f5b1",
+        "model": "default"
+      },
+      "human_author": "Martin Säfsten",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
