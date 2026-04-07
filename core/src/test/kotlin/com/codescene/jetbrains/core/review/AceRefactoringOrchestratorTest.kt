@@ -9,11 +9,13 @@ import com.codescene.jetbrains.core.models.settings.AceStatus
 import com.codescene.jetbrains.core.util.AceEntryPoint
 import io.mockk.every
 import io.mockk.mockk
+import java.lang.reflect.InvocationTargetException
 import java.net.ConnectException
 import java.net.http.HttpTimeoutException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
@@ -29,6 +31,11 @@ class AceRefactoringOrchestratorTest {
         statusChanges = mutableListOf()
         requestedRequests = mutableListOf()
         performanceRecords = mutableListOf()
+    }
+
+    @After
+    fun tearDown() {
+        Thread.interrupted()
     }
 
     private fun createRequest(): RefactoringRequest {
@@ -158,5 +165,29 @@ class AceRefactoringOrchestratorTest {
         } catch (_: RuntimeException) {
         }
         assertEquals(1, requestedRequests.size)
+    }
+
+    @Test
+    fun `runRefactor returns null without failure status when interrupted`() {
+        val orchestrator =
+            createOrchestrator(
+                executeRefactor = { _, _ -> throw InterruptedException() },
+            )
+        val result = orchestrator.runRefactor(createRequest(), mockOptions)
+        assertEquals(null, result)
+        assertTrue(statusChanges.none { it == AceStatus.ERROR || it == AceStatus.OFFLINE })
+    }
+
+    @Test
+    fun `runRefactor returns null without failure status when cause is InterruptedException`() {
+        val orchestrator =
+            createOrchestrator(
+                executeRefactor = { _, _ ->
+                    throw InvocationTargetException(InterruptedException())
+                },
+            )
+        val result = orchestrator.runRefactor(createRequest(), mockOptions)
+        assertEquals(null, result)
+        assertTrue(statusChanges.none { it == AceStatus.ERROR || it == AceStatus.OFFLINE })
     }
 }

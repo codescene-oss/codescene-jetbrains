@@ -49,6 +49,10 @@ fun routeCwfMessage(
             handler.handleClose()
         }
 
+        PanelMessages.CANCEL.value -> {
+            handler.handleCancel()
+        }
+
         PanelMessages.RETRY.value -> {
             handler.handleRetry()
         }

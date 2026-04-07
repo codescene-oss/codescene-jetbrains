@@ -36,11 +36,29 @@ class AceRefactoringOrchestrator(
             logger.debug("Refactoring ${request.function.name} took ${elapsedMs}ms.", serviceName)
             onStatusChange(resolveActivatedAceStatus(getToken()))
             result?.let { AceRefactoringResult(it, elapsedMs) }
+        } catch (_: InterruptedException) {
+            Thread.currentThread().interrupt()
+            null
         } catch (e: Exception) {
+            if (e.hasInterruptedCause()) {
+                Thread.currentThread().interrupt()
+                return null
+            }
             val newStatus = resolveAceFailureStatus(e)
             logger.warn("Problem occurred during ACE refactoring: ${e.message}")
             onStatusChange(newStatus)
             throw e
         }
     }
+}
+
+private fun Throwable.hasInterruptedCause(): Boolean {
+    var current: Throwable? = this
+    while (current != null) {
+        if (current is InterruptedException) {
+            return true
+        }
+        current = current.cause
+    }
+    return false
 }

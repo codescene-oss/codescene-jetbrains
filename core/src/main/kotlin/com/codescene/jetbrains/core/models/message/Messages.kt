@@ -13,6 +13,7 @@ enum class LoginMessages(val value: String) {
 
 enum class PanelMessages(val value: String) {
     APPLY("apply"),
+    CANCEL("cancel"),
     CLOSE("close"),
     RETRY("retry"),
     REJECT("reject"),

@@ -59,7 +59,7 @@ private fun aceRefactorBackgroundTask(
     entryOrchestrator: AceEntryOrchestrator,
     cont: CancellableContinuation<Unit>,
 ): Task.Backgroundable =
-    object : Task.Backgroundable(project, title, false) {
+    object : Task.Backgroundable(project, title, true) {
         override fun run(indicator: ProgressIndicator) {
             launchCoordinator.attachRefactorProgress(gen, indicator)
             try {
@@ -98,16 +98,24 @@ private fun runAceRefactorBlocking(
         val skipUsed = effectiveOptions.skipCache.orElse(request.skipCache)
         effectiveOptions.setSkipCache(skipUsed)
         val requestForRun = request.copy(skipCache = skipUsed)
-        val result =
-            refactoringOrchestrator.runRefactor(
-                request = requestForRun,
-                options = effectiveOptions,
+        val worker =
+            startAceRefactorWorker(
+                refactoringOrchestrator = refactoringOrchestrator,
+                requestForRun = requestForRun,
+                effectiveOptions = effectiveOptions,
             )
+        worker.thread.start()
+        if (!awaitWorkerRespectingProgress(worker, gen, indicator, runCoordinator)) {
+            return
+        }
 
         if (!runCoordinator.isLatest(gen) || indicator.isCanceled) {
             return
         }
 
+        worker.error.get()?.let { throw it }
+
+        val result = worker.result.get()
         presentAceRefactorResult(result, editor, requestForRun, entryOrchestrator)
     } catch (_: ProcessCanceledException) {
         return
