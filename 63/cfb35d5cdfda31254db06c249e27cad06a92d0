@@ -1,0 +1,77 @@
+core/src/main/kotlin/com/codescene/jetbrains/core/util/AutoRefactorConfigUtils.kt
+  cb580130f8625a9c 29-39,44-47
+  be14a6ef91464d12 40-43
+src/main/kotlin/com/codescene/jetbrains/platform/util/DocUtils.kt
+  cb580130f8625a9c 8,36-41,43
+core/src/test/kotlin/com/codescene/jetbrains/core/util/AutoRefactorConfigUtilsTest.kt
+  cb580130f8625a9c 93-107,122-151
+  be14a6ef91464d12 109-121
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/OpenDocs.kt
+  cb580130f8625a9c 3,8,12-13,16,18,24,27,55,57,61-64,69-73,78-90,103-119,122,126-129,139,147
+  be14a6ef91464d12 20,91-102
+src/main/kotlin/com/codescene/jetbrains/platform/webview/handler/CwfMessageHandler.kt
+  be14a6ef91464d12 19,21,251,256-260,273-294
+  cb580130f8625a9c 47,255,261,264,268,423-429
+core/src/test/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouterTest.kt
+  be14a6ef91464d12 4,71-92,96-106,221-227,231-233
+core/src/main/kotlin/com/codescene/jetbrains/core/models/message/AceAcknowledgedPayload.kt
+  be14a6ef91464d12 1-14
+core/src/main/kotlin/com/codescene/jetbrains/core/handler/ICwfActionHandler.kt
+  be14a6ef91464d12 3,33
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/GetUserData.kt
+  cb580130f8625a9c 3,11,47-49
+core/src/test/kotlin/com/codescene/jetbrains/core/models/message/AceAcknowledgedPayloadTest.kt
+  be14a6ef91464d12 1-53
+core/src/main/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouter.kt
+  be14a6ef91464d12 4,14,78-87
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/CwfViewRefreshMessages.kt
+  cb580130f8625a9c 8,16-17,21-24
+src/main/kotlin/com/codescene/jetbrains/platform/fileeditor/documentation/CwfDocsFileEditorProvider.kt
+  cb580130f8625a9c 3,13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "63cfb35d5cdfda31254db06c249e27cad06a92d0",
+  "prompts": {
+    "be14a6ef91464d12": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "275f9519-4edc-457c-9b9f-44f6dd3cc44a",
+        "model": "default"
+      },
+      "human_author": "Martin Säfsten",
+      "messages": [],
+      "total_additions": 64,
+      "total_deletions": 0,
+      "accepted_lines": 185,
+      "overriden_lines": 0
+    },
+    "c5fa01f5a2f90d19": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "58e474fc-c992-4ec8-b8ad-98bafc01b3e0",
+        "model": "default"
+      },
+      "human_author": "Martin Säfsten",
+      "messages": [],
+      "total_additions": 54,
+      "total_deletions": 40,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "cb580130f8625a9c": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "1040ea57-74c2-400e-8041-7388f10503e7",
+        "model": "default"
+      },
+      "human_author": "Martin Säfsten",
+      "messages": [],
+      "total_additions": 177,
+      "total_deletions": 21,
+      "accepted_lines": 150,
+      "overriden_lines": 0
+    }
+  }
+}
