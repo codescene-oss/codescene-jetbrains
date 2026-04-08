@@ -1,4 +1,4 @@
-This project is a Jetbrains extension using intelliJPlatform, written i Kotlin. Write code accordingly.
+This project is a Jetbrains extension using intelliJPlatform, written in Kotlin. Write code accordingly.
 
 Business and core logic should be implemented in the `core` sub-project, while any IntelliJ Platform dependent code belongs in `com.codescene.jetbrains.platform`. Keep code in the platform project to a minimum.
 

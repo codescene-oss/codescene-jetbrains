@@ -11,7 +11,7 @@ install-cli: check-bb
 	@$(BB) -f .github/install-cli.clj
 
 check-bb:
-	@$(BB) --version
+	@$(BB) --version > /dev/null 2>&1
 
 KT_FILES := $(wildcard src/main/kotlin/**/*.kt) \
             $(wildcard src/test/kotlin/**/*.kt) \
@@ -20,25 +20,25 @@ KT_FILES := $(wildcard src/main/kotlin/**/*.kt) \
 GRADLE_FILES := $(wildcard build.gradle.kts) $(wildcard core/build.gradle.kts) $(wildcard settings.gradle.kts) $(wildcard gradle.properties) $(wildcard gradle/libs.versions.toml)
 
 .build-timestamp: check-bb $(KT_FILES) $(GRADLE_FILES)
-	@$(BB) -f .github/run-quiet.clj build.log $(GRADLEW) --rerun-tasks --warn buildPlugin
+	@$(BB) -f .github/run-quiet.clj build.log "gradle buildPlugin" $(GRADLEW) --rerun-tasks --warn buildPlugin
 	@$(BB) -e "(println (str \"Build completed at \" (java.time.Instant/now)))" > .build-timestamp
 
 build: .build-timestamp
 
-test: check-bb
-	@$(BB) -f .github/run-quiet.clj test.log $(GRADLEW) test
+test: check-bb build
+	@$(BB) -f .github/run-quiet.clj test.log "gradle test" $(GRADLEW) test
 
 format: check-bb
-	@$(BB) -f .github/run-quiet.clj format.log $(GRADLEW) ktlintFormat
-	@$(BB) -f .github/run-quiet.clj format.log $(GRADLEW) core:ktlintFormat
+	@$(BB) -f .github/run-quiet.clj format.log "gradle ktlintFormat" $(GRADLEW) ktlintFormat
+	@$(BB) -f .github/run-quiet.clj format.log "gradle core:ktlintFormat" $(GRADLEW) core:ktlintFormat
 
 format-check: check-bb
-	@$(BB) -f .github/run-quiet.clj format-check.log $(GRADLEW) --console=plain -PktlintFailOnError=true ktlintCheck
+	@$(BB) -f .github/run-quiet.clj format-check.log "gradle ktlintCheck" $(GRADLEW) --console=plain -PktlintFailOnError=true ktlintCheck
 
 delta: check-bb install-cli
-	@$(BB) -f .github/run-quiet.clj delta.log cs delta master --error-on-warnings
+	@$(BB) -f .github/run-quiet.clj delta.log "cs delta" cs delta master --error-on-warnings
 
 coverage-summary: check-bb
 	@$(BB) -f .github/coverage-summary.clj
 
-iter: format-check delta build test 
+iter: format-check delta test
