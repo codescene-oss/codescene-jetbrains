@@ -106,6 +106,20 @@ class AutoRefactorConfigUtilsTest {
     }
 
     @Test
+    fun `autoRefactorConfigForDocsView hides auto refactor for code health monitor doc`() {
+        val settings =
+            CodeSceneGlobalSettings(enableAutoRefactor = true, aceAuthToken = "tok")
+        val result =
+            autoRefactorConfigForDocsView(
+                settings,
+                "docs_code_health_monitor",
+                refactorTargetPresent = true,
+            )
+        assertFalse(result.visible)
+        assertTrue(result.disabled)
+    }
+
+    @Test
     fun `autoRefactorConfigForDocsView hides auto refactor when code smell has no refactor target`() {
         val settings =
             CodeSceneGlobalSettings(enableAutoRefactor = true, aceAuthToken = "tok")

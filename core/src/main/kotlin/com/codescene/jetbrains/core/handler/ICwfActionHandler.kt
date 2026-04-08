@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.core.handler
 
+import com.codescene.jetbrains.core.models.message.AceAcknowledgedPayload
 import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionDeselected
 import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionSelected
 import com.codescene.jetbrains.core.models.message.GotoFunctionLocation
@@ -29,7 +30,7 @@ interface ICwfActionHandler {
 
     fun handleReject()
 
-    fun handleAcknowledged()
+    fun handleAcknowledged(payload: AceAcknowledgedPayload? = null)
 
     fun handleOpenDocs(docsForFunction: OpenDocsForFunction)
 

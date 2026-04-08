@@ -17,6 +17,7 @@ import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.fileeditor.documentation.CWF_DOCS_DATA_KEY
 import com.codescene.jetbrains.platform.fileeditor.documentation.CWF_DOCS_FN_TO_REFACTOR_KEY
 import com.codescene.jetbrains.platform.util.FileUtils
+import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.getSelectedTextEditor
 import com.codescene.jetbrains.platform.webview.WebViewInitializer
 import com.codescene.jetbrains.platform.webview.handler.CwfMessageHandler
@@ -87,7 +88,18 @@ internal fun resolveFnToRefactorForDocumentation(
             ?: run {
                 val virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath)
                 val document = virtualFile?.let { FileDocumentManager.getInstance().getDocument(it) }
-                document?.text ?: services.fileSystem.readFile(filePath) ?: ""
+                document?.text
+                    ?: runCatching { services.fileSystem.readFile(filePath) }
+                        .getOrElse { t ->
+                            val kind = t.javaClass.simpleName
+                            val detail = t.message
+                            Log.warn(
+                                "Failed to read file for docs refactor resolution: $filePath ($kind: $detail)",
+                                "resolveFnToRefactorForDocumentation",
+                            )
+                            null
+                        }
+                    ?: ""
             }
     val candidates = services.aceRefactorableFunctionsCache.get(filePath, code)
     val fn = fileData.fn

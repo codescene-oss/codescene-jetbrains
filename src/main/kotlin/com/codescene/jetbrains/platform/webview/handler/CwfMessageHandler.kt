@@ -18,6 +18,7 @@ import com.codescene.jetbrains.core.models.DocsEntryPoint
 import com.codescene.jetbrains.core.models.View
 import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionDeselected
 import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionSelected
+import com.codescene.jetbrains.core.models.message.AceAcknowledgedPayload
 import com.codescene.jetbrains.core.models.message.GotoFunctionLocation
 import com.codescene.jetbrains.core.models.message.OpenDocsForFunction
 import com.codescene.jetbrains.core.models.message.RequestAndPresentRefactoring
@@ -42,8 +43,6 @@ import com.codescene.jetbrains.platform.webview.util.aceAcknowledgeRefreshMessag
 import com.codescene.jetbrains.platform.webview.util.docsRefreshMessage
 import com.codescene.jetbrains.platform.webview.util.getAceAcknowledgeUserData
 import com.codescene.jetbrains.platform.webview.util.getAceUserData
-import com.codescene.jetbrains.platform.webview.util.getDocsFnToRefactor
-import com.codescene.jetbrains.platform.webview.util.getDocsUserData
 import com.codescene.jetbrains.platform.webview.util.openDocs
 import com.codescene.jetbrains.platform.webview.util.resolveFnToRefactorForDocumentation
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
@@ -249,21 +248,16 @@ class CwfMessageHandler(
         return fnToRefactor
     }
 
-    override fun handleAcknowledged() {
+    override fun handleAcknowledged(payload: AceAcknowledgedPayload?) {
         services.telemetryService.logUsage(TelemetryEvents.ACE_INFO_ACKNOWLEDGED)
         services.settingsProvider.updateAceAcknowledged(true)
 
         val ackData = getAceAcknowledgeUserData(project)
-        val fileData: FileMetaType?
-        val fnToRefactor: FnToRefactor?
-        if (ackData != null) {
-            fileData = ackData.aceAcknowledgeData.fileData
-            fnToRefactor = ackData.fnToRefactor
-        } else {
-            val docsData = getDocsUserData(project)
-            fileData = docsData?.fileData
-            fnToRefactor = getDocsFnToRefactor(project)
-        }
+        val tabFileData = ackData?.aceAcknowledgeData?.fileData
+        val tabFnToRefactor = ackData?.fnToRefactor
+        val fromPayload = resolveAcknowledgedRefactorTarget(payload)
+        val fileData = tabFileData ?: fromPayload?.first
+        val fnToRefactor = if (tabFileData != null) tabFnToRefactor else fromPayload?.second
 
         closeWindow(UiLabelsBundle.message("aceAcknowledge"), project)
 
@@ -274,6 +268,30 @@ class CwfMessageHandler(
                 fnToRefactor,
             )
         }
+    }
+
+    private fun resolveAcknowledgedRefactorTarget(
+        payload: AceAcknowledgedPayload?,
+    ): Pair<FileMetaType, FnToRefactor?>? {
+        payload ?: return null
+        val filePath = payload.filePath ?: payload.fileName ?: return null
+        val baseFn = payload.fn ?: return null
+        val fnWithRange =
+            when {
+                baseFn.range != null -> baseFn
+                payload.range != null -> baseFn.copy(range = payload.range)
+                else -> return null
+            }
+        if (fnWithRange.name.isNullOrBlank()) return null
+        val request =
+            RequestAndPresentRefactoring(
+                fileName = filePath,
+                fn = fnWithRange,
+                filePath = filePath,
+                range = payload.range,
+            )
+        val resolvedFn = resolveRequestedFunctionToRefactor(request, filePath)
+        return FileMetaType(fn = fnWithRange, fileName = filePath) to resolvedFn
     }
 
     override fun handleShowDiff() {

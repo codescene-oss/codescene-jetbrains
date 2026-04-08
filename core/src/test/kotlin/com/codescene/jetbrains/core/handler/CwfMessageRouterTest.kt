@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.core.handler
 
 import com.codescene.jetbrains.core.models.CwfMessage
+import com.codescene.jetbrains.core.models.message.AceAcknowledgedPayload
 import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionDeselected
 import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionSelected
 import com.codescene.jetbrains.core.models.message.EditorMessages
@@ -67,7 +68,28 @@ class CwfMessageRouterTest {
         verify(exactly = 1) { handler.handleCopy(null) }
         verify(exactly = 1) { handler.handleApply() }
         verify(exactly = 1) { handler.handleReject() }
-        verify(exactly = 1) { handler.handleAcknowledged() }
+        verify(exactly = 1) { handler.handleAcknowledged(null) }
+    }
+
+    @Test
+    fun `routes acknowledged with payload`() {
+        val payload =
+            json.parseToJsonElement(
+                """
+                {
+                  "source":"docs",
+                  "filePath":"/tmp/Foo.cs",
+                  "fn":{"name":"Bar","range":{"startLine":12,"startColumn":9,"endLine":43,"endColumn":10}},
+                  "range":{"startLine":12,"startColumn":9,"endLine":43,"endColumn":10}
+                }
+                """.trimIndent(),
+            )
+        val slot = slot<AceAcknowledgedPayload>()
+        assertEquals(true, routeCwfMessage(CwfMessage(PanelMessages.ACKNOWLEDGED.value, payload), handler, json))
+        verify(exactly = 1) { handler.handleAcknowledged(capture(slot)) }
+        assertEquals("docs", slot.captured.source)
+        assertEquals("/tmp/Foo.cs", slot.captured.filePath)
+        assertEquals("Bar", slot.captured.fn?.name)
     }
 
     @Test

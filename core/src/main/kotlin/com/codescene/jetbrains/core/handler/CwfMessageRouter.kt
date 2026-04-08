@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.core.handler
 
 import com.codescene.jetbrains.core.models.CwfMessage
+import com.codescene.jetbrains.core.models.message.AceAcknowledgedPayload
 import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionDeselected
 import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionSelected
 import com.codescene.jetbrains.core.models.message.CopyCodePayload
@@ -74,7 +75,13 @@ fun routeCwfMessage(
         }
 
         PanelMessages.ACKNOWLEDGED.value -> {
-            handler.handleAcknowledged()
+            val ackPayload =
+                message.payload?.let { el ->
+                    runCatching {
+                        json.decodeFromJsonElement(AceAcknowledgedPayload.serializer(), el)
+                    }.getOrNull()
+                }
+            handler.handleAcknowledged(ackPayload)
         }
 
         PanelMessages.OPEN_DOCS_FOR_FUNCTION.value -> {

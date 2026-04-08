@@ -37,10 +37,10 @@ fun autoRefactorConfigForDocsView(
     refactorTargetPresent: Boolean,
 ): AutoRefactorConfig {
     val base = toAutoRefactorConfig(settings)
-    if (docType == DOCS_GENERAL_CODE_HEALTH) {
-        return base.copy(visible = false, disabled = true)
-    }
-    if (docType.startsWith(DOCS_ISSUES_PREFIX) && !refactorTargetPresent) {
+    if (docType == DOCS_GENERAL_CODE_HEALTH ||
+        !docType.startsWith(DOCS_ISSUES_PREFIX) ||
+        !refactorTargetPresent
+    ) {
         return base.copy(visible = false, disabled = true)
     }
     return base
