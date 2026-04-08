@@ -13,8 +13,9 @@ fun handleOpenGeneralDocs(
     project: Project,
     source: String,
     docsEntryPoint: DocsEntryPoint,
+    filePath: String? = null,
 ) {
-    val docsData = resolveGeneralDocsData(source) ?: return
+    val docsData = resolveGeneralDocsData(source, filePath.orEmpty()) ?: return
     openDocs(docsData, project, docsEntryPoint)
 }
 

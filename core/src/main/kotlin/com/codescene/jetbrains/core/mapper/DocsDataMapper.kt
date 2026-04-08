@@ -40,15 +40,21 @@ fun toCodeSmellDocsData(
             ),
     )
 
-fun toGeneralDocsData(docType: String): DocsData =
+fun toGeneralDocsData(
+    docType: String,
+    filePath: String = "",
+): DocsData =
     DocsData(
         docType = docType,
-        fileData = FileMetaType(fileName = ""),
+        fileData = FileMetaType(fileName = filePath),
     )
 
-fun resolveGeneralDocsData(source: String): DocsData? {
+fun resolveGeneralDocsData(
+    source: String,
+    filePath: String = "",
+): DocsData? {
     val docType = nameDocMap[source] ?: return null
-    return toGeneralDocsData(docType)
+    return toGeneralDocsData(docType, filePath)
 }
 
 fun resolveCodeSmellDocsData(
