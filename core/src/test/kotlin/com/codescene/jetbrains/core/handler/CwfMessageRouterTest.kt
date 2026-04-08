@@ -218,7 +218,18 @@ class CwfMessageRouterTest {
         verify(exactly = 1) { h.handleCopy(null) }
     }
 
+    @Test
+    fun `handleAcknowledged default parameter is used when argument omitted`() {
+        val h = mockk<ICwfActionHandler>(relaxed = true)
+        invokeHandleAcknowledgedWithDefault(h)
+        verify(exactly = 1) { h.handleAcknowledged(null) }
+    }
+
     private fun invokeHandleCopyWithDefault(handler: ICwfActionHandler) {
         handler.handleCopy()
+    }
+
+    private fun invokeHandleAcknowledgedWithDefault(handler: ICwfActionHandler) {
+        handler.handleAcknowledged()
     }
 }
