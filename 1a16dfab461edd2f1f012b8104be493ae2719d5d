@@ -1,0 +1,50 @@
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/OpenDocs.kt
+  cb580130f8625a9c 3,8,12-13,16,18,23,26,54,56,60-63,68-72,77-107,110,114-117,127,135
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/CwfViewRefreshMessages.kt
+  cb580130f8625a9c 8,16-17,21-24
+core/src/test/kotlin/com/codescene/jetbrains/core/util/AutoRefactorConfigUtilsTest.kt
+  cb580130f8625a9c 93-137
+src/main/kotlin/com/codescene/jetbrains/platform/util/DocUtils.kt
+  cb580130f8625a9c 8,36-41,43
+src/main/kotlin/com/codescene/jetbrains/platform/fileeditor/documentation/CwfDocsFileEditorProvider.kt
+  cb580130f8625a9c 3,13
+src/main/kotlin/com/codescene/jetbrains/platform/webview/handler/CwfMessageHandler.kt
+  cb580130f8625a9c 45-46,48,256-262,264-267,270,274,405-411
+core/src/main/kotlin/com/codescene/jetbrains/core/util/AutoRefactorConfigUtils.kt
+  cb580130f8625a9c 29-47
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/GetUserData.kt
+  cb580130f8625a9c 3,11,47-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "1a16dfab461edd2f1f012b8104be493ae2719d5d",
+  "prompts": {
+    "c5fa01f5a2f90d19": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "58e474fc-c992-4ec8-b8ad-98bafc01b3e0",
+        "model": "default"
+      },
+      "human_author": "Martin Säfsten",
+      "messages": [],
+      "total_additions": 54,
+      "total_deletions": 40,
+      "accepted_lines": 0,
+      "overriden_lines": 6
+    },
+    "cb580130f8625a9c": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "1040ea57-74c2-400e-8041-7388f10503e7",
+        "model": "default"
+      },
+      "human_author": "Martin Säfsten",
+      "messages": [],
+      "total_additions": 177,
+      "total_deletions": 21,
+      "accepted_lines": 168,
+      "overriden_lines": 1
+    }
+  }
+}
