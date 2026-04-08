@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.core.handler
 
 import com.codescene.jetbrains.core.models.CwfMessage
+import com.codescene.jetbrains.core.models.message.AceAcknowledgedPayload
 import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionDeselected
 import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionSelected
 import com.codescene.jetbrains.core.models.message.CopyCodePayload
@@ -10,6 +11,7 @@ import com.codescene.jetbrains.core.models.message.LifecycleMessages
 import com.codescene.jetbrains.core.models.message.OpenDocsForFunction
 import com.codescene.jetbrains.core.models.message.PanelMessages
 import com.codescene.jetbrains.core.models.message.RequestAndPresentRefactoring
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
@@ -74,7 +76,17 @@ fun routeCwfMessage(
         }
 
         PanelMessages.ACKNOWLEDGED.value -> {
-            handler.handleAcknowledged()
+            val ackPayload =
+                when (val p = message.payload) {
+                    null -> null
+                    else ->
+                        try {
+                            json.decodeFromJsonElement(AceAcknowledgedPayload.serializer(), p)
+                        } catch (_: SerializationException) {
+                            return false
+                        }
+                }
+            handler.handleAcknowledged(ackPayload)
         }
 
         PanelMessages.OPEN_DOCS_FOR_FUNCTION.value -> {

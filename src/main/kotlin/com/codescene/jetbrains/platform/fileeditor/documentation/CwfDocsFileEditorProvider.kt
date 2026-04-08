@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.platform.fileeditor.documentation
 
+import com.codescene.data.ace.FnToRefactor
 import com.codescene.jetbrains.core.models.view.DocsData
 import com.codescene.jetbrains.platform.fileeditor.BaseCwfFileEditorProvider
 import com.intellij.openapi.fileEditor.FileEditor
@@ -8,6 +9,8 @@ import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.VirtualFile
 
 val CWF_DOCS_DATA_KEY: Key<DocsData> = Key.create("codescene.documentation.data")
+
+val CWF_DOCS_FN_TO_REFACTOR_KEY: Key<FnToRefactor?> = Key.create("codescene.documentation.fnToRefactor")
 
 /**
  * The Docs view hosts CodeScene's code smell documentation files.

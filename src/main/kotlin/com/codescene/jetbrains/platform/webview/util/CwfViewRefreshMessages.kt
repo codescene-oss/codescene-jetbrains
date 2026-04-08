@@ -5,6 +5,7 @@ import com.codescene.jetbrains.core.mapper.AceAcknowledgementMapper
 import com.codescene.jetbrains.core.mapper.DocumentationMapper
 import com.codescene.jetbrains.core.models.CwfData
 import com.codescene.jetbrains.core.models.view.AceAcknowledgeData
+import com.codescene.jetbrains.core.util.autoRefactorConfigForDocsView
 import com.codescene.jetbrains.core.util.parseMessage
 import com.codescene.jetbrains.core.util.toAutoRefactorConfig
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
@@ -12,11 +13,15 @@ import com.intellij.openapi.project.Project
 
 fun docsRefreshMessage(project: Project): String? {
     val raw = getDocsUserData(project) ?: return null
+    val settings = CodeSceneApplicationServiceProvider.getInstance().settingsProvider.currentState()
+    val refactorTargetPresent = getDocsFnToRefactor(project) != null
     val enriched =
         raw.copy(
             autoRefactor =
-                toAutoRefactorConfig(
-                    CodeSceneApplicationServiceProvider.getInstance().settingsProvider.currentState(),
+                autoRefactorConfigForDocsView(
+                    settings,
+                    raw.docType,
+                    refactorTargetPresent,
                 ),
         )
     return DocumentationMapper().toMessage(enriched, devmode = RuntimeFlags.isDevMode)

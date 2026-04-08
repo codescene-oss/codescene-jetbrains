@@ -26,3 +26,22 @@ fun toAutoRefactorConfig(settings: CodeSceneGlobalSettings): AutoRefactorConfig 
             ),
     )
 }
+
+private const val DOCS_GENERAL_CODE_HEALTH = "docs_general_code_health"
+
+private const val DOCS_ISSUES_PREFIX = "docs_issues_"
+
+fun autoRefactorConfigForDocsView(
+    settings: CodeSceneGlobalSettings,
+    docType: String,
+    refactorTargetPresent: Boolean,
+): AutoRefactorConfig {
+    val base = toAutoRefactorConfig(settings)
+    if (docType == DOCS_GENERAL_CODE_HEALTH ||
+        !docType.startsWith(DOCS_ISSUES_PREFIX) ||
+        !refactorTargetPresent
+    ) {
+        return base.copy(visible = false, disabled = true)
+    }
+    return base
+}

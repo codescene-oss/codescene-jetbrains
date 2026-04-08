@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.platform.webview.util
 
+import com.codescene.data.ace.FnToRefactor
 import com.codescene.jetbrains.core.models.view.DocsData
 import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.fileeditor.ace.CWF_ACE_DATA_KEY
@@ -7,6 +8,7 @@ import com.codescene.jetbrains.platform.fileeditor.ace.CwfAceFileEditorProviderD
 import com.codescene.jetbrains.platform.fileeditor.ace.acknowledge.CWF_ACE_ACKNOWLEDGE_DATA_KEY
 import com.codescene.jetbrains.platform.fileeditor.ace.acknowledge.CwfAceAcknowledgeEditorProviderData
 import com.codescene.jetbrains.platform.fileeditor.documentation.CWF_DOCS_DATA_KEY
+import com.codescene.jetbrains.platform.fileeditor.documentation.CWF_DOCS_FN_TO_REFACTOR_KEY
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
@@ -41,6 +43,9 @@ fun getAceUserData(project: Project): CwfAceFileEditorProviderData? =
 
 fun getDocsUserData(project: Project): DocsData? =
     getUserDataForTab(project, UiLabelsBundle.message("codeSmellDocs"), CWF_DOCS_DATA_KEY)
+
+fun getDocsFnToRefactor(project: Project): FnToRefactor? =
+    getUserDataForTab(project, UiLabelsBundle.message("codeSmellDocs"), CWF_DOCS_FN_TO_REFACTOR_KEY)
 
 /**
  * Retrieves the ACE user data stored in the custom ACE acknowledge editor tab.
