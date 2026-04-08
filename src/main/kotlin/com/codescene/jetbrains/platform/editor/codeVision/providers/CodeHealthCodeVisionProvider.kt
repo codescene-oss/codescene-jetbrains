@@ -61,7 +61,12 @@ internal class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
         codeSmell: CodeVisionCodeSmell,
     ) {
         editor.project?.let {
-            handleOpenGeneralDocs(it, GENERAL_CODE_HEALTH, DocsEntryPoint.CODE_VISION)
+            handleOpenGeneralDocs(
+                it,
+                GENERAL_CODE_HEALTH,
+                DocsEntryPoint.CODE_VISION,
+                editor.virtualFile?.path,
+            )
         }
     }
 }

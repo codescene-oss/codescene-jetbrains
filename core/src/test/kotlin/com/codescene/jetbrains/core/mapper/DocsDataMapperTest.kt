@@ -45,6 +45,13 @@ class DocsDataMapperTest {
     }
 
     @Test
+    fun `toGeneralDocsData maps filePath when provided`() {
+        val result = toGeneralDocsData("docs_general_code_health", "src/Foo.kt")
+        assertEquals("docs_general_code_health", result.docType)
+        assertEquals("src/Foo.kt", result.fileData.fileName)
+    }
+
+    @Test
     fun `toGeneralDocsData has no function data`() {
         val result = toGeneralDocsData("type")
         assertEquals(null, result.fileData.fn)
@@ -71,6 +78,14 @@ class DocsDataMapperTest {
 
         assertNotNull(result)
         assertEquals("docs_general_code_health", result?.docType)
+    }
+
+    @Test
+    fun `resolveGeneralDocsData passes filePath into fileData`() {
+        val result = resolveGeneralDocsData(Constants.GENERAL_CODE_HEALTH, "x.kt")
+
+        assertNotNull(result)
+        assertEquals("x.kt", result?.fileData?.fileName)
     }
 
     @Test
