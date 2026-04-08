@@ -4,7 +4,6 @@ import com.codescene.jetbrains.core.telemetry.buildSettingsVisibilityTelemetryDa
 import com.codescene.jetbrains.core.util.Constants.CODESCENE
 import com.codescene.jetbrains.core.util.TelemetryEvents
 import com.codescene.jetbrains.platform.settings.tab.AboutTab
-import com.codescene.jetbrains.platform.settings.tab.GeneralTab
 import com.codescene.jetbrains.platform.settings.tab.SettingsTab
 import com.codescene.jetbrains.platform.telemetry.TelemetryService
 import com.intellij.openapi.options.Configurable
@@ -16,11 +15,9 @@ import javax.swing.JComponent
 class CodeSceneSettings : Composite, Configurable {
     private val settingsTab = SettingsTab()
     private val aboutTab = AboutTab()
-    private val generalTab = GeneralTab()
 
     private val childConfigurables: Array<Configurable> =
         arrayOf(
-            generalTab,
             settingsTab,
             aboutTab,
         )
@@ -49,11 +46,10 @@ class CodeSceneSettings : Composite, Configurable {
             }
         }
 
-    override fun isModified() = settingsTab.isModified || aboutTab.isModified
+    override fun isModified() = settingsTab.isModified
 
     override fun apply() {
         if (settingsTab.isModified) settingsTab.apply()
-        if (aboutTab.isModified) aboutTab.apply()
     }
 
     override fun reset() {
