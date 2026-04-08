@@ -1,0 +1,27 @@
+src/main/kotlin/com/codescene/jetbrains/platform/settings/CodeSceneSettings.kt
+  1fa23549d3e3813b 49
+src/main/kotlin/com/codescene/jetbrains/platform/settings/tab/TelemetryStatisticsUi.kt
+  1fa23549d3e3813b 1-47
+src/main/kotlin/com/codescene/jetbrains/platform/settings/tab/SettingsTab.kt
+  1fa23549d3e3813b 4-5,66-82,90-95
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "6ccea78622b7e990cfa8784826c5f12442971060",
+  "prompts": {
+    "1fa23549d3e3813b": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "e09d7cec-4f9b-4fcd-8f8f-8b1c26b16b17",
+        "model": "default"
+      },
+      "human_author": "Martin Säfsten",
+      "messages": [],
+      "total_additions": 73,
+      "total_deletions": 385,
+      "accepted_lines": 73,
+      "overriden_lines": 0
+    }
+  }
+}
