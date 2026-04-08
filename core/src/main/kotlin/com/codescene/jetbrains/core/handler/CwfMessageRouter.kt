@@ -11,6 +11,7 @@ import com.codescene.jetbrains.core.models.message.LifecycleMessages
 import com.codescene.jetbrains.core.models.message.OpenDocsForFunction
 import com.codescene.jetbrains.core.models.message.PanelMessages
 import com.codescene.jetbrains.core.models.message.RequestAndPresentRefactoring
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
@@ -76,10 +77,14 @@ fun routeCwfMessage(
 
         PanelMessages.ACKNOWLEDGED.value -> {
             val ackPayload =
-                message.payload?.let { el ->
-                    runCatching {
-                        json.decodeFromJsonElement(AceAcknowledgedPayload.serializer(), el)
-                    }.getOrNull()
+                when (val p = message.payload) {
+                    null -> null
+                    else ->
+                        try {
+                            json.decodeFromJsonElement(AceAcknowledgedPayload.serializer(), p)
+                        } catch (_: SerializationException) {
+                            return false
+                        }
                 }
             handler.handleAcknowledged(ackPayload)
         }

@@ -93,6 +93,18 @@ class CwfMessageRouterTest {
     }
 
     @Test
+    fun `returns false for acknowledged with malformed payload`() {
+        val ok =
+            routeCwfMessage(
+                CwfMessage(PanelMessages.ACKNOWLEDGED.value, JsonPrimitive("not-an-object")),
+                handler,
+                json,
+            )
+        assertEquals(false, ok)
+        verify(exactly = 0) { handler.handleAcknowledged(any()) }
+    }
+
+    @Test
     fun `routes goto function location with valid payload`() {
         val payload = json.parseToJsonElement("""{"fileName":"a.kt","fn":null}""")
         val ok = routeCwfMessage(CwfMessage(EditorMessages.GOTO_FUNCTION_LOCATION.value, payload), handler, json)
