@@ -1,0 +1,29 @@
+core/src/main/kotlin/com/codescene/jetbrains/core/mapper/DocsDataMapper.kt
+  16d476c5021f56f7 43-45,49,52-54,57
+src/main/kotlin/com/codescene/jetbrains/platform/util/DocUtils.kt
+  16d476c5021f56f7 16,18
+core/src/test/kotlin/com/codescene/jetbrains/core/mapper/DocsDataMapperTest.kt
+  16d476c5021f56f7 48-53,84-90
+src/main/kotlin/com/codescene/jetbrains/platform/editor/codeVision/providers/CodeHealthCodeVisionProvider.kt
+  16d476c5021f56f7 64-69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "b5e4247aebf055d1a1eb472ede26f987f6149853",
+  "prompts": {
+    "16d476c5021f56f7": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "c0616264-0ccf-4ecc-9715-248594850280",
+        "model": "default"
+      },
+      "human_author": "Martin Säfsten",
+      "messages": [],
+      "total_additions": 35,
+      "total_deletions": 8,
+      "accepted_lines": 31,
+      "overriden_lines": 0
+    }
+  }
+}
