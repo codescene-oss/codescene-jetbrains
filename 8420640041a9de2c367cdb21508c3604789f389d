@@ -1,0 +1,37 @@
+core/src/main/kotlin/com/codescene/jetbrains/core/models/message/AceAcknowledgedPayload.kt
+  be14a6ef91464d12 1-14
+core/src/main/kotlin/com/codescene/jetbrains/core/util/AutoRefactorConfigUtils.kt
+  be14a6ef91464d12 40-43
+src/main/kotlin/com/codescene/jetbrains/platform/webview/handler/CwfMessageHandler.kt
+  be14a6ef91464d12 21,251,256-260,273-294
+core/src/main/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouter.kt
+  be14a6ef91464d12 4,78-84
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/OpenDocs.kt
+  be14a6ef91464d12 20,91-102
+core/src/test/kotlin/com/codescene/jetbrains/core/util/AutoRefactorConfigUtilsTest.kt
+  be14a6ef91464d12 109-121
+core/src/main/kotlin/com/codescene/jetbrains/core/handler/ICwfActionHandler.kt
+  be14a6ef91464d12 3,33
+core/src/test/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouterTest.kt
+  be14a6ef91464d12 4,71-92
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "8420640041a9de2c367cdb21508c3604789f389d",
+  "prompts": {
+    "be14a6ef91464d12": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "275f9519-4edc-457c-9b9f-44f6dd3cc44a",
+        "model": "default"
+      },
+      "human_author": "Martin Säfsten",
+      "messages": [],
+      "total_additions": 151,
+      "total_deletions": 63,
+      "accepted_lines": 110,
+      "overriden_lines": 0
+    }
+  }
+}
