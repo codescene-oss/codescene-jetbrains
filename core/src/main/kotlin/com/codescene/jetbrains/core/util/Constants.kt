@@ -70,6 +70,8 @@ object Constants {
             "https://codescene.com",
             "https://blog.ploeh.dk/2018/08/27/on-constructor-over-injection/",
             "https://supporthub.codescene.com",
+            "https://helpcenter.codescene.com",
+            "https://forms.clickup.com"
         )
     const val DELTA_ANALYSIS_JOB = "deltaAnalysis"
     const val AUTO_REFACTOR_JOB = "autoRefactor"
