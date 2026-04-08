@@ -1,6 +1,8 @@
 package com.codescene.jetbrains.platform.settings.tab
 
 import com.codescene.jetbrains.core.flag.RuntimeFlags
+import com.codescene.jetbrains.core.util.Constants.TELEMETRY_EVENTS_URL
+import com.codescene.jetbrains.core.util.Constants.TELEMETRY_SAMPLES_URL
 import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.api.AceService
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
@@ -61,6 +63,23 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                         .bindText(settings::serverUrl)
                 }
             }.visible(false)
+
+            groupRowsRange(UiLabelsBundle.message("statistics")) {
+                row {
+                    cell(telemetryDescriptionTextArea())
+                        .align(Align.FILL)
+                }
+                row {
+                    cell(telemetrySampleLink(TELEMETRY_SAMPLES_URL, UiLabelsBundle.message("dataSamples")))
+                }
+                row {
+                    cell(telemetrySampleLink(TELEMETRY_EVENTS_URL, UiLabelsBundle.message("eventsList")))
+                }
+                row {
+                    checkBox(UiLabelsBundle.message("telemetryCheckbox"))
+                        .bindSelected(settings::telemetryConsentGiven)
+                }
+            }
         }
     }
 
@@ -68,8 +87,12 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
         val previousState = settings.copy()
         super.apply()
         CodeSceneGlobalSettingsStore.getInstance().notifyIfStateChanged(previousState)
-        scope.launch {
-            AceService.getInstance().runPreflight(true)
+        val onlyTelemetryConsentChanged =
+            previousState.copy(telemetryConsentGiven = settings.telemetryConsentGiven) == settings
+        if (!onlyTelemetryConsentChanged) {
+            scope.launch {
+                AceService.getInstance().runPreflight(true)
+            }
         }
     }
 }
