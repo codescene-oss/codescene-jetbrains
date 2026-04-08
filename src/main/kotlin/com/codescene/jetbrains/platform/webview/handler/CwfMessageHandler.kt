@@ -42,7 +42,10 @@ import com.codescene.jetbrains.platform.webview.util.aceAcknowledgeRefreshMessag
 import com.codescene.jetbrains.platform.webview.util.docsRefreshMessage
 import com.codescene.jetbrains.platform.webview.util.getAceAcknowledgeUserData
 import com.codescene.jetbrains.platform.webview.util.getAceUserData
+import com.codescene.jetbrains.platform.webview.util.getDocsFnToRefactor
+import com.codescene.jetbrains.platform.webview.util.getDocsUserData
 import com.codescene.jetbrains.platform.webview.util.openDocs
+import com.codescene.jetbrains.platform.webview.util.resolveFnToRefactorForDocumentation
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
@@ -250,14 +253,25 @@ class CwfMessageHandler(
         services.telemetryService.logUsage(TelemetryEvents.ACE_INFO_ACKNOWLEDGED)
         services.settingsProvider.updateAceAcknowledged(true)
 
-        val data = getAceAcknowledgeUserData(project)
+        val ackData = getAceAcknowledgeUserData(project)
+        val fileData: FileMetaType?
+        val fnToRefactor: FnToRefactor?
+        if (ackData != null) {
+            fileData = ackData.aceAcknowledgeData.fileData
+            fnToRefactor = ackData.fnToRefactor
+        } else {
+            val docsData = getDocsUserData(project)
+            fileData = docsData?.fileData
+            fnToRefactor = getDocsFnToRefactor(project)
+        }
+
         closeWindow(UiLabelsBundle.message("aceAcknowledge"), project)
 
-        data?.aceAcknowledgeData?.fileData?.let {
+        fileData?.let {
             orchestrator.handleRefactoringFromCwf(
                 it,
                 AceEntryPoint.ACE_ACKNOWLEDGEMENT,
-                data.fnToRefactor,
+                fnToRefactor,
             )
         }
     }
@@ -388,7 +402,13 @@ class CwfMessageHandler(
     }
 
     override fun handleOpenDocs(docsForFunction: OpenDocsForFunction) {
-        openDocs(toDocsData(docsForFunction), project, DocsEntryPoint.CODE_HEALTH_DETAILS)
+        val docsData = toDocsData(docsForFunction)
+        val fnToRefactor =
+            resolveFnToRefactorForDocumentation(
+                project,
+                docsData.fileData,
+            )
+        openDocs(docsData, project, DocsEntryPoint.CODE_HEALTH_DETAILS, fnToRefactor)
     }
 
     override fun handleCodeHealthDetailsFunctionSelected(payload: CodeHealthDetailsFunctionSelected) {

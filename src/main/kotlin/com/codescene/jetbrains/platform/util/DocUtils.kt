@@ -5,6 +5,7 @@ import com.codescene.jetbrains.core.mapper.resolveGeneralDocsData
 import com.codescene.jetbrains.core.models.CodeVisionCodeSmell
 import com.codescene.jetbrains.core.models.DocsEntryPoint
 import com.codescene.jetbrains.platform.webview.util.openDocs
+import com.codescene.jetbrains.platform.webview.util.resolveFnToRefactorForDocumentation
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 
@@ -32,6 +33,12 @@ fun handleOpenCwfDocs(
 ) {
     val project = editor.project ?: return
     val docsData = resolveCodeSmellDocsData(editor.virtualFile.path, codeSmell) ?: return
+    val fnToRefactor =
+        resolveFnToRefactorForDocumentation(
+            project,
+            docsData.fileData,
+            editor.document.text,
+        )
 
-    openDocs(docsData, project, source)
+    openDocs(docsData, project, source, fnToRefactor)
 }
