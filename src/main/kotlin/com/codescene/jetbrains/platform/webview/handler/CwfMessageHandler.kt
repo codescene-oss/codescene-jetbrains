@@ -47,6 +47,7 @@ import com.codescene.jetbrains.platform.webview.util.openDocs
 import com.codescene.jetbrains.platform.webview.util.resolveFnToRefactorForDocumentation
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -218,8 +219,12 @@ class CwfMessageHandler(
 
     private fun contentForAceCacheLookup(filePath: String): String? {
         val virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return null
-        val document = FileDocumentManager.getInstance().getDocument(virtualFile)
-        return document?.text
+        val fromDocument =
+            runReadAction<String?> {
+                val document = FileDocumentManager.getInstance().getDocument(virtualFile)
+                document?.text
+            }
+        return fromDocument
             ?: runCatching { services.fileSystem.readFile(filePath) }
                 .getOrElse { t ->
                     Log.warn(
