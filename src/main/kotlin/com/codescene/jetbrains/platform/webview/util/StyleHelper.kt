@@ -11,10 +11,13 @@ import com.intellij.ui.JBColor
 import com.intellij.ui.jcef.JBCefScrollbarsHelper
 import java.awt.Color
 import javax.swing.UIManager
+import kotlin.math.pow
 
 @Service(Service.Level.APP)
 class StyleHelper {
     companion object {
+        private const val MIN_LABEL_ON_BACKGROUND_CONTRAST = 4.5
+
         fun getInstance(): StyleHelper = ApplicationManager.getApplication().getService(StyleHelper::class.java)
     }
 
@@ -27,7 +30,8 @@ class StyleHelper {
      * block containing custom properties.
      *
      * The generated CSS includes:
-     * - `--cs-theme-editor-background`: Background color for the editor area.
+     * - `--cs-theme-editor-background`: Background aligned with the editor when it contrasts
+     *   with [Label.foreground]; otherwise [Panel.background] so it pairs with general UI text.
      * - `--cs-theme-textLink-foreground`: Text color for hyperlinks.
      * - `--cs-theme-foreground`: General foreground color (labels, text).
      * - `--cs-theme-panel-background`: Background color for panels.
@@ -49,12 +53,20 @@ class StyleHelper {
 
             val editorFontSize = scheme.editorFontSize
             val editorFontFamily = scheme.editorFontName
-            val editorBackground = scheme.defaultBackground
+            val rawEditorBackground = scheme.defaultBackground
 
             val defaultFont = UIManager.getFont("Label.font")
             val fontSize = defaultFont.size
 
             val textFg = UIManager.getColor("Label.foreground")
+            val editorBackground =
+                textFg?.let { fg ->
+                    if (contrastRatio(rawEditorBackground, fg) < MIN_LABEL_ON_BACKGROUND_CONTRAST) {
+                        UIManager.getColor("Panel.background") ?: rawEditorBackground
+                    } else {
+                        rawEditorBackground
+                    }
+                } ?: rawEditorBackground
             val linkFg = UIManager.getColor("Hyperlink.linkColor")
             val buttonBg = UIManager.getColor("Button.default.startBackground")
             val buttonFg = JBColor.namedColor("Button.default.foreground")
@@ -83,3 +95,22 @@ class StyleHelper {
 }
 
 private fun Color.toRgbColor(): RgbColor = RgbColor(red = red, green = green, blue = blue)
+
+private fun contrastRatio(
+    background: Color,
+    foreground: Color,
+): Double {
+    val l1 = relativeLuminance(background)
+    val l2 = relativeLuminance(foreground)
+    val lighter = maxOf(l1, l2)
+    val darker = minOf(l1, l2)
+    return (lighter + 0.05) / (darker + 0.05)
+}
+
+private fun relativeLuminance(color: Color): Double {
+    fun channel(c: Int): Double {
+        val v = c / 255.0
+        return if (v <= 0.03928) v / 12.92 else ((v + 0.055) / 1.055).pow(2.4)
+    }
+    return 0.2126 * channel(color.red) + 0.7152 * channel(color.green) + 0.0722 * channel(color.blue)
+}
