@@ -6,7 +6,7 @@ import com.codescene.jetbrains.core.models.CodeVisionCodeSmell
 import com.codescene.jetbrains.core.models.DocsEntryPoint
 import com.codescene.jetbrains.core.review.ReviewCacheQuery
 import com.codescene.jetbrains.core.util.CodeVisionAction
-import com.codescene.jetbrains.core.util.CodeVisionApiCallTracker
+import com.codescene.jetbrains.core.util.CodeVisionDecision
 import com.codescene.jetbrains.core.util.CodeVisionDecisionInput
 import com.codescene.jetbrains.core.util.defaultCodeVisionProviderIds
 import com.codescene.jetbrains.core.util.getCodeSmellsByCategory
@@ -26,22 +26,12 @@ import com.intellij.codeInsight.codeVision.CodeVisionState
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 
 @Suppress("UnstableApiUsage")
 abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
     companion object {
-        val activeReviewApiCalls: MutableSet<String>
-            get() = CodeVisionApiCallTracker.activeReviewApiCalls
-
-        val activeDeltaApiCalls: MutableSet<String>
-            get() = CodeVisionApiCallTracker.activeDeltaApiCalls
-
-        fun markApiCallComplete(
-            filePath: String,
-            apiCalls: MutableSet<String>,
-        ) = CodeVisionApiCallTracker.markApiCallComplete(filePath, apiCalls)
-
         fun getProviders(): List<String> = defaultCodeVisionProviderIds
     }
 
@@ -72,18 +62,39 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         return recomputeCodeVision(editor)
     }
 
-    private fun triggerApiCall(
+    private fun scheduleReviewIfNeeded(
+        project: Project,
         editor: Editor,
-        apiCalls: MutableSet<String>,
-        action: () -> Unit,
+        decision: CodeVisionDecision,
+        shortPath: String,
     ) {
-        val filePath = editor.virtualFile.path
-
-        if (!CodeVisionApiCallTracker.isApiCallInProgressForFile(filePath, apiCalls)) {
-            CodeVisionApiCallTracker.markApiCallInProgress(filePath, apiCalls)
-
-            action()
+        if (!decision.needsDeltaApiCall && !decision.needsReviewApiCall) {
+            return
         }
+        val filePath = editor.virtualFile.path
+        val cachedReviewService = project.service<CachedReviewService>()
+        if (cachedReviewService.activeReviewCalls.contains(filePath)) {
+            Log.debug(
+                "code vision skip schedule, review in flight file=$shortPath",
+                "CodeSceneCodeVision",
+            )
+            return
+        }
+        val docStamp = editor.document.modificationStamp
+        val unchangedSinceForeground =
+            CodeVisionReviewScheduleHint.isDocumentUnchangedSinceForegrounded(filePath, docStamp)
+        val debounceMs =
+            when {
+                !decision.needsReviewApiCall -> 0L
+                unchangedSinceForeground -> 0L
+                else -> null
+            }
+        Log.debug(
+            "code vision scheduling review file=$shortPath debounceOverride=$debounceMs " +
+                "unchangedSinceForeground=$unchangedSinceForeground",
+            "CodeSceneCodeVision",
+        )
+        cachedReviewService.reviewFromCodeVision(editor, debounceMs)
     }
 
     private fun recomputeCodeVision(editor: Editor): CodeVisionState {
@@ -122,16 +133,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
             "CodeSceneCodeVision",
         )
 
-        if (decision.needsDeltaApiCall || decision.needsReviewApiCall) {
-            val debounceMs = if (decision.needsReviewApiCall) null else 0L
-            triggerApiCall(editor, activeReviewApiCalls) {
-                Log.debug(
-                    "code vision scheduling review file=$shortPath debounceOverride=$debounceMs",
-                    "CodeSceneCodeVision",
-                )
-                project.service<CachedReviewService>().reviewFromCodeVision(editor, debounceMs)
-            }
-        }
+        scheduleReviewIfNeeded(project, editor, decision, shortPath)
 
         return when (decision.action) {
             CodeVisionAction.NOT_READY -> CodeVisionState.NotReady

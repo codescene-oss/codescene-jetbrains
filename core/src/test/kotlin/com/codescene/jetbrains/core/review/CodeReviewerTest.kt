@@ -4,6 +4,7 @@ import com.codescene.jetbrains.core.models.FailureType
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -13,6 +14,37 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CodeReviewerTest {
+    @Test
+    fun `reviewFile does not invoke onFinished for superseded job`() {
+        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), defaultDebounceDelayMs = 50)
+        val firstFinishCount = AtomicInteger(0)
+        val secondDone = CountDownLatch(1)
+
+        reviewer.reviewFile(
+            filePath = "a.kt",
+            timeout = 5000,
+            runWithProgress = { action -> action() },
+            performAction = {
+                delay(10_000)
+            },
+            onError = { _, _ -> },
+            onFinished = { firstFinishCount.incrementAndGet() },
+        )
+
+        reviewer.reviewFile(
+            filePath = "a.kt",
+            timeout = 5000,
+            runWithProgress = { action -> action() },
+            performAction = {
+                secondDone.countDown()
+            },
+            onError = { _, _ -> },
+        )
+
+        assertTrue(secondDone.await(3, TimeUnit.SECONDS))
+        assertEquals(0, firstFinishCount.get())
+    }
+
     @Test
     fun `reviewFile cancels previous scheduled call for same path`() {
         val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), defaultDebounceDelayMs = 200)
