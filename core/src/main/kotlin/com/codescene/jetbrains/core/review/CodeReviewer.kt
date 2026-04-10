@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
@@ -33,7 +34,7 @@ class CodeReviewer(
 
         lateinit var job: Job
         job =
-            scope.launch {
+            scope.launch(start = CoroutineStart.LAZY) {
                 try {
                     withTimeout(timeout) {
                         runWithProgress {
@@ -57,6 +58,7 @@ class CodeReviewer(
 
         activeCalls[filePath] = job
         onScheduled?.invoke()
+        job.start()
     }
 
     fun cancel(filePath: String): Boolean {
