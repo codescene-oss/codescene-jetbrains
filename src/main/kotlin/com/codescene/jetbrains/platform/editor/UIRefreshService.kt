@@ -42,6 +42,21 @@ class UIRefreshService(
         Log.debug("UI refresh complete for file: ${editor.virtualFile.name}")
     }
 
+    suspend fun refreshUI(
+        filePath: String,
+        providers: List<String>,
+        dispatcher: CoroutineDispatcher = Dispatchers.Main,
+    ) = withContext(dispatcher) {
+        val editor = getEditor(filePath)
+        if (editor != null) {
+            refreshCodeVision(editor, providers, dispatcher)
+            refreshAnnotations(editor)
+            Log.debug("UI refresh complete for file path=$filePath name=${editor.virtualFile.name}", "UIRefreshService")
+        } else {
+            Log.debug("UI refresh skipped, no editor for path=$filePath", "UIRefreshService")
+        }
+    }
+
     suspend fun refreshCodeVision(
         editor: Editor,
         providers: List<String>,
@@ -94,10 +109,19 @@ class UIRefreshService(
     }
 
     private fun getEditor(filePath: String): Editor? {
-        val file = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return null
-        return FileEditorManager.getInstance(project).getEditors(file).firstNotNullOfOrNull { editor ->
-            (editor as? TextEditor)?.editor
+        val file =
+            LocalFileSystem.getInstance().findFileByPath(filePath) ?: run {
+                Log.debug("getEditor: VFS miss path=$filePath", "UIRefreshService")
+                return null
+            }
+        val editor =
+            FileEditorManager.getInstance(project).getEditors(file).firstNotNullOfOrNull { fe ->
+                (fe as? TextEditor)?.editor
+            }
+        if (editor == null) {
+            Log.debug("getEditor: no TextEditor for path=$filePath", "UIRefreshService")
         }
+        return editor
     }
 
     private fun restartDaemon(psiFile: PsiFile) {

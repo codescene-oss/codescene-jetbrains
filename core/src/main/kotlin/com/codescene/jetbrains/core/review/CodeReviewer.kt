@@ -49,8 +49,9 @@ class CodeReviewer(
                 } catch (e: Exception) {
                     onError(FailureType.FAILED, e.message)
                 } finally {
-                    activeCalls.remove(filePath, job)
-                    onFinished?.invoke()
+                    if (activeCalls.remove(filePath, job)) {
+                        onFinished?.invoke()
+                    }
                 }
             }
 

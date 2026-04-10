@@ -12,7 +12,6 @@ import com.codescene.jetbrains.core.review.ReviewOrchestrator
 import com.codescene.jetbrains.core.review.resolveDeltaExecutionPlan
 import com.codescene.jetbrains.core.review.shouldCheckRefactorableFunctions
 import com.codescene.jetbrains.core.review.shouldRefreshAfterReviewFlow
-import com.codescene.jetbrains.core.util.CodeVisionApiCallTracker
 import com.codescene.jetbrains.core.util.resolveCliCacheFileName
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
@@ -52,12 +51,6 @@ class CachedReviewService(
             logger = Log,
             telemetryService = serviceProvider.telemetryService,
             progressService = serviceProvider.progressService,
-            onApiCallComplete = { filePath ->
-                CodeVisionApiCallTracker.markApiCallComplete(
-                    filePath,
-                    CodeVisionApiCallTracker.activeReviewApiCalls,
-                )
-            },
         )
     }
 
@@ -77,10 +70,15 @@ class CachedReviewService(
     }
 
     override fun onReviewScheduled(filePath: String) {
+        Log.debug(
+            "review scheduled path=$filePath activeJobs=${codeReviewer.activeFilePaths()}",
+            "CodeSceneCachedReview",
+        )
         updateMonitor(project)
     }
 
     override fun onReviewFinished(filePath: String) {
+        Log.debug("review finished path=$filePath", "CodeSceneCachedReview")
         updateMonitor(project)
     }
 
@@ -101,6 +99,7 @@ class CachedReviewService(
         if (review == null) {
             val f = path.substringAfterLast('/')
             Log.debug("cached review no result file=$f len=${currentCode.length}", "CodeSceneCachedReview")
+            uiRefreshService.refreshCodeVision(path, CodeSceneCodeVisionProvider.getProviders())
             return
         }
 
@@ -117,7 +116,7 @@ class CachedReviewService(
             handleDelta(editor, fileName, currentCode, review.score.orElse(null), reviewMiss)
 
         if (shouldRefreshAfterReviewFlow(reviewMiss, deltaHandled.didHandleDelta, aceUpdated)) {
-            uiRefreshService.refreshUI(editor, CodeSceneCodeVisionProvider.getProviders())
+            uiRefreshService.refreshUI(path, CodeSceneCodeVisionProvider.getProviders())
         }
     }
 
