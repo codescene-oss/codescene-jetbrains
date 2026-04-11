@@ -21,6 +21,10 @@
                     "weight": 0.0
                 },
                 {
+                    "name": "Global Conditionals",
+                    "weight": 0.0
+                },
+                {
                     "name": "String Heavy Function Arguments",
                     "weight": 0.0
                 }
@@ -39,7 +43,12 @@
         {
             "matching_content_path": "**/*",
             "matching_content_path_doc": "Default fallback for all other files",
-            "rules": [ ],
+            "rules": [ 
+                {
+                    "name": "Global Conditionals",
+                    "weight": 0.0
+                }
+            ],
             "thresholds": [ ]
         }
     ]

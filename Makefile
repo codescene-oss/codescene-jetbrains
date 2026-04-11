@@ -56,4 +56,4 @@ test-release: check-bb
 class-size-mine: check-bb
 	@$(BB) -f .github/check-class-size-mine.clj
 
-iter: format-check class-size-mine delta test
+iter: format format-check class-size-mine delta test

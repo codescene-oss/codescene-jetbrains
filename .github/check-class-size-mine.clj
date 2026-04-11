@@ -8,6 +8,7 @@
         diff-result (shell {:out :string :continue true} "git diff --name-only master...HEAD")
         status-files (when (= 0 (:exit status-result))
                        (->> (str/split-lines (:out status-result))
+                            (filter #(>= (count %) 3))
                             (map #(subs % 3))
                             (map #(if (str/includes? % " -> ")
                                     (second (str/split % #" -> "))

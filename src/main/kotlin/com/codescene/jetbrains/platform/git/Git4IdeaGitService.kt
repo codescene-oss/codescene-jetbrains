@@ -11,7 +11,6 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import git4idea.commands.Git
 import git4idea.commands.GitCommand
-import git4idea.commands.GitLineHandler
 import git4idea.repo.GitRepository
 import git4idea.repo.GitRepositoryManager
 
@@ -67,7 +66,7 @@ class Git4IdeaGitService(val project: Project) : IGitService {
     override fun isIgnored(filePath: String): Boolean {
         val context = getRepositoryContext(filePath) ?: return false
         val handler =
-            GitLineHandler(project, context.repository.root, GitCommand.LS_FILES).apply {
+            createGitLineHandler(project, context.repository.root, GitCommand.LS_FILES).apply {
                 addParameters("--ignored", "--exclude-standard", "--others", "--", context.relativePath)
             }
         val result = Git.getInstance().runCommand(handler)
@@ -100,7 +99,7 @@ class Git4IdeaGitService(val project: Project) : IGitService {
 
     private fun resolveHeadCommitSha(gitRepository: GitRepository): String? {
         val handler =
-            GitLineHandler(project, gitRepository.root, GitCommand.REV_PARSE).apply {
+            createGitLineHandler(project, gitRepository.root, GitCommand.REV_PARSE).apply {
                 addParameters("HEAD")
             }
         return Git.getInstance().runCommand(handler).let { result ->
@@ -138,7 +137,7 @@ class Git4IdeaGitService(val project: Project) : IGitService {
         rev2: String,
     ): String? {
         val handler =
-            GitLineHandler(project, gitRepository.root, GitCommand.MERGE_BASE).apply {
+            createGitLineHandler(project, gitRepository.root, GitCommand.MERGE_BASE).apply {
                 addParameters(rev1, rev2)
             }
         val result = Git.getInstance().runCommand(handler)
@@ -156,7 +155,7 @@ class Git4IdeaGitService(val project: Project) : IGitService {
         gitRepository: GitRepository,
     ): List<String>? {
         val handler =
-            GitLineHandler(project, gitRepository.root, GitCommand.REF_LOG).apply {
+            createGitLineHandler(project, gitRepository.root, GitCommand.REF_LOG).apply {
                 addParameters(gitRepository.currentBranchName!!)
             }
 
@@ -175,7 +174,7 @@ class Git4IdeaGitService(val project: Project) : IGitService {
         commit: String,
     ): String {
         val handler =
-            GitLineHandler(project, gitRepository.root, GitCommand.SHOW).apply {
+            createGitLineHandler(project, gitRepository.root, GitCommand.SHOW).apply {
                 addParameters("$commit:$relativePath")
             }
 
