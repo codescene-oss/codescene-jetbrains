@@ -1,0 +1,53 @@
+core/src/main/kotlin/com/codescene/jetbrains/core/util/CodeSmellUtils.kt
+  02108df0d29213b7 66-76
+core/src/main/kotlin/com/codescene/jetbrains/core/util/CodeVisionApiCallTracker.kt
+  02108df0d29213b7 1-28
+src/main/kotlin/com/codescene/jetbrains/platform/listeners/FileEventProcessor.kt
+  02108df0d29213b7 4,47-48
+core/src/test/kotlin/com/codescene/jetbrains/core/util/PathUtilsTest.kt
+  02108df0d29213b7 1-33
+core/src/test/kotlin/com/codescene/jetbrains/core/util/CodeSmellUtilsTest.kt
+  02108df0d29213b7 40-47,67-126
+core/src/test/kotlin/com/codescene/jetbrains/core/util/GitReflogUtilsTest.kt
+  02108df0d29213b7 1-33
+core/src/main/kotlin/com/codescene/jetbrains/core/util/TextEditUtils.kt
+  02108df0d29213b7 1-10
+src/main/kotlin/com/codescene/jetbrains/platform/editor/codeVision/CodeSceneCodeVisionProvider.kt
+  02108df0d29213b7 9,36-37,39-40,45,89-90
+src/main/kotlin/com/codescene/jetbrains/platform/api/CodeReviewService.kt
+  02108df0d29213b7 8,43,45
+core/src/test/kotlin/com/codescene/jetbrains/core/util/CwfThemeCssUtilsTest.kt
+  02108df0d29213b7 1-103
+core/src/test/kotlin/com/codescene/jetbrains/core/util/TextEditUtilsTest.kt
+  02108df0d29213b7 1-21
+src/main/kotlin/com/codescene/jetbrains/platform/api/CodeDeltaService.kt
+  02108df0d29213b7 9,44,46
+core/src/main/kotlin/com/codescene/jetbrains/core/util/PathUtils.kt
+  02108df0d29213b7 1-18
+src/main/kotlin/com/codescene/jetbrains/platform/util/ShowAceDiff.kt
+  02108df0d29213b7 4,77
+core/src/main/kotlin/com/codescene/jetbrains/core/util/CwfFileTabUtils.kt
+  02108df0d29213b7 1-7
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/StyleHelper.kt
+  02108df0d29213b7 3-5,7,64-77,83
+src/main/kotlin/com/codescene/jetbrains/platform/git/Git4IdeaGitService.kt
+  02108df0d29213b7 4,56-57
+src/main/kotlin/com/codescene/jetbrains/platform/util/CodeSmellPlatformUtils.kt
+  02108df0d29213b7 6,43,45-50
+src/main/kotlin/com/codescene/jetbrains/platform/util/FileUtils.kt
+  02108df0d29213b7 3,12,50,64
+core/src/test/kotlin/com/codescene/jetbrains/core/util/CwfFileTabUtilsTest.kt
+  02108df0d29213b7 1-24
+core/src/test/kotlin/com/codescene/jetbrains/core/util/CodeVisionApiCallTrackerTest.kt
+  02108df0d29213b7 1-53
+core/src/main/kotlin/com/codescene/jetbrains/core/util/GitReflogUtils.kt
+  02108df0d29213b7 1-8
+core/src/main/kotlin/com/codescene/jetbrains/core/util/CwfThemeCssUtils.kt
+  02108df0d29213b7 1-71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.18",
+  "base_commit_sha": "6fca44f27760d6e0879737e91cb0e82a5434c890",
+  "prompts": {}
+}

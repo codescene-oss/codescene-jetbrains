@@ -1,0 +1,44 @@
+build.gradle.kts
+  8b41550ab316db86 229-252
+.github/coverage-summary.clj
+  2b0a98a084a543d0 1-106
+Makefile
+  2b0a98a084a543d0 8,41-43
+.github/workflows/build.yml
+  8b41550ab316db86 125,139
+.github/workflows/code-coverage.yml
+  8b41550ab316db86 32-33,42,51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "27b23407ae35a47b615b78581c9ccf4c37e583ab",
+  "prompts": {
+    "2b0a98a084a543d0": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "56ea1941-a191-4e83-b618-90cd9d4dde33",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 165,
+      "total_deletions": 56,
+      "accepted_lines": 110,
+      "overriden_lines": 0
+    },
+    "8b41550ab316db86": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "6a4c541c-240d-4167-a345-db7d496fe15c",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 30,
+      "total_deletions": 24,
+      "accepted_lines": 30,
+      "overriden_lines": 0
+    }
+  }
+}

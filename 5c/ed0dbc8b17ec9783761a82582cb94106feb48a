@@ -1,0 +1,35 @@
+src/main/kotlin/com/codescene/jetbrains/platform/api/CachedReviewService.kt
+  a1cc1a7c62a8277e 73-76,81,102,119
+core/src/main/kotlin/com/codescene/jetbrains/core/review/CodeReviewer.kt
+  a1cc1a7c62a8277e 52-54
+src/main/kotlin/com/codescene/jetbrains/platform/editor/codeVision/CodeVisionReviewScheduleHint.kt
+  a1cc1a7c62a8277e 1-26
+src/main/kotlin/com/codescene/jetbrains/platform/editor/UIRefreshService.kt
+  a1cc1a7c62a8277e 45-59,112-122,124
+src/main/kotlin/com/codescene/jetbrains/platform/editor/codeVision/CodeSceneCodeVisionProvider.kt
+  a1cc1a7c62a8277e 9,29,65-66,68-69,71-73,75-81,83-97,136
+src/main/kotlin/com/codescene/jetbrains/platform/listeners/FileEditorLifecycleListener.kt
+  a1cc1a7c62a8277e 8-11,15,17,19-21,24-55,75-89
+core/src/test/kotlin/com/codescene/jetbrains/core/review/CodeReviewerTest.kt
+  a1cc1a7c62a8277e 7,18-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.6",
+  "base_commit_sha": "5ced0dbc8b17ec9783761a82582cb94106feb48a",
+  "prompts": {
+    "a1cc1a7c62a8277e": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "e8b19514-b7f3-4c56-89e5-383f6c2a58ad",
+        "model": "default"
+      },
+      "human_author": "Martin Säfsten",
+      "messages": [],
+      "total_additions": 243,
+      "total_deletions": 103,
+      "accepted_lines": 190,
+      "overriden_lines": 0
+    }
+  }
+}

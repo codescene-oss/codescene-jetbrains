@@ -1,0 +1,23 @@
+src/main/kotlin/com/codescene/jetbrains/platform/webview/handler/CwfMessageHandler.kt
+  cdeea22675c9c92b 50,222-227
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "22cb52287e928c8bec84ed800cc61bff6e950574",
+  "prompts": {
+    "cdeea22675c9c92b": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "d6efbdf0-142b-460c-8592-2af97cd768a2",
+        "model": "default"
+      },
+      "human_author": "Martin Säfsten",
+      "messages": [],
+      "total_additions": 7,
+      "total_deletions": 2,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    }
+  }
+}

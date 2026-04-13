@@ -1,0 +1,47 @@
+src/main/kotlin/com/codescene/jetbrains/platform/webview/handler/CwfMessageHandler.kt
+  82382c724d7c7b2b 2,19-20,26,63,72,75-76,78,98,105,113,115,117-118,125-126,151-152,159,164-166,173,182,184-185,195-196,204,207-209,222-223,230,238,240-241,243,245,248,254,256-257,262-267,274-275,277-284,286,297,299,301-302,304-305,307,310,313-319,324-325,327-334,336,338-339,359-362,381-382,385-404,407-408,411,415-416,423-424,429,433,438
+  af96c9d71a7f3dfe 303,306
+core/src/test/kotlin/com/codescene/jetbrains/core/mapper/AceMapperTest.kt
+  af96c9d71a7f3dfe 67,159-168
+core/src/test/kotlin/com/codescene/jetbrains/core/handler/CwfActionLogicTest.kt
+  af96c9d71a7f3dfe 81-97
+  82382c724d7c7b2b 119-121,124-125
+core/src/main/kotlin/com/codescene/jetbrains/core/handler/ICwfActionHandler.kt
+  af96c9d71a7f3dfe 24
+  82382c724d7c7b2b 2-4,8,11,13,15,17,19,21,23,25,27,29,31,33,35-38
+core/src/main/kotlin/com/codescene/jetbrains/core/models/view/AceViewData.kt
+  af96c9d71a7f3dfe 31
+core/src/main/kotlin/com/codescene/jetbrains/core/handler/CwfActionLogic.kt
+  82382c724d7c7b2b 2,9,17,22,28,35-37,50-51,53,62-63,68-90,94-107,109-116,120-126,128-136,139
+  af96c9d71a7f3dfe 38-41,43-49
+core/src/main/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouter.kt
+  af96c9d71a7f3dfe 6,57-61
+  82382c724d7c7b2b 2,4-5,16,25-26,29-30,34-35,38-39,42,44,46-47,50-51,54-55,62-63,66-67,70-71,74-75,78,80,82-83,86,88,90-107,110,112
+core/src/test/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouterTest.kt
+  af96c9d71a7f3dfe 14-15,21,65,154-170
+  01bdf8e1f1593b25 2,4-5,19,23-24,27,29-30,35-36,39,41-42,47-48,53-54,62,70-71,78-79,101-103,105-107,109-110,119-150,152,171-172
+core/src/main/kotlin/com/codescene/jetbrains/core/mapper/AceMapper.kt
+  af96c9d71a7f3dfe 48
+core/src/main/kotlin/com/codescene/jetbrains/core/models/message/CopyCodePayload.kt
+  af96c9d71a7f3dfe 1-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "1ff05eeb559a4ef54d750ae3b72d9bc2e4fe4239",
+  "prompts": {
+    "af96c9d71a7f3dfe": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "c1ac715b-8cd0-49a9-bca3-7fa96b98e3c1",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 84,
+      "total_deletions": 13,
+      "accepted_lines": 79,
+      "overriden_lines": 0
+    }
+  }
+}

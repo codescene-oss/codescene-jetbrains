@@ -1,0 +1,23 @@
+src/main/kotlin/com/codescene/jetbrains/platform/editor/UIRefreshService.kt
+  289aaf247c59e393 17,75,102-113
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "5feb33d169dd7e24b942151a3a332cfce7badd20",
+  "prompts": {
+    "289aaf247c59e393": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "cc4412ae-07a0-4e0c-b8b6-3972508870b2",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 15,
+      "total_deletions": 4,
+      "accepted_lines": 14,
+      "overriden_lines": 0
+    }
+  }
+}

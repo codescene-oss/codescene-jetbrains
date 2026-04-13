@@ -1,0 +1,34 @@
+src/main/kotlin/com/codescene/jetbrains/platform/api/CachedReviewService.kt
+  8d130f478cf4b9fb 105
+  daeca96b7f962fc7 83-88
+core/src/test/kotlin/com/codescene/jetbrains/core/review/CachedReviewFlowTest.kt
+  8d130f478cf4b9fb 11-17,25-31,38-45,51-62
+src/main/kotlin/com/codescene/jetbrains/platform/api/CodeDeltaService.kt
+  c31458d8829c1fbf 8-9,12,16,48-52
+src/main/kotlin/com/codescene/jetbrains/platform/api/CodeReviewService.kt
+  c31458d8829c1fbf 6,8
+core/src/main/kotlin/com/codescene/jetbrains/core/review/BaselineReviewCacheService.kt
+  daeca96b7f962fc7 24-29
+core/src/main/kotlin/com/codescene/jetbrains/core/review/CachedReviewFlow.kt
+  8d130f478cf4b9fb 10,19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "70758214e8754704a55d4e86142e2b2daf68f0bd",
+  "prompts": {
+    "8d130f478cf4b9fb": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "9c7fbbb0-3480-4244-b2d7-29d09cc39edc",
+        "model": "gpt-5.4-medium"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 63,
+      "total_deletions": 30,
+      "accepted_lines": 37,
+      "overriden_lines": 0
+    }
+  }
+}

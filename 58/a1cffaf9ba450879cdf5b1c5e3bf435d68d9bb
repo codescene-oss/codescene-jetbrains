@@ -1,0 +1,40 @@
+core/src/test/kotlin/com/codescene/jetbrains/core/settings/SettingsStateManagerTest.kt
+  01ec85c8a478ae8b 36-66
+core/src/main/kotlin/com/codescene/jetbrains/core/settings/SettingsStateManager.kt
+  01ec85c8a478ae8b 8-9,16-24
+core/src/main/kotlin/com/codescene/jetbrains/core/models/settings/CodeSceneGlobalSettings.kt
+  01ec85c8a478ae8b 36-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "58a1cffaf9ba450879cdf5b1c5e3bf435d68d9bb",
+  "prompts": {
+    "01ec85c8a478ae8b": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "31b4c283-13bf-4401-b85d-8dc15fb5785b",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 48,
+      "total_deletions": 3,
+      "accepted_lines": 48,
+      "overriden_lines": 0
+    },
+    "19de72a9fda1a33a": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "846daac1-92d4-4c2f-985a-e1edb932e168",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 47,
+      "total_deletions": 15,
+      "accepted_lines": 46,
+      "overriden_lines": 0
+    }
+  }
+}

@@ -1,0 +1,31 @@
+core/src/test/kotlin/com/codescene/jetbrains/core/contracts/ITelemetryServiceTest.kt
+  01bdf8e1f1593b25 1-50
+core/src/test/kotlin/com/codescene/jetbrains/core/telemetry/MonitorDeltaTelemetryTest.kt
+  01bdf8e1f1593b25 1-102
+core/src/test/kotlin/com/codescene/jetbrains/core/models/message/CodeHealthDetailsSelectionTest.kt
+  01bdf8e1f1593b25 1-39
+core/src/test/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouterTest.kt
+  01bdf8e1f1593b25 4-5,118-148
+core/src/test/kotlin/com/codescene/jetbrains/core/telemetry/UnhandledErrorTelemetryTest.kt
+  01bdf8e1f1593b25 1-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "6ea0e8c479799a7de0bb30592330bfccc4e5bd91",
+  "prompts": {
+    "01bdf8e1f1593b25": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "6e5bc1d7-e2e0-4ea6-8e6f-59820f5e7b25",
+        "model": "gpt-5.4-medium"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 254,
+      "total_deletions": 0,
+      "accepted_lines": 254,
+      "overriden_lines": 0
+    }
+  }
+}

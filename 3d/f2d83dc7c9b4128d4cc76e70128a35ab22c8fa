@@ -1,0 +1,25 @@
+core/src/test/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouterTest.kt
+  be14a6ef91464d12 221-227,231-233
+core/src/test/kotlin/com/codescene/jetbrains/core/models/message/AceAcknowledgedPayloadTest.kt
+  be14a6ef91464d12 1-53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "3df2d83dc7c9b4128d4cc76e70128a35ab22c8fa",
+  "prompts": {
+    "be14a6ef91464d12": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "275f9519-4edc-457c-9b9f-44f6dd3cc44a",
+        "model": "default"
+      },
+      "human_author": "Martin Säfsten",
+      "messages": [],
+      "total_additions": 64,
+      "total_deletions": 0,
+      "accepted_lines": 64,
+      "overriden_lines": 0
+    }
+  }
+}

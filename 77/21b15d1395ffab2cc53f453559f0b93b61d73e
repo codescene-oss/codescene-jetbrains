@@ -1,0 +1,53 @@
+core/src/main/kotlin/com/codescene/jetbrains/core/contracts/IDeltaCacheService.kt
+  b185bd02e9c8c84b 13-17
+src/main/kotlin/com/codescene/jetbrains/platform/util/Log.kt
+  b185bd02e9c8c84b 16-18
+src/main/kotlin/com/codescene/jetbrains/platform/api/CodeSceneService.kt
+  b185bd02e9c8c84b 29,42
+core/src/main/kotlin/com/codescene/jetbrains/core/review/ReviewCacheService.kt
+  b185bd02e9c8c84b 23-24,34-49
+core/src/main/kotlin/com/codescene/jetbrains/core/delta/DeltaCacheService.kt
+  b185bd02e9c8c84b 12,20,29-30,55-57,60-76,82-83,85-98,101-106,112-118
+core/src/main/kotlin/com/codescene/jetbrains/core/delta/DeltaAnalysisOrchestration.kt
+  b185bd02e9c8c84b 55
+src/main/kotlin/com/codescene/jetbrains/platform/editor/codeVision/CodeSceneCodeVisionProvider.kt
+  b185bd02e9c8c84b 17,116-124,126,128-132
+src/main/kotlin/com/codescene/jetbrains/platform/api/CachedReviewService.kt
+  b185bd02e9c8c84b 6,70-78,97-108,152-170,172-178
+core/src/main/kotlin/com/codescene/jetbrains/core/review/CodeReviewer.kt
+  b185bd02e9c8c84b 16,23,30-31,40
+core/src/test/kotlin/com/codescene/jetbrains/core/review/CodeReviewerTest.kt
+  b185bd02e9c8c84b 18,50,80,86,109,145
+core/src/test/kotlin/com/codescene/jetbrains/core/delta/DeltaAnalysisOrchestrationTest.kt
+  b185bd02e9c8c84b 29,52
+src/main/kotlin/com/codescene/jetbrains/platform/git/Git4IdeaGitService.kt
+  b185bd02e9c8c84b 30-32,36-39,47-48,62,67-133,135,168,175
+core/src/main/kotlin/com/codescene/jetbrains/core/review/ReviewOrchestrator.kt
+  b185bd02e9c8c84b 30,39
+core/src/test/kotlin/com/codescene/jetbrains/core/review/ReviewOrchestratorTest.kt
+  b185bd02e9c8c84b 32
+core/src/test/kotlin/com/codescene/jetbrains/core/delta/DeltaCacheServiceTest.kt
+  b185bd02e9c8c84b 5,77-144
+core/src/test/kotlin/com/codescene/jetbrains/core/testdoubles/InMemoryDeltaCacheService.kt
+  b185bd02e9c8c84b 20-26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.19",
+  "base_commit_sha": "7721b15d1395ffab2cc53f453559f0b93b61d73e",
+  "prompts": {
+    "b185bd02e9c8c84b": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "96244bbe-70a0-4488-b3e4-39f024b95554",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 437,
+      "total_deletions": 124,
+      "accepted_lines": 354,
+      "overriden_lines": 0
+    }
+  }
+}

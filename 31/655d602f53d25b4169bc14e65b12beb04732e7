@@ -1,0 +1,23 @@
+core/src/test/kotlin/com/codescene/jetbrains/core/review/ReviewOrchestratorTest.kt
+  5bf11be60db59a21 7,13,15,25-26,31-39,232-233,240-243,250-253,256-257
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "31655d602f53d25b4169bc14e65b12beb04732e7",
+  "prompts": {
+    "5bf11be60db59a21": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "bcbf0f4c-ccfc-4ee5-bcbe-48258830966c",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 26,
+      "total_deletions": 7,
+      "accepted_lines": 26,
+      "overriden_lines": 0
+    }
+  }
+}

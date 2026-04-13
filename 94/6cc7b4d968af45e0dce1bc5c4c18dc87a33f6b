@@ -1,0 +1,57 @@
+core/src/test/kotlin/com/codescene/jetbrains/core/util/AutoRefactorConfigUtilsTest.kt
+  437b90bb39a92421 10-13,17-22,27-28
+.github/workflows/release.yml
+  437b90bb39a92421 79
+.github/workflows/build.yml
+  437b90bb39a92421 80
+".run/Run Plugin.run.xml"
+  437b90bb39a92421 9
+.github/workflows/code-coverage.yml
+  437b90bb39a92421 33
+src/main/kotlin/com/codescene/jetbrains/platform/settings/tab/GeneralTab.kt
+  437b90bb39a92421 78
+src/main/kotlin/com/codescene/jetbrains/platform/settings/tab/SettingsTab.kt
+  437b90bb39a92421 59
+src/main/kotlin/com/codescene/jetbrains/platform/api/CodeReviewService.kt
+  437b90bb39a92421 84-86
+core/src/test/kotlin/com/codescene/jetbrains/core/util/AceOrchestrationTest.kt
+  437b90bb39a92421 42,44,51,58
+core/src/main/kotlin/com/codescene/jetbrains/core/util/AceOrchestration.kt
+  437b90bb39a92421 51
+core/src/main/kotlin/com/codescene/jetbrains/core/util/AutoRefactorConfigUtils.kt
+  437b90bb39a92421 9
+core/src/test/kotlin/com/codescene/jetbrains/core/review/AcePreflightOrchestratorTest.kt
+  437b90bb39a92421 53,62,70,78,86,95,106,118,130
+src/main/kotlin/com/codescene/jetbrains/platform/statusbar/AceStatusBarWidget.kt
+  437b90bb39a92421 65
+src/main/kotlin/com/codescene/jetbrains/platform/editor/annotator/CodeSmellAnnotator.kt
+  437b90bb39a92421 100
+core/src/main/kotlin/com/codescene/jetbrains/core/review/AcePreflightOrchestrator.kt
+  437b90bb39a92421 17
+src/main/kotlin/com/codescene/jetbrains/platform/api/AceService.kt
+  437b90bb39a92421 99
+core/src/main/kotlin/com/codescene/jetbrains/core/util/AcePreflightUtils.kt
+  437b90bb39a92421 18
+core/src/test/kotlin/com/codescene/jetbrains/core/review/AceEntryLogicTest.kt
+  437b90bb39a92421 48-49,51,60,68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "946cc7b4d968af45e0dce1bc5c4c18dc87a33f6b",
+  "prompts": {
+    "437b90bb39a92421": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "26c49a71-ebd5-4007-a5e6-508c7d214a2c",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 46,
+      "total_deletions": 164,
+      "accepted_lines": 46,
+      "overriden_lines": 0
+    }
+  }
+}

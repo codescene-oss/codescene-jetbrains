@@ -1,0 +1,71 @@
+src/main/kotlin/com/codescene/jetbrains/platform/util/Log.kt
+  02108df0d29213b7 4,30,37,44,51
+src/main/kotlin/com/codescene/jetbrains/platform/telemetry/TelemetryService.kt
+  02108df0d29213b7 8,76
+core/src/main/kotlin/com/codescene/jetbrains/core/settings/SettingsStateManager.kt
+  02108df0d29213b7 1-60
+core/src/main/kotlin/com/codescene/jetbrains/core/util/CodeHealthUtils.kt
+  02108df0d29213b7 3-4,38-54
+src/main/kotlin/com/codescene/jetbrains/platform/editor/codeVision/providers/CodeHealthCodeVisionProvider.kt
+  02108df0d29213b7 9,45
+core/src/main/kotlin/com/codescene/jetbrains/core/telemetry/TelemetryEventData.kt
+  02108df0d29213b7 33-34
+core/src/test/kotlin/com/codescene/jetbrains/core/telemetry/TelemetryEventDataTest.kt
+  02108df0d29213b7 28-31
+src/main/kotlin/com/codescene/jetbrains/platform/util/IndentationPlatformUtils.kt
+  02108df0d29213b7 3,30
+core/src/test/kotlin/com/codescene/jetbrains/core/settings/SettingsStateManagerTest.kt
+  02108df0d29213b7 1-91
+core/src/main/kotlin/com/codescene/jetbrains/core/util/IndentationUtils.kt
+  02108df0d29213b7 3-24
+core/src/test/kotlin/com/codescene/jetbrains/core/util/CodeHealthUtilsTest.kt
+  02108df0d29213b7 3-7,78-112
+core/src/main/kotlin/com/codescene/jetbrains/core/util/PathUtils.kt
+  02108df0d29213b7 1-8
+core/src/main/kotlin/com/codescene/jetbrains/core/util/LogMessageUtils.kt
+  02108df0d29213b7 1-9
+core/src/test/kotlin/com/codescene/jetbrains/core/util/PathUtilsTest.kt
+  02108df0d29213b7 1-25
+src/main/kotlin/com/codescene/jetbrains/platform/settings/CodeSceneGlobalSettingsStore.kt
+  02108df0d29213b7 7,18,20,23,26,29,36,40,44,48,52
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/StyleHelper.kt
+  02108df0d29213b7 3,122
+core/src/test/kotlin/com/codescene/jetbrains/core/util/ScrollbarCssUtilsTest.kt
+  02108df0d29213b7 1-26
+core/src/test/kotlin/com/codescene/jetbrains/core/util/CodeSmellUtilsTest.kt
+  02108df0d29213b7 40-47
+core/src/test/kotlin/com/codescene/jetbrains/core/util/IndentationUtilsTest.kt
+  02108df0d29213b7 5-126,192-211
+core/src/test/kotlin/com/codescene/jetbrains/core/util/LogMessageUtilsTest.kt
+  02108df0d29213b7 1-24
+core/src/test/kotlin/com/codescene/jetbrains/core/util/AceUtilsTest.kt
+  02108df0d29213b7 37-66
+core/src/main/kotlin/com/codescene/jetbrains/core/util/AceUtils.kt
+  02108df0d29213b7 32-40
+src/main/kotlin/com/codescene/jetbrains/platform/util/AceStatusBarWidgetUtils.kt
+  02108df0d29213b7 5,34
+core/src/main/kotlin/com/codescene/jetbrains/core/util/ScrollbarCssUtils.kt
+  02108df0d29213b7 1-17
+src/main/kotlin/com/codescene/jetbrains/platform/fs/VfsFileSystem.kt
+  02108df0d29213b7 4,22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "6b91f4df3ab46026c71437a61b24bea2ff573e5c",
+  "prompts": {
+    "02108df0d29213b7": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "8859f757-ee10-4600-a7db-25b81521a31a",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 594,
+      "total_deletions": 231,
+      "accepted_lines": 567,
+      "overriden_lines": 0
+    }
+  }
+}

@@ -1,0 +1,43 @@
+src/main/kotlin/com/codescene/jetbrains/platform/api/AceRefactorBackgroundProgress.kt
+  8eb18706d4459497 62,101-105,107-110,116,118
+src/main/kotlin/com/codescene/jetbrains/platform/api/AceRefactorProgressWorker.kt
+  8eb18706d4459497 1-64
+core/src/main/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouter.kt
+  8eb18706d4459497 52-55
+core/src/test/kotlin/com/codescene/jetbrains/core/review/AceRefactoringOrchestratorTest.kt
+  8eb18706d4459497 12,18,36-40,169-192
+core/src/main/kotlin/com/codescene/jetbrains/core/handler/ICwfActionHandler.kt
+  8eb18706d4459497 22-23
+core/src/main/kotlin/com/codescene/jetbrains/core/review/AceRefactoringOrchestrator.kt
+  8eb18706d4459497 39-41,43-46,54-63
+core/src/main/kotlin/com/codescene/jetbrains/core/models/message/Messages.kt
+  8eb18706d4459497 16
+src/main/kotlin/com/codescene/jetbrains/platform/api/AceService.kt
+  8eb18706d4459497 118-121
+core/src/test/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouterTest.kt
+  8eb18706d4459497 57,65
+src/main/kotlin/com/codescene/jetbrains/platform/webview/handler/CwfMessageHandler.kt
+  8eb18706d4459497 29,198-203
+src/main/kotlin/com/codescene/jetbrains/platform/api/AceRefactorLaunchCoordinator.kt
+  8eb18706d4459497 32-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "b4075bf01b9a842c6561af3cd9f3a1724743609a",
+  "prompts": {
+    "8eb18706d4459497": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a65f0428-a8d7-4666-ab42-137114b0813f",
+        "model": "default"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 240,
+      "total_deletions": 90,
+      "accepted_lines": 156,
+      "overriden_lines": 0
+    }
+  }
+}

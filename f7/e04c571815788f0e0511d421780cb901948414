@@ -1,0 +1,27 @@
+src/main/kotlin/com/codescene/jetbrains/platform/util/AceEntryOrchestrator.kt
+  f680937f7f9813da 10,27,40,42-43,56,152,164-168,170-191
+src/main/kotlin/com/codescene/jetbrains/platform/webview/handler/CwfMessageHandler.kt
+  f680937f7f9813da 260
+src/main/kotlin/com/codescene/jetbrains/platform/api/AceService.kt
+  f680937f7f9813da 134-147,161,164-165
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.19",
+  "base_commit_sha": "f7e04c571815788f0e0511d421780cb901948414",
+  "prompts": {
+    "f680937f7f9813da": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "8b7623aa-cbb9-4243-98f4-abc2f36d42bf",
+        "model": "default"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 58,
+      "total_deletions": 97,
+      "accepted_lines": 57,
+      "overriden_lines": 0
+    }
+  }
+}

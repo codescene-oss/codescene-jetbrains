@@ -1,0 +1,44 @@
+src/main/kotlin/com/codescene/jetbrains/platform/telemetry/TelemetryService.kt
+  b5f4acd482215206 38,41-42
+core/src/main/kotlin/com/codescene/jetbrains/core/telemetry/TelemetryServiceLogic.kt
+  b5f4acd482215206 14,17
+src/main/kotlin/com/codescene/jetbrains/platform/util/NotificationUtils.kt
+  b5f4acd482215206 30-34,54,58-74,76-79
+src/main/kotlin/com/codescene/jetbrains/platform/listeners/ProjectStartupActivity.kt
+  b5f4acd482215206 34-39,41,45
+core/src/test/kotlin/com/codescene/jetbrains/core/telemetry/TelemetryServiceLogicTest.kt
+  b5f4acd482215206 13,29-33,53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "f91271fd5ba18e86dbf0c246b6dcc63423df058b",
+  "prompts": {
+    "19de72a9fda1a33a": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "846daac1-92d4-4c2f-985a-e1edb932e168",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 46,
+      "overriden_lines": 0
+    },
+    "b5f4acd482215206": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "5dab66e6-53c0-4d95-8771-4b5dd225bae8",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 63,
+      "total_deletions": 25,
+      "accepted_lines": 62,
+      "overriden_lines": 0
+    }
+  }
+}

@@ -1,0 +1,23 @@
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/StyleHelper.kt
+  2e04217a3cdcb9a0 14,19-20,33-34,56,62-69,98-116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "cb91bb11a23bc3198047ad4c599dd6a2e9691e5d",
+  "prompts": {
+    "2e04217a3cdcb9a0": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "0956c8f9-862e-4c90-9722-0c4a5124bba1",
+        "model": "default"
+      },
+      "human_author": "Martin Säfsten",
+      "messages": [],
+      "total_additions": 36,
+      "total_deletions": 5,
+      "accepted_lines": 33,
+      "overriden_lines": 0
+    }
+  }
+}

@@ -1,0 +1,27 @@
+core/src/test/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouterTest.kt
+  be14a6ef91464d12 96-106
+src/main/kotlin/com/codescene/jetbrains/platform/webview/handler/CwfMessageHandler.kt
+  be14a6ef91464d12 19
+core/src/main/kotlin/com/codescene/jetbrains/core/handler/CwfMessageRouter.kt
+  be14a6ef91464d12 14,80-87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "6d72a15443efad722b5a87bfd668d5ef55ad7fc2",
+  "prompts": {
+    "be14a6ef91464d12": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "275f9519-4edc-457c-9b9f-44f6dd3cc44a",
+        "model": "default"
+      },
+      "human_author": "Martin Säfsten",
+      "messages": [],
+      "total_additions": 22,
+      "total_deletions": 5,
+      "accepted_lines": 22,
+      "overriden_lines": 0
+    }
+  }
+}

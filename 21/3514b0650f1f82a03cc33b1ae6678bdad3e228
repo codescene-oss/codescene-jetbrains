@@ -1,0 +1,23 @@
+.github/workflows/code-coverage.yml
+  8b41550ab316db86 53-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "213514b0650f1f82a03cc33b1ae6678bdad3e228",
+  "prompts": {
+    "8b41550ab316db86": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "6a4c541c-240d-4167-a345-db7d496fe15c",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 18,
+      "total_deletions": 0,
+      "accepted_lines": 18,
+      "overriden_lines": 0
+    }
+  }
+}

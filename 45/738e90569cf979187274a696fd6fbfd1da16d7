@@ -1,0 +1,33 @@
+core/src/main/kotlin/com/codescene/jetbrains/core/review/BaselineReviewCacheService.kt
+  daeca96b7f962fc7 24-29
+src/main/kotlin/com/codescene/jetbrains/platform/api/CodeReviewService.kt
+  daeca96b7f962fc7 8
+src/main/kotlin/com/codescene/jetbrains/platform/api/CachedReviewService.kt
+  daeca96b7f962fc7 83-88
+core/src/test/kotlin/com/codescene/jetbrains/core/review/FileEventHandlerTest.kt
+  daeca96b7f962fc7 4
+core/src/main/kotlin/com/codescene/jetbrains/core/review/FileEventHandler.kt
+  daeca96b7f962fc7 4
+src/main/kotlin/com/codescene/jetbrains/platform/api/CodeDeltaService.kt
+  daeca96b7f962fc7 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.19",
+  "base_commit_sha": "45738e90569cf979187274a696fd6fbfd1da16d7",
+  "prompts": {
+    "daeca96b7f962fc7": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "115e0934-37e4-44a3-aba4-e5406b6e9b6c",
+        "model": "gpt-5.4-medium"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 24,
+      "total_deletions": 17,
+      "accepted_lines": 16,
+      "overriden_lines": 0
+    }
+  }
+}

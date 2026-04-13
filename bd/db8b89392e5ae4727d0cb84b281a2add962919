@@ -1,0 +1,43 @@
+src/main/kotlin/com/codescene/jetbrains/platform/listeners/ProjectStartupActivity.kt
+  4aa73d7164ff24dc 13,34-41,43,90-93
+core/src/test/kotlin/com/codescene/jetbrains/core/settings/SettingsStateManagerTest.kt
+  4aa73d7164ff24dc 34-35,50-59
+core/src/main/kotlin/com/codescene/jetbrains/core/contracts/ISettingsProvider.kt
+  4aa73d7164ff24dc 11-12
+src/main/resources/messages/UiLabelsBundle.properties
+  4aa73d7164ff24dc 40-42
+core/src/test/kotlin/com/codescene/jetbrains/core/testdoubles/InMemorySettingsProvider.kt
+  4aa73d7164ff24dc 16-19
+core/src/main/kotlin/com/codescene/jetbrains/core/settings/SettingsStateManager.kt
+  4aa73d7164ff24dc 27-32
+core/src/main/kotlin/com/codescene/jetbrains/core/models/settings/CodeSceneGlobalSettings.kt
+  4aa73d7164ff24dc 26-27
+src/main/kotlin/com/codescene/jetbrains/platform/settings/CodeSceneGlobalSettingsStore.kt
+  4aa73d7164ff24dc 35-41
+core/src/main/kotlin/com/codescene/jetbrains/core/util/NotificationSpecs.kt
+  4aa73d7164ff24dc 4,26,34,37
+core/src/test/kotlin/com/codescene/jetbrains/core/util/NotificationSpecsTest.kt
+  4aa73d7164ff24dc 8-9,11,13,38-39,43-44
+src/main/kotlin/com/codescene/jetbrains/platform/util/NotificationUtils.kt
+  4aa73d7164ff24dc 6,17,51-53,59,61-62,99,105
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "bddb8b89392e5ae4727d0cb84b281a2add962919",
+  "prompts": {
+    "4aa73d7164ff24dc": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "c6021235-cd3b-436b-ae94-4997f2619987",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 74,
+      "total_deletions": 31,
+      "accepted_lines": 73,
+      "overriden_lines": 0
+    }
+  }
+}

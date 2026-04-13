@@ -1,0 +1,23 @@
+core/src/main/kotlin/com/codescene/jetbrains/core/models/shared/AceStatusType.kt
+  6812c98ea7e9f693 1-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "4781767d3b0662cd94e9b9cd693208b918b50cb5",
+  "prompts": {
+    "6812c98ea7e9f693": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "c478b048-93b9-4c08-afc9-7a3961e5b4a6",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 9,
+      "total_deletions": 0,
+      "accepted_lines": 9,
+      "overriden_lines": 0
+    }
+  }
+}

@@ -1,0 +1,57 @@
+core/src/test/kotlin/com/codescene/jetbrains/core/util/CodeSmellAnnotatorLogicTest.kt
+  9dc3cb5d36c394ec 1-24
+core/src/test/kotlin/com/codescene/jetbrains/core/review/FileChangePlanningTest.kt
+  9dc3cb5d36c394ec 39-67
+core/src/main/kotlin/com/codescene/jetbrains/core/util/NotificationSpecs.kt
+  9dc3cb5d36c394ec 1-31
+src/main/kotlin/com/codescene/jetbrains/platform/settings/tab/GeneralTab.kt
+  9dc3cb5d36c394ec 4,241
+core/src/test/kotlin/com/codescene/jetbrains/core/mapper/DocsDataMapperTest.kt
+  9dc3cb5d36c394ec 3-5,7-8,35,55,67-112,114-119
+core/src/test/kotlin/com/codescene/jetbrains/core/telemetry/TelemetryServiceLogicTest.kt
+  9dc3cb5d36c394ec 1-57
+src/main/kotlin/com/codescene/jetbrains/platform/listeners/FileEditorLifecycleListener.kt
+  9dc3cb5d36c394ec 3,17-19
+core/src/main/kotlin/com/codescene/jetbrains/core/review/FileChangePlanning.kt
+  9dc3cb5d36c394ec 3-4,42-52,55-59,66-74
+core/src/main/kotlin/com/codescene/jetbrains/core/util/CodeSmellAnnotatorLogic.kt
+  9dc3cb5d36c394ec 1-9
+src/main/kotlin/com/codescene/jetbrains/platform/util/NotificationUtils.kt
+  9dc3cb5d36c394ec 5-8,54,59,61-62,64,77,83,85-86,88,100,105,107,122-145
+src/main/kotlin/com/codescene/jetbrains/platform/settings/CodeSceneSettings.kt
+  9dc3cb5d36c394ec 3,46
+core/src/test/kotlin/com/codescene/jetbrains/core/util/NotificationSpecsTest.kt
+  9dc3cb5d36c394ec 1-36
+src/main/kotlin/com/codescene/jetbrains/platform/editor/annotator/CodeSmellAnnotator.kt
+  9dc3cb5d36c394ec 9,152
+core/src/main/kotlin/com/codescene/jetbrains/core/telemetry/TelemetryServiceLogic.kt
+  9dc3cb5d36c394ec 1-30
+src/main/kotlin/com/codescene/jetbrains/platform/util/DocUtils.kt
+  9dc3cb5d36c394ec 3-4,16-17,34
+src/main/kotlin/com/codescene/jetbrains/platform/listeners/FileEventProcessor.kt
+  9dc3cb5d36c394ec 3,7-9,11-13,54-61,68-77,83-91,107-111
+src/main/kotlin/com/codescene/jetbrains/platform/telemetry/TelemetryService.kt
+  9dc3cb5d36c394ec 7,9,39-50
+core/src/main/kotlin/com/codescene/jetbrains/core/mapper/DocsDataMapper.kt
+  9dc3cb5d36c394ec 3,8,48-72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "5a546467ed84d3c44fd9ff02a0cbb3dcdbefe882",
+  "prompts": {
+    "9dc3cb5d36c394ec": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "42cca9d1-865b-486a-82e8-9ce70105d26f",
+        "model": "gpt-5.4-medium"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 453,
+      "total_deletions": 121,
+      "accepted_lines": 443,
+      "overriden_lines": 0
+    }
+  }
+}

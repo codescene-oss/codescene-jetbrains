@@ -1,0 +1,31 @@
+src/test/kotlin/com/codescene/jetbrains/platform/editor/codeVision/providers/AggregatedSmellCodeVisionProviderTest.kt
+  17ff0749efab6a8c 1-19
+src/test/kotlin/com/codescene/jetbrains/platform/util/IndentationPlatformUtilsTest.kt
+  17ff0749efab6a8c 1-80
+src/test/kotlin/com/codescene/jetbrains/platform/util/CodeSmellPlatformUtilsTest.kt
+  17ff0749efab6a8c 1-44
+src/test/kotlin/com/codescene/jetbrains/platform/util/TelemetryInfoTest.kt
+  17ff0749efab6a8c 1-85
+src/test/kotlin/com/codescene/jetbrains/platform/listeners/FileChangeListenerTest.kt
+  17ff0749efab6a8c 1-90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "6209e9c0b6713d41d814e337eea4b8a92b90346b",
+  "prompts": {
+    "17ff0749efab6a8c": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "78be4ffd-b7a8-48de-82aa-c6a0ab9754b0",
+        "model": "composer-2"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 327,
+      "total_deletions": 9,
+      "accepted_lines": 318,
+      "overriden_lines": 0
+    }
+  }
+}

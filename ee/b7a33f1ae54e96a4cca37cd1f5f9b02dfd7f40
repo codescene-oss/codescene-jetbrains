@@ -1,0 +1,43 @@
+core/src/test/kotlin/com/codescene/jetbrains/core/util/CliCacheUtilsTest.kt
+  2ef63186bd8be256 1-61
+src/main/kotlin/com/codescene/jetbrains/platform/review/PlatformCliCacheService.kt
+  2ef63186bd8be256 1-60
+src/main/kotlin/com/codescene/jetbrains/platform/api/AceService.kt
+  2ef63186bd8be256 4,106,116
+src/main/kotlin/com/codescene/jetbrains/platform/util/AceEntryOrchestrator.kt
+  2ef63186bd8be256 3,23,146-150
+core/src/main/kotlin/com/codescene/jetbrains/core/util/CliCacheUtils.kt
+  2ef63186bd8be256 1-27
+core/src/test/kotlin/com/codescene/jetbrains/core/testdoubles/StubGitService.kt
+  2ef63186bd8be256 7-8,10-11,16-22
+src/main/kotlin/com/codescene/jetbrains/platform/di/CodeSceneProjectServiceProvider.kt
+  2ef63186bd8be256 24,50
+src/main/kotlin/com/codescene/jetbrains/platform/git/Git4IdeaGitService.kt
+  2ef63186bd8be256 22-27,44,46,49-50,54,57-62,64,66-67,92,108-114,116-120,122-124
+src/main/kotlin/com/codescene/jetbrains/platform/api/CodeDeltaService.kt
+  2ef63186bd8be256 4,11-12,45-52,54-57
+core/src/main/kotlin/com/codescene/jetbrains/core/contracts/IGitService.kt
+  2ef63186bd8be256 5-8
+src/main/kotlin/com/codescene/jetbrains/platform/api/CodeReviewService.kt
+  2ef63186bd8be256 4,12-13,24,34,37,50-58,78,84-86
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.19",
+  "base_commit_sha": "eeb7a33f1ae54e96a4cca37cd1f5f9b02dfd7f40",
+  "prompts": {
+    "2ef63186bd8be256": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "cb6e3c53-ecfe-421f-990f-9e331a9485af",
+        "model": "gpt-5.4-medium"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>",
+      "messages": [],
+      "total_additions": 252,
+      "total_deletions": 28,
+      "accepted_lines": 252,
+      "overriden_lines": 0
+    }
+  }
+}
