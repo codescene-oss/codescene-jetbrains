@@ -1,0 +1,11 @@
+README.md
+  ad6cf5dcb69695eb 119,127
+.github/release.clj
+  ad6cf5dcb69695eb 45-47,100-101,103-106,108,112-114,118-184,268-271
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "f518bef28cd84d67e4d9d57ac1070b698bcfb1fe",
+  "prompts": {}
+}
