@@ -42,6 +42,9 @@
 (defn join-lines [lines]
   (str (str/join "\n" lines) "\n"))
 
+(defn current-date []
+  (str (java.time.LocalDate/now)))
+
 (defn next-section-index [lines start-index]
   (or (some (fn [idx]
               (when (re-find section-header-pattern (nth lines idx))
@@ -94,19 +97,106 @@
                              (str "pluginVersion = " version))]
     (spit (str gradle-properties-path) updated)))
 
-(defn promote-unreleased [version]
+(defn changelog-content []
+  (slurp (str changelog-path)))
+
+(defn restore-changelog [content]
+  (spit (str changelog-path) content))
+
+(defn replace-unreleased [release-lines]
   (let [lines (changelog-lines)
-        {:keys [start-index end-index body-lines]} (unreleased-section)
-        unreleased-lines (trim-blank-lines body-lines)
+        {:keys [start-index end-index]} (unreleased-section)
         prefix (subvec lines 0 start-index)
         suffix (vec (drop-while str/blank? (subvec lines end-index)))
-        version-header (str "### [" version "] - " (str (java.time.LocalDate/now)))
         new-lines (vec (concat prefix
-                               ["## [Unreleased]" "" version-header]
-                               unreleased-lines
-                               [""]
+                               ["## [Unreleased]" ""]
+                               release-lines
+                               (when (seq release-lines) [""])
                                suffix))]
     (spit (str changelog-path) (join-lines new-lines))))
+
+(defn test-release-tag-name? [tag]
+  (boolean (re-find #"-test\." tag)))
+
+(defn latest-non-test-tag []
+  (let [result (shell {:dir repo-dir :out :string :err :string :continue true}
+                      "git" "tag" "--merged" "HEAD" "--sort=-creatordate")]
+    (when (zero? (:exit result))
+      (->> (split-lines (str/trim (or (:out result) "")))
+           (remove str/blank?)
+           (remove test-release-tag-name?)
+           first))))
+
+(defn tag-ref-exists? [tag]
+  (let [ref (str "refs/tags/" tag)
+        result (shell {:dir repo-dir :out :string :err :string :continue true}
+                      "git" "rev-parse" "--verify" ref)]
+    (zero? (:exit result))))
+
+(defn commit-log-range-arg []
+  (when-let [tag (not-empty (str/trim (or (latest-non-test-tag) "")))]
+    (when (tag-ref-exists? tag)
+      (str "refs/tags/" tag "..HEAD"))))
+
+(defn commit-subjects []
+  (let [range-arg (commit-log-range-arg)
+        result (if range-arg
+                 (shell {:dir repo-dir :out :string :err :string :continue true}
+                        "git" "log" "--pretty=format:%s" range-arg)
+                 (shell {:dir repo-dir :out :string :err :string :continue true}
+                        "git" "log" "--pretty=format:%s"))]
+    (if (zero? (:exit result))
+      (remove str/blank? (split-lines (or (:out result) "")))
+      (fail (str (process-message result) "\ncommand failed: git log --pretty=format:%s")))))
+
+(defn empty-groups []
+  {:Added []
+   :Fixed []
+   :Changed []})
+
+(defn add-entry [groups key value]
+  (update groups key conj (str "- " value)))
+
+(defn group-commit-subjects [subjects]
+  (reduce
+    (fn [groups subject]
+      (cond
+        (or (str/blank? subject)
+            (str/starts-with? subject "Merge"))
+        groups
+
+        (re-matches #"^chore(\(.+?\))?:.*" subject)
+        groups
+
+        :else
+        (if-let [[_ kind _ text] (re-matches #"^(feat|fix|docs|refactor|style|perf|build|ci|test)(\(.+?\))?:\s*(.+)$" subject)]
+          (case kind
+            "feat" (add-entry groups :Added text)
+            "fix" (add-entry groups :Fixed text)
+            (add-entry groups :Changed text))
+          (add-entry groups :Changed subject))))
+    (empty-groups)
+    subjects))
+
+(defn group-lines [title entries]
+  (when (seq entries)
+    (into [(str "- **" title "**")]
+          (map #(str "  " %) entries))))
+
+(defn generated-release-lines [version]
+  (let [groups (group-commit-subjects (commit-subjects))
+        sections (keep identity
+                       [(group-lines "Added" (:Added groups))
+                        (group-lines "Fixed" (:Fixed groups))
+                        (group-lines "Changed" (:Changed groups))])
+        body-lines (vec (mapcat (fn [idx section]
+                                  (if (zero? idx)
+                                    section
+                                    (concat [""] section)))
+                                (range)
+                                sections))]
+    (vec (concat [(str "### [" version "] - " (current-date))]
+                 body-lines))))
 
 (defn default-notes [version]
   (str "Release " version))
@@ -129,6 +219,11 @@
                         (str editor " " (shell-quote (str path))))]
       (when-not (zero? (:exit result))
         (fail "Editor command failed.")))))
+
+(defn continue-after-edit? []
+  (println "Edit the changelog now, then press Enter to continue (or 'q' to abort)")
+  (flush)
+  (not= "q" (str/trim (or (read-line) ""))))
 
 (defn commit-and-tag [version tag-message]
   (sh "git" "add" "--" (str gradle-properties-path) (str changelog-path))
@@ -166,36 +261,30 @@
 
 (defn stable-release []
   (ensure-clean-worktree)
-  (let [version (base-plugin-version)]
+  (let [version (base-plugin-version)
+        original-changelog (changelog-content)]
     (ensure-tag-missing (str "v" version))
-  (promote-unreleased version)
-  (open-in-editor changelog-path)
-  (let [notes (str/trim (section-text (version-section version)))
-        tag-message (if (seq notes) notes (default-notes version))]
-    (commit-and-tag version tag-message)
-    (println (str "Created release commit and tag v" version "."))
-    (println "Push with: git push --follow-tags"))))
-
-(defn temp-notes-path [version]
-  (fs/create-temp-file {:prefix (str "codescene-release-" version "-")
-                        :suffix ".md"}))
+    (replace-unreleased (generated-release-lines version))
+    (open-in-editor changelog-path)
+    (if-not (continue-after-edit?)
+      (do
+        (restore-changelog original-changelog)
+        (println "Aborted. Changelog reverted."))
+      (let [notes (str/trim (section-text (version-section version)))
+            tag-message (if (seq notes) notes (default-notes version))]
+        (commit-and-tag version tag-message)
+        (println (str "Created release commit and tag v" version "."))
+        (println "Push with: git push --follow-tags")))))
 
 (defn test-release []
   (ensure-clean-worktree)
   (let [version (str (base-plugin-version) "-test." (short-sha))
         tag (str "v" version)]
     (ensure-tag-missing tag)
-    (let [notes-path (temp-notes-path version)
-          notes (str/trim (section-text (unreleased-section)))]
-      (spit (str notes-path) (str (if (seq notes) notes (test-default-notes version)) "\n"))
-      (try
-        (open-in-editor notes-path)
-        (let [tag-message (str/trim (slurp (str notes-path)))]
-          (tag-test-release version (if (seq tag-message) tag-message (test-default-notes version)))
-          (println (str "Created test release tag " tag "."))
-          (println "Push with: git push --follow-tags"))
-        (finally
-          (fs/delete-if-exists notes-path))))))
+    (let [tag-message (str/trim (section-text (unreleased-section)))]
+      (tag-test-release version (if (seq tag-message) tag-message (test-default-notes version)))
+      (println (str "Created test release tag " tag "."))
+      (println "Push with: git push --follow-tags"))))
 
 (defn print-notes [mode value]
   (case mode
