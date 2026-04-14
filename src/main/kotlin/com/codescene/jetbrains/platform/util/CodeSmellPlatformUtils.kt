@@ -1,28 +1,14 @@
 package com.codescene.jetbrains.platform.util
 
-import com.codescene.jetbrains.core.util.isExcludedByGitignore as coreIsExcludedByGitignore
 import com.codescene.jetbrains.core.util.isFileSupportedForAnalysis
 import com.codescene.jetbrains.core.util.linePairToOffsets
-import com.codescene.jetbrains.core.util.readGitignore as coreReadGitignore
+import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
-
-private fun isExcludedByGitignore(
-    file: VirtualFile,
-    ignoredFiles: List<String>,
-): Boolean =
-    coreIsExcludedByGitignore(file.extension, ignoredFiles)
-        .also { isExcluded ->
-            if (isExcluded) {
-                Log.debug(
-                    "File ${file.name} is excluded from analysis due to .gitignore.",
-                )
-            }
-        }
 
 fun isFileSupported(
     project: Project,
@@ -33,10 +19,14 @@ fun isFileSupported(
             val fileIndex = ProjectFileIndex.getInstance(project)
             fileIndex.isInContent(virtualFile)
         }
+    val gitService = CodeSceneProjectServiceProvider.getInstance(project).gitService
+    val ignoredByGitignore = gitService.isIgnored(virtualFile.path)
 
-    val ignoredFiles = coreReadGitignore(project.basePath)
-
-    val ignoredByGitignore = isExcludedByGitignore(virtualFile, ignoredFiles)
+    if (ignoredByGitignore) {
+        Log.debug(
+            "File ${virtualFile.name} is excluded from analysis due to .gitignore.",
+        )
+    }
 
     return isFileSupportedForAnalysis(
         extension = virtualFile.extension,

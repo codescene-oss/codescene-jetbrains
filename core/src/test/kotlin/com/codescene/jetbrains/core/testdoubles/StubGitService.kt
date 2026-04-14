@@ -6,9 +6,11 @@ class StubGitService(
     private val contentByPath: Map<String, String> = emptyMap(),
     private val commitHashByPath: Map<String, String?> = emptyMap(),
     private val repoRelativePathByPath: Map<String, String?> = emptyMap(),
+    private val ignoredByPath: Map<String, Boolean> = emptyMap(),
     private val defaultContent: String = "",
     private val defaultCommitHash: String? = null,
     private val defaultRepoRelativePath: String? = null,
+    private val defaultIgnored: Boolean = false,
 ) : IGitService {
     override fun getBranchCreationCommitCode(filePath: String): String {
         return contentByPath[filePath] ?: defaultContent
@@ -20,5 +22,9 @@ class StubGitService(
 
     override fun getRepoRelativePath(filePath: String): String? {
         return repoRelativePathByPath[filePath] ?: defaultRepoRelativePath
+    }
+
+    override fun isIgnored(filePath: String): Boolean {
+        return ignoredByPath[filePath] ?: defaultIgnored
     }
 }

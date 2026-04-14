@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.core.review
 
+import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -49,7 +50,10 @@ class FileChangePlanningTest {
                 ),
             )
 
-        assertEquals(FileChange.Rename("src/Old.kt", "src/New.kt", "src/New.kt"), result)
+        assertEquals(
+            FileChange.Rename(File("src", "Old.kt").path, File("src", "New.kt").path, "src/New.kt"),
+            result,
+        )
     }
 
     @Test
