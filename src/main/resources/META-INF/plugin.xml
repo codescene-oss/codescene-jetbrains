@@ -30,8 +30,6 @@
         <notificationGroup id="CodeScene Error" displayType="BALLOON"/> <!-- Short-lived notifications -->
         <notificationGroup id="CodeScene ACE" displayType="STICKY_BALLOON"/>
 
-        <applicationService serviceImplementation="com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore"/>
-
         <applicationConfigurable
                 parentId="tools"
                 displayName="CodeScene"

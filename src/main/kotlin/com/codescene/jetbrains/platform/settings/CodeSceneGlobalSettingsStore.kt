@@ -7,6 +7,7 @@ import com.codescene.jetbrains.core.models.settings.CodeSceneGlobalSettings
 import com.codescene.jetbrains.core.settings.SettingsStateManager
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 
@@ -14,6 +15,7 @@ import com.intellij.openapi.components.Storage
     name = "CodeSceneGlobalSettings",
     storages = [Storage("codescene-settings.xml")],
 )
+@Service(Service.Level.APP)
 class CodeSceneGlobalSettingsStore : PersistentStateComponent<CodeSceneGlobalSettings>, ISettingsProvider {
     private val stateManager = SettingsStateManager()
 
