@@ -7,7 +7,7 @@ GRADLEW := ./gradlew
 NULL := /dev/null
 endif
 
-.PHONY: install-cli check-bb build test format format-check delta iter coverage-summary bump-version release test-release
+.PHONY: install-cli check-bb build test format format-check delta iter coverage-summary bump-version release test-release class-size-mine
 
 install-cli: check-bb
 	@$(BB) -f .github/install-cli.clj
@@ -43,7 +43,6 @@ delta: check-bb install-cli
 coverage-summary: check-bb
 	@$(BB) -f .github/coverage-summary.clj
 
-iter: format-check delta test
 
 bump-version: check-bb
 	@$(BB) .github/release.clj bump-version "$(BUMP)"
@@ -53,3 +52,8 @@ release: check-bb
 
 test-release: check-bb
 	@$(BB) .github/release.clj test
+
+class-size-mine: check-bb
+	@$(BB) -f .github/check-class-size-mine.clj
+
+iter: format format-check class-size-mine delta test

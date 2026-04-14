@@ -9,4 +9,13 @@ interface IFileSystem {
         basePath: String,
         filePath: String,
     ): String
+
+    fun getAbsolutePath(
+        parent: String,
+        child: String,
+    ): String
+
+    fun getExtension(path: String): String
+
+    fun getParent(path: String): String?
 }
