@@ -6,4 +6,6 @@ interface IGitService {
     fun getBranchCreationCommitHash(filePath: String): String?
 
     fun getRepoRelativePath(filePath: String): String?
+
+    fun isIgnored(filePath: String): Boolean
 }

@@ -1,6 +1,6 @@
 package com.codescene.jetbrains.core.util
 
-import java.io.File
+import com.codescene.jetbrains.core.contracts.IGitService
 
 private val supportedLanguages =
     mapOf(
@@ -51,17 +51,19 @@ private val supportedLanguages =
         "scala" to "scala",
     )
 
-fun readGitignore(projectPath: String?): List<String> {
-    val gitignoreFile = File(projectPath, ".gitignore")
-
-    return if (gitignoreFile.exists()) {
-        gitignoreFile.readLines().map { it.trim() }.filter { it.isNotEmpty() }
-    } else {
-        emptyList()
-    }
-}
-
 fun isSupportedLanguage(extension: String) = supportedLanguages.containsKey(extension)
+
+fun isFileSupportedForAnalysis(
+    extension: String?,
+    inProjectContent: Boolean,
+    filePath: String,
+    gitService: IGitService,
+): Boolean =
+    isFileSupportedForAnalysis(
+        extension = extension,
+        inProjectContent = inProjectContent,
+        ignoredByGitignore = gitService.isIgnored(filePath),
+    )
 
 fun isFileSupportedForAnalysis(
     extension: String?,

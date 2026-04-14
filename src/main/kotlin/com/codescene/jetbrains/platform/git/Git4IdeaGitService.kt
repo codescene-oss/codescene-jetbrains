@@ -64,6 +64,22 @@ class Git4IdeaGitService(val project: Project) : IGitService {
 
     override fun getRepoRelativePath(filePath: String): String? = getRepositoryContext(filePath)?.relativePath
 
+    override fun isIgnored(filePath: String): Boolean {
+        val context = getRepositoryContext(filePath) ?: return false
+        val handler =
+            GitLineHandler(project, context.repository.root, GitCommand.LS_FILES).apply {
+                addParameters("--ignored", "--exclude-standard", "--others", "--", context.relativePath)
+            }
+        val result = Git.getInstance().runCommand(handler)
+
+        if (!result.success()) {
+            Log.warn("Could not determine ignore status for ${context.file.path}.", service)
+            return false
+        }
+
+        return result.output.any { it.trim().removeSurrounding("\"") == context.relativePath }
+    }
+
     private fun isMainLineBranch(branchName: String): Boolean =
         MAIN_BRANCH_NAMES.any { it.equals(branchName, ignoreCase = true) }
 
