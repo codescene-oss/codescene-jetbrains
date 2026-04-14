@@ -1,6 +1,6 @@
 # CodeScene - Code Analysis and Refactoring
 
-<!-- Plugin description -->
+
 
 [CodeScene](https://www.codescene.com) - the only code analysis tool with a proven business impact.
 
@@ -49,7 +49,7 @@ CodeScene ACE, our AI-powered refactoring agent, was free during beta but will n
 the extension. If you’re interested in continuing to use CodeScene ACE or would like to share feedback,
 [reach out](https://codescene.com/contact-us-about-codescene-ace) to our Sales team.
 
-<!-- Plugin description end -->
+
 
 ## Table of contents
 
@@ -72,10 +72,10 @@ git clone git@github.com:empear-analytics/codescene-jetbrains.git
 
 ### Set JDK version to 17
 
-After opening your project in _IntelliJ IDEA Community Edition_ or _IntelliJ IDEA Ultimate_, the next step is to set the
-proper <kbd>SDK</kbd> to Java in version `17` within the [Project Structure settings][docs:project-structure-settings].
+After opening your project in *IntelliJ IDEA Community Edition* or *IntelliJ IDEA Ultimate*, the next step is to set the
+proper SDK to Java in version `17` within the [Project Structure settings](https://www.jetbrains.com/help/idea/project-settings-and-structure.html).
 
-![Project Structure — SDK][file:project-structure-sdk.png]
+Project Structure — SDK
 
 ### Build the project
 
@@ -91,18 +91,20 @@ You can also run the build task from the Gradle menu in your IDE.
 
 The Makefile provides development targets for build, test, format, and CodeScene delta analysis. [Babashka](https://babashka.org) must be installed first.
 
-| Target             | Description                                              |
-| ------------------ | -------------------------------------------------------- |
-| `make build`       | Build the plugin (cached)                                |
-| `make test`        | Run all tests                                            |
-| `make format`      | Format all Kotlin files with ktlint (both modules)       |
-| `make format-check`| Check format of all Kotlin files                         |
-| `make delta`       | Run CodeScene delta analysis (requires `cs` CLI)         |
-| `make install-cli` | Install CodeScene CLI (`cs`)                             |
-| `make iter`        | Run format-check, delta, build, and test                 |
-| `make bump-version BUMP=patch|minor|major` | Increment the base plugin version |
-| `make release`     | Prepare a stable release commit and tag                  |
-| `make test-release` | Create a tagged test release from `HEAD`                |
+
+| Target                        | Description                                        |
+| ----------------------------- | -------------------------------------------------- |
+| `make build`                  | Build the plugin (cached)                          |
+| `make test`                   | Run all tests                                      |
+| `make format`                 | Format all Kotlin files with ktlint (both modules) |
+| `make format-check`           | Check format of all Kotlin files                   |
+| `make delta`                  | Run CodeScene delta analysis (requires `cs` CLI)   |
+| `make install-cli`            | Install CodeScene CLI (`cs`)                       |
+| `make iter`                   | Run format-check, delta, build, and test           |
+| `make bump-version BUMP=patch | minor                                              |
+| `make release`                | Prepare a stable release commit and tag            |
+| `make test-release`           | Create a tagged test release from `HEAD`           |
+
 
 ### Release commands
 
@@ -114,14 +116,17 @@ The release flow is tag-driven. Prepare the release locally, then push the annot
   - lets the branch move to the next planned stable base version before any release is cut
 - `make release`
   - uses the existing base version from `gradle.properties`
-  - moves the `CHANGELOG.md` `Unreleased` notes into that version
+  - generates a draft release section from commits since the latest non-test tag (skips `*-test.<sha>` tags)
+  - filters out `Merge*` and `chore*` commits
+  - groups conventional commits into `Added`, `Fixed`, and `Changed`
   - opens `CHANGELOG.md` for manual cleanup
   - creates a release commit and an annotated `v<baseVersion>` tag
 - `make test-release`
   - keeps `gradle.properties` unchanged
   - derives a version like `<baseVersion>-test.<shortSha>`
-  - opens a temporary release-notes file for manual cleanup
+  - uses the current `CHANGELOG.md` `Unreleased` section as the test release notes
   - creates an annotated `v<baseVersion>-test.<shortSha>` tag on the current commit
+  - does not modify or open `CHANGELOG.md`
 
 Push prepared tags with:
 
@@ -144,14 +149,14 @@ Set `VISUAL` or `EDITOR`, or make sure `code` is available on `PATH`, before run
 
 #### Gradle configuration
 
-The recommended method for plugin development involves using the [Gradle][gradle] setup with
-the [gradle-intellij-plugin][gh:gradle-intellij-plugin] installed.
+The recommended method for plugin development involves using the [Gradle](https://gradle.org) setup with
+the [gradle-intellij-plugin](https://github.com/JetBrains/gradle-intellij-plugin) installed.
 The `gradle-intellij-plugin` makes it possible to run the IDE with the plugin and publish it to JetBrains Marketplace.
 
 A project built using the IntelliJ Platform Plugin Template includes a Gradle configuration already set up. To run the
-project, start the _Run Plugin_ task:
+project, start the *Run Plugin* task:
 
-![Run/Debug configurations][file:run-debug-configurations.png]
+Run/Debug configurations
 
 > **Note**
 >
@@ -206,9 +211,11 @@ Feature flags can also be set during the plugin build so that the resulting plug
 
 If a property is not provided, it defaults to false.
 
+
 | Flag name           | Description                                                                        |
 | ------------------- | ---------------------------------------------------------------------------------- |
 | FEATURE_CWF_DEVMODE | Allows easier debugging of CWF payloads, enables opening devtools in the webviews. |
+
 
 ## Project structure
 
@@ -246,7 +253,7 @@ The CodeScene project uses a multi-module architecture with a clear separation b
 
 ### Architecture overview
 
-- **`core/`** - Contains all platform-independent business logic, including:
+- `**core/**` - Contains all platform-independent business logic, including:
   - `contracts/` - Interfaces for dependency inversion (services, caches, etc.)
   - `models/` - Data models, settings, and view data
   - `review/` - Code review and analysis orchestration
@@ -255,57 +262,42 @@ The CodeScene project uses a multi-module architecture with a clear separation b
   - `mapper/` - Data transformation logic
   - `util/` - Shared utilities
   - `testdoubles/` - In-memory implementations for testing
-
-- **`src/`** - Contains IntelliJ Platform-specific code in `com.codescene.jetbrains.platform`:
+- `**src/**` - Contains IntelliJ Platform-specific code in `com.codescene.jetbrains.platform`:
   - IDE service implementations
   - Editor integrations (annotators, code vision, intentions)
   - UI components (settings, tool windows, webviews)
   - Platform-specific utilities
 
-The plugin manifest is located at [plugin.xml][file:plugin.xml].
+The plugin manifest is located at [plugin.xml](./src/main/resources/META-INF/plugin.xml).
 
 ## Predefined Run/Debug configurations
 
-Within the default project structure, there is a `.run` directory provided containing predefined _Run/Debug
-configurations_ that expose corresponding Gradle tasks:
+Within the default project structure, there is a `.run` directory provided containing predefined *Run/Debug
+configurations* that expose corresponding Gradle tasks:
 
-| Configuration name   | Description                                                                                                                                                                 |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Run Plugin           | Runs [`:runIde`][gh:gradle-intellij-plugin-runIde] Gradle IntelliJ Plugin task. Use the _Debug_ icon for plugin debugging.                                                  |
-| Run Verifications    | Runs [`:runPluginVerifier`][gh:gradle-intellij-plugin-runPluginVerifier] Gradle IntelliJ Plugin task to check the plugin compatibility against the specified IntelliJ IDEs. |
-| Run Tests            | Runs [`:test`][gradle:lifecycle-tasks] Gradle task.                                                                                                                         |
-| Run IDE for UI Tests | Runs [`:runIdeForUiTests`][gh:intellij-ui-test-robot] Gradle IntelliJ Plugin task to allow for running UI tests within the IntelliJ IDE running instance.                   |
+
+| Configuration name   | Description                                                                                                                                                                                                                           |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Run Plugin           | Runs `[:runIde](https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html#tasks-runide)` Gradle IntelliJ Plugin task. Use the *Debug* icon for plugin debugging.                                                  |
+| Run Verifications    | Runs `[:runPluginVerifier](https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html#tasks-runpluginverifier)` Gradle IntelliJ Plugin task to check the plugin compatibility against the specified IntelliJ IDEs. |
+| Run Tests            | Runs `[:test](https://docs.gradle.org/current/userguide/java_plugin.html#lifecycle_tasks)` Gradle task.                                                                                                                               |
+| Run IDE for UI Tests | Runs [`:runIdeForUiTests`][gh:intellij-ui-test-robot] Gradle IntelliJ Plugin task to allow for running UI tests within the IntelliJ IDE running instance.                                                                             |
+
 
 > **Note**
 >
 > You can find the logs from the running task in the `idea.log` tab.
 >
-> ![Run/Debug configuration logs][file:run-logs.png]
+> Run/Debug configuration logs
 
 ## Useful links
 
-- [IntelliJ Platform SDK Plugin SDK][docs]
-- [Gradle IntelliJ Plugin Documentation][gh:gradle-intellij-plugin-docs]
-- [Kotlin UI DSL][docs:kotlin-ui-dsl]
-- [IntelliJ SDK Code Samples][gh:code-samples]
-- [GitHub Actions][gh:actions]
+- [IntelliJ Platform SDK Plugin SDK](https://plugins.jetbrains.com/docs/intellij?from=IJPluginTemplate)
+- [Gradle IntelliJ Plugin Documentation](https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html)
+- [Kotlin UI DSL](https://plugins.jetbrains.com/docs/intellij/kotlin-ui-dsl-version-2.html?from=IJPluginTemplate)
+- [IntelliJ SDK Code Samples](https://github.com/JetBrains/intellij-sdk-code-samples)
+- [GitHub Actions](https://help.github.com/en/actions)
 
 ## License
 
 See LICENSE file.
-
-[docs]: https://plugins.jetbrains.com/docs/intellij?from=IJPluginTemplate
-[docs:kotlin-ui-dsl]: https://plugins.jetbrains.com/docs/intellij/kotlin-ui-dsl-version-2.html?from=IJPluginTemplate
-[docs:project-structure-settings]: https://www.jetbrains.com/help/idea/project-settings-and-structure.html
-[file:project-structure-sdk.png]: ./.github/readme/project-structure-sdk.png
-[file:plugin.xml]: ./src/main/resources/META-INF/plugin.xml
-[file:run-debug-configurations.png]: ./.github/readme/run-debug-configurations.png
-[file:run-logs.png]: ./.github/readme/run-logs.png
-[gh:actions]: https://help.github.com/en/actions
-[gh:code-samples]: https://github.com/JetBrains/intellij-sdk-code-samples
-[gh:gradle-intellij-plugin]: https://github.com/JetBrains/gradle-intellij-plugin
-[gh:gradle-intellij-plugin-docs]: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
-[gh:gradle-intellij-plugin-runIde]: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html#tasks-runide
-[gh:gradle-intellij-plugin-runPluginVerifier]: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html#tasks-runpluginverifier
-[gradle]: https://gradle.org
-[gradle:lifecycle-tasks]: https://docs.gradle.org/current/userguide/java_plugin.html#lifecycle_tasks
