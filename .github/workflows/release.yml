@@ -1,11 +1,8 @@
-# GitHub Actions Workflow created for handling the release process based on the draft release prepared with the Build workflow.
-# Running the publishPlugin task requires all following secrets to be provided: PUBLISH_TOKEN, PRIVATE_KEY, PRIVATE_KEY_PASSWORD, CERTIFICATE_CHAIN.
-# See https://plugins.jetbrains.com/docs/intellij/plugin-signing.html for more information.
-
 name: Release
 on:
-  release:
-    types: [prereleased, released]
+  push:
+    tags:
+      - "v*"
 
 env:
   GH_USERNAME: ${{ secrets.GH_USERNAME }}
@@ -13,73 +10,76 @@ env:
   CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN: ${{ secrets.CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN }}
 
 jobs:
-
-  # Prepare and publish the plugin to JetBrains Marketplace repository
   release:
-    name: Publish Plugin
+    name: Publish Release
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
     steps:
-
-      # Free GitHub Actions Environment Disk Space
       - name: Maximize Build Space
         uses: jlumbroso/free-disk-space@main
         with:
           tool-cache: true
           large-packages: true
 
-      # Check out the current repository
       - name: Fetch Sources
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
 
-      # Set up Java environment for the next steps
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: zulu
           java-version: 17
 
-      # Setup Gradle
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Set environment variables
-      - name: Export Properties
-        id: properties
+      - name: Resolve Release Metadata
+        id: release
         shell: bash
         run: |
-          CHANGELOG="$(cat << 'EOM' | sed -e 's/^[[:space:]]*$//g' -e '/./,$!d'
-          ${{ github.event.release.body }}
-          EOM
-          )"
-          
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          VERSION="${GITHUB_REF_NAME#v}"
+          IS_TEST=false
+          NOTES_FILE="$RUNNER_TEMP/release-notes.md"
 
-      # Update the Unreleased section with the current release note
-      - name: Patch Changelog
-        if: ${{ steps.properties.outputs.changelog != '' }}
-        env:
-          CHANGELOG: ${{ steps.properties.outputs.changelog }}
-        run: |
-          ./gradlew patchChangelog --release-note="$CHANGELOG"
+          if [[ "$VERSION" == *"-test."* ]]; then
+            IS_TEST=true
+          fi
 
-      # Publish the plugin to JetBrains Marketplace
+          git tag -l --format='%(contents)' "$GITHUB_REF_NAME" > "$NOTES_FILE"
+
+          if [ ! -s "$NOTES_FILE" ]; then
+            if [ "$IS_TEST" = true ]; then
+              echo "Test release $VERSION" > "$NOTES_FILE"
+            else
+              echo "Release $VERSION" > "$NOTES_FILE"
+            fi
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "is_test=$IS_TEST" >> "$GITHUB_OUTPUT"
+          echo "notes_file=$NOTES_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Build Plugin
+        run: ./gradlew buildPlugin -PreleaseVersion=${{ steps.release.outputs.version }} -PFEATURE_CWF_DEVMODE=${{ secrets.FEATURE_CWF_DEVMODE }}
+
       - name: Publish Plugin
+        if: ${{ steps.release.outputs.is_test != 'true' }}
         env:
           PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
           CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
           PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}
-        run: ./gradlew publishPlugin -PFEATURE_CWF_DEVMODE=${{ secrets.FEATURE_CWF_DEVMODE }}
+        run: ./gradlew publishPlugin -PreleaseVersion=${{ steps.release.outputs.version }} -PFEATURE_CWF_DEVMODE=${{ secrets.FEATURE_CWF_DEVMODE }}
 
-      # Upload artifact as a release asset
-      - name: Upload Release Asset
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: ${{ steps.release.outputs.notes_file }}
+          prerelease: ${{ steps.release.outputs.is_test == 'true' }}
+          files: ./build/distributions/*

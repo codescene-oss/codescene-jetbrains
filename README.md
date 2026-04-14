@@ -100,6 +100,45 @@ The Makefile provides development targets for build, test, format, and CodeScene
 | `make delta`       | Run CodeScene delta analysis (requires `cs` CLI)         |
 | `make install-cli` | Install CodeScene CLI (`cs`)                             |
 | `make iter`        | Run format-check, delta, build, and test                 |
+| `make bump-version BUMP=patch|minor|major` | Increment the base plugin version |
+| `make release`     | Prepare a stable release commit and tag                  |
+| `make test-release` | Create a tagged test release from `HEAD`                |
+
+### Release commands
+
+The release flow is tag-driven. Prepare the release locally, then push the annotated tag and let GitHub Actions build from that tag.
+
+- `make bump-version BUMP=minor`
+  - increments the current base version in `gradle.properties`
+  - does not create a commit, tag, or GitHub release
+  - lets the branch move to the next planned stable base version before any release is cut
+- `make release`
+  - uses the existing base version from `gradle.properties`
+  - moves the `CHANGELOG.md` `Unreleased` notes into that version
+  - opens `CHANGELOG.md` for manual cleanup
+  - creates a release commit and an annotated `v<baseVersion>` tag
+- `make test-release`
+  - keeps `gradle.properties` unchanged
+  - derives a version like `<baseVersion>-test.<shortSha>`
+  - opens a temporary release-notes file for manual cleanup
+  - creates an annotated `v<baseVersion>-test.<shortSha>` tag on the current commit
+
+Push prepared tags with:
+
+```bash
+git push --follow-tags
+```
+
+Set `VISUAL` or `EDITOR`, or make sure `code` is available on `PATH`, before running the release commands.
+
+### Example release checklist
+
+1. Start the next release line with `make bump-version BUMP=minor` or `make bump-version BUMP=major`.
+2. Commit the base version change when appropriate for the branch.
+3. Create GitHub-only tester drops during development with `make test-release`, then `git push --follow-tags`.
+4. When the release is ready, run `make release`.
+5. Review and clean up `CHANGELOG.md` in the editor that opens.
+6. Push the release commit and tag with `git push --follow-tags`.
 
 ### Run the plugin
 

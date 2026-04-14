@@ -19,7 +19,9 @@ plugins {
 }
 
 group = providers.gradleProperty("pluginGroup").get()
-version = providers.gradleProperty("pluginVersion").get()
+val basePluginVersion = providers.gradleProperty("pluginVersion")
+val effectivePluginVersion = providers.gradleProperty("releaseVersion").orElse(basePluginVersion)
+version = effectivePluginVersion.get()
 
 val codeSceneExtensionAPIVersion = providers.gradleProperty("codeSceneExtensionAPIVersion").get()
 val codeSceneRepository = providers.gradleProperty("codeSceneRepository").get()
@@ -85,7 +87,7 @@ dependencies {
 // Configure IntelliJ Platform Gradle Plugin - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-extension.html
 intellijPlatform {
     pluginConfiguration {
-        version = providers.gradleProperty("pluginVersion")
+        version = effectivePluginVersion
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
         description =
@@ -104,7 +106,7 @@ intellijPlatform {
         val changelog = project.changelog // local variable for configuration cache compatibility
         // Get the latest available change notes from the changelog file
         changeNotes =
-            providers.gradleProperty("pluginVersion").map { pluginVersion ->
+            effectivePluginVersion.map { pluginVersion ->
                 with(changelog) {
                     renderItem(
                         (getOrNull(pluginVersion) ?: getUnreleased())
@@ -133,7 +135,7 @@ intellijPlatform {
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
         channels =
-            providers.gradleProperty("pluginVersion")
+            effectivePluginVersion
                 .map { listOf(it.substringAfter('-', "").ifEmpty { "default" }) }
         hidden = true
     }
@@ -186,10 +188,6 @@ changelog {
 tasks {
     wrapper {
         gradleVersion = providers.gradleProperty("gradleVersion").get()
-    }
-
-    publishPlugin {
-        dependsOn(patchChangelog)
     }
 
     runIde {
