@@ -1,0 +1,21 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "dc6b4b2ccd7ec0bd7702a1aad0097d63388f4530",
+  "prompts": {
+    "ad6cf5dcb69695eb": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "15ac0d03-3da9-4561-a037-99d6550a0cda",
+        "model": "gpt-5.4-medium"
+      },
+      "human_author": "Martin Säfsten",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 1
+    }
+  }
+}
