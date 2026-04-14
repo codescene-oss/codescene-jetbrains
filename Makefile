@@ -1,17 +1,19 @@
 BB := bb
 ifeq ($(OS),Windows_NT)
 GRADLEW := .\gradlew.bat
+NULL := NUL
 else
 GRADLEW := ./gradlew
+NULL := /dev/null
 endif
 
-.PHONY: install-cli check-bb build test format format-check delta iter coverage-summary
+.PHONY: install-cli check-bb build test format format-check delta iter coverage-summary bump-version release test-release
 
 install-cli: check-bb
 	@$(BB) -f .github/install-cli.clj
 
 check-bb:
-	@$(BB) --version > /dev/null 2>&1
+	@$(BB) --version > $(NULL) 2>&1
 
 KT_FILES := $(wildcard src/main/kotlin/**/*.kt) \
             $(wildcard src/test/kotlin/**/*.kt) \
@@ -42,3 +44,12 @@ coverage-summary: check-bb
 	@$(BB) -f .github/coverage-summary.clj
 
 iter: format-check delta test
+
+bump-version: check-bb
+	@$(BB) .github/release.clj bump-version "$(BUMP)"
+
+release: check-bb
+	@$(BB) .github/release.clj stable
+
+test-release: check-bb
+	@$(BB) .github/release.clj test
