@@ -9,17 +9,17 @@ import com.codescene.jetbrains.core.util.CodeVisionAction
 import com.codescene.jetbrains.core.util.CodeVisionDecision
 import com.codescene.jetbrains.core.util.CodeVisionDecisionInput
 import com.codescene.jetbrains.core.util.defaultCodeVisionProviderIds
-import com.codescene.jetbrains.core.util.getCodeSmellsByCategory
+import com.codescene.jetbrains.core.util.formatCodeSmellMessage
 import com.codescene.jetbrains.core.util.resolveCodeVisionDecision
 import com.codescene.jetbrains.platform.api.CachedReviewService
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.icons.CodeSceneIcons.CODE_SMELL
 import com.codescene.jetbrains.platform.util.Log
-import com.codescene.jetbrains.platform.util.getTextRange
 import com.codescene.jetbrains.platform.util.handleOpenDocs
 import com.codescene.jetbrains.platform.util.isFileSupported
 import com.intellij.codeInsight.codeVision.CodeVisionAnchorKind
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
+import com.intellij.codeInsight.codeVision.CodeVisionEntryExtraActionModel
 import com.intellij.codeInsight.codeVision.CodeVisionProvider
 import com.intellij.codeInsight.codeVision.CodeVisionRelativeOrdering
 import com.intellij.codeInsight.codeVision.CodeVisionState
@@ -32,6 +32,8 @@ import com.intellij.openapi.util.TextRange
 @Suppress("UnstableApiUsage")
 abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
     companion object {
+        private const val SMELL_EXTRA_ACTION_MARKER = ".smell."
+
         fun getProviders(): List<String> = defaultCodeVisionProviderIds
     }
 
@@ -47,6 +49,17 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
 
     override fun precomputeOnUiThread(editor: Editor) {
         // Precomputations on the UI thread are unnecessary in this context, so this is left intentionally empty.
+    }
+
+    override fun handleExtraAction(
+        editor: Editor,
+        textRange: TextRange,
+        actionId: String,
+    ) {
+        val index = parseSmellExtraActionIndex(actionId) ?: return
+        val smells = smellsAtTextRange(editor, textRange) ?: return
+        val smell = smells.getOrNull(index) ?: return
+        handleLensClick(editor, smell)
     }
 
     override fun computeCodeVision(
@@ -151,18 +164,65 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
             return arrayListOf()
         }
         val lenses = ArrayList<Pair<TextRange, CodeVisionEntry>>()
-        for (category in categories) {
-            getCodeSmellsByCategory(result, category).forEach { smell ->
-                val range =
-                    getTextRange(smell.highlightRange.startLine to smell.highlightRange.endLine, editor.document)
-                val entry = getCodeVisionEntry(smell)
-                lenses.add(range to entry)
-            }
+        val pairs = collectSmellsWithHighlightRangesForVision(editor, result, categories)
+        val grouped = groupReviewSmellsByHighlightRange(pairs)
+        for ((range, smells) in grouped) {
+            lenses.add(range to codeVisionEntryForSmells(smells))
         }
         return lenses
     }
 
-    private fun getCodeVisionEntry(codeSmell: CodeVisionCodeSmell): ClickableTextCodeVisionEntry =
+    private fun smellsAtTextRange(
+        editor: Editor,
+        textRange: TextRange,
+    ): List<CodeVisionCodeSmell>? {
+        val categories = categoriesForLenses()
+        if (categories.isEmpty()) {
+            return null
+        }
+        val project = editor.project ?: return null
+        val serviceProvider = CodeSceneProjectServiceProvider.getInstance(project)
+        val query = ReviewCacheQuery(editor.document.text, editor.virtualFile.path)
+        val review = serviceProvider.reviewCacheService.get(query) ?: return null
+        val pairs = collectSmellsWithHighlightRangesForVision(editor, review, categories)
+        return groupReviewSmellsByHighlightRange(pairs)
+            .firstOrNull { (r, _) -> r == textRange }
+            ?.second
+    }
+
+    private fun parseSmellExtraActionIndex(actionId: String): Int? {
+        val marker = "${id}$SMELL_EXTRA_ACTION_MARKER"
+        if (!actionId.startsWith(marker)) {
+            return null
+        }
+        return actionId.removePrefix(marker).toIntOrNull()
+    }
+
+    private fun smellExtraActionId(index: Int): String = "${id}$SMELL_EXTRA_ACTION_MARKER$index"
+
+    private fun codeVisionEntryForSmells(smells: List<CodeVisionCodeSmell>): ClickableTextCodeVisionEntry {
+        require(smells.isNotEmpty())
+        if (smells.size == 1) {
+            return singleSmellCodeVisionEntry(smells.first())
+        }
+        val text = smells.joinToString(" | ") { it.category }
+        val tooltip = smells.joinToString("\n") { formatCodeSmellMessage(it.category, it.details) }
+        val extraActions =
+            smells.mapIndexed { index, smell ->
+                CodeVisionEntryExtraActionModel(smell.category, smellExtraActionId(index))
+            }
+        return ClickableTextCodeVisionEntry(
+            text,
+            id,
+            { mouseEvent, sourceEditor -> showSmellDocumentationChooser(mouseEvent, sourceEditor, smells) },
+            CODE_SMELL,
+            text,
+            tooltip,
+            extraActions,
+        )
+    }
+
+    private fun singleSmellCodeVisionEntry(codeSmell: CodeVisionCodeSmell): ClickableTextCodeVisionEntry =
         ClickableTextCodeVisionEntry(
             codeSmell.category,
             id,
