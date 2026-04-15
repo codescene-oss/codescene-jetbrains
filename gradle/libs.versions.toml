@@ -1,6 +1,7 @@
 [versions]
 # libraries
 junit = "4.13.2"
+remoteRobot = "0.11.23"
 
 # plugins
 changelog = "2.5.0"

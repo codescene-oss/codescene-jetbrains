@@ -7,7 +7,7 @@ GRADLEW := ./gradlew
 NULL := /dev/null
 endif
 
-.PHONY: install-cli check-bb build test format format-check delta iter coverage-summary bump-version release test-release class-size-mine
+.PHONY: install-cli check-bb build test ui-test format format-check delta iter coverage-summary bump-version release test-release class-size-mine
 
 install-cli: check-bb
 	@$(BB) -f .github/install-cli.clj
@@ -17,6 +17,7 @@ check-bb:
 
 KT_FILES := $(wildcard src/main/kotlin/**/*.kt) \
             $(wildcard src/test/kotlin/**/*.kt) \
+            $(wildcard src/uiTest/kotlin/**/*.kt) \
             $(wildcard core/src/main/kotlin/**/*.kt) \
             $(wildcard core/src/test/kotlin/**/*.kt)
 GRADLE_FILES := $(wildcard build.gradle.kts) $(wildcard core/build.gradle.kts) $(wildcard settings.gradle.kts) $(wildcard gradle.properties) $(wildcard gradle/libs.versions.toml)
@@ -29,6 +30,10 @@ build: .build-timestamp
 
 test: check-bb build
 	@$(BB) -f .github/run-quiet.clj test.log "gradle test" $(GRADLEW) test
+
+ui-test: check-bb build
+	@echo "Requires a running IDE: $(GRADLEW) runIdeForUiTests (separate terminal), robot on http://127.0.0.1:8082"
+	@$(GRADLEW) uiTest
 
 format: check-bb
 	@$(BB) -f .github/run-quiet.clj format.log "gradle ktlintFormat" $(GRADLEW) ktlintFormat

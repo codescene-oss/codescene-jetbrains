@@ -1,63 +1,98 @@
-# GitHub Actions Workflow for launching UI tests on Linux, Windows, and Mac in the following steps:
-# - Prepare and launch IDE with your plugin and robot-server plugin, which is needed to interact with the UI.
-# - Wait for IDE to start.
-# - Run UI tests with a separate Gradle task.
-#
-# Please check https://github.com/JetBrains/intellij-ui-test-robot for information about UI tests with IntelliJ Platform.
-#
-# Workflow is triggered manually.
+# UI tests use intellij-ui-test-robot (remote-robot + robot-server plugin).
+# See https://github.com/JetBrains/intellij-ui-test-robot
 
 name: Run UI Tests
 on:
-  workflow_dispatch
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+  pull_request:
+
+env:
+  GH_USERNAME: ${{ secrets.GH_USERNAME }}
+  GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
+  CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN: ${{ secrets.CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN }}
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
-
-  testUI:
+  uiTest:
+    name: ${{ matrix.os }} / IC ${{ matrix.platformVersion }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
-            runIde: |
-              export DISPLAY=:99.0
-              Xvfb -ac :99 -screen 0 1920x1080x16 &
-              gradle runIdeForUiTests &
+            platformVersion: "2023.3.8"
+          - os: ubuntu-latest
+            platformVersion: "2024.3.7"
           - os: windows-latest
-            runIde: start gradlew.bat runIdeForUiTests
+            platformVersion: "2023.3.8"
+          - os: windows-latest
+            platformVersion: "2024.3.7"
           - os: macos-latest
-            runIde: ./gradlew runIdeForUiTests &
+            platformVersion: "2023.3.8"
+          - os: macos-latest
+            platformVersion: "2024.3.7"
 
     steps:
-
-      # Check out the current repository
       - name: Fetch Sources
         uses: actions/checkout@v4
 
-      # Set up Java environment for the next steps
+      - name: Gradle Wrapper Validation
+        uses: gradle/actions/wrapper-validation@v4
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: zulu
           java-version: 17
 
-      # Setup Gradle
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Run IDEA prepared for UI testing
-      - name: Run IDE
-        run: ${{ matrix.runIde }}
+      - name: Start Xvfb
+        if: runner.os == 'Linux'
+        run: |
+          Xvfb :99 -screen 0 1920x1080x24 &
+          echo "DISPLAY=:99.0" >> "$GITHUB_ENV"
 
-      # Wait for IDEA to be started
-      - name: Health Check
+      - name: Fetch CWF assets
+        run: ./gradlew fetchCwf --no-daemon -PplatformVersion=${{ matrix.platformVersion }}
+
+      - name: Run IDE for UI tests
+        run: |
+          ./gradlew runIdeForUiTests --no-daemon \
+            -PplatformVersion=${{ matrix.platformVersion }} \
+            -PFEATURE_CWF_DEVMODE=${{ secrets.FEATURE_CWF_DEVMODE }} &
+
+      - name: Wait for robot server
         uses: jtalk/url-health-check-action@v4
         with:
           url: http://127.0.0.1:8082
-          max-attempts: 15
-          retry-delay: 30s
+          max-attempts: 30
+          retry-delay: 20s
 
-      # Run tests
-      - name: Tests
-        run: ./gradlew test
+      - name: UI tests
+        run: ./gradlew uiTest --no-daemon -PplatformVersion=${{ matrix.platformVersion }}
+
+      - name: Publish UI test results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          check_name: UI test results (${{ matrix.os }}, ${{ matrix.platformVersion }})
+          files: "build/test-results/uiTest/*.xml"
+          comment_mode: off
+
+      - name: Upload UI test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-reports-${{ matrix.os }}-${{ matrix.platformVersion }}
+          path: |
+            build/reports/tests/uiTest
