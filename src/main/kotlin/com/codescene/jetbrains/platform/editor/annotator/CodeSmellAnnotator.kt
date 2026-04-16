@@ -202,9 +202,9 @@ class CodeSmellAnnotator : ExternalAnnotator<
     private fun isRuntimeSafe(psiFile: PsiFile): Boolean {
         val application = ApplicationManager.getApplication()
         val project = psiFile.project
-        if (application.isDisposed || project.isDisposed || !psiFile.isValid) {
-            return false
-        }
+        if (application.isDisposed) return false
+        if (project.isDisposed) return false
+        if (!psiFile.isValid) return false
 
         val virtualFile = psiFile.virtualFile ?: return false
 
