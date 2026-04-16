@@ -18,8 +18,10 @@ import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.ExternalAnnotator
 import com.intellij.lang.annotation.HighlightSeverity
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.psi.PsiFile
 import org.jetbrains.annotations.NotNull
 
@@ -32,6 +34,10 @@ class CodeSmellAnnotator : ExternalAnnotator<
         annotationContext: AnnotationContext,
         @NotNull holder: AnnotationHolder,
     ) {
+        if (!isRuntimeSafe(psiFile)) {
+            return
+        }
+
         if (!isFileSupported(psiFile.project, psiFile.virtualFile)) {
             Log.warn("File type not supported: ${psiFile.virtualFile.name}. Skipping code smell annotation.")
             return
@@ -45,12 +51,26 @@ class CodeSmellAnnotator : ExternalAnnotator<
         holder: AnnotationHolder,
         annotationContext: AnnotationContext,
     ) {
-        val document = FileDocumentManager.getInstance().getDocument(psiFile.virtualFile) ?: return
+        val document =
+            runSafeAction<Document?>(
+                psiFile = psiFile,
+                action = "read document for annotation",
+                fallback = null,
+            ) {
+                FileDocumentManager.getInstance().getDocument(psiFile.virtualFile)
+            } ?: return
         val review = annotationContext.reviewCache
         val ace = annotationContext.aceCache
-        val serviceProvider = CodeSceneProjectServiceProvider.getInstance(psiFile.project)
 
         if (review != null) {
+            val serviceProvider =
+                runSafeAction<CodeSceneProjectServiceProvider?>(
+                    psiFile = psiFile,
+                    action = "resolve project services for annotation",
+                    fallback = null,
+                ) {
+                    CodeSceneProjectServiceProvider.getInstance(psiFile.project)
+                } ?: return
             Log.info("Annotating code smells for file: ${psiFile.name}")
 
             review.fileLevelCodeSmells.forEach {
@@ -124,17 +144,44 @@ class CodeSmellAnnotator : ExternalAnnotator<
     ): Review? {
         val path = psiFile.virtualFile.path
         val query = ReviewCacheQuery(content, path)
-        val serviceProvider = CodeSceneProjectServiceProvider.getInstance(psiFile.project)
 
-        return serviceProvider.reviewCacheService.get(query).also {
+        return runSafeAction<Review?>(
+            psiFile = psiFile,
+            action = "fetch review cache",
+            fallback = null,
+        ) {
+            CodeSceneProjectServiceProvider.getInstance(psiFile.project).reviewCacheService.get(query)
+        }.also {
             if (it == null) Log.info("No cache available for $path. Skipping annotation.")
+        }
+    }
+
+    private fun fetchAceCache(
+        psiFile: PsiFile,
+        content: String,
+    ): List<FnToRefactor> {
+        val path = psiFile.virtualFile.path
+
+        return runSafeAction<List<FnToRefactor>>(
+            psiFile = psiFile,
+            action = "fetch ACE cache",
+            fallback = emptyList(),
+        ) {
+            AceEntryOrchestrator.getInstance(psiFile.project).fetchAceCache(path, content)
         }
     }
 
     override fun collectInformation(
         @NotNull file: PsiFile,
     ): AnnotationContext? {
-        val document = FileDocumentManager.getInstance().getDocument(file.virtualFile)
+        val document =
+            runSafeAction<Document?>(
+                psiFile = file,
+                action = "read document for collection",
+                fallback = null,
+            ) {
+                FileDocumentManager.getInstance().getDocument(file.virtualFile)
+            }
 
         val content =
             document?.text ?: run {
@@ -144,13 +191,45 @@ class CodeSmellAnnotator : ExternalAnnotator<
             }
 
         val cache = fetchCache(file, content)
-        val aceCache = AceEntryOrchestrator.getInstance(file.project).fetchAceCache(file.virtualFile.path, content)
+        val aceCache = fetchAceCache(file, content)
 
         return AnnotationContext(cache, aceCache)
     }
 
     override fun doAnnotate(collectedInfo: AnnotationContext): AnnotationContext? =
         collectedInfo.takeIf { shouldAnnotateCodeSmells(it.reviewCache, it.aceCache) }
+
+    private fun isRuntimeSafe(psiFile: PsiFile): Boolean {
+        val application = ApplicationManager.getApplication()
+        val project = psiFile.project
+        val virtualFile = psiFile.virtualFile
+
+        return !application.isDisposed && !project.isDisposed && virtualFile.isValid
+    }
+
+    private inline fun <T> runSafeAction(
+        psiFile: PsiFile,
+        action: String,
+        fallback: T,
+        block: () -> T,
+    ): T {
+        if (!isRuntimeSafe(psiFile)) {
+            Log.warn("Skipping $action for ${psiFile.name}: project or file is no longer valid.")
+            return fallback
+        }
+
+        return try {
+            block()
+        } catch (e: ProcessCanceledException) {
+            throw e
+        } catch (e: LinkageError) {
+            Log.warn("Skipping $action for ${psiFile.name}: ${e.message ?: e::class.java.simpleName}")
+            fallback
+        } catch (e: Exception) {
+            Log.warn("Skipping $action for ${psiFile.name}: ${e.message ?: e::class.java.simpleName}")
+            fallback
+        }
+    }
 
     class AnnotationContext(val reviewCache: Review?, val aceCache: List<FnToRefactor>)
 }
