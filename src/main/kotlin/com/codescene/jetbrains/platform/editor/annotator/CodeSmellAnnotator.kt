@@ -142,17 +142,18 @@ class CodeSmellAnnotator : ExternalAnnotator<
         psiFile: PsiFile,
         content: String,
     ): Review? {
-        val path = psiFile.virtualFile.path
-        val query = ReviewCacheQuery(content, path)
-
         return runSafeAction<Review?>(
             psiFile = psiFile,
             action = "fetch review cache",
             fallback = null,
         ) {
+            val path = psiFile.virtualFile.path
+            val query = ReviewCacheQuery(content, path)
             CodeSceneProjectServiceProvider.getInstance(psiFile.project).reviewCacheService.get(query)
         }.also {
-            if (it == null) Log.info("No cache available for $path. Skipping annotation.")
+            if (it == null) {
+                Log.info("No cache available for ${resolvePathForLogging(psiFile)}. Skipping annotation.")
+            }
         }
     }
 
@@ -160,13 +161,12 @@ class CodeSmellAnnotator : ExternalAnnotator<
         psiFile: PsiFile,
         content: String,
     ): List<FnToRefactor> {
-        val path = psiFile.virtualFile.path
-
         return runSafeAction<List<FnToRefactor>>(
             psiFile = psiFile,
             action = "fetch ACE cache",
             fallback = emptyList(),
         ) {
+            val path = psiFile.virtualFile.path
             AceEntryOrchestrator.getInstance(psiFile.project).fetchAceCache(path, content)
         }
     }
@@ -202,9 +202,21 @@ class CodeSmellAnnotator : ExternalAnnotator<
     private fun isRuntimeSafe(psiFile: PsiFile): Boolean {
         val application = ApplicationManager.getApplication()
         val project = psiFile.project
-        val virtualFile = psiFile.virtualFile
+        if (application.isDisposed || project.isDisposed || !psiFile.isValid) {
+            return false
+        }
 
-        return !application.isDisposed && !project.isDisposed && virtualFile.isValid
+        val virtualFile = psiFile.virtualFile ?: return false
+
+        return virtualFile.isValid
+    }
+
+    private fun resolvePathForLogging(psiFile: PsiFile): String {
+        return if (isRuntimeSafe(psiFile)) {
+            psiFile.virtualFile.path
+        } else {
+            psiFile.name
+        }
     }
 
     private inline fun <T> runSafeAction(
