@@ -15,7 +15,7 @@ import git4idea.repo.GitRepositoryManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-private val MAIN_BRANCH_NAMES = listOf("main", "master", "develop", "trunk", "dev")
+private val MAIN_BRANCH_NAMES = listOf("main", "master", "develop", "trunk", "dev", "development")
 
 @Service(Service.Level.PROJECT)
 class Git4IdeaChangeLister(

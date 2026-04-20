@@ -28,7 +28,7 @@ class Git4IdeaGitService(val project: Project) : IGitService {
         fun getInstance(project: Project): Git4IdeaGitService = project.service<Git4IdeaGitService>()
 
         private val MAIN_BRANCH_NAMES =
-            listOf("main", "master", "develop", "trunk", "dev")
+            listOf("main", "master", "develop", "trunk", "dev", "development")
     }
 
     /**

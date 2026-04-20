@@ -149,7 +149,7 @@ class TestGitChangeLister(private val testRepoPath: File) : IGitChangeLister {
     private fun getMergeBase(gitRootPath: String): String? {
         val currentBranch = exec("git", "rev-parse", "--abbrev-ref", "HEAD").trim()
 
-        val mainBranchNames = listOf("main", "master", "develop", "trunk", "dev")
+        val mainBranchNames = listOf("main", "master", "develop", "trunk", "dev", "development")
         if (mainBranchNames.any { it.equals(currentBranch, ignoreCase = true) }) {
             return exec("git", "rev-parse", "HEAD").trim()
         }
