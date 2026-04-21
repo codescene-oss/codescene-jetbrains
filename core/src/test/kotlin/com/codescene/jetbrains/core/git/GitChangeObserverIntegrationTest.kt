@@ -189,6 +189,10 @@ class GitChangeObserverIntegrationTest {
 
 private class NoOpSavedFilesTracker : ISavedFilesTracker {
     override fun getSavedFiles(): Set<String> = emptySet()
+
+    override fun clearSavedFiles() {}
+
+    override fun removeFromTracker(filePath: String) {}
 }
 
 private class NoOpOpenFilesObserver : IOpenFilesObserver {

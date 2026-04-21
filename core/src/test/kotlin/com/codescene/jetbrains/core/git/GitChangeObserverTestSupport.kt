@@ -21,9 +21,17 @@ class MockGitChangeLister : IGitChangeLister {
 }
 
 class MockSavedFilesTracker : ISavedFilesTracker {
-    var files: Set<String> = emptySet()
+    var files: MutableSet<String> = mutableSetOf()
 
-    override fun getSavedFiles(): Set<String> = files
+    override fun getSavedFiles(): Set<String> = files.toSet()
+
+    override fun clearSavedFiles() {
+        files.clear()
+    }
+
+    override fun removeFromTracker(filePath: String) {
+        files.remove(filePath)
+    }
 }
 
 class MockOpenFilesObserver : IOpenFilesObserver {
