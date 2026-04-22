@@ -28,11 +28,7 @@ class GitChangeObserver(
     private val eventQueue = mutableListOf<FileEvent>()
     private var scheduler: ScheduledExecutorService? = null
 
-    init {
-        kotlinx.coroutines.runBlocking { populateTrackerFromRepoState() }
-    }
-
-    internal suspend fun populateTrackerFromRepoState() {
+    suspend fun populateTrackerFromRepoState() {
         val changedFiles = gitChangeLister.getAllChangedFiles(gitRootPath, workspacePath, emptySet())
         // Add all files to tracker unconditionally - this ensures HandleFileDelete works correctly.
         // Files open in the editor are excluded from changedFiles (via OpenFilesObserver), but they

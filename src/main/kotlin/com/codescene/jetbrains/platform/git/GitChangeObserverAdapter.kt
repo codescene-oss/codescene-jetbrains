@@ -7,6 +7,9 @@ import com.codescene.jetbrains.core.contracts.ISavedFilesTracker
 import com.codescene.jetbrains.core.git.FileEvent
 import com.codescene.jetbrains.core.git.GitChangeObserver
 import com.intellij.openapi.Disposable
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class GitChangeObserverAdapter(
     gitChangeLister: IGitChangeLister,
@@ -32,7 +35,12 @@ class GitChangeObserverAdapter(
             batchIntervalMs,
         )
 
-    fun start() = observer.start()
+    fun start() {
+        CoroutineScope(Dispatchers.IO).launch {
+            observer.populateTrackerFromRepoState()
+        }
+        observer.start()
+    }
 
     fun queueEvent(event: FileEvent) = observer.queueEvent(event)
 
