@@ -185,6 +185,41 @@ class GitChangeObserverIntegrationTest {
 
             assertFalse(observer.getTrackedFiles().contains(testFile.absolutePath))
         }
+
+    @Test
+    fun `directory deletion cascades to all tracked files`() =
+        runBlocking {
+            val subDir = File(testRepoPath, "subdir")
+            subDir.mkdir()
+
+            val file1 = File(subDir, "file1.ts")
+            file1.writeText("export const x = 1;")
+            val file2 = File(subDir, "file2.ts")
+            file2.writeText("export const y = 2;")
+            val nestedDir = File(subDir, "nested")
+            nestedDir.mkdir()
+            val file3 = File(nestedDir, "file3.ts")
+            file3.writeText("export const z = 3;")
+
+            observer.queueEvent(FileEvent(FileEventType.CREATE, file1.absolutePath))
+            observer.queueEvent(FileEvent(FileEventType.CREATE, file2.absolutePath))
+            observer.queueEvent(FileEvent(FileEventType.CREATE, file3.absolutePath))
+            observer.processQueuedEvents()
+
+            assertTrue(observer.getTrackedFiles().contains(file1.absolutePath))
+            assertTrue(observer.getTrackedFiles().contains(file2.absolutePath))
+            assertTrue(observer.getTrackedFiles().contains(file3.absolutePath))
+
+            deletedFiles.clear()
+
+            observer.queueEvent(FileEvent(FileEventType.DELETE, subDir.absolutePath))
+            observer.processQueuedEvents()
+
+            assertEquals(3, deletedFiles.size)
+            assertTrue(deletedFiles.contains(file1.absolutePath))
+            assertTrue(deletedFiles.contains(file2.absolutePath))
+            assertTrue(deletedFiles.contains(file3.absolutePath))
+        }
 }
 
 private class NoOpSavedFilesTracker : ISavedFilesTracker {
