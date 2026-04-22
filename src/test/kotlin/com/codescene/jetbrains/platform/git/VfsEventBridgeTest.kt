@@ -167,4 +167,18 @@ class VfsEventBridgeTest {
         }
         verify(exactly = 0) { observer.queueEvent(match { it.path == "$workspacePath/file5.kt" }) }
     }
+
+    @Test
+    fun `dispose disconnects MessageBusConnection`() {
+        val messageBus = mockk<MessageBus>(relaxed = true)
+        val connection = mockk<MessageBusConnection>(relaxed = true)
+
+        every { project.messageBus } returns messageBus
+        every { messageBus.connect(bridge) } returns connection
+
+        bridge.start()
+        bridge.dispose()
+
+        verify(exactly = 1) { connection.disconnect() }
+    }
 }
