@@ -7,8 +7,8 @@ import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.intellij.platform.gradle.models.ProductRelease
+import org.jetbrains.intellij.platform.gradle.tasks.RunIdeTask
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask
-
 plugins {
     alias(libs.plugins.kotlin) // Kotlin support
     alias(libs.plugins.intelliJPlatform) // IntelliJ Platform Gradle Plugin
@@ -35,6 +35,14 @@ kotlin {
     jvmToolchain(17)
 }
 
+sourceSets {
+    create("uiTest") {
+        val testCompileClasspath = configurations.named("testCompileClasspath").get()
+        compileClasspath += sourceSets["main"].output + testCompileClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
 // Configure project's dependencies
 repositories {
     mavenLocal()
@@ -51,6 +59,10 @@ repositories {
     // IntelliJ Platform Gradle Plugin Repositories Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-repositories-extension.html
     intellijPlatform {
         defaultRepositories()
+    }
+
+    maven {
+        url = uri("https://packages.jetbrains.team/maven/p/ij/intellij-dependencies")
     }
 }
 
@@ -82,6 +94,12 @@ dependencies {
         zipSigner()
         testFramework(TestFrameworkType.Platform)
     }
+
+    val remoteRobotVersion = libs.versions.remoteRobot.get()
+    add("uiTestImplementation", "com.intellij.remoterobot:remote-robot:$remoteRobotVersion")
+    add("uiTestImplementation", "com.intellij.remoterobot:remote-fixtures:$remoteRobotVersion")
+    add("uiTestImplementation", libs.junit)
+    add("uiTestImplementation", kotlin("stdlib"))
 }
 
 // Configure IntelliJ Platform Gradle Plugin - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-extension.html
@@ -209,9 +227,30 @@ tasks {
     }
 
     withType<Test>().configureEach {
+        if (name == "uiTest") {
+            return@configureEach
+        }
         extensions.configure<org.gradle.testing.jacoco.plugins.JacocoTaskExtension> {
             isIncludeNoLocationClasses = true
             excludes = listOf("jdk.internal.*")
+        }
+    }
+
+    register<Test>("uiTest") {
+        description = "Runs UI tests; start the IDE with runIdeForUiTests in another process first."
+        group = "verification"
+        testClassesDirs = sourceSets["uiTest"].output.classesDirs
+        classpath = sourceSets["uiTest"].runtimeClasspath
+        useJUnit()
+        dependsOn("compileUiTestKotlin")
+        jvmArgs(
+            "--add-opens",
+            "java.base/java.lang=ALL-UNNAMED",
+            "--add-opens",
+            "java.base/java.lang.reflect=ALL-UNNAMED",
+        )
+        extensions.configure<org.gradle.testing.jacoco.plugins.JacocoTaskExtension> {
+            isEnabled = false
         }
     }
 
@@ -260,7 +299,13 @@ intellijPlatformTesting {
                     CommandLineArgumentProvider {
                         listOf(
                             "-Drobot-server.port=8082",
+                            "-Didea.trust.all.projects=true",
+                            "-Dide.show.tips.on.startup.default.value=false",
+                            "-Dide.browser.jcef.jsQueryPoolSize=10000",
                             "-Dide.mac.message.dialogs.as.sheets=false",
+                            "-DjbScreenMenuBar.enabled=false",
+                            "-Dapple.laf.useScreenMenuBar=false",
+                            "-Dide.mac.file.chooser.native=false",
                             "-Djb.privacy.policy.text=<!--999.999-->",
                             "-Djb.consents.confirmation.enabled=false",
                         )
@@ -272,6 +317,12 @@ intellijPlatformTesting {
             }
         }
     }
+}
+
+tasks.named<RunIdeTask>("runIdeForUiTests") {
+    dependsOn("fetchCwf", "processResources")
+    val devMode = project.properties["FEATURE_CWF_DEVMODE"]?.toString()?.toBoolean() ?: false
+    systemProperty("FEATURE_CWF_DEVMODE", devMode)
 }
 
 // Replace placeholders in feature-flags.properties with actual Gradle properties
