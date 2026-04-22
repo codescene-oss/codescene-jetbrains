@@ -181,4 +181,73 @@ class VfsEventBridgeTest {
 
         verify(exactly = 1) { connection.disconnect() }
     }
+
+    @Test
+    fun `convertEvent handles paths with special characters`() {
+        val event = mockk<VFileCreateEvent>()
+        every { event.path } returns "$workspacePath/file with spaces.kt"
+
+        val result = bridge.convertEvent(event)
+
+        assertEquals(FileEventType.CREATE, result?.type)
+        assertEquals("$workspacePath/file with spaces.kt", result?.path)
+    }
+
+    @Test
+    fun `convertEvent handles paths with unicode characters`() {
+        val event = mockk<VFileCreateEvent>()
+        every { event.path } returns "$workspacePath/文件.kt"
+
+        val result = bridge.convertEvent(event)
+
+        assertEquals(FileEventType.CREATE, result?.type)
+        assertEquals("$workspacePath/文件.kt", result?.path)
+    }
+
+    @Test
+    fun `convertEvent handles paths with special symbols`() {
+        val event = mockk<VFileCreateEvent>()
+        every { event.path } returns "$workspacePath/file-with_special.chars.kt"
+
+        val result = bridge.convertEvent(event)
+
+        assertEquals(FileEventType.CREATE, result?.type)
+        assertEquals("$workspacePath/file-with_special.chars.kt", result?.path)
+    }
+
+    @Test
+    fun `convertEvent handles empty path`() {
+        val event = mockk<VFileCreateEvent>()
+        every { event.path } returns ""
+
+        val result = bridge.convertEvent(event)
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `isWithinWorkspace handles empty path`() {
+        assertFalse(bridge.isWithinWorkspace(""))
+    }
+
+    @Test
+    fun `isWithinWorkspace handles relative paths`() {
+        assertFalse(bridge.isWithinWorkspace("relative/path/file.kt"))
+    }
+
+    @Test
+    fun `convertEvent handles paths with dots in filename`() {
+        val event = mockk<VFileCreateEvent>()
+        every { event.path } returns "$workspacePath/.gitignore"
+
+        val result = bridge.convertEvent(event)
+
+        assertEquals(FileEventType.CREATE, result?.type)
+        assertEquals("$workspacePath/.gitignore", result?.path)
+    }
+
+    @Test
+    fun `isWithinWorkspace handles paths with multiple slashes`() {
+        assertTrue(bridge.isWithinWorkspace("$workspacePath//file.kt"))
+    }
 }
