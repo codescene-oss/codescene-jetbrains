@@ -126,5 +126,107 @@ class GitChangeObserverCallbackTest {
         }
 
         verify(exactly = 1) { cachedReviewService.review(editor) }
+        verify(exactly = 0) { cachedReviewService.reviewByPath(any()) }
+    }
+
+    @Test
+    fun `onFileChanged callback triggers reviewByPath when file is not open in editor`() {
+        val cachedReviewService = mockk<CachedReviewService>(relaxed = true)
+        val localFileSystem = mockk<LocalFileSystem>(relaxed = true)
+        val fileEditorManager = mockk<FileEditorManager>(relaxed = true)
+        val virtualFile = mockk<VirtualFile>(relaxed = true)
+
+        mockkStatic(CachedReviewService::class)
+        mockkStatic(LocalFileSystem::class)
+        mockkStatic(FileEditorManager::class)
+
+        every { CachedReviewService.getInstance(project) } returns cachedReviewService
+        every { LocalFileSystem.getInstance() } returns localFileSystem
+        every { FileEditorManager.getInstance(project) } returns fileEditorManager
+
+        every { localFileSystem.findFileByPath("/test/path/file.kt") } returns virtualFile
+        every { fileEditorManager.getEditors(virtualFile) } returns emptyArray()
+
+        val runnableSlot = slot<Runnable>()
+        every { mockApplication.invokeLater(capture(runnableSlot)) } answers {
+            runnableSlot.captured.run()
+        }
+
+        val getEditorForFile: (String) -> Editor? = { filePath ->
+            val file = LocalFileSystem.getInstance().findFileByPath(filePath)
+            if (file != null) {
+                FileEditorManager.getInstance(project).getEditors(file).firstNotNullOfOrNull { fe ->
+                    (fe as? TextEditor)?.editor
+                }
+            } else {
+                null
+            }
+        }
+
+        val onFileChanged: suspend (String) -> Unit = { filePath ->
+            ApplicationManager.getApplication().invokeLater {
+                val editor = getEditorForFile(filePath)
+                if (editor != null) {
+                    CachedReviewService.getInstance(project).review(editor)
+                } else {
+                    CachedReviewService.getInstance(project).reviewByPath(filePath)
+                }
+            }
+        }
+
+        kotlinx.coroutines.runBlocking {
+            onFileChanged("/test/path/file.kt")
+        }
+
+        verify(exactly = 0) { cachedReviewService.review(any()) }
+        verify(exactly = 1) { cachedReviewService.reviewByPath("/test/path/file.kt") }
+    }
+
+    @Test
+    fun `onFileChanged callback triggers reviewByPath when file not found in LocalFileSystem`() {
+        val cachedReviewService = mockk<CachedReviewService>(relaxed = true)
+        val localFileSystem = mockk<LocalFileSystem>(relaxed = true)
+
+        mockkStatic(CachedReviewService::class)
+        mockkStatic(LocalFileSystem::class)
+
+        every { CachedReviewService.getInstance(project) } returns cachedReviewService
+        every { LocalFileSystem.getInstance() } returns localFileSystem
+
+        every { localFileSystem.findFileByPath("/test/path/file.kt") } returns null
+
+        val runnableSlot = slot<Runnable>()
+        every { mockApplication.invokeLater(capture(runnableSlot)) } answers {
+            runnableSlot.captured.run()
+        }
+
+        val getEditorForFile: (String) -> Editor? = { filePath ->
+            val file = LocalFileSystem.getInstance().findFileByPath(filePath)
+            if (file != null) {
+                FileEditorManager.getInstance(project).getEditors(file).firstNotNullOfOrNull { fe ->
+                    (fe as? TextEditor)?.editor
+                }
+            } else {
+                null
+            }
+        }
+
+        val onFileChanged: suspend (String) -> Unit = { filePath ->
+            ApplicationManager.getApplication().invokeLater {
+                val editor = getEditorForFile(filePath)
+                if (editor != null) {
+                    CachedReviewService.getInstance(project).review(editor)
+                } else {
+                    CachedReviewService.getInstance(project).reviewByPath(filePath)
+                }
+            }
+        }
+
+        kotlinx.coroutines.runBlocking {
+            onFileChanged("/test/path/file.kt")
+        }
+
+        verify(exactly = 0) { cachedReviewService.review(any()) }
+        verify(exactly = 1) { cachedReviewService.reviewByPath("/test/path/file.kt") }
     }
 }

@@ -63,8 +63,11 @@ class GitChangeObserverService(
                 },
                 onFileChanged = { filePath ->
                     ApplicationManager.getApplication().invokeLater {
-                        getEditorForFile(filePath)?.let { editor ->
+                        val editor = getEditorForFile(filePath)
+                        if (editor != null) {
                             CachedReviewService.getInstance(project).review(editor)
+                        } else {
+                            CachedReviewService.getInstance(project).reviewByPath(filePath)
                         }
                     }
                 },
