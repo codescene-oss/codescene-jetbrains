@@ -132,4 +132,39 @@ class VfsEventBridgeTest {
         verify(exactly = 1) { messageBus.connect(bridge) }
         verify(exactly = 1) { connection.subscribe(any(), any()) }
     }
+
+    @Test
+    fun `batch event processing queues all valid events`() {
+        val createEvent1 = mockk<VFileCreateEvent>()
+        val createEvent2 = mockk<VFileCreateEvent>()
+        val changeEvent = mockk<VFileContentChangeEvent>()
+        val deleteEvent = mockk<VFileDeleteEvent>()
+        val moveEvent = mockk<VFileMoveEvent>()
+
+        every { createEvent1.path } returns "$workspacePath/file1.kt"
+        every { createEvent2.path } returns "$workspacePath/file2.kt"
+        every { changeEvent.path } returns "$workspacePath/file3.kt"
+        every { deleteEvent.path } returns "$workspacePath/file4.kt"
+        every { moveEvent.path } returns "$workspacePath/file5.kt"
+
+        val events = listOf(createEvent1, createEvent2, changeEvent, deleteEvent, moveEvent)
+
+        for (event in events) {
+            bridge.convertEvent(event)?.let { observer.queueEvent(it) }
+        }
+
+        verify(exactly = 1) {
+            observer.queueEvent(match { it.path == "$workspacePath/file1.kt" && it.type == FileEventType.CREATE })
+        }
+        verify(exactly = 1) {
+            observer.queueEvent(match { it.path == "$workspacePath/file2.kt" && it.type == FileEventType.CREATE })
+        }
+        verify(exactly = 1) {
+            observer.queueEvent(match { it.path == "$workspacePath/file3.kt" && it.type == FileEventType.CHANGE })
+        }
+        verify(exactly = 1) {
+            observer.queueEvent(match { it.path == "$workspacePath/file4.kt" && it.type == FileEventType.DELETE })
+        }
+        verify(exactly = 0) { observer.queueEvent(match { it.path == "$workspacePath/file5.kt" }) }
+    }
 }
