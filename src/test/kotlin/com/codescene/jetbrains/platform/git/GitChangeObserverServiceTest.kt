@@ -55,4 +55,13 @@ class GitChangeObserverServiceTest {
     fun `dispose cleans up resources`() {
         service.dispose()
     }
+
+    @Test
+    fun `start does nothing when LocalFileSystem cannot find workspace path`() {
+        every { mockLocalFileSystem.findFileByPath(workspacePath) } returns null
+
+        service.start()
+
+        verify(exactly = 1) { mockLocalFileSystem.findFileByPath(workspacePath) }
+    }
 }
