@@ -7,8 +7,11 @@ import com.intellij.openapi.vfs.newvfs.events.VFileCreateEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileMoveEvent
 import com.intellij.openapi.vfs.newvfs.events.VFilePropertyChangeEvent
+import com.intellij.util.messages.MessageBus
+import com.intellij.util.messages.MessageBusConnection
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -114,5 +117,19 @@ class VfsEventBridgeTest {
     fun `isWithinWorkspace handles workspace path with trailing slash`() {
         val bridgeWithSlash = VfsEventBridge(project, "$workspacePath/", observer)
         assertTrue(bridgeWithSlash.isWithinWorkspace("$workspacePath/src/file.kt"))
+    }
+
+    @Test
+    fun `start subscribes to MessageBus VFS_CHANGES`() {
+        val messageBus = mockk<MessageBus>(relaxed = true)
+        val connection = mockk<MessageBusConnection>(relaxed = true)
+
+        every { project.messageBus } returns messageBus
+        every { messageBus.connect(bridge) } returns connection
+
+        bridge.start()
+
+        verify(exactly = 1) { messageBus.connect(bridge) }
+        verify(exactly = 1) { connection.subscribe(any(), any()) }
     }
 }
