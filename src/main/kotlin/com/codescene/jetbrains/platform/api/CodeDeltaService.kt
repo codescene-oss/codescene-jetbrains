@@ -7,6 +7,7 @@ import com.codescene.jetbrains.core.delta.DeltaAnalysisResult
 import com.codescene.jetbrains.core.delta.adaptDeltaResult
 import com.codescene.jetbrains.core.delta.completeDeltaAnalysis
 import com.codescene.jetbrains.core.telemetry.resolveTelemetryInfo
+import com.codescene.jetbrains.core.util.extractExtension
 import com.codescene.jetbrains.core.util.resolveBaselineCliCacheFileName
 import com.codescene.jetbrains.core.util.resolveCliCacheFileName
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
@@ -47,7 +48,7 @@ class CodeDeltaService(private val project: Project) : com.codescene.jetbrains.c
         fileName: String,
         currentCode: String,
     ): DeltaAnalysisResult {
-        val extension = path.substringAfterLast('.', "").ifEmpty { null }
+        val extension = extractExtension(fileName)
         val lineCount = currentCode.lines().size
         return performDeltaAnalysisInternal(path, fileName, extension, currentCode, lineCount)
     }

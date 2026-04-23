@@ -9,6 +9,8 @@ import com.codescene.jetbrains.core.git.GitChangeObserver
 import com.intellij.openapi.Disposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class GitChangeObserverAdapter(
@@ -35,11 +37,13 @@ class GitChangeObserverAdapter(
             batchIntervalMs,
         )
 
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     fun start() {
-        CoroutineScope(Dispatchers.IO).launch {
+        scope.launch {
             observer.populateTrackerFromRepoState()
+            observer.start()
         }
-        observer.start()
     }
 
     fun queueEvent(event: FileEvent) = observer.queueEvent(event)
@@ -54,5 +58,8 @@ class GitChangeObserverAdapter(
 
     fun getQueuedEventCount(): Int = observer.getQueuedEventCount()
 
-    override fun dispose() = observer.dispose()
+    override fun dispose() {
+        scope.cancel()
+        observer.dispose()
+    }
 }

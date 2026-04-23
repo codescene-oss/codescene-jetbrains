@@ -15,6 +15,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
@@ -85,7 +86,7 @@ class GitChangeObserverCallbackTest {
         val textEditor = mockk<TextEditor>(relaxed = true)
         val editor = mockk<Editor>(relaxed = true)
 
-        mockkStatic(CachedReviewService::class)
+        mockkObject(CachedReviewService.Companion)
         mockkStatic(LocalFileSystem::class)
         mockkStatic(FileEditorManager::class)
 
@@ -136,7 +137,7 @@ class GitChangeObserverCallbackTest {
         val fileEditorManager = mockk<FileEditorManager>(relaxed = true)
         val virtualFile = mockk<VirtualFile>(relaxed = true)
 
-        mockkStatic(CachedReviewService::class)
+        mockkObject(CachedReviewService.Companion)
         mockkStatic(LocalFileSystem::class)
         mockkStatic(FileEditorManager::class)
 
@@ -187,7 +188,7 @@ class GitChangeObserverCallbackTest {
         val cachedReviewService = mockk<CachedReviewService>(relaxed = true)
         val localFileSystem = mockk<LocalFileSystem>(relaxed = true)
 
-        mockkStatic(CachedReviewService::class)
+        mockkObject(CachedReviewService.Companion)
         mockkStatic(LocalFileSystem::class)
 
         every { CachedReviewService.getInstance(project) } returns cachedReviewService

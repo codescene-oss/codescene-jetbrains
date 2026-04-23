@@ -117,6 +117,7 @@ class CachedReviewService(
         val cachedReview = serviceProvider.reviewCacheService.get(ReviewCacheQuery(currentCode, filePath))
         if (cachedReview != null) {
             Log.debug("reviewByPath cache hit path=$filePath", "CodeSceneCachedReview")
+            handleDeltaByPath(filePath, fileName, currentCode, cachedReview.score.orElse(null))
             return
         }
 

@@ -57,12 +57,14 @@ class GitChangeObserverService(
                 fileSystem = fileSystem,
                 onFileDeleted = { filePath ->
                     ApplicationManager.getApplication().invokeLater {
+                        if (project.isDisposed) return@invokeLater
                         fileEventHandler.handleDelete(filePath)
                         updateMonitor(project)
                     }
                 },
                 onFileChanged = { filePath ->
                     ApplicationManager.getApplication().invokeLater {
+                        if (project.isDisposed) return@invokeLater
                         val editor = getEditorForFile(filePath)
                         if (editor != null) {
                             CachedReviewService.getInstance(project).review(editor)

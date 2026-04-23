@@ -41,7 +41,7 @@ class GitChangeObserverPrePopulationTest {
         )
 
     @Test
-    fun `tracker is pre-populated on construction`() =
+    fun `tracker is pre-populated when populateTrackerFromRepoState is called`() =
         runBlocking {
             mockGitChangeLister.changedFiles = setOf("src/file1.ts", "src/file2.ts")
 
@@ -97,7 +97,7 @@ class GitChangeObserverPrePopulationTest {
         }
 
     @Test
-    fun `delete event fires for file that was open in editor during init`() =
+    fun `delete event fires for file that was open in editor when populateTrackerFromRepoState is called`() =
         runBlocking {
             mockGitChangeLister.changedFiles = setOf("src/open-in-editor.ts")
             mockOpenFilesObserver.files = setOf("/workspace/src/open-in-editor.ts")
