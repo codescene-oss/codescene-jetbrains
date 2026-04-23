@@ -1,5 +1,7 @@
 package com.codescene.jetbrains.core.git
 
+import com.codescene.jetbrains.core.contracts.ILogger
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -13,6 +15,7 @@ class GitChangeObserverTest {
     private lateinit var mockSavedFilesTracker: MockSavedFilesTracker
     private lateinit var mockOpenFilesObserver: MockOpenFilesObserver
     private lateinit var mockFileSystem: MockFileSystem
+    private lateinit var logger: ILogger
     private var deletedFiles: MutableList<String> = mutableListOf()
     private var changedFiles: MutableList<String> = mutableListOf()
 
@@ -27,6 +30,7 @@ class GitChangeObserverTest {
         mockSavedFilesTracker = MockSavedFilesTracker()
         mockOpenFilesObserver = MockOpenFilesObserver()
         mockFileSystem = MockFileSystem()
+        logger = mockk(relaxed = true)
 
         observer =
             GitChangeObserver(
@@ -38,6 +42,7 @@ class GitChangeObserverTest {
                 onFileChanged = { changedFiles.add(it) },
                 workspacePath = workspacePath,
                 gitRootPath = gitRootPath,
+                logger = logger,
             )
     }
 

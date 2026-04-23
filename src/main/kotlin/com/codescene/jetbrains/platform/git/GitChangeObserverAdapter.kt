@@ -6,6 +6,7 @@ import com.codescene.jetbrains.core.contracts.IOpenFilesObserver
 import com.codescene.jetbrains.core.contracts.ISavedFilesTracker
 import com.codescene.jetbrains.core.git.FileEvent
 import com.codescene.jetbrains.core.git.GitChangeObserver
+import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.Disposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,13 +36,16 @@ class GitChangeObserverAdapter(
             workspacePath,
             gitRootPath,
             batchIntervalMs,
+            Log,
         )
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     fun start() {
+        Log.info("Starting async initialization", "GitChangeObserverAdapter")
         scope.launch {
             observer.populateTrackerFromRepoState()
+            Log.debug("Tracker populated, starting scheduler", "GitChangeObserverAdapter")
             observer.start()
         }
     }
@@ -59,6 +63,7 @@ class GitChangeObserverAdapter(
     fun getQueuedEventCount(): Int = observer.getQueuedEventCount()
 
     override fun dispose() {
+        Log.info("Disposing, cancelling scope", "GitChangeObserverAdapter")
         scope.cancel()
         observer.dispose()
     }

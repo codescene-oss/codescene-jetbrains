@@ -6,6 +6,7 @@ import com.codescene.jetbrains.core.git.FileSystemAdapter
 import com.codescene.jetbrains.core.git.MAX_UNTRACKED_FILES_PER_LOCATION
 import com.codescene.jetbrains.core.git.convertGitPathToWorkspacePath
 import com.codescene.jetbrains.core.git.createWorkspacePrefix
+import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -32,7 +33,12 @@ class Git4IdeaChangeLister(
         workspacePath: String,
         filesToExcludeFromHeuristic: Set<String>,
     ): Set<String> {
-        val repository = getRepository(gitRootPath) ?: return emptySet()
+        Log.debug("Getting changed files gitRoot=${gitRootPath.substringAfterLast('/')}", "Git4IdeaChangeLister")
+        val repository = getRepository(gitRootPath)
+        if (repository == null) {
+            Log.debug("No repository found", "Git4IdeaChangeLister")
+            return emptySet()
+        }
 
         val filesFromRepoState =
             collectFilesFromRepoState(
@@ -43,7 +49,9 @@ class Git4IdeaChangeLister(
             )
         val filesFromGitDiff = collectFilesFromGitDiff(repository, gitRootPath, workspacePath)
 
-        return filesFromRepoState + filesFromGitDiff
+        val files = filesFromRepoState + filesFromGitDiff
+        Log.debug("Found ${files.size} changed files", "Git4IdeaChangeLister")
+        return files
     }
 
     private suspend fun collectFilesFromRepoState(
@@ -57,6 +65,7 @@ class Git4IdeaChangeLister(
             val (normalizedWorkspacePath, workspacePrefix) = createWorkspacePrefix(workspacePath)
 
             val stagingArea = repository.stagingAreaHolder.allRecords
+            Log.debug("Processing ${stagingArea.size} staging records", "Git4IdeaChangeLister")
             for (record in stagingArea) {
                 val status = "${record.index}${record.workTree}".trim()
                 val includedStatuses = setOf("A", "M", "R", "C", "AM", "MM")
@@ -99,6 +108,11 @@ class Git4IdeaChangeLister(
 
             for ((location, filesList) in untrackedFilesByLocation) {
                 val shouldExclude = filesList.size > MAX_UNTRACKED_FILES_PER_LOCATION
+                Log.debug(
+                    "Untracked heuristic: ${filesList.size} files in location=$location " +
+                        "(limit=$MAX_UNTRACKED_FILES_PER_LOCATION)",
+                    "Git4IdeaChangeLister",
+                )
 
                 for (filePath in filesList) {
                     val absolutePath = fileSystem.getAbsolutePath(gitRootPath, filePath)
@@ -130,12 +144,17 @@ class Git4IdeaChangeLister(
     ): Set<String> =
         withContext(Dispatchers.IO) {
             val files = mutableSetOf<String>()
-            val baseCommit = getMergeBase(repository) ?: return@withContext files
+            val baseCommit = getMergeBase(repository)
+            if (baseCommit == null) {
+                Log.debug("No merge base, skipping git diff", "Git4IdeaChangeLister")
+                return@withContext files
+            }
 
             if (baseCommit.isEmpty()) {
                 return@withContext files
             }
 
+            Log.debug("Processing git diff from ${baseCommit.take(8)}", "Git4IdeaChangeLister")
             val output = gitExecutor.runDiff(repository, baseCommit)
             if (output.isEmpty()) {
                 return@withContext files
@@ -171,6 +190,7 @@ class Git4IdeaChangeLister(
         val currentBranch = repository.currentBranchName ?: return null
 
         if (isMainLineBranch(currentBranch)) {
+            Log.debug("On mainline branch, using HEAD", "Git4IdeaChangeLister")
             return resolveHeadCommitSha(repository)
         }
 
@@ -191,10 +211,12 @@ class Git4IdeaChangeLister(
             for (ref in refsToTry) {
                 val mergeBase = runMergeBase(repository, currentBranchName, ref)
                 if (!mergeBase.isNullOrBlank()) {
+                    Log.debug("Found merge base for ref=$ref", "Git4IdeaChangeLister")
                     return mergeBase.trim()
                 }
             }
         }
+        Log.debug("Could not find merge base with any main branch", "Git4IdeaChangeLister")
         return null
     }
 

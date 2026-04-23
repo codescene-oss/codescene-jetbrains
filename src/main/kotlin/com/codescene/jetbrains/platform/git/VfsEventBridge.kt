@@ -2,6 +2,7 @@ package com.codescene.jetbrains.platform.git
 
 import com.codescene.jetbrains.core.git.FileEvent
 import com.codescene.jetbrains.core.git.FileEventType
+import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFileManager
@@ -20,16 +21,20 @@ class VfsEventBridge(
     private var connection: MessageBusConnection? = null
 
     fun start() {
+        Log.info("Starting VFS listener", "VfsEventBridge")
         connection?.disconnect()
         connection = project.messageBus.connect(this)
         connection?.subscribe(
             VirtualFileManager.VFS_CHANGES,
             object : BulkFileListener {
                 override fun after(events: List<VFileEvent>) {
+                    var queuedCount = 0
                     for (event in events) {
                         val fileEvent = convertEvent(event) ?: continue
                         observer.queueEvent(fileEvent)
+                        queuedCount++
                     }
+                    Log.debug("Received ${events.size} VFS events, queued $queuedCount", "VfsEventBridge")
                 }
             },
         )
@@ -43,7 +48,10 @@ class VfsEventBridge(
             is VFileCreateEvent -> FileEvent(FileEventType.CREATE, path)
             is VFileDeleteEvent -> FileEvent(FileEventType.DELETE, path)
             is VFileContentChangeEvent -> FileEvent(FileEventType.CHANGE, path)
-            else -> null
+            else -> {
+                Log.debug("Ignoring event type=${event::class.simpleName}", "VfsEventBridge")
+                null
+            }
         }
     }
 
@@ -53,6 +61,7 @@ class VfsEventBridge(
     }
 
     override fun dispose() {
+        Log.debug("Disposing", "VfsEventBridge")
         connection?.disconnect()
         connection = null
     }

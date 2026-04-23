@@ -1,10 +1,12 @@
 package com.codescene.jetbrains.core.git
 
+import com.codescene.jetbrains.core.contracts.ILogger
 import com.codescene.jetbrains.core.contracts.ISavedFilesTracker
 import java.util.TreeSet
 
 class SavedFilesTracker(
     private val isFileOpenInEditor: (String) -> Boolean,
+    private val logger: ILogger,
 ) : ISavedFilesTracker {
     private val savedFiles: MutableSet<String> = TreeSet(String.CASE_INSENSITIVE_ORDER)
 
@@ -12,6 +14,9 @@ class SavedFilesTracker(
         if (filePath.isEmpty()) return
         if (isFileOpenInEditor(filePath)) {
             synchronized(savedFiles) { savedFiles.add(filePath) }
+            logger.debug("Tracked saved file", "SavedFilesTracker")
+        } else {
+            logger.debug("Ignoring save for file not open in editor", "SavedFilesTracker")
         }
     }
 
@@ -20,6 +25,8 @@ class SavedFilesTracker(
     }
 
     override fun clearSavedFiles() {
+        val count = synchronized(savedFiles) { savedFiles.size }
+        logger.debug("Clearing $count saved files", "SavedFilesTracker")
         synchronized(savedFiles) { savedFiles.clear() }
     }
 

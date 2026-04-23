@@ -2,6 +2,7 @@ package com.codescene.jetbrains.core.git
 
 import com.codescene.jetbrains.core.contracts.IFileSystem
 import com.codescene.jetbrains.core.contracts.IGitChangeLister
+import com.codescene.jetbrains.core.contracts.ILogger
 import com.codescene.jetbrains.core.contracts.IOpenFilesObserver
 import com.codescene.jetbrains.core.contracts.ISavedFilesTracker
 import java.io.File
@@ -23,12 +24,14 @@ class GitChangeObserver(
     private val workspacePath: String,
     private val gitRootPath: String,
     private val batchIntervalMs: Long = 1000L,
+    private val logger: ILogger,
 ) {
     private val tracker = mutableSetOf<String>()
     private val eventQueue = mutableListOf<FileEvent>()
     private var scheduler: ScheduledExecutorService? = null
 
     suspend fun populateTrackerFromRepoState() {
+        logger.debug("Populating tracker from repo state", "GitChangeObserver")
         val changedFiles = gitChangeLister.getAllChangedFiles(gitRootPath, workspacePath, emptySet())
         // Add all files to tracker unconditionally - this ensures HandleFileDelete works correctly.
         // Files open in the editor are excluded from changedFiles (via OpenFilesObserver), but they
@@ -39,9 +42,11 @@ class GitChangeObserver(
                 tracker.add(absolutePath)
             }
         }
+        logger.debug("Populated tracker with ${changedFiles.size} files", "GitChangeObserver")
     }
 
     fun start() {
+        logger.info("Starting event scheduler interval=${batchIntervalMs}ms", "GitChangeObserver")
         dispose()
         scheduler = Executors.newSingleThreadScheduledExecutor()
         scheduler?.scheduleAtFixedRate(
@@ -53,6 +58,7 @@ class GitChangeObserver(
     }
 
     fun queueEvent(event: FileEvent) {
+        logger.debug("Queued event type=${event.type} path=${event.path.substringAfterLast('/')}", "GitChangeObserver")
         synchronized(eventQueue) {
             eventQueue.add(event)
         }
@@ -66,6 +72,7 @@ class GitChangeObserver(
         }
 
         if (events.isEmpty()) {
+            logger.debug("No events to process", "GitChangeObserver")
             return
         }
 
@@ -75,6 +82,8 @@ class GitChangeObserver(
                 .mapValues { it.value.last() }
                 .values
                 .toList()
+
+        logger.debug("Processing ${events.size} events (${deduplicatedEvents.size} after dedup)", "GitChangeObserver")
 
         val changedFiles = getChangedFilesVsBaseline()
 
@@ -112,6 +121,7 @@ class GitChangeObserver(
     }
 
     fun dispose() {
+        logger.info("Disposing event scheduler", "GitChangeObserver")
         scheduler?.shutdown()
         scheduler = null
     }
@@ -140,16 +150,19 @@ class GitChangeObserver(
     ) {
         val extension = fileSystem.getExtension(filePath)
         if (extension.isEmpty()) {
+            logger.debug("Skipping file with no extension", "GitChangeObserver")
             return
         }
 
         if (!shouldProcessFile(filePath, changedFiles)) {
+            logger.debug("Skipping file not in changed list", "GitChangeObserver")
             return
         }
 
         synchronized(tracker) {
             tracker.add(filePath)
         }
+        logger.debug("Added file to tracker", "GitChangeObserver")
         onFileChanged(filePath)
     }
 
@@ -160,6 +173,7 @@ class GitChangeObserver(
         synchronized(tracker) {
             if (tracker.contains(filePath)) {
                 tracker.remove(filePath)
+                logger.debug("Removing tracked file", "GitChangeObserver")
                 onFileDeleted(filePath)
                 return
             }
@@ -180,6 +194,8 @@ class GitChangeObserver(
             synchronized(tracker) {
                 filesToDelete = tracker.filter { it.startsWith(directoryPrefix) }
             }
+
+            logger.debug("Directory deletion cascade files=${filesToDelete.size}", "GitChangeObserver")
 
             for (fileToDelete in filesToDelete) {
                 synchronized(tracker) {

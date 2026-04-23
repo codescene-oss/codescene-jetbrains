@@ -1,8 +1,10 @@
 package com.codescene.jetbrains.core.git
 
 import com.codescene.jetbrains.core.contracts.IFileSystem
+import com.codescene.jetbrains.core.contracts.ILogger
 import com.codescene.jetbrains.core.contracts.IOpenFilesObserver
 import com.codescene.jetbrains.core.contracts.ISavedFilesTracker
+import io.mockk.mockk
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -18,6 +20,7 @@ class GitChangeObserverIntegrationTest {
     private lateinit var testRepoPath: File
     private lateinit var observer: GitChangeObserver
     private lateinit var gitChangeLister: TestGitChangeLister
+    private lateinit var logger: ILogger
     private var deletedFiles: MutableList<String> = mutableListOf()
     private var changedFiles: MutableList<String> = mutableListOf()
 
@@ -29,6 +32,7 @@ class GitChangeObserverIntegrationTest {
         deletedFiles = mutableListOf()
         changedFiles = mutableListOf()
         gitChangeLister = TestGitChangeLister(testRepoPath)
+        logger = mockk(relaxed = true)
 
         observer =
             GitChangeObserver(
@@ -40,6 +44,7 @@ class GitChangeObserverIntegrationTest {
                 onFileChanged = { changedFiles.add(it) },
                 workspacePath = testRepoPath.absolutePath,
                 gitRootPath = testRepoPath.absolutePath,
+                logger = logger,
             )
     }
 

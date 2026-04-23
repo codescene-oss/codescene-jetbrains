@@ -2,6 +2,7 @@ package com.codescene.jetbrains.platform.git
 
 import com.codescene.jetbrains.core.contracts.ISavedFilesTracker
 import com.codescene.jetbrains.core.git.SavedFilesTracker
+import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -16,9 +17,12 @@ class SavedFilesTrackerAdapter(
     private var connection: MessageBusConnection? = null
 
     private val tracker =
-        SavedFilesTracker { filePath ->
-            isFileOpenInEditor(filePath)
-        }
+        SavedFilesTracker(
+            isFileOpenInEditor = { filePath ->
+                isFileOpenInEditor(filePath)
+            },
+            logger = Log,
+        )
 
     private fun isFileOpenInEditor(filePath: String): Boolean {
         val fileEditorManager = FileEditorManager.getInstance(project)
@@ -26,6 +30,7 @@ class SavedFilesTrackerAdapter(
     }
 
     fun start() {
+        Log.info("Starting document save listener", "SavedFilesTrackerAdapter")
         connection?.disconnect()
         connection = project.messageBus.connect(this)
         connection?.subscribe(
@@ -33,6 +38,7 @@ class SavedFilesTrackerAdapter(
             object : FileDocumentManagerListener {
                 override fun beforeDocumentSaving(document: Document) {
                     val file = FileDocumentManager.getInstance().getFile(document)
+                    Log.debug("Document saving file=${file?.name ?: "null"}", "SavedFilesTrackerAdapter")
                     if (file != null) {
                         tracker.onFileSaved(file.path)
                     }
@@ -48,6 +54,7 @@ class SavedFilesTrackerAdapter(
     override fun removeFromTracker(filePath: String) = tracker.removeFromTracker(filePath)
 
     override fun dispose() {
+        Log.debug("Disposing", "SavedFilesTrackerAdapter")
         connection?.disconnect()
         connection = null
     }

@@ -4,6 +4,7 @@ import com.codescene.jetbrains.core.git.FileSystemAdapter
 import com.codescene.jetbrains.core.review.FileEventHandler
 import com.codescene.jetbrains.platform.api.CachedReviewService
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
+import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
@@ -29,8 +30,17 @@ class GitChangeObserverService(
     private var savedFilesTracker: SavedFilesTrackerAdapter? = null
 
     fun start() {
-        val workspacePath = project.basePath ?: return
-        val gitRootPath = resolveGitRootPath(workspacePath) ?: return
+        val workspacePath = project.basePath
+        if (workspacePath == null) {
+            Log.warn("Cannot start: project base path is null", "GitChangeObserverService")
+            return
+        }
+        Log.info("Starting service", "GitChangeObserverService")
+        val gitRootPath = resolveGitRootPath(workspacePath)
+        if (gitRootPath == null) {
+            Log.warn("Cannot start: could not resolve git root", "GitChangeObserverService")
+            return
+        }
 
         val serviceProvider = CodeSceneProjectServiceProvider.getInstance(project)
         val fileEventHandler =
@@ -56,6 +66,8 @@ class GitChangeObserverService(
                 openFilesObserver = openFilesObserver,
                 fileSystem = fileSystem,
                 onFileDeleted = { filePath ->
+                    val fileName = filePath.substringAfterLast('/')
+                    Log.debug("File deletion callback path=$fileName", "GitChangeObserverService")
                     ApplicationManager.getApplication().invokeLater {
                         if (project.isDisposed) return@invokeLater
                         fileEventHandler.handleDelete(filePath)
@@ -63,12 +75,15 @@ class GitChangeObserverService(
                     }
                 },
                 onFileChanged = { filePath ->
+                    val fileName = filePath.substringAfterLast('/')
                     ApplicationManager.getApplication().invokeLater {
                         if (project.isDisposed) return@invokeLater
                         val editor = getEditorForFile(filePath)
                         if (editor != null) {
+                            Log.debug("File change (editor) path=$fileName", "GitChangeObserverService")
                             CachedReviewService.getInstance(project).review(editor)
                         } else {
+                            Log.debug("File change (reviewByPath) path=$fileName", "GitChangeObserverService")
                             CachedReviewService.getInstance(project).reviewByPath(filePath)
                         }
                     }
@@ -90,7 +105,9 @@ class GitChangeObserverService(
     private fun resolveGitRootPath(workspacePath: String): String? {
         val virtualFile = LocalFileSystem.getInstance().findFileByPath(workspacePath) ?: return null
         val repository = GitRepositoryManager.getInstance(project).getRepositoryForFile(virtualFile)
-        return repository?.root?.path ?: workspacePath
+        val gitRoot = repository?.root?.path ?: workspacePath
+        Log.debug("Resolved git root", "GitChangeObserverService")
+        return gitRoot
     }
 
     private fun getEditorForFile(filePath: String): com.intellij.openapi.editor.Editor? {
@@ -101,6 +118,7 @@ class GitChangeObserverService(
     }
 
     override fun dispose() {
+        Log.info("Disposing", "GitChangeObserverService")
         savedFilesTracker = null
         vfsEventBridge = null
         observer = null

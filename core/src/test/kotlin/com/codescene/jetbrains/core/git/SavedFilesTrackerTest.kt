@@ -1,5 +1,7 @@
 package com.codescene.jetbrains.core.git
 
+import com.codescene.jetbrains.core.contracts.ILogger
+import io.mockk.mockk
 import java.util.TreeSet
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -13,14 +15,19 @@ import org.junit.Test
 class SavedFilesTrackerTest {
     private lateinit var openFiles: MutableSet<String>
     private lateinit var tracker: SavedFilesTracker
+    private lateinit var logger: ILogger
 
     @Before
     fun setup() {
         openFiles = TreeSet(String.CASE_INSENSITIVE_ORDER)
+        logger = mockk(relaxed = true)
         tracker =
-            SavedFilesTracker { filePath ->
-                openFiles.any { it.equals(filePath, ignoreCase = true) }
-            }
+            SavedFilesTracker(
+                isFileOpenInEditor = { filePath ->
+                    openFiles.any { it.equals(filePath, ignoreCase = true) }
+                },
+                logger = logger,
+            )
     }
 
     @Test
