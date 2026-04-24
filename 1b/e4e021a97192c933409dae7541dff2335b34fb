@@ -1,0 +1,14 @@
+gradle.properties
+  h_0bea9e1dd5ef0d 14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "1be4e021a97192c933409dae7541dff2335b34fb",
+  "prompts": {},
+  "humans": {
+    "h_0bea9e1dd5ef0d": {
+      "author": "Martin Säfsten"
+    }
+  }
+}
