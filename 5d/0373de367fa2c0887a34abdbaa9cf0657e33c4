@@ -1,0 +1,31 @@
+core/src/test/kotlin/com/codescene/jetbrains/core/testdoubles/InMemoryReviewCacheService.kt
+  2b24a4687495e7e6 17-18
+src/main/kotlin/com/codescene/jetbrains/platform/editor/annotator/CodeSmellAnnotator.kt
+  2b24a4687495e7e6 160-166
+src/main/kotlin/com/codescene/jetbrains/platform/listeners/FileEditorLifecycleListener.kt
+  2b24a4687495e7e6 4,10,14,17,54,60-67,69-73,104
+core/src/test/kotlin/com/codescene/jetbrains/core/testdoubles/InMemoryAceRefactorableFunctionsCache.kt
+  2b24a4687495e7e6 21-22
+core/src/main/kotlin/com/codescene/jetbrains/core/contracts/IReviewCacheService.kt
+  2b24a4687495e7e6 12-13
+core/src/main/kotlin/com/codescene/jetbrains/core/review/AceRefactorableFunctionsCacheService.kt
+  2b24a4687495e7e6 47-48
+core/src/main/kotlin/com/codescene/jetbrains/core/review/ReviewCacheService.kt
+  2b24a4687495e7e6 56-57
+core/src/test/kotlin/com/codescene/jetbrains/core/review/AceRefactorableFunctionsCacheServiceTest.kt
+  2b24a4687495e7e6 126-132
+core/src/test/kotlin/com/codescene/jetbrains/core/review/ReviewCacheServiceTest.kt
+  2b24a4687495e7e6 130-141
+src/main/kotlin/com/codescene/jetbrains/platform/editor/codeVision/CodeSceneCodeVisionProvider.kt
+  2b24a4687495e7e6 171-181
+core/src/main/kotlin/com/codescene/jetbrains/core/contracts/IAceRefactorableFunctionsCache.kt
+  2b24a4687495e7e6 13-14
+src/main/kotlin/com/codescene/jetbrains/platform/util/AceEntryOrchestrator.kt
+  2b24a4687495e7e6 133
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "5d0373de367fa2c0887a34abdbaa9cf0657e33c4",
+  "prompts": {}
+}
