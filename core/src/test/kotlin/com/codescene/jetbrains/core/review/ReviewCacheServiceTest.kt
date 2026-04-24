@@ -96,6 +96,37 @@ class ReviewCacheServiceTest {
     }
 
     @Test
+    fun `getLastKnown returns stored response even when content hash differs`() {
+        reviewCacheService.put(ReviewCacheEntry(fileContents, filePath, response))
+
+        assertNull(reviewCacheService.get(ReviewCacheQuery(newFileContents, filePath)))
+        assertEquals(response, reviewCacheService.getLastKnown(filePath))
+    }
+
+    @Test
+    fun `getLastKnown returns null when there is no entry for the file`() {
+        assertNull(reviewCacheService.getLastKnown(filePath))
+    }
+
+    @Test
+    fun `getLastKnown returns latest response after put is called again`() {
+        val updated: Review = mockk()
+        reviewCacheService.put(ReviewCacheEntry(fileContents, filePath, response))
+        reviewCacheService.put(ReviewCacheEntry(newFileContents, filePath, updated))
+
+        assertEquals(updated, reviewCacheService.getLastKnown(filePath))
+    }
+
+    @Test
+    fun `getLastKnown returns null after invalidate`() {
+        reviewCacheService.put(ReviewCacheEntry(fileContents, filePath, response))
+
+        reviewCacheService.invalidate(filePath)
+
+        assertNull(reviewCacheService.getLastKnown(filePath))
+    }
+
+    @Test
     fun `updateKey does nothing if old key does not exist`() {
         val newFilePath = "/path/to/renamed_file.txt"
 

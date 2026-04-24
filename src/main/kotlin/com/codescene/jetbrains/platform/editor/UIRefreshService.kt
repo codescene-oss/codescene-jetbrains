@@ -4,7 +4,6 @@ import com.codescene.jetbrains.core.contracts.IUIRefreshService
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.codeInsight.codeVision.CodeVisionHost
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -84,11 +83,7 @@ class UIRefreshService(
 
             withContext(Dispatchers.Main) {
                 try {
-                    ApplicationManager
-                        .getApplication()
-                        .runWriteAction<Unit, RuntimeException> {
-                            restartDaemon(psiFile)
-                        }
+                    restartDaemon(psiFile)
                 } catch (e: Exception) {
                     Log.warn("Failed to refresh annotations for file: ${psiFile.name}. Error: ${e.message}")
                 }

@@ -16,6 +16,8 @@ class InMemoryAceRefactorableFunctionsCache : IAceRefactorableFunctionsCache {
         return cache[filePath]?.takeIf { it.contentHash == contentHash }?.result.orEmpty()
     }
 
+    override fun getLastKnown(filePath: String): List<FnToRefactor> = cache[filePath]?.result.orEmpty()
+
     override fun put(
         filePath: String,
         content: String,

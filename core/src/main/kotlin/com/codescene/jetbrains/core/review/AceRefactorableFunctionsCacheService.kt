@@ -42,6 +42,8 @@ open class AceRefactorableFunctionsCacheService(
         return emptyList()
     }
 
+    override fun getLastKnown(filePath: String): List<FnToRefactor> = cache[filePath]?.result.orEmpty()
+
     override fun put(entry: AceRefactorableFunctionCacheEntry) {
         val (filePath, content, result) = entry
         val code = DigestUtils.sha256Hex(content)

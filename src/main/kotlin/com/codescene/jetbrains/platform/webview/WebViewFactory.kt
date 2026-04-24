@@ -14,6 +14,10 @@ import javax.swing.JLabel
 import org.cef.browser.CefMessageRouter
 
 object WebViewFactory {
+    init {
+        System.setProperty("ide.browser.jcef.out-of-process.enabled", "false")
+    }
+
     /**
      * Creates a generic JCEF WebView component for a given project, view type, and optional initial data.
      * This encapsulates:

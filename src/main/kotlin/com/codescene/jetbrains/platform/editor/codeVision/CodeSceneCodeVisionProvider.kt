@@ -149,10 +149,23 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         scheduleReviewIfNeeded(project, editor, decision, shortPath)
 
         return when (decision.action) {
-            CodeVisionAction.NOT_READY -> CodeVisionState.NotReady
+            CodeVisionAction.NOT_READY -> resolveNotReadyState(editor, serviceProvider, shortPath)
             CodeVisionAction.READY_EMPTY -> CodeVisionState.READY_EMPTY
             CodeVisionAction.READY -> CodeVisionState.Ready(getLenses(editor, cachedReview))
         }
+    }
+
+    private fun resolveNotReadyState(
+        editor: Editor,
+        serviceProvider: CodeSceneProjectServiceProvider,
+        shortPath: String,
+    ): CodeVisionState {
+        val filePath = editor.virtualFile.path
+        val staleReview =
+            serviceProvider.reviewCacheService.getLastKnown(filePath)
+                ?: return CodeVisionState.NotReady
+        Log.debug("code vision reusing stale lenses file=$shortPath", "CodeSceneCodeVision")
+        return CodeVisionState.Ready(getLenses(editor, staleReview))
     }
 
     open fun getLenses(

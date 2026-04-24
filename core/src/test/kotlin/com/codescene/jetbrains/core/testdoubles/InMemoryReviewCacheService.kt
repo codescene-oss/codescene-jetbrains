@@ -12,6 +12,8 @@ class InMemoryReviewCacheService : IReviewCacheService {
 
     override fun get(query: ReviewCacheQuery): Review? = delegate.get(query)
 
+    override fun getLastKnown(filePath: String): Review? = delegate.getLastKnown(filePath)
+
     override fun put(entry: ReviewCacheEntry) {
         delegate.put(entry)
     }

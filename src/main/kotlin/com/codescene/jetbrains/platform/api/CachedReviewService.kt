@@ -99,7 +99,6 @@ class CachedReviewService(
         if (review == null) {
             val f = path.substringAfterLast('/')
             Log.debug("cached review no result file=$f len=${currentCode.length}", "CodeSceneCachedReview")
-            uiRefreshService.refreshCodeVision(path, CodeSceneCodeVisionProvider.getProviders())
             return
         }
 

@@ -9,6 +9,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.vcsUtil.VcsUtil
 import git4idea.commands.Git
 import git4idea.commands.GitCommand
 import git4idea.repo.GitRepository
@@ -65,18 +66,7 @@ class Git4IdeaGitService(val project: Project) : IGitService {
 
     override fun isIgnored(filePath: String): Boolean {
         val context = getRepositoryContext(filePath) ?: return false
-        val handler =
-            createGitLineHandler(project, context.repository.root, GitCommand.LS_FILES).apply {
-                addParameters("--ignored", "--exclude-standard", "--others", "--", context.relativePath)
-            }
-        val result = Git.getInstance().runCommand(handler)
-
-        if (!result.success()) {
-            Log.warn("Could not determine ignore status for ${context.file.path}.", service)
-            return false
-        }
-
-        return result.output.any { it.trim().removeSurrounding("\"") == context.relativePath }
+        return context.repository.ignoredFilesHolder.containsFile(VcsUtil.getFilePath(context.file))
     }
 
     private fun isMainLineBranch(branchName: String): Boolean =
