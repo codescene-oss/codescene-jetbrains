@@ -5,7 +5,6 @@ import com.codescene.jetbrains.core.contracts.IGitChangeLister
 import com.codescene.jetbrains.core.contracts.ILogger
 import com.codescene.jetbrains.core.contracts.IOpenFilesObserver
 import com.codescene.jetbrains.core.contracts.ISavedFilesTracker
-import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -188,11 +187,12 @@ class GitChangeObserver(
         val isDirectory = extension.isEmpty()
 
         if (isDirectory) {
+            val normalizedDirPath = filePath.replace('\\', '/')
             val directoryPrefix =
-                if (filePath.endsWith(File.separator)) filePath else filePath + File.separator
+                if (normalizedDirPath.endsWith("/")) normalizedDirPath else normalizedDirPath + "/"
             val filesToDelete: List<String>
             synchronized(tracker) {
-                filesToDelete = tracker.filter { it.startsWith(directoryPrefix) }
+                filesToDelete = tracker.filter { it.replace('\\', '/').startsWith(directoryPrefix) }
             }
 
             logger.debug("Directory deletion cascade files=${filesToDelete.size}", "GitChangeObserver")

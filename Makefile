@@ -1,13 +1,13 @@
 BB := bb
 ifeq ($(OS),Windows_NT)
-GRADLEW := .\gradlew.bat
+GRADLEW := ./gradlew.bat
 NULL := NUL
 else
 GRADLEW := ./gradlew
 NULL := /dev/null
 endif
 
-.PHONY: install-cli check-bb build test format format-check delta iter coverage-summary bump-version release test-release class-size-mine
+.PHONY: install-cli check-bb build test format format-check delta iter coverage-summary bump-version release test-release class-size-mine run-ide
 
 install-cli: check-bb
 	@$(BB) -f .github/install-cli.clj
@@ -55,5 +55,8 @@ test-release: check-bb
 
 class-size-mine: check-bb
 	@$(BB) -f .github/check-class-size-mine.clj
+
+run-ide:
+	$(GRADLEW) runIde
 
 iter: format format-check class-size-mine delta test

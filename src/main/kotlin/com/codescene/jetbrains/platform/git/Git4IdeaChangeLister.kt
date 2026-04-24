@@ -18,6 +18,13 @@ import kotlinx.coroutines.withContext
 
 private val MAIN_BRANCH_NAMES = listOf("main", "master", "develop", "trunk", "dev", "development")
 
+private fun hasWindowsDriveLetter(path: String): Boolean = path.length >= 3 && path[1] == ':' && path[2] == '/'
+
+private fun normalizePathForComparison(path: String): String {
+    val normalized = path.replace('\\', '/')
+    return if (hasWindowsDriveLetter(normalized)) normalized.substring(2) else normalized
+}
+
 @Service(Service.Level.PROJECT)
 class Git4IdeaChangeLister(
     val project: Project,
@@ -79,7 +86,7 @@ class Git4IdeaChangeLister(
 
                 if (
                     fileSystem.fileExists(absolutePath) &&
-                    absolutePath.startsWith(workspacePrefix) &&
+                    normalizePathForComparison(absolutePath).startsWith(normalizePathForComparison(workspacePrefix)) &&
                     shouldReviewFile(absolutePath) &&
                     !isFileIgnored(repository, record.path)
                 ) {
@@ -99,7 +106,10 @@ class Git4IdeaChangeLister(
             for (filePath in untrackedFiles) {
                 val absolutePath = fileSystem.getAbsolutePath(gitRootPath, filePath.path)
 
-                if (absolutePath.startsWith(workspacePrefix) && !isFileIgnored(repository, filePath)) {
+                if (normalizePathForComparison(
+                        absolutePath,
+                    ).startsWith(normalizePathForComparison(workspacePrefix)) && !isFileIgnored(repository, filePath)
+                ) {
                     val dir = fileSystem.getParent(filePath.path) ?: "."
                     val location = if (dir == ".") "__root__" else dir
                     untrackedFilesByLocation.getOrPut(location) { mutableListOf() }.add(filePath.path)
@@ -169,7 +179,7 @@ class Git4IdeaChangeLister(
                 val absolutePath = fileSystem.getAbsolutePath(gitRootPath, filePath)
 
                 if (
-                    absolutePath.startsWith(workspacePrefix) &&
+                    normalizePathForComparison(absolutePath).startsWith(normalizePathForComparison(workspacePrefix)) &&
                     fileSystem.fileExists(absolutePath) &&
                     shouldReviewFile(absolutePath)
                 ) {

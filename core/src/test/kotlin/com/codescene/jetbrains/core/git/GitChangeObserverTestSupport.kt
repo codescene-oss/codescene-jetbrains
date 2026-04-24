@@ -54,7 +54,7 @@ class MockFileSystem : IFileSystem {
         return try {
             val base = Paths.get(basePath)
             val file = Paths.get(filePath)
-            base.relativize(file).toString()
+            base.relativize(file).toString().replace('\\', '/')
         } catch (e: IllegalArgumentException) {
             filePath
         }
