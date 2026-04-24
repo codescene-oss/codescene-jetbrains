@@ -124,11 +124,12 @@ class AceEntryOrchestrator(private val project: Project) {
         path: String,
         content: String,
     ): List<FnToRefactor> {
-        val query = AceRefactorableFunctionCacheQuery(path, content)
-
-        return PlatformAceRefactorableFunctionsCacheService.getInstance(project).get(query).also {
-            if (it.isEmpty()) Log.debug("No ACE refactorable functions cache available for $path. Skipping annotation.")
-        }
+        val cacheService = PlatformAceRefactorableFunctionsCacheService.getInstance(project)
+        val fresh = cacheService.get(AceRefactorableFunctionCacheQuery(path, content))
+        if (fresh.isNotEmpty()) return fresh
+        val stale = cacheService.getLastKnown(path)
+        Log.debug("ACE refactorable functions cache ${if (stale.isEmpty()) "miss" else "stale"} for $path.")
+        return stale
     }
 
     suspend fun checkContainsRefactorableFunctions(

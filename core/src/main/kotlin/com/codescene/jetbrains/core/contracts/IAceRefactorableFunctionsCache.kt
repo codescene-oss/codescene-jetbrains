@@ -8,6 +8,8 @@ interface IAceRefactorableFunctionsCache {
         content: String,
     ): List<FnToRefactor>
 
+    fun getLastKnown(filePath: String): List<FnToRefactor>
+
     fun put(
         filePath: String,
         content: String,

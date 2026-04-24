@@ -7,6 +7,8 @@ import com.codescene.jetbrains.core.review.ReviewCacheQuery
 interface IReviewCacheService {
     fun get(query: ReviewCacheQuery): Review?
 
+    fun getLastKnown(filePath: String): Review?
+
     fun put(entry: ReviewCacheEntry)
 
     fun invalidate(filePath: String)

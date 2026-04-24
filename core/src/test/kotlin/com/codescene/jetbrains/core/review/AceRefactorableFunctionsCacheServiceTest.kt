@@ -92,6 +92,37 @@ class AceRefactorableFunctionsCacheServiceTest {
     }
 
     @Test
+    fun `getLastKnown returns stored result even when content hash differs`() {
+        cache.put("a.kt", "content", listOf(createFn("fn1")))
+
+        assertTrue(cache.get("a.kt", "different content").isEmpty())
+        assertEquals(1, cache.getLastKnown("a.kt").size)
+        assertEquals("fn1", cache.getLastKnown("a.kt")[0].name)
+    }
+
+    @Test
+    fun `getLastKnown returns empty list when there is no entry`() {
+        assertTrue(cache.getLastKnown("a.kt").isEmpty())
+    }
+
+    @Test
+    fun `getLastKnown returns latest result after put is called again`() {
+        cache.put("a.kt", "v1", listOf(createFn("old")))
+        cache.put("a.kt", "v2", listOf(createFn("new")))
+
+        assertEquals("new", cache.getLastKnown("a.kt")[0].name)
+    }
+
+    @Test
+    fun `getLastKnown returns empty list after invalidate`() {
+        cache.put("a.kt", "content", listOf(createFn()))
+
+        cache.invalidate("a.kt")
+
+        assertTrue(cache.getLastKnown("a.kt").isEmpty())
+    }
+
+    @Test
     fun `query-based get works the same as convenience get`() {
         cache.put("a.kt", "content", listOf(createFn("fn1")))
         val query = AceRefactorableFunctionCacheQuery("a.kt", "content")

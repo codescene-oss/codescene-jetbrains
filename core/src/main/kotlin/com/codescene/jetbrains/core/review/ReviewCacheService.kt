@@ -51,6 +51,8 @@ open class ReviewCacheService(
         return if (cacheHit) apiResponse else null
     }
 
+    fun getLastKnown(filePath: String): Review? = cache[filePath]?.response
+
     override fun put(entry: ReviewCacheEntry) {
         val (fileContents, filePath, response) = entry
 

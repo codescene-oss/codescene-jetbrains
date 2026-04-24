@@ -148,8 +148,15 @@ class CodeSmellAnnotator : ExternalAnnotator<
             fallback = null,
         ) {
             val path = psiFile.virtualFile.path
-            val query = ReviewCacheQuery(content, path)
-            CodeSceneProjectServiceProvider.getInstance(psiFile.project).reviewCacheService.get(query)
+            val reviewCacheService =
+                CodeSceneProjectServiceProvider.getInstance(psiFile.project).reviewCacheService
+            val fresh = reviewCacheService.get(ReviewCacheQuery(content, path))
+            if (fresh != null) {
+                return@runSafeAction fresh
+            }
+            reviewCacheService.getLastKnown(path)?.also {
+                Log.debug("annotator reusing stale review file=${psiFile.name}")
+            }
         }.also {
             if (it == null) {
                 Log.info("No cache available for ${resolvePathForLogging(psiFile)}. Skipping annotation.")
