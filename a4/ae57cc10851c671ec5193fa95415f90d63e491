@@ -1,0 +1,50 @@
+core/src/main/kotlin/com/codescene/jetbrains/core/review/AceRefactorableFunctionsCacheService.kt
+  2b24a4687495e7e6 45-46
+src/main/kotlin/com/codescene/jetbrains/platform/editor/annotator/CodeSmellAnnotator.kt
+  2b24a4687495e7e6 151-159
+core/src/test/kotlin/com/codescene/jetbrains/core/testdoubles/InMemoryAceRefactorableFunctionsCache.kt
+  2b24a4687495e7e6 19-20
+src/main/kotlin/com/codescene/jetbrains/platform/listeners/FileEditorLifecycleListener.kt
+  2b24a4687495e7e6 3,11,13,15,20,39,68,74-103
+src/main/kotlin/com/codescene/jetbrains/platform/editor/codeVision/CodeSceneCodeVisionProvider.kt
+  2b24a4687495e7e6 152,158-168
+core/src/main/kotlin/com/codescene/jetbrains/core/contracts/IAceRefactorableFunctionsCache.kt
+  2b24a4687495e7e6 11-12
+core/src/test/kotlin/com/codescene/jetbrains/core/review/ReviewCacheServiceTest.kt
+  2b24a4687495e7e6 99-128
+core/src/test/kotlin/com/codescene/jetbrains/core/review/AceRefactorableFunctionsCacheServiceTest.kt
+  2b24a4687495e7e6 95-124
+core/src/test/kotlin/com/codescene/jetbrains/core/testdoubles/InMemoryReviewCacheService.kt
+  2b24a4687495e7e6 15-16
+src/main/kotlin/com/codescene/jetbrains/platform/util/AceEntryOrchestrator.kt
+  2b24a4687495e7e6 127-132
+core/src/main/kotlin/com/codescene/jetbrains/core/contracts/IReviewCacheService.kt
+  2b24a4687495e7e6 10-11
+core/src/main/kotlin/com/codescene/jetbrains/core/review/ReviewCacheService.kt
+  2b24a4687495e7e6 54-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "a4ae57cc10851c671ec5193fa95415f90d63e491",
+  "prompts": {
+    "2b24a4687495e7e6": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "594f2595-ca5b-42d9-bef4-a64b71fe2a9c",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Martin Säfsten",
+      "messages": [],
+      "total_additions": 196,
+      "total_deletions": 81,
+      "accepted_lines": 145,
+      "overriden_lines": 4
+    }
+  },
+  "humans": {
+    "h_0bea9e1dd5ef0d": {
+      "author": "Martin Säfsten"
+    }
+  }
+}
