@@ -1,0 +1,28 @@
+src/main/kotlin/com/codescene/jetbrains/platform/editor/codeVision/ReviewSmellCodeVisionGrouping.kt
+  a8f09410c0a569af 17-18,21-26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "20b3e46e34f40d44cd9f57f0d275fa45ba65db37",
+  "prompts": {
+    "a8f09410c0a569af": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a7c294d8-225e-4cb9-b390-3010757cddfd",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Martin Säfsten",
+      "messages": [],
+      "total_additions": 8,
+      "total_deletions": 2,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_0bea9e1dd5ef0d": {
+      "author": "Martin Säfsten"
+    }
+  }
+}
