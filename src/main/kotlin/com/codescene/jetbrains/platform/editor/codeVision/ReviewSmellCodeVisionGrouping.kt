@@ -14,10 +14,16 @@ internal fun collectSmellsWithHighlightRangesForVision(
     categories: List<String>,
 ): List<Pair<TextRange, CodeVisionCodeSmell>> {
     val out = ArrayList<Pair<TextRange, CodeVisionCodeSmell>>()
+    val document = editor.document
+    val lineCount = document.lineCount
     for (category in categories) {
         for (smell in getCodeSmellsByCategory(result, category)) {
-            val range =
-                getTextRange(smell.highlightRange.startLine to smell.highlightRange.endLine, editor.document)
+            val startLine = smell.highlightRange.startLine
+            val endLine = smell.highlightRange.endLine
+            if (startLine < 1 || endLine < startLine || endLine > lineCount) {
+                continue
+            }
+            val range = getTextRange(startLine to endLine, document)
             out.add(range to smell)
         }
     }
