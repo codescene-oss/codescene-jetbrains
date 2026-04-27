@@ -152,7 +152,7 @@ jobs:
         run: ./gradlew check jacocoMergedReport -PktlintFailOnError=true
 
       - name: Publish Test Results
-        if: ${{ always() && !cancelled() }}
+        if: ${{ always() && !cancelled() && matrix.os == 'ubuntu-latest' }}
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: "**/build/test-results/test/**/*.xml"
