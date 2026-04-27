@@ -1,8 +1,10 @@
 BB := bb
 ifeq ($(OS),Windows_NT)
 NULL := NUL
+IDEA_LOG := build\idea-sandbox\*\log\idea.log
 else
 NULL := /dev/null
+IDEA_LOG := build/idea-sandbox/*/log/idea.log
 endif
 
 .PHONY: install-cli check-bb build test format format-check delta iter coverage-summary bump-version release test-release class-size-mine run-ide
@@ -73,9 +75,18 @@ class-size-mine: check-bb
 
 run-ide:
 ifeq ($(OS),Windows_NT)
+	@powershell -Command "Remove-Item -Force -ErrorAction SilentlyContinue '$(IDEA_LOG)'"
 	cmd //c ".\\gradlew.bat runIde"
 else
+	@rm -f $(IDEA_LOG)
 	./gradlew runIde
 endif
 
 iter: format format-check class-size-mine delta test
+
+logs:
+ifeq ($(OS),Windows_NT)
+	@powershell -Command "Get-Content (Get-ChildItem '$(IDEA_LOG)')[0].FullName | Select-String -SimpleMatch 'codescene.jetbrains'; Get-Content -Wait -Tail 0 (Get-ChildItem '$(IDEA_LOG)')[0].FullName | Select-String -SimpleMatch 'codescene.jetbrains'"
+else
+	@tail -n +1 -f $(IDEA_LOG) | grep -F "codescene.jetbrains"
+endif
