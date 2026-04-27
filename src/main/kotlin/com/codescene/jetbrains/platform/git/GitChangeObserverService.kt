@@ -67,7 +67,7 @@ class GitChangeObserverService(
                 fileSystem = fileSystem,
                 onFileDeleted = { filePath ->
                     val fileName = filePath.substringAfterLast('/')
-                    Log.debug("File deletion callback path=$fileName", "GitChangeObserverService")
+                    Log.info("File deletion callback path=$fileName", "GitChangeObserverService")
                     ApplicationManager.getApplication().invokeLater {
                         if (project.isDisposed) return@invokeLater
                         fileEventHandler.handleDelete(filePath)
@@ -80,10 +80,10 @@ class GitChangeObserverService(
                         if (project.isDisposed) return@invokeLater
                         val editor = getEditorForFile(filePath)
                         if (editor != null) {
-                            Log.debug("File change (editor) path=$fileName", "GitChangeObserverService")
+                            Log.info("File change (editor) path=$fileName", "GitChangeObserverService")
                             CachedReviewService.getInstance(project).review(editor)
                         } else {
-                            Log.debug("File change (reviewByPath) path=$fileName", "GitChangeObserverService")
+                            Log.info("File change (reviewByPath) path=$fileName", "GitChangeObserverService")
                             CachedReviewService.getInstance(project).reviewByPath(filePath)
                         }
                     }
@@ -106,7 +106,7 @@ class GitChangeObserverService(
         val virtualFile = LocalFileSystem.getInstance().findFileByPath(workspacePath) ?: return null
         val repository = GitRepositoryManager.getInstance(project).getRepositoryForFile(virtualFile)
         val gitRoot = repository?.root?.path ?: workspacePath
-        Log.debug("Resolved git root", "GitChangeObserverService")
+        Log.info("Resolved git root", "GitChangeObserverService")
         return gitRoot
     }
 

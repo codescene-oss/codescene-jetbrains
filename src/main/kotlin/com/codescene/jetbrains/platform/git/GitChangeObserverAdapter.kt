@@ -45,7 +45,7 @@ class GitChangeObserverAdapter(
         Log.info("Starting async initialization", "GitChangeObserverAdapter")
         scope.launch {
             observer.populateTrackerFromRepoState()
-            Log.debug("Tracker populated, starting scheduler", "GitChangeObserverAdapter")
+            Log.info("Tracker populated, starting scheduler", "GitChangeObserverAdapter")
             observer.start()
         }
     }

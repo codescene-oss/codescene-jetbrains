@@ -14,9 +14,9 @@ class SavedFilesTracker(
         if (filePath.isEmpty()) return
         if (isFileOpenInEditor(filePath)) {
             synchronized(savedFiles) { savedFiles.add(filePath) }
-            logger.debug("Tracked saved file", "SavedFilesTracker")
+            logger.info("Tracked saved file", "SavedFilesTracker")
         } else {
-            logger.debug("Ignoring save for file not open in editor", "SavedFilesTracker")
+            logger.info("Ignoring save for file not open in editor", "SavedFilesTracker")
         }
     }
 
@@ -26,7 +26,7 @@ class SavedFilesTracker(
 
     override fun clearSavedFiles() {
         val count = synchronized(savedFiles) { savedFiles.size }
-        logger.debug("Clearing $count saved files", "SavedFilesTracker")
+        logger.info("Clearing $count saved files", "SavedFilesTracker")
         synchronized(savedFiles) { savedFiles.clear() }
     }
 

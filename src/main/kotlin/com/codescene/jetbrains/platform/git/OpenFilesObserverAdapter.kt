@@ -15,7 +15,7 @@ class OpenFilesObserverAdapter(
                 .mapNotNull { it.path }
                 .filter { it.isNotEmpty() }
                 .toSet()
-        Log.debug("Open files count=${result.size}", "OpenFilesObserver")
+        Log.info("Open files count=${result.size}", "OpenFilesObserver")
         return result
     }
 }

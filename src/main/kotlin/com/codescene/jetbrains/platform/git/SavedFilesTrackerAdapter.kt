@@ -38,7 +38,7 @@ class SavedFilesTrackerAdapter(
             object : FileDocumentManagerListener {
                 override fun beforeDocumentSaving(document: Document) {
                     val file = FileDocumentManager.getInstance().getFile(document)
-                    Log.debug("Document saving file=${file?.name ?: "null"}", "SavedFilesTrackerAdapter")
+                    Log.info("Document saving file=${file?.name ?: "null"}", "SavedFilesTrackerAdapter")
                     if (file != null) {
                         tracker.onFileSaved(file.path)
                     }
@@ -54,7 +54,7 @@ class SavedFilesTrackerAdapter(
     override fun removeFromTracker(filePath: String) = tracker.removeFromTracker(filePath)
 
     override fun dispose() {
-        Log.debug("Disposing", "SavedFilesTrackerAdapter")
+        Log.info("Disposing", "SavedFilesTrackerAdapter")
         connection?.disconnect()
         connection = null
     }

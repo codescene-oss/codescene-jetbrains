@@ -34,7 +34,7 @@ class VfsEventBridge(
                         observer.queueEvent(fileEvent)
                         queuedCount++
                     }
-                    Log.debug("Received ${events.size} VFS events, queued $queuedCount", "VfsEventBridge")
+                    Log.info("Received ${events.size} VFS events, queued $queuedCount", "VfsEventBridge")
                 }
             },
         )
@@ -49,7 +49,7 @@ class VfsEventBridge(
             is VFileDeleteEvent -> FileEvent(FileEventType.DELETE, path)
             is VFileContentChangeEvent -> FileEvent(FileEventType.CHANGE, path)
             else -> {
-                Log.debug("Ignoring event type=${event::class.simpleName}", "VfsEventBridge")
+                Log.info("Ignoring event type=${event::class.simpleName}", "VfsEventBridge")
                 null
             }
         }
@@ -61,7 +61,7 @@ class VfsEventBridge(
     }
 
     override fun dispose() {
-        Log.debug("Disposing", "VfsEventBridge")
+        Log.info("Disposing", "VfsEventBridge")
         connection?.disconnect()
         connection = null
     }
