@@ -12,12 +12,14 @@ class TelemetryEventDataTest {
                 eventName = "open",
                 data = mapOf("k" to "v"),
                 ideInfo = "idea",
+                editorVersion = "2023.3.8",
                 pluginVersion = "1.0.0",
                 deviceId = "device",
             )
 
         assertEquals("JetBrains/open", result.eventName)
         assertEquals("idea", result.ideInfo)
+        assertEquals("2023.3.8", result.editorVersion)
         assertEquals("1.0.0", result.pluginVersion)
         assertEquals("device", result.deviceId)
         assertEquals(mapOf("k" to "v"), result.additionalProperties)
@@ -37,6 +39,7 @@ class TelemetryEventDataTest {
                 eventName = "evt",
                 data = emptyMap(),
                 ideInfo = "i",
+                editorVersion = "v",
                 pluginVersion = "p",
                 deviceId = "d",
                 isDevMode = true,

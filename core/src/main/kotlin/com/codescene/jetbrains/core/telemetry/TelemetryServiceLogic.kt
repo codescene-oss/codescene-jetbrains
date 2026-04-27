@@ -5,6 +5,7 @@ data class TelemetryRequest(
     val eventName: String,
     val data: Map<String, Any>,
     val ideInfo: String,
+    val editorVersion: String,
     val pluginVersion: String,
     val deviceId: String,
 )
@@ -21,6 +22,7 @@ fun resolveTelemetryEventData(
         eventName = request.eventName,
         data = request.data,
         ideInfo = request.ideInfo,
+        editorVersion = request.editorVersion,
         pluginVersion = request.pluginVersion,
         deviceId = request.deviceId,
     )

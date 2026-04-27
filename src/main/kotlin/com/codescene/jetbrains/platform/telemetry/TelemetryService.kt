@@ -50,6 +50,7 @@ class TelemetryService : BaseService(Log), Disposable, ITelemetryService {
                         eventName = eventName,
                         data = eventData,
                         ideInfo = getIdeInfo(),
+                        editorVersion = getEditorVersion(),
                         pluginVersion = getPluginVersion(),
                         deviceId = CodeSceneApplicationServiceProvider.getInstance().deviceIdStore.get(),
                     ),
@@ -68,6 +69,7 @@ class TelemetryService : BaseService(Log), Disposable, ITelemetryService {
         telemetryEvent.setAdditionalProperty("event-time", Instant.now().toString())
         telemetryEvent.setAdditionalProperty("process-platform", processPlatform())
         telemetryEvent.setAdditionalProperty("process-arch", processArch())
+        telemetryEvent.setAdditionalProperty("editor-version", eventInfo.editorVersion)
         if (internalTelemetryFlag()) {
             telemetryEvent.setAdditionalProperty("internal", true)
         }
@@ -105,6 +107,8 @@ class TelemetryService : BaseService(Log), Disposable, ITelemetryService {
     }
 
     private fun getIdeInfo(): String = normalizeIdeName(ApplicationInfo.getInstance().versionName)
+
+    private fun getEditorVersion(): String = ApplicationInfo.getInstance().fullVersion
 
     private fun getPluginVersion(): String =
         PluginManagerCore.getPlugin(PluginId.getId(CODESCENE_PLUGIN_ID))?.version ?: "unknown"
