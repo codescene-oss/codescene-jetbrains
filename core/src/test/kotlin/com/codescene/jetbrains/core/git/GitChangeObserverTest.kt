@@ -15,6 +15,7 @@ class GitChangeObserverTest {
     private lateinit var mockSavedFilesTracker: MockSavedFilesTracker
     private lateinit var mockOpenFilesObserver: MockOpenFilesObserver
     private lateinit var mockFileSystem: MockFileSystem
+    private lateinit var mockGitService: MockGitService
     private lateinit var logger: ILogger
     private var deletedFiles: MutableList<String> = mutableListOf()
     private var changedFiles: MutableList<String> = mutableListOf()
@@ -30,6 +31,7 @@ class GitChangeObserverTest {
         mockSavedFilesTracker = MockSavedFilesTracker()
         mockOpenFilesObserver = MockOpenFilesObserver()
         mockFileSystem = MockFileSystem()
+        mockGitService = MockGitService()
         logger = mockk(relaxed = true)
 
         observer =
@@ -38,6 +40,7 @@ class GitChangeObserverTest {
                 savedFilesTracker = mockSavedFilesTracker,
                 openFilesObserver = mockOpenFilesObserver,
                 fileSystem = mockFileSystem,
+                gitService = mockGitService,
                 onFileDeleted = { deletedFiles.add(it) },
                 onFileChanged = { changedFiles.add(it) },
                 workspacePath = workspacePath,
@@ -125,7 +128,7 @@ class GitChangeObserverTest {
     fun `handleFileChange filters files not in changed list`() =
         runBlocking {
             mockGitChangeLister.changedFiles = emptySet()
-            observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/committed.ts"))
+            observer.queueEvent(FileEvent(FileEventType.CHANGE, "/workspace/committed.ts"))
             observer.processQueuedEvents()
 
             assertFalse(observer.getTrackedFiles().contains("/workspace/committed.ts"))
@@ -204,5 +207,62 @@ class GitChangeObserverTest {
             observer.processQueuedEvents()
 
             assertEquals(1, changedFiles.size)
+        }
+
+    @Test
+    fun `CREATE event tracks file without requiring git4idea confirmation`() =
+        runBlocking {
+            mockGitChangeLister.changedFiles = emptySet()
+            observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/new-file.ts"))
+            observer.processQueuedEvents()
+
+            assertTrue(observer.getTrackedFiles().contains("/workspace/new-file.ts"))
+            assertTrue(changedFiles.contains("/workspace/new-file.ts"))
+        }
+
+    @Test
+    fun `CREATE event skips unsupported file extensions`() =
+        runBlocking {
+            mockGitChangeLister.changedFiles = emptySet()
+            observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/readme.txt"))
+            observer.processQueuedEvents()
+
+            assertFalse(observer.getTrackedFiles().contains("/workspace/readme.txt"))
+            assertFalse(changedFiles.contains("/workspace/readme.txt"))
+        }
+
+    @Test
+    fun `CREATE event skips non-existent files`() =
+        runBlocking {
+            mockFileSystem.fileExistsOverrides["/workspace/ghost.ts"] = false
+            mockGitChangeLister.changedFiles = emptySet()
+            observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/ghost.ts"))
+            observer.processQueuedEvents()
+
+            assertFalse(observer.getTrackedFiles().contains("/workspace/ghost.ts"))
+            assertFalse(changedFiles.contains("/workspace/ghost.ts"))
+        }
+
+    @Test
+    fun `CREATE event processes file even when not in git changed list`() =
+        runBlocking {
+            mockGitChangeLister.changedFiles = setOf("other.ts")
+            observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/brand-new.ts"))
+            observer.processQueuedEvents()
+
+            assertTrue(observer.getTrackedFiles().contains("/workspace/brand-new.ts"))
+            assertTrue(changedFiles.contains("/workspace/brand-new.ts"))
+        }
+
+    @Test
+    fun `CREATE event skips gitignored files`() =
+        runBlocking {
+            mockGitService.ignoredFiles.add("/workspace/ignored.ts")
+            mockGitChangeLister.changedFiles = emptySet()
+            observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/ignored.ts"))
+            observer.processQueuedEvents()
+
+            assertFalse(observer.getTrackedFiles().contains("/workspace/ignored.ts"))
+            assertFalse(changedFiles.contains("/workspace/ignored.ts"))
         }
 }

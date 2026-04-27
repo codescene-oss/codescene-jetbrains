@@ -58,6 +58,7 @@ class GitChangeObserverService(
         val openFilesObserver = OpenFilesObserverAdapter(project)
         val gitChangeLister = Git4IdeaChangeLister.getInstance(project)
         val fileSystem = FileSystemAdapter()
+        val gitService = Git4IdeaGitService.getInstance(project)
 
         val gitChangeObserver =
             GitChangeObserverAdapter(
@@ -65,6 +66,7 @@ class GitChangeObserverService(
                 savedFilesTracker = tracker,
                 openFilesObserver = openFilesObserver,
                 fileSystem = fileSystem,
+                gitService = gitService,
                 onFileDeleted = { filePath ->
                     val fileName = filePath.substringAfterLast('/')
                     Log.info("File deletion callback path=$fileName", "GitChangeObserverService")

@@ -2,6 +2,7 @@ package com.codescene.jetbrains.platform.git
 
 import com.codescene.jetbrains.core.contracts.IFileSystem
 import com.codescene.jetbrains.core.contracts.IGitChangeLister
+import com.codescene.jetbrains.core.contracts.IGitService
 import com.codescene.jetbrains.core.contracts.IOpenFilesObserver
 import com.codescene.jetbrains.core.contracts.ISavedFilesTracker
 import com.codescene.jetbrains.core.git.FileEvent
@@ -19,6 +20,7 @@ class GitChangeObserverAdapter(
     savedFilesTracker: ISavedFilesTracker,
     openFilesObserver: IOpenFilesObserver,
     fileSystem: IFileSystem,
+    gitService: IGitService,
     onFileDeleted: (String) -> Unit,
     onFileChanged: suspend (String) -> Unit,
     workspacePath: String,
@@ -31,6 +33,7 @@ class GitChangeObserverAdapter(
             savedFilesTracker,
             openFilesObserver,
             fileSystem,
+            gitService,
             onFileDeleted,
             onFileChanged,
             workspacePath,

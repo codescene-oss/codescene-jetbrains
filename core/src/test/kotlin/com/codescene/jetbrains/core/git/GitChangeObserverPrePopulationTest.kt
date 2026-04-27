@@ -14,6 +14,7 @@ class GitChangeObserverPrePopulationTest {
     private lateinit var mockSavedFilesTracker: MockSavedFilesTracker
     private lateinit var mockOpenFilesObserver: MockOpenFilesObserver
     private lateinit var mockFileSystem: MockFileSystem
+    private lateinit var mockGitService: MockGitService
     private lateinit var logger: ILogger
     private var deletedFiles: MutableList<String> = mutableListOf()
     private var changedFiles: MutableList<String> = mutableListOf()
@@ -29,6 +30,7 @@ class GitChangeObserverPrePopulationTest {
         mockSavedFilesTracker = MockSavedFilesTracker()
         mockOpenFilesObserver = MockOpenFilesObserver()
         mockFileSystem = MockFileSystem()
+        mockGitService = MockGitService()
         logger = mockk(relaxed = true)
     }
 
@@ -38,6 +40,7 @@ class GitChangeObserverPrePopulationTest {
             savedFilesTracker = mockSavedFilesTracker,
             openFilesObserver = mockOpenFilesObserver,
             fileSystem = mockFileSystem,
+            gitService = mockGitService,
             onFileDeleted = { deletedFiles.add(it) },
             onFileChanged = { changedFiles.add(it) },
             workspacePath = workspacePath,

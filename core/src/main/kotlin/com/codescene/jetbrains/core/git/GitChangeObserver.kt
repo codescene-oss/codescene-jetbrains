@@ -2,6 +2,7 @@ package com.codescene.jetbrains.core.git
 
 import com.codescene.jetbrains.core.contracts.IFileSystem
 import com.codescene.jetbrains.core.contracts.IGitChangeLister
+import com.codescene.jetbrains.core.contracts.IGitService
 import com.codescene.jetbrains.core.contracts.ILogger
 import com.codescene.jetbrains.core.contracts.IOpenFilesObserver
 import com.codescene.jetbrains.core.contracts.ISavedFilesTracker
@@ -18,6 +19,7 @@ class GitChangeObserver(
     private val savedFilesTracker: ISavedFilesTracker,
     private val openFilesObserver: IOpenFilesObserver,
     private val fileSystem: IFileSystem,
+    private val gitService: IGitService,
     private val onFileDeleted: (String) -> Unit,
     private val onFileChanged: suspend (String) -> Unit,
     private val workspacePath: String,
@@ -87,10 +89,11 @@ class GitChangeObserver(
         val changedFiles = getChangedFilesVsBaseline()
 
         for (event in deduplicatedEvents) {
-            if (event.type == FileEventType.DELETE || !isFileInChangedList(event.path, changedFiles)) {
-                handleFileDelete(event.path, changedFiles)
-            } else {
-                handleFileChange(event.path, changedFiles)
+            when {
+                event.type == FileEventType.DELETE -> handleFileDelete(event.path, changedFiles)
+                event.type == FileEventType.CREATE -> handleFileCreate(event.path)
+                !isFileInChangedList(event.path, changedFiles) -> handleFileDelete(event.path, changedFiles)
+                else -> handleFileChange(event.path, changedFiles)
             }
         }
     }
@@ -141,6 +144,29 @@ class GitChangeObserver(
     ): Boolean {
         val relativePath = fileSystem.getRelativePath(workspacePath, filePath)
         return changedFiles.contains(relativePath)
+    }
+
+    private suspend fun handleFileCreate(filePath: String) {
+        if (!shouldReviewFile(filePath)) {
+            logger.info("Skipping file with unsupported extension", "GitChangeObserver")
+            return
+        }
+
+        if (!fileSystem.fileExists(filePath)) {
+            logger.info("Skipping non-existent file", "GitChangeObserver")
+            return
+        }
+
+        if (gitService.isIgnored(filePath)) {
+            logger.info("Skipping gitignored file", "GitChangeObserver")
+            return
+        }
+
+        synchronized(tracker) {
+            tracker.add(filePath)
+        }
+        logger.info("Added created file to tracker", "GitChangeObserver")
+        onFileChanged(filePath)
     }
 
     private suspend fun handleFileChange(

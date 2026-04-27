@@ -43,6 +43,7 @@ class VfsEventBridge(
     internal fun convertEvent(event: VFileEvent): FileEvent? {
         val path = event.path
         if (!isWithinWorkspace(path)) return null
+        if (isGitInternalPath(path)) return null
 
         return when (event) {
             is VFileCreateEvent -> FileEvent(FileEventType.CREATE, path)
@@ -58,6 +59,11 @@ class VfsEventBridge(
     internal fun isWithinWorkspace(path: String): Boolean {
         val normalizedWorkspace = if (workspacePath.endsWith("/")) workspacePath else "$workspacePath/"
         return path.startsWith(normalizedWorkspace) || path == workspacePath
+    }
+
+    internal fun isGitInternalPath(path: String): Boolean {
+        val normalizedPath = path.replace('\\', '/')
+        return normalizedPath.contains("/.git/") || normalizedPath.endsWith("/.git")
     }
 
     override fun dispose() {

@@ -250,4 +250,50 @@ class VfsEventBridgeTest {
     fun `isWithinWorkspace handles paths with multiple slashes`() {
         assertTrue(bridge.isWithinWorkspace("$workspacePath//file.kt"))
     }
+
+    @Test
+    fun `isGitInternalPath returns true for git directory paths`() {
+        assertTrue(bridge.isGitInternalPath("$workspacePath/.git/index"))
+        assertTrue(bridge.isGitInternalPath("$workspacePath/.git/AUTO_MERGE"))
+        assertTrue(bridge.isGitInternalPath("$workspacePath/.git/objects/pack/something"))
+        assertTrue(bridge.isGitInternalPath("$workspacePath/.git/refs/heads/main"))
+    }
+
+    @Test
+    fun `isGitInternalPath returns true for git directory itself`() {
+        assertTrue(bridge.isGitInternalPath("$workspacePath/.git"))
+    }
+
+    @Test
+    fun `isGitInternalPath returns false for regular files`() {
+        assertFalse(bridge.isGitInternalPath("$workspacePath/src/file.kt"))
+        assertFalse(bridge.isGitInternalPath("$workspacePath/.gitignore"))
+        assertFalse(bridge.isGitInternalPath("$workspacePath/.github/workflows/ci.yml"))
+    }
+
+    @Test
+    fun `isGitInternalPath handles Windows-style backslashes`() {
+        assertTrue(bridge.isGitInternalPath("$workspacePath\\.git\\index"))
+        assertTrue(bridge.isGitInternalPath("$workspacePath\\.git\\objects\\pack"))
+    }
+
+    @Test
+    fun `convertEvent filters git internal paths`() {
+        val event = mockk<VFileCreateEvent>()
+        every { event.path } returns "$workspacePath/.git/index"
+
+        val result = bridge.convertEvent(event)
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `convertEvent filters git internal paths for change events`() {
+        val event = mockk<VFileContentChangeEvent>()
+        every { event.path } returns "$workspacePath/.git/AUTO_MERGE"
+
+        val result = bridge.convertEvent(event)
+
+        assertNull(result)
+    }
 }

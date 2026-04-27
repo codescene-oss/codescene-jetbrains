@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.core.git
 
 import com.codescene.jetbrains.core.contracts.IFileSystem
+import com.codescene.jetbrains.core.contracts.IGitService
 import com.codescene.jetbrains.core.contracts.ILogger
 import com.codescene.jetbrains.core.contracts.IOpenFilesObserver
 import com.codescene.jetbrains.core.contracts.ISavedFilesTracker
@@ -20,6 +21,7 @@ class GitChangeObserverIntegrationTest {
     private lateinit var testRepoPath: File
     private lateinit var observer: GitChangeObserver
     private lateinit var gitChangeLister: TestGitChangeLister
+    private lateinit var gitService: TestGitService
     private lateinit var logger: ILogger
     private var deletedFiles: MutableList<String> = mutableListOf()
     private var changedFiles: MutableList<String> = mutableListOf()
@@ -32,6 +34,7 @@ class GitChangeObserverIntegrationTest {
         deletedFiles = mutableListOf()
         changedFiles = mutableListOf()
         gitChangeLister = TestGitChangeLister(testRepoPath)
+        gitService = TestGitService(testRepoPath)
         logger = mockk(relaxed = true)
 
         observer =
@@ -40,6 +43,7 @@ class GitChangeObserverIntegrationTest {
                 savedFilesTracker = NoOpSavedFilesTracker(),
                 openFilesObserver = NoOpOpenFilesObserver(),
                 fileSystem = RealFileSystem(testRepoPath.absolutePath),
+                gitService = gitService,
                 onFileDeleted = { deletedFiles.add(it) },
                 onFileChanged = { changedFiles.add(it) },
                 workspacePath = testRepoPath.absolutePath,
@@ -267,4 +271,27 @@ private class RealFileSystem(private val basePath: String) : IFileSystem {
     }
 
     override fun getParent(path: String): String? = File(path).parent
+}
+
+private class TestGitService(private val testRepoPath: File) : IGitService {
+    override fun getBranchCreationCommitCode(filePath: String): String = ""
+
+    override fun getBranchCreationCommitHash(filePath: String): String? = null
+
+    override fun getRepoRelativePath(filePath: String): String? {
+        val base = Paths.get(testRepoPath.absolutePath).toAbsolutePath().normalize()
+        val file = Paths.get(filePath).toAbsolutePath().normalize()
+        return base.relativize(file).toString()
+    }
+
+    override fun isIgnored(filePath: String): Boolean {
+        val relativePath = getRepoRelativePath(filePath) ?: return false
+        val result =
+            ProcessBuilder("git", "check-ignore", "-q", relativePath)
+                .directory(testRepoPath)
+                .redirectErrorStream(true)
+                .start()
+                .waitFor()
+        return result == 0
+    }
 }
