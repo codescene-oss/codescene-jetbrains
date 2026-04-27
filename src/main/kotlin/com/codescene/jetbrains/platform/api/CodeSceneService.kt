@@ -25,7 +25,7 @@ abstract class CodeSceneService :
 
     protected fun reviewFile(
         editor: Editor,
-        timeout: Long = 60_000,
+        timeout: Long = 300_000,
         debounceDelayMs: Long? = null,
         performAction: suspend () -> Unit,
     ) {

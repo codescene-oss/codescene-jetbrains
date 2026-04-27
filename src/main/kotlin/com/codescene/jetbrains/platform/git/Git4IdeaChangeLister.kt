@@ -13,6 +13,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import git4idea.repo.GitRepository
 import git4idea.repo.GitRepositoryManager
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -49,6 +50,8 @@ class Git4IdeaChangeLister
                 return emptySet()
             }
 
+            repository.update()
+
             val filesFromRepoState =
                 collectFilesFromRepoState(
                     repository,
@@ -77,34 +80,59 @@ class Git4IdeaChangeLister
                 Log.info("Processing ${stagingArea.size} staging records", "Git4IdeaChangeLister")
                 for (record in stagingArea) {
                     val status = "${record.index}${record.workTree}".trim()
+                    Log.info("Staging record: path=${record.path.path} status='$status'", "Git4IdeaChangeLister")
                     val includedStatuses = setOf("A", "M", "R", "C", "AM", "MM")
 
                     if (!includedStatuses.contains(status)) {
+                        Log.info("Skipping record with status '$status'", "Git4IdeaChangeLister")
                         continue
                     }
 
-                    val filePath = record.path.path
-                    val absolutePath = fileSystem.getAbsolutePath(gitRootPath, filePath)
+                    val rawPath = record.path.path
+                    val absolutePath =
+                        if (File(rawPath).isAbsolute) {
+                            rawPath
+                        } else {
+                            fileSystem.getAbsolutePath(gitRootPath, rawPath)
+                        }
+                    val relativeFilePath =
+                        if (File(rawPath).isAbsolute) {
+                            fileSystem.getRelativePath(gitRootPath, rawPath)
+                        } else {
+                            rawPath
+                        }
 
-                    if (
-                        fileSystem.fileExists(absolutePath) &&
+                    Log.info(
+                        "rawPath='$rawPath' absolutePath='$absolutePath' relativeFilePath='$relativeFilePath'",
+                        "Git4IdeaChangeLister",
+                    )
+                    val exists = fileSystem.fileExists(absolutePath)
+                    val matchesPrefix =
                         normalizePathForComparison(
                             absolutePath,
-                        ).startsWith(normalizePathForComparison(workspacePrefix)) &&
-                        shouldReviewFile(absolutePath) &&
-                        !isFileIgnored(repository, record.path)
-                    ) {
+                        ).startsWith(normalizePathForComparison(workspacePrefix))
+                    val shouldReview = shouldReviewFile(absolutePath)
+                    val isIgnored = isFileIgnored(repository, record.path)
+
+                    Log.info(
+                        "Checks: exists=$exists prefix=$matchesPrefix review=$shouldReview ignored=$isIgnored",
+                        "Git4IdeaChangeLister",
+                    )
+
+                    if (exists && matchesPrefix && shouldReview && !isIgnored) {
                         val relativeToWorkspace =
                             convertGitPathToWorkspacePath(
-                                filePath,
+                                relativeFilePath,
                                 gitRootPath,
                                 normalizedWorkspacePath,
                             )
-                        files.add(fileSystem.getAbsolutePath(workspacePath, relativeToWorkspace))
+                        files.add(relativeToWorkspace)
+                        Log.info("Added file to result set: '$relativeToWorkspace'", "Git4IdeaChangeLister")
                     }
                 }
 
                 val untrackedFiles = repository.untrackedFilesHolder.retrieveUntrackedFilePaths()
+                Log.info("Retrieved ${untrackedFiles.size} untracked files from holder", "Git4IdeaChangeLister")
                 val untrackedFilesByLocation = mutableMapOf<String, MutableList<String>>()
 
                 for (filePath in untrackedFiles) {
@@ -145,7 +173,7 @@ class Git4IdeaChangeLister
                                     gitRootPath,
                                     normalizedWorkspacePath,
                                 )
-                            files.add(fileSystem.getAbsolutePath(workspacePath, relativeToWorkspace))
+                            files.add(relativeToWorkspace)
                         }
                     }
                 }
@@ -197,7 +225,7 @@ class Git4IdeaChangeLister
                                 gitRootPath,
                                 normalizedWorkspacePath,
                             )
-                        files.add(fileSystem.getAbsolutePath(workspacePath, relativeToWorkspace))
+                        files.add(relativeToWorkspace)
                     }
                 }
 

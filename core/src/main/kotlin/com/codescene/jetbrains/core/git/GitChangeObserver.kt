@@ -34,14 +34,18 @@ class GitChangeObserver(
     suspend fun populateTrackerFromRepoState() {
         logger.info("Populating tracker from repo state", "GitChangeObserver")
         val changedFiles = gitChangeLister.getAllChangedFiles(gitRootPath, workspacePath, emptySet())
+        logger.info("getAllChangedFiles returned ${changedFiles.size} files", "GitChangeObserver")
         // Add all files to tracker unconditionally - this ensures HandleFileDelete works correctly.
         // Files open in the editor are excluded from changedFiles (via OpenFilesObserver), but they
         // still need to be tracked so that delete events are properly handled.
-        for (relativePath in changedFiles) {
-            val absolutePath = fileSystem.getAbsolutePath(workspacePath, relativePath)
+        for (filePath in changedFiles) {
+            logger.info("Processing file from getAllChangedFiles: '$filePath'", "GitChangeObserver")
+            val absolutePath = fileSystem.getAbsolutePath(workspacePath, filePath)
+            logger.info("After getAbsolutePath: '$absolutePath'", "GitChangeObserver")
             synchronized(tracker) {
                 tracker.add(absolutePath)
             }
+            queueEvent(FileEvent(FileEventType.CHANGE, absolutePath))
         }
         logger.info("Populated tracker with ${changedFiles.size} files", "GitChangeObserver")
     }

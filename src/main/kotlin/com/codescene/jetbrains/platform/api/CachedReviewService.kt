@@ -79,7 +79,7 @@ class CachedReviewService(
             fileName = fileName,
             serviceName = serviceName,
             isCodeReview = true,
-            timeout = 60_000,
+            timeout = 300_000,
             debounceDelayMs = null,
             performAction = { performCachedReviewByPath(filePath, fileName) },
             onScheduled = { onReviewScheduled(filePath) },
