@@ -9,6 +9,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.util.messages.MessageBusConnection
 import git4idea.repo.GitRepository
 import git4idea.status.GitStagingAreaHolder
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -22,10 +23,11 @@ class GitRepoStateListener(
     private val observer: GitChangeObserverAdapter,
     private val workspacePath: String,
     private val gitRootPath: String,
+    dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : Disposable {
     private var connection: MessageBusConnection? = null
     private var reconcileJob: Job? = null
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val scope = CoroutineScope(SupervisorJob() + dispatcher)
 
     fun start() {
         Log.info("Starting staging area listener", "GitRepoStateListener")
