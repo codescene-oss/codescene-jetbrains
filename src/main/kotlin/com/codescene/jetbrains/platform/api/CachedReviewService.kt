@@ -170,6 +170,15 @@ class CachedReviewService(
             return
         }
 
+        val query = DeltaCacheQuery(filePath, baselineCode, currentCode)
+        val (deltaHit, _) = serviceProvider.deltaCacheService.get(query)
+        if (deltaHit) {
+            Log.debug("handleDeltaByPath cache hit file=$fileName", "CodeSceneCachedReview")
+            serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(filePath, false)
+            return
+        }
+        Log.debug("handleDeltaByPath cache miss file=$fileName", "CodeSceneCachedReview")
+
         deltaService.performDeltaAnalysisByPath(filePath, fileName, currentCode)
         serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(filePath, true)
         Log.debug("handleDeltaByPath done file=$fileName", "CodeSceneCachedReview")
