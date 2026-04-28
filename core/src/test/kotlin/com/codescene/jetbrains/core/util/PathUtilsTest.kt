@@ -39,6 +39,21 @@ class PathUtilsTest {
     }
 
     @Test
+    fun `extractExtension returns null for dotfiles without extension`() {
+        assertEquals(null, extractExtension(".gitignore"))
+    }
+
+    @Test
+    fun `extractExtension returns extension for dotfiles with extension`() {
+        assertEquals("local", extractExtension(".env.local"))
+    }
+
+    @Test
+    fun `extractExtension returns null for single dot`() {
+        assertEquals(null, extractExtension("."))
+    }
+
+    @Test
     fun `pathsAfterRename joins parent with old and new names`() {
         val parent = "${File.separator}repo${File.separator}src"
         val (oldPath, newPath) = pathsAfterRename(parent, "Old.kt", "New.kt")

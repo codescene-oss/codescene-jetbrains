@@ -7,7 +7,10 @@ fun getRelativePath(
     filePath: String,
 ): String = File(basePath).toPath().relativize(File(filePath).toPath()).toString()
 
-fun extractExtension(fileName: String): String? = fileName.substringAfterLast('.', "").ifEmpty { null }
+fun extractExtension(fileName: String): String? {
+    val lastIndex = fileName.lastIndexOf('.')
+    return if (lastIndex <= 0) null else fileName.substring(lastIndex + 1)
+}
 
 fun pathsAfterRename(
     parentPath: String,
