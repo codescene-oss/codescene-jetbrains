@@ -50,7 +50,9 @@ class Git4IdeaChangeLister
                 return emptySet()
             }
 
-            repository.update()
+            withContext(Dispatchers.IO) {
+                repository.update()
+            }
 
             val filesFromRepoState =
                 collectFilesFromRepoState(
