@@ -7,7 +7,7 @@ NULL := /dev/null
 IDEA_LOG := build/idea-sandbox/*/log/idea.log
 endif
 
-.PHONY: install-cli check-bb build test format format-check delta iter coverage-summary bump-version release test-release class-size-mine run-ide kill-ide kill-ide kill-ide
+.PHONY: install-cli check-bb build test format format-check delta iter coverage-summary bump-version release test-release class-size-mine run-ide kill-ide kill-ide kill-ide logs
 
 install-cli: check-bb
 	@$(BB) -f .github/install-cli.clj

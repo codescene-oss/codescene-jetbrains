@@ -20,11 +20,13 @@ import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionPro
 import com.codescene.jetbrains.platform.util.AceEntryOrchestrator
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
+import java.nio.charset.Charset
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
@@ -112,7 +114,18 @@ class CachedReviewService(
             return
         }
 
-        val currentCode = String(file.contentsToByteArray(), file.charset)
+        val fileData =
+            ReadAction.compute<Pair<ByteArray, Charset>?, Exception> {
+                if (!file.isValid) {
+                    return@compute null
+                }
+                Pair(file.contentsToByteArray(), file.charset)
+            }
+        if (fileData == null) {
+            Log.debug("reviewByPath file became invalid path=$filePath", "CodeSceneCachedReview")
+            return
+        }
+        val currentCode = String(fileData.first, fileData.second)
 
         val cachedReview = serviceProvider.reviewCacheService.get(ReviewCacheQuery(currentCode, filePath))
         if (cachedReview != null) {
