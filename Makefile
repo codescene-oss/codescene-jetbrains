@@ -7,7 +7,7 @@ NULL := /dev/null
 IDEA_LOG := build/idea-sandbox/*/log/idea.log
 endif
 
-.PHONY: install-cli check-bb build test format format-check delta iter coverage-summary bump-version release test-release class-size-mine run-ide
+.PHONY: install-cli check-bb build test format format-check delta iter coverage-summary bump-version release test-release class-size-mine run-ide kill-ide kill-ide kill-ide
 
 install-cli: check-bb
 	@$(BB) -f .github/install-cli.clj
@@ -31,7 +31,7 @@ endif
 
 build: .build-timestamp
 
-test: check-bb build
+test: kill-ide check-bb build
 ifeq ($(OS),Windows_NT)
 	@$(BB) -f .github/run-quiet.clj test.log "gradle test" cmd //c ".\\gradlew.bat test"
 else
@@ -72,6 +72,13 @@ test-release: check-bb
 
 class-size-mine: check-bb
 	@$(BB) -f .github/check-class-size-mine.clj
+
+kill-ide:
+ifeq ($(OS),Windows_NT)
+	@powershell -ExecutionPolicy Bypass -File .github/kill-ide.ps1 > $(NULL) 2>&1 || exit 0
+else
+	@.github/kill-ide.sh > $(NULL) 2>&1 || true
+endif
 
 run-ide:
 ifeq ($(OS),Windows_NT)
