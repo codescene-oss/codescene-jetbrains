@@ -26,6 +26,27 @@ private fun normalizePathForComparison(path: String): String {
     return if (hasWindowsDriveLetter(normalized)) normalized.substring(2) else normalized
 }
 
+private fun resolveAbsolutePath(
+    fileSystem: IFileSystem,
+    basePath: String,
+    path: String,
+): String {
+    val result =
+        if (File(path).isAbsolute) {
+            path
+        } else {
+            fileSystem.getAbsolutePath(basePath, path)
+        }
+
+    val normalized = result.replace('\\', '/')
+    val baseNormalized = basePath.replace('\\', '/')
+    if (normalized.indexOf(baseNormalized) != normalized.lastIndexOf(baseNormalized)) {
+        Log.warn("Invalid doubled path detected: $result (base=$basePath, input=$path)", "Git4IdeaChangeLister")
+    }
+
+    return result
+}
+
 @Service(Service.Level.PROJECT)
 class Git4IdeaChangeLister
     @JvmOverloads
@@ -91,12 +112,7 @@ class Git4IdeaChangeLister
                     }
 
                     val rawPath = record.path.path
-                    val absolutePath =
-                        if (File(rawPath).isAbsolute) {
-                            rawPath
-                        } else {
-                            fileSystem.getAbsolutePath(gitRootPath, rawPath)
-                        }
+                    val absolutePath = resolveAbsolutePath(fileSystem, gitRootPath, rawPath)
                     val relativeFilePath =
                         if (File(rawPath).isAbsolute) {
                             fileSystem.getRelativePath(gitRootPath, rawPath)
@@ -138,7 +154,7 @@ class Git4IdeaChangeLister
                 val untrackedFilesByLocation = mutableMapOf<String, MutableList<String>>()
 
                 for (filePath in untrackedFiles) {
-                    val absolutePath = fileSystem.getAbsolutePath(gitRootPath, filePath.path)
+                    val absolutePath = resolveAbsolutePath(fileSystem, gitRootPath, filePath.path)
 
                     if (normalizePathForComparison(
                             absolutePath,
@@ -161,21 +177,22 @@ class Git4IdeaChangeLister
                     )
 
                     for (filePath in filesList) {
-                        val absolutePath = fileSystem.getAbsolutePath(gitRootPath, filePath)
+                        val absolutePath = resolveAbsolutePath(fileSystem, gitRootPath, filePath)
                         val shouldExcludeFromHeuristic = filesToExcludeFromHeuristic.contains(absolutePath)
+                        val exists = fileSystem.fileExists(absolutePath)
+                        val reviewable = shouldReviewFile(absolutePath)
 
-                        if (
-                            (!shouldExclude || shouldExcludeFromHeuristic) &&
-                            fileSystem.fileExists(absolutePath) &&
-                            shouldReviewFile(absolutePath)
-                        ) {
-                            val relativeToWorkspace =
-                                convertGitPathToWorkspacePath(
-                                    filePath,
-                                    gitRootPath,
-                                    normalizedWorkspacePath,
-                                )
-                            files.add(relativeToWorkspace)
+                        Log.info(
+                            "Untracked file check: path=$filePath absolutePath=$absolutePath " +
+                                "exists=$exists reviewable=$reviewable shouldExclude=$shouldExclude " +
+                                "excludeFromHeuristic=$shouldExcludeFromHeuristic",
+                            "Git4IdeaChangeLister",
+                        )
+
+                        if ((!shouldExclude || shouldExcludeFromHeuristic) && exists && reviewable) {
+                            convertUntrackedPath(filePath, gitRootPath, normalizedWorkspacePath)?.let {
+                                files.add(it)
+                            }
                         }
                     }
                 }
@@ -212,7 +229,7 @@ class Git4IdeaChangeLister
                     val filePath = line.trim()
                     if (filePath.isEmpty()) continue
 
-                    val absolutePath = fileSystem.getAbsolutePath(gitRootPath, filePath)
+                    val absolutePath = resolveAbsolutePath(fileSystem, gitRootPath, filePath)
 
                     if (
                         normalizePathForComparison(
@@ -286,4 +303,20 @@ class Git4IdeaChangeLister
             repository: GitRepository,
             filePath: com.intellij.openapi.vcs.FilePath,
         ): Boolean = repository.ignoredFilesHolder.containsFile(filePath)
+
+        private fun convertUntrackedPath(
+            filePath: String,
+            gitRootPath: String,
+            normalizedWorkspacePath: String,
+        ): String? =
+            try {
+                val relativeFilePath =
+                    if (File(filePath).isAbsolute) fileSystem.getRelativePath(gitRootPath, filePath) else filePath
+                val result = convertGitPathToWorkspacePath(relativeFilePath, gitRootPath, normalizedWorkspacePath)
+                Log.info("Added untracked file: $result", "Git4IdeaChangeLister")
+                result
+            } catch (e: Exception) {
+                Log.warn("Failed to convert untracked path '$filePath': ${e.message}", "Git4IdeaChangeLister")
+                null
+            }
     }
