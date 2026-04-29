@@ -175,6 +175,7 @@ class CachedReviewService(
                     "CodeSceneCachedReview",
                 )
                 serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(path, false)
+                updateMonitor(project)
                 return DeltaHandlingResult(didHandleDelta = false)
             }
             val df = path.substringAfterLast('/')

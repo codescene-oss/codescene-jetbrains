@@ -8,6 +8,7 @@ import com.codescene.jetbrains.core.review.ReviewCacheQuery
 import com.codescene.jetbrains.core.review.resolveDeltaExecutionPlan
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.util.Log
+import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -148,6 +149,7 @@ class PathBasedReviewHandler(private val project: Project) {
                 "CodeSceneCachedReview",
             )
             serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(filePath, false)
+            updateMonitor(project)
             return
         }
         Log.info("handleDeltaByPath cache miss file=$fileName", "CodeSceneCachedReview")

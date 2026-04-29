@@ -9,6 +9,7 @@ import com.codescene.jetbrains.core.util.TelemetryEvents
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.telemetry.CodeHealthMonitorTelemetryState
 import com.codescene.jetbrains.platform.util.Log
+import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -27,6 +28,7 @@ class PlatformDeltaCacheService(
         val previous = cache[path]
         val wasVisible = previous?.visibleInCodeHealthMonitor() == true
         super.put(entry)
+        updateMonitor(project)
         val current = cache[path] ?: return
         val delta = current.deltaApiResponse ?: return
         if (!current.visibleInCodeHealthMonitor()) return
@@ -53,6 +55,7 @@ class PlatformDeltaCacheService(
         val previous = cache[filePath]
         val wasVisible = previous?.visibleInCodeHealthMonitor() == true
         super.invalidate(filePath)
+        updateMonitor(project)
         if (wasVisible) {
             val visible = CodeHealthMonitorTelemetryState.getInstance(project).toolWindowVisible
             CodeSceneProjectServiceProvider.getInstance(project).telemetryService.logUsage(
