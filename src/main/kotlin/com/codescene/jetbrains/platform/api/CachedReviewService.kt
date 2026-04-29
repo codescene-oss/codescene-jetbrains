@@ -20,13 +20,10 @@ import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionPro
 import com.codescene.jetbrains.platform.util.AceEntryOrchestrator
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.LocalFileSystem
-import java.nio.charset.Charset
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
@@ -39,6 +36,7 @@ class CachedReviewService(
     private val reviewService = project.service<CodeReviewService>()
     private val deltaService = project.service<CodeDeltaService>()
     private val uiRefreshService = project.service<UIRefreshService>()
+    private val pathBasedReviewHandler by lazy { PathBasedReviewHandler.getInstance(project) }
     private val aceEntryOrchestrator by lazy { AceEntryOrchestrator.getInstance(project) }
 
     companion object {
@@ -83,7 +81,7 @@ class CachedReviewService(
             isCodeReview = true,
             timeout = 300_000,
             debounceDelayMs = null,
-            performAction = { performCachedReviewByPath(filePath, fileName) },
+            performAction = { pathBasedReviewHandler.performCachedReviewByPath(filePath, fileName) },
             onScheduled = { onReviewScheduled(filePath) },
             onFinished = { onReviewFinished(filePath) },
         )
@@ -103,86 +101,6 @@ class CachedReviewService(
     }
 
     override fun isCodeReview(): Boolean = true
-
-    private suspend fun performCachedReviewByPath(
-        filePath: String,
-        fileName: String,
-    ) {
-        val file = LocalFileSystem.getInstance().findFileByPath(filePath)
-        if (file == null) {
-            Log.debug("reviewByPath file not found path=$filePath", "CodeSceneCachedReview")
-            return
-        }
-
-        val fileData =
-            ReadAction.compute<Pair<ByteArray, Charset>?, Exception> {
-                if (!file.isValid) {
-                    return@compute null
-                }
-                Pair(file.contentsToByteArray(), file.charset)
-            }
-        if (fileData == null) {
-            Log.debug("reviewByPath file became invalid path=$filePath", "CodeSceneCachedReview")
-            return
-        }
-        val currentCode = String(fileData.first, fileData.second)
-
-        val cachedReview = serviceProvider.reviewCacheService.get(ReviewCacheQuery(currentCode, filePath))
-        if (cachedReview != null) {
-            Log.debug("reviewByPath cache hit path=$filePath", "CodeSceneCachedReview")
-            handleDeltaByPath(filePath, fileName, currentCode, cachedReview.score.orElse(null))
-            return
-        }
-
-        val review = reviewService.performCodeReviewByPath(filePath, fileName, currentCode)
-        if (review == null) {
-            Log.debug("reviewByPath no result path=$filePath", "CodeSceneCachedReview")
-            return
-        }
-
-        Log.debug("reviewByPath completed path=$filePath", "CodeSceneCachedReview")
-        handleDeltaByPath(filePath, fileName, currentCode, review.score.orElse(null))
-    }
-
-    private suspend fun handleDeltaByPath(
-        filePath: String,
-        fileName: String,
-        currentCode: String,
-        currentScore: Double?,
-    ) {
-        val baselineCode = serviceProvider.gitService.getBranchCreationCommitCode(filePath)
-        val baselineScore = getBaselineScore(filePath, fileName, baselineCode)
-        val plan = resolveDeltaExecutionPlan(baselineCode, currentCode, currentScore, baselineScore)
-
-        if (plan.shouldCacheEmptyDelta) {
-            serviceProvider.deltaCacheService.put(
-                DeltaCacheEntry(
-                    filePath = filePath,
-                    headContent = baselineCode,
-                    currentFileContent = currentCode,
-                    deltaApiResponse = null,
-                ),
-            )
-            return
-        }
-
-        if (!plan.shouldRunDelta) {
-            return
-        }
-
-        val query = DeltaCacheQuery(filePath, baselineCode, currentCode)
-        val (deltaHit, _) = serviceProvider.deltaCacheService.get(query)
-        if (deltaHit) {
-            Log.debug("handleDeltaByPath cache hit file=$fileName", "CodeSceneCachedReview")
-            serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(filePath, false)
-            return
-        }
-        Log.debug("handleDeltaByPath cache miss file=$fileName", "CodeSceneCachedReview")
-
-        deltaService.performDeltaAnalysisByPath(filePath, fileName, currentCode)
-        serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(filePath, true)
-        Log.debug("handleDeltaByPath done file=$fileName", "CodeSceneCachedReview")
-    }
 
     private suspend fun performCachedReview(editor: Editor) {
         val file = editor.virtualFile
@@ -287,7 +205,9 @@ class CachedReviewService(
             val cliFileName =
                 resolveCliCacheFileName(filePath, serviceProvider.gitService.getRepoRelativePath(filePath))
             val aceParams = CodeParams(currentCode, cliFileName)
-            val cacheParams = CacheParams(serviceProvider.cliCacheService.getCachePath())
+            val cachePath = serviceProvider.cliCacheService.getCachePath()
+            Log.info("cachedReview ACE cachePath=$cachePath", "CachedReviewService")
+            val cacheParams = CacheParams(cachePath)
             AceService.getInstance().getRefactorableFunctions(aceParams, cacheParams, delta, editor)
         }
         return DeltaHandlingResult(didHandleDelta = true)

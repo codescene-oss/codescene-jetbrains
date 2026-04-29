@@ -89,7 +89,9 @@ class CodeReviewService(private val project: Project) : com.codescene.jetbrains.
         cacheResult: Boolean,
     ): Review? {
         val params = ReviewParams(reviewPath, code)
-        val cacheParams = CacheParams(serviceProvider.cliCacheService.getCachePath())
+        val cachePath = serviceProvider.cliCacheService.getCachePath()
+        Log.info("review cachePath=$cachePath", "CodeReviewService")
+        val cacheParams = CacheParams(cachePath)
         val (result, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.review(params, cacheParams) }
         result ?: return null
 

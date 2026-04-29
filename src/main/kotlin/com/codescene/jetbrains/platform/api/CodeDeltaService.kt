@@ -72,7 +72,9 @@ class CodeDeltaService(private val project: Project) : com.codescene.jetbrains.c
 
         val oldReview = ReviewParams(baselineReviewPath, oldCode)
         val newReview = ReviewParams(currentReviewPath, currentCode)
-        val cacheParams = CacheParams(serviceProvider.cliCacheService.getCachePath())
+        val cachePath = serviceProvider.cliCacheService.getCachePath()
+        Log.info("delta cachePath=$cachePath", "CodeDeltaService")
+        val cacheParams = CacheParams(cachePath)
         val (rawResult, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview, cacheParams) }
         val delta = adaptDeltaResult(rawResult)
         StatsCollectorService.getInstance().recordAnalysis(fileName, elapsedMs.toDouble())
