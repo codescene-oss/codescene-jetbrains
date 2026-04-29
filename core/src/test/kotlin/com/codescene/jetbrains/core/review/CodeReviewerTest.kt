@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.core.review
 
+import com.codescene.jetbrains.core.TestLogger
 import com.codescene.jetbrains.core.models.FailureType
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -16,7 +17,7 @@ import org.junit.Test
 class CodeReviewerTest {
     @Test
     fun `reviewFile does not invoke onFinished for superseded job`() {
-        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), defaultDebounceDelayMs = 50)
+        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), TestLogger, defaultDebounceDelayMs = 50)
         val firstFinishCount = AtomicInteger(0)
         val secondDone = CountDownLatch(1)
 
@@ -47,7 +48,7 @@ class CodeReviewerTest {
 
     @Test
     fun `reviewFile cancels previous scheduled call for same path`() {
-        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), defaultDebounceDelayMs = 200)
+        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), TestLogger, defaultDebounceDelayMs = 200)
         val firstExecuted = AtomicBoolean(false)
         val secondExecuted = CountDownLatch(1)
         val firstError = AtomicReference<FailureType?>()
@@ -84,7 +85,7 @@ class CodeReviewerTest {
 
     @Test
     fun `reviewFile executes action and invokes lifecycle callbacks`() {
-        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), defaultDebounceDelayMs = 10)
+        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), TestLogger, defaultDebounceDelayMs = 10)
         val scheduled = AtomicBoolean(false)
         val finished = AtomicBoolean(false)
         val executed = CountDownLatch(1)
@@ -114,13 +115,13 @@ class CodeReviewerTest {
 
     @Test
     fun `cancel returns false when no active call exists`() {
-        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), defaultDebounceDelayMs = 0)
+        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), TestLogger, defaultDebounceDelayMs = 0)
         assertEquals(false, reviewer.cancel("missing.kt"))
     }
 
     @Test
     fun `cancel returns true for active call and removes active path`() {
-        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), defaultDebounceDelayMs = 0)
+        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), TestLogger, defaultDebounceDelayMs = 0)
         val entered = CountDownLatch(1)
 
         reviewer.reviewFile(
@@ -143,7 +144,7 @@ class CodeReviewerTest {
 
     @Test
     fun `dispose cancels all active calls`() {
-        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), defaultDebounceDelayMs = 0)
+        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), TestLogger, defaultDebounceDelayMs = 0)
         reviewer.reviewFile(
             filePath = "a.kt",
             timeout = 2000,
@@ -179,7 +180,7 @@ class CodeReviewerTest {
         timeout: Long,
         performAction: suspend () -> Unit,
     ) {
-        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), defaultDebounceDelayMs = 0)
+        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), TestLogger, defaultDebounceDelayMs = 0)
         val error = AtomicReference<FailureType?>()
         val done = CountDownLatch(1)
 

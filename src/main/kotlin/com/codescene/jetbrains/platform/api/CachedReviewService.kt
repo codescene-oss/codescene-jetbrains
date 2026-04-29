@@ -46,7 +46,7 @@ class CachedReviewService(
     }
 
     override val scope = CoroutineScope(Dispatchers.IO)
-    override val codeReviewer = CodeReviewer(scope)
+    override val codeReviewer = CodeReviewer(scope, Log)
     override val reviewOrchestrator: ReviewOrchestrator by lazy {
         ReviewOrchestrator(
             codeReviewer = codeReviewer,
