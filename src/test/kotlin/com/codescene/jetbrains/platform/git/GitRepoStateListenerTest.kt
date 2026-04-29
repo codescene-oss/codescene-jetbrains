@@ -141,7 +141,7 @@ class GitRepoStateListenerTest {
 
             val trackedFile = "$workspacePath/file.kt"
             coEvery { observer.getTrackedFiles() } returns setOf(trackedFile)
-            coEvery { observer.getChangedFilesVsBaseline() } returns setOf("file.kt")
+            coEvery { observer.getChangedFilesVsBaseline() } returns setOf(trackedFile)
 
             listener.start()
             listenerSlot.captured.stagingAreaChanged(repository)

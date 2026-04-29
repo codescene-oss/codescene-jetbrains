@@ -51,7 +51,7 @@ class GitChangeObserverPrePopulationTest {
     @Test
     fun `tracker is pre-populated when populateTrackerFromRepoState is called`() =
         runBlocking {
-            mockGitChangeLister.changedFiles = setOf("src/file1.ts", "src/file2.ts")
+            mockGitChangeLister.changedFiles = setOf("$workspacePath/src/file1.ts", "$workspacePath/src/file2.ts")
 
             val observer = createObserver()
             observer.populateTrackerFromRepoState()
@@ -63,9 +63,9 @@ class GitChangeObserverPrePopulationTest {
         }
 
     @Test
-    fun `pre-population converts relative paths to absolute paths`() =
+    fun `pre-population uses absolute paths from getAllChangedFiles`() =
         runBlocking {
-            mockGitChangeLister.changedFiles = setOf("src/file.ts")
+            mockGitChangeLister.changedFiles = setOf("$workspacePath/src/file.ts")
 
             val observer = createObserver()
             observer.populateTrackerFromRepoState()
@@ -78,7 +78,7 @@ class GitChangeObserverPrePopulationTest {
     @Test
     fun `pre-populated files can be deleted without prior change event`() =
         runBlocking {
-            mockGitChangeLister.changedFiles = setOf("src/file.ts")
+            mockGitChangeLister.changedFiles = setOf("$workspacePath/src/file.ts")
 
             val observer = createObserver()
             observer.populateTrackerFromRepoState()
@@ -107,7 +107,7 @@ class GitChangeObserverPrePopulationTest {
     @Test
     fun `delete event fires for file that was open in editor when populateTrackerFromRepoState is called`() =
         runBlocking {
-            mockGitChangeLister.changedFiles = setOf("src/open-in-editor.ts")
+            mockGitChangeLister.changedFiles = setOf("$workspacePath/src/open-in-editor.ts")
             mockOpenFilesObserver.files = setOf("/workspace/src/open-in-editor.ts")
 
             val observer = createObserver()

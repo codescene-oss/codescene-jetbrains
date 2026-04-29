@@ -4,7 +4,6 @@ import com.codescene.jetbrains.core.contracts.IFileSystem
 import com.codescene.jetbrains.core.contracts.IGitChangeLister
 import com.codescene.jetbrains.core.git.FileSystemAdapter
 import com.codescene.jetbrains.core.git.MAX_UNTRACKED_FILES_PER_LOCATION
-import com.codescene.jetbrains.core.git.convertGitPathToWorkspacePath
 import com.codescene.jetbrains.core.git.createWorkspacePrefix
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.components.Service
@@ -97,7 +96,7 @@ class Git4IdeaChangeLister
         ): Set<String> =
             withContext(Dispatchers.IO) {
                 val files = mutableSetOf<String>()
-                val (normalizedWorkspacePath, workspacePrefix) = createWorkspacePrefix(workspacePath)
+                val (_, workspacePrefix) = createWorkspacePrefix(workspacePath)
 
                 val stagingArea = repository.stagingAreaHolder.allRecords
                 Log.info("Processing ${stagingArea.size} staging records", "Git4IdeaChangeLister")
@@ -113,15 +112,9 @@ class Git4IdeaChangeLister
 
                     val rawPath = record.path.path
                     val absolutePath = resolveAbsolutePath(fileSystem, gitRootPath, rawPath)
-                    val relativeFilePath =
-                        if (File(rawPath).isAbsolute) {
-                            fileSystem.getRelativePath(gitRootPath, rawPath)
-                        } else {
-                            rawPath
-                        }
 
                     Log.info(
-                        "rawPath='$rawPath' absolutePath='$absolutePath' relativeFilePath='$relativeFilePath'",
+                        "rawPath='$rawPath' absolutePath='$absolutePath'",
                         "Git4IdeaChangeLister",
                     )
                     val exists = fileSystem.fileExists(absolutePath)
@@ -138,14 +131,8 @@ class Git4IdeaChangeLister
                     )
 
                     if (exists && matchesPrefix && shouldReview && !isIgnored) {
-                        val relativeToWorkspace =
-                            convertGitPathToWorkspacePath(
-                                relativeFilePath,
-                                gitRootPath,
-                                normalizedWorkspacePath,
-                            )
-                        files.add(relativeToWorkspace)
-                        Log.info("Added file to result set: '$relativeToWorkspace'", "Git4IdeaChangeLister")
+                        files.add(absolutePath)
+                        Log.info("Added file to result set: '$absolutePath'", "Git4IdeaChangeLister")
                     }
                 }
 
@@ -190,9 +177,8 @@ class Git4IdeaChangeLister
                         )
 
                         if ((!shouldExclude || shouldExcludeFromHeuristic) && exists && reviewable) {
-                            convertUntrackedPath(filePath, gitRootPath, normalizedWorkspacePath)?.let {
-                                files.add(it)
-                            }
+                            files.add(absolutePath)
+                            Log.info("Added untracked file: '$absolutePath'", "Git4IdeaChangeLister")
                         }
                     }
                 }
@@ -223,7 +209,7 @@ class Git4IdeaChangeLister
                     return@withContext files
                 }
 
-                val (normalizedWorkspacePath, workspacePrefix) = createWorkspacePrefix(workspacePath)
+                val (_, workspacePrefix) = createWorkspacePrefix(workspacePath)
 
                 for (line in output) {
                     val filePath = line.trim()
@@ -238,13 +224,7 @@ class Git4IdeaChangeLister
                         fileSystem.fileExists(absolutePath) &&
                         shouldReviewFile(absolutePath)
                     ) {
-                        val relativeToWorkspace =
-                            convertGitPathToWorkspacePath(
-                                filePath,
-                                gitRootPath,
-                                normalizedWorkspacePath,
-                            )
-                        files.add(relativeToWorkspace)
+                        files.add(absolutePath)
                     }
                 }
 
@@ -303,20 +283,4 @@ class Git4IdeaChangeLister
             repository: GitRepository,
             filePath: com.intellij.openapi.vcs.FilePath,
         ): Boolean = repository.ignoredFilesHolder.containsFile(filePath)
-
-        private fun convertUntrackedPath(
-            filePath: String,
-            gitRootPath: String,
-            normalizedWorkspacePath: String,
-        ): String? =
-            try {
-                val relativeFilePath =
-                    if (File(filePath).isAbsolute) fileSystem.getRelativePath(gitRootPath, filePath) else filePath
-                val result = convertGitPathToWorkspacePath(relativeFilePath, gitRootPath, normalizedWorkspacePath)
-                Log.info("Added untracked file: $result", "Git4IdeaChangeLister")
-                result
-            } catch (e: Exception) {
-                Log.warn("Failed to convert untracked path '$filePath': ${e.message}", "Git4IdeaChangeLister")
-                null
-            }
     }

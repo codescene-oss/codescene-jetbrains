@@ -2,7 +2,6 @@ package com.codescene.jetbrains.platform.git
 
 import com.codescene.jetbrains.core.git.FileEvent
 import com.codescene.jetbrains.core.git.FileEventType
-import com.codescene.jetbrains.core.util.getRelativePath
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
@@ -64,8 +63,7 @@ class GitRepoStateListener(
         )
 
         for (trackedPath in trackedFiles) {
-            val relativePath = getRelativePath(workspacePath, trackedPath)
-            if (!currentChangedFiles.contains(relativePath)) {
+            if (!currentChangedFiles.contains(trackedPath)) {
                 Log.info(
                     "Queueing DELETE for file no longer changed: ${trackedPath.substringAfterLast('/')}",
                     "GitRepoStateListener",

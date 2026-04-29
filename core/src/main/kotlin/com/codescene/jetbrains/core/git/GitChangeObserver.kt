@@ -35,13 +35,8 @@ class GitChangeObserver(
         logger.info("Populating tracker from repo state", "GitChangeObserver")
         val changedFiles = gitChangeLister.getAllChangedFiles(gitRootPath, workspacePath, emptySet())
         logger.info("getAllChangedFiles returned ${changedFiles.size} files", "GitChangeObserver")
-        // Add all files to tracker unconditionally - this ensures HandleFileDelete works correctly.
-        // Files open in the editor are excluded from changedFiles (via OpenFilesObserver), but they
-        // still need to be tracked so that delete events are properly handled.
-        for (filePath in changedFiles) {
-            logger.info("Processing file from getAllChangedFiles: '$filePath'", "GitChangeObserver")
-            val absolutePath = fileSystem.getAbsolutePath(workspacePath, filePath)
-            logger.info("After getAbsolutePath: '$absolutePath'", "GitChangeObserver")
+        for (absolutePath in changedFiles) {
+            logger.info("Processing file: '$absolutePath'", "GitChangeObserver")
             synchronized(tracker) {
                 tracker.add(absolutePath)
             }
@@ -146,8 +141,7 @@ class GitChangeObserver(
         filePath: String,
         changedFiles: Set<String>,
     ): Boolean {
-        val relativePath = fileSystem.getRelativePath(workspacePath, filePath)
-        return changedFiles.contains(relativePath)
+        return changedFiles.contains(filePath)
     }
 
     private suspend fun handleFileCreate(filePath: String) {
