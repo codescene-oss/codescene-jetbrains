@@ -36,6 +36,7 @@ class CachedReviewService(
     private val reviewService = project.service<CodeReviewService>()
     private val deltaService = project.service<CodeDeltaService>()
     private val uiRefreshService = project.service<UIRefreshService>()
+    private val pathBasedReviewHandler by lazy { PathBasedReviewHandler.getInstance(project) }
     private val aceEntryOrchestrator by lazy { AceEntryOrchestrator.getInstance(project) }
 
     companion object {
@@ -43,7 +44,7 @@ class CachedReviewService(
     }
 
     override val scope = CoroutineScope(Dispatchers.IO)
-    override val codeReviewer = CodeReviewer(scope)
+    override val codeReviewer = CodeReviewer(scope, Log)
     override val reviewOrchestrator: ReviewOrchestrator by lazy {
         ReviewOrchestrator(
             codeReviewer = codeReviewer,
@@ -67,6 +68,23 @@ class CachedReviewService(
         reviewFile(editor, debounceDelayMs = debounceDelayMs) {
             performCachedReview(editor)
         }
+    }
+
+    fun reviewByPath(filePath: String) {
+        val fileName = filePath.substringAfterLast('/')
+        val serviceName = "$serviceImplementation - ${project.name}"
+
+        reviewOrchestrator.reviewFile(
+            filePath = filePath,
+            fileName = fileName,
+            serviceName = serviceName,
+            isCodeReview = true,
+            timeout = 300_000,
+            debounceDelayMs = null,
+            performAction = { pathBasedReviewHandler.performCachedReviewByPath(filePath, fileName) },
+            onScheduled = { onReviewScheduled(filePath) },
+            onFinished = { onReviewFinished(filePath) },
+        )
     }
 
     override fun onReviewScheduled(filePath: String) {
@@ -157,6 +175,7 @@ class CachedReviewService(
                     "CodeSceneCachedReview",
                 )
                 serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(path, false)
+                updateMonitor(project)
                 return DeltaHandlingResult(didHandleDelta = false)
             }
             val df = path.substringAfterLast('/')
@@ -187,7 +206,9 @@ class CachedReviewService(
             val cliFileName =
                 resolveCliCacheFileName(filePath, serviceProvider.gitService.getRepoRelativePath(filePath))
             val aceParams = CodeParams(currentCode, cliFileName)
-            val cacheParams = CacheParams(serviceProvider.cliCacheService.getCachePath())
+            val cachePath = serviceProvider.cliCacheService.getCachePath()
+            Log.info("cachedReview ACE cachePath=$cachePath", "CachedReviewService")
+            val cacheParams = CacheParams(cachePath)
             AceService.getInstance().getRefactorableFunctions(aceParams, cacheParams, delta, editor)
         }
         return DeltaHandlingResult(didHandleDelta = true)

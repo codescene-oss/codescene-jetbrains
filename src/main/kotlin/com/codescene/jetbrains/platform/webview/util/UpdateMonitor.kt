@@ -15,6 +15,7 @@ import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.UpdateToolWindowIconParams
 import com.codescene.jetbrains.platform.util.updateToolWindowIcon
 import com.codescene.jetbrains.platform.webview.handler.CwfMessageHandler
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 
 /**
@@ -31,11 +32,21 @@ import com.intellij.openapi.project.Project
 private val codeHealthMonitorMapper = CodeHealthMonitorMapper()
 
 fun updateMonitor(project: Project) {
+    ApplicationManager.getApplication().invokeLater {
+        if (project.isDisposed) return@invokeLater
+        updateMonitorImpl(project)
+    }
+}
+
+private fun updateMonitorImpl(project: Project) {
     Log.info("Updating monitor for project '${project.name}'...")
 
     val services = CodeSceneProjectServiceProvider.getInstance(project)
     val deltaResults = PlatformDeltaCacheService.getInstance(project).getAll()
     val activeJobs = CachedReviewService.getInstance(project).activeReviewCalls.toList()
+
+    val shortNames = activeJobs.map { it.substringAfterLast('/') }
+    Log.info("Active jobs: $shortNames deltaResults=${deltaResults.size}", "UpdateMonitor")
 
     val update =
         codeHealthMonitorMapper.buildUpdate(

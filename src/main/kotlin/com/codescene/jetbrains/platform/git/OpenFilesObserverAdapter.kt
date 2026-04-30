@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.git
 
 import com.codescene.jetbrains.core.contracts.IOpenFilesObserver
+import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 
@@ -9,9 +10,12 @@ class OpenFilesObserverAdapter(
 ) : IOpenFilesObserver {
     override fun getAllVisibleFileNames(): Set<String> {
         val fileEditorManager = FileEditorManager.getInstance(project)
-        return fileEditorManager.openFiles
-            .mapNotNull { it.path }
-            .filter { it.isNotEmpty() }
-            .toSet()
+        val result =
+            fileEditorManager.openFiles
+                .mapNotNull { it.path }
+                .filter { it.isNotEmpty() }
+                .toSet()
+        Log.info("Open files count=${result.size}", "OpenFilesObserver")
+        return result
     }
 }

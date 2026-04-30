@@ -6,8 +6,8 @@ import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.jetbrains.core.delta.DeltaAnalysisResult
 import com.codescene.jetbrains.core.delta.adaptDeltaResult
 import com.codescene.jetbrains.core.delta.completeDeltaAnalysis
-import com.codescene.jetbrains.core.models.TelemetryInfo
 import com.codescene.jetbrains.core.telemetry.resolveTelemetryInfo
+import com.codescene.jetbrains.core.util.extractExtension
 import com.codescene.jetbrains.core.util.resolveBaselineCliCacheFileName
 import com.codescene.jetbrains.core.util.resolveCliCacheFileName
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
@@ -31,18 +31,36 @@ class CodeDeltaService(private val project: Project) : com.codescene.jetbrains.c
         fun getInstance(project: Project): CodeDeltaService = project.service<CodeDeltaService>()
     }
 
-    /**
-     * Performs delta analysis by comparing the current editor content against a baseline.
-     *
-     * The baseline for delta analysis is determined as follows:
-     * - If available, it uses the code/content from the branch creation commit.
-     * - If the branch creation commit is not found or the analysis is run in a detached HEAD state,
-     *   it falls back to comparing against the best score of 10.0.
-     */
     suspend fun performDeltaAnalysis(editor: Editor): DeltaAnalysisResult {
         val path = editor.virtualFile.path
-        val oldCode = gitService.getBranchCreationCommitCode(path)
+        val fileName = editor.virtualFile.name
+        val extension = editor.virtualFile.extension
         val currentCode = editor.document.text
+        val lineCount =
+            ApplicationManager.getApplication().runReadAction<Int?> {
+                FileDocumentManager.getInstance().getDocument(editor.virtualFile)?.lineCount
+            }
+        return performDeltaAnalysisInternal(path, fileName, extension, currentCode, lineCount)
+    }
+
+    suspend fun performDeltaAnalysisByPath(
+        path: String,
+        fileName: String,
+        currentCode: String,
+    ): DeltaAnalysisResult {
+        val extension = extractExtension(fileName)
+        val lineCount = currentCode.lines().size
+        return performDeltaAnalysisInternal(path, fileName, extension, currentCode, lineCount)
+    }
+
+    private suspend fun performDeltaAnalysisInternal(
+        path: String,
+        fileName: String,
+        extension: String?,
+        currentCode: String,
+        lineCount: Int?,
+    ): DeltaAnalysisResult {
+        val oldCode = gitService.getBranchCreationCommitCode(path)
         val repoRelativePath = gitService.getRepoRelativePath(path)
         val baselineReviewPath =
             resolveBaselineCliCacheFileName(
@@ -54,16 +72,14 @@ class CodeDeltaService(private val project: Project) : com.codescene.jetbrains.c
 
         val oldReview = ReviewParams(baselineReviewPath, oldCode)
         val newReview = ReviewParams(currentReviewPath, currentCode)
-        val cacheParams = CacheParams(serviceProvider.cliCacheService.getCachePath())
+        val cachePath = serviceProvider.cliCacheService.getCachePath()
+        Log.info("delta cachePath=$cachePath", "CodeDeltaService")
+        val cacheParams = CacheParams(cachePath)
         val (rawResult, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview, cacheParams) }
         val delta = adaptDeltaResult(rawResult)
-        StatsCollectorService.getInstance().recordAnalysis(editor.virtualFile.name, elapsedMs.toDouble())
+        StatsCollectorService.getInstance().recordAnalysis(fileName, elapsedMs.toDouble())
 
-        val telemetryInfo =
-            ApplicationManager.getApplication().runReadAction<TelemetryInfo> {
-                val document = FileDocumentManager.getInstance().getDocument(editor.virtualFile)
-                resolveTelemetryInfo(document?.lineCount, editor.virtualFile.extension)
-            } ?: resolveTelemetryInfo(null, null)
+        val telemetryInfo = resolveTelemetryInfo(lineCount, extension)
         val result =
             completeDeltaAnalysis(
                 path = path,

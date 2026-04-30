@@ -110,9 +110,17 @@ jobs:
   test:
     name: Test
     needs: [build]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: windows-latest
+          - os: macos-latest
     steps:
       - name: Maximize Build Space
+        if: matrix.os == 'ubuntu-latest'
         uses: jlumbroso/free-disk-space@main
         with:
           tool-cache: true
@@ -145,14 +153,14 @@ jobs:
         run: ./gradlew check jacocoMergedReport -PktlintFailOnError=true
 
       - name: Publish Test Results
-        if: ${{ always() && !cancelled() }}
+        if: ${{ always() && !cancelled() && matrix.os == 'ubuntu-latest' }}
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: "**/build/test-results/test/**/*.xml"
 
       - name: Check code coverage
         uses: ./.github/actions/check-coverage
-        if: ${{ success() }}
+        if: ${{ success() && matrix.os == 'ubuntu-latest' }}
         with:
           access-token: ${{ secrets.CODESCENE_CODE_COVERAGE_API_TOKEN }}
           project-url: "https://api.codescene.io/v2/projects/63256"

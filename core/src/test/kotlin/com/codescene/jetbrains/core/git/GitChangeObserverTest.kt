@@ -1,5 +1,7 @@
 package com.codescene.jetbrains.core.git
 
+import com.codescene.jetbrains.core.contracts.ILogger
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -13,6 +15,8 @@ class GitChangeObserverTest {
     private lateinit var mockSavedFilesTracker: MockSavedFilesTracker
     private lateinit var mockOpenFilesObserver: MockOpenFilesObserver
     private lateinit var mockFileSystem: MockFileSystem
+    private lateinit var mockGitService: MockGitService
+    private lateinit var logger: ILogger
     private var deletedFiles: MutableList<String> = mutableListOf()
     private var changedFiles: MutableList<String> = mutableListOf()
 
@@ -27,6 +31,8 @@ class GitChangeObserverTest {
         mockSavedFilesTracker = MockSavedFilesTracker()
         mockOpenFilesObserver = MockOpenFilesObserver()
         mockFileSystem = MockFileSystem()
+        mockGitService = MockGitService()
+        logger = mockk(relaxed = true)
 
         observer =
             GitChangeObserver(
@@ -34,17 +40,19 @@ class GitChangeObserverTest {
                 savedFilesTracker = mockSavedFilesTracker,
                 openFilesObserver = mockOpenFilesObserver,
                 fileSystem = mockFileSystem,
+                gitService = mockGitService,
                 onFileDeleted = { deletedFiles.add(it) },
                 onFileChanged = { changedFiles.add(it) },
                 workspacePath = workspacePath,
                 gitRootPath = gitRootPath,
+                logger = logger,
             )
     }
 
     @Test
     fun `tracker tracks added files`() =
         runBlocking {
-            mockGitChangeLister.changedFiles = setOf("test.ts")
+            mockGitChangeLister.changedFiles = setOf("$workspacePath/test.ts")
             observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/test.ts"))
             observer.processQueuedEvents()
 
@@ -54,7 +62,7 @@ class GitChangeObserverTest {
     @Test
     fun `removeFromTracker removes file from tracking`() =
         runBlocking {
-            mockGitChangeLister.changedFiles = setOf("test.ts")
+            mockGitChangeLister.changedFiles = setOf("$workspacePath/test.ts")
             observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/test.ts"))
             observer.processQueuedEvents()
             assertTrue(observer.getTrackedFiles().contains("/workspace/test.ts"))
@@ -67,7 +75,7 @@ class GitChangeObserverTest {
     @Test
     fun `handleFileDelete removes tracked file`() =
         runBlocking {
-            mockGitChangeLister.changedFiles = setOf("test.ts")
+            mockGitChangeLister.changedFiles = setOf("$workspacePath/test.ts")
             observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/test.ts"))
             observer.processQueuedEvents()
             assertTrue(observer.getTrackedFiles().contains("/workspace/test.ts"))
@@ -83,7 +91,12 @@ class GitChangeObserverTest {
     @Test
     fun `handleFileDelete handles directory deletion`() =
         runBlocking {
-            mockGitChangeLister.changedFiles = setOf("subdir/file1.ts", "subdir/file2.ts", "other.ts")
+            mockGitChangeLister.changedFiles =
+                setOf(
+                    "$workspacePath/subdir/file1.ts",
+                    "$workspacePath/subdir/file2.ts",
+                    "$workspacePath/other.ts",
+                )
             observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/subdir/file1.ts"))
             observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/subdir/file2.ts"))
             observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/other.ts"))
@@ -92,7 +105,7 @@ class GitChangeObserverTest {
             assertEquals(3, observer.getTrackedFiles().size)
 
             mockFileSystem.extensionOverrides["/workspace/subdir"] = ""
-            mockGitChangeLister.changedFiles = setOf("other.ts")
+            mockGitChangeLister.changedFiles = setOf("$workspacePath/other.ts")
             observer.queueEvent(FileEvent(FileEventType.DELETE, "/workspace/subdir"))
             observer.processQueuedEvents()
 
@@ -105,14 +118,14 @@ class GitChangeObserverTest {
     @Test
     fun `shouldProcessFile rejects unsupported file types`() =
         runBlocking {
-            val changedFilesSet = setOf("test.txt")
+            val changedFilesSet = setOf("$workspacePath/test.txt")
             assertFalse(observer.shouldProcessFile("/workspace/test.txt", changedFilesSet))
         }
 
     @Test
     fun `shouldProcessFile accepts supported file types`() =
         runBlocking {
-            val changedFilesSet = setOf("test.ts")
+            val changedFilesSet = setOf("$workspacePath/test.ts")
             assertTrue(observer.shouldProcessFile("/workspace/test.ts", changedFilesSet))
         }
 
@@ -120,7 +133,7 @@ class GitChangeObserverTest {
     fun `handleFileChange filters files not in changed list`() =
         runBlocking {
             mockGitChangeLister.changedFiles = emptySet()
-            observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/committed.ts"))
+            observer.queueEvent(FileEvent(FileEventType.CHANGE, "/workspace/committed.ts"))
             observer.processQueuedEvents()
 
             assertFalse(observer.getTrackedFiles().contains("/workspace/committed.ts"))
@@ -129,7 +142,7 @@ class GitChangeObserverTest {
     @Test
     fun `change event removes tracked file when no longer changed`() =
         runBlocking {
-            mockGitChangeLister.changedFiles = setOf("test.ts")
+            mockGitChangeLister.changedFiles = setOf("$workspacePath/test.ts")
             observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/test.ts"))
             observer.processQueuedEvents()
             assertTrue(observer.getTrackedFiles().contains("/workspace/test.ts"))
@@ -154,7 +167,12 @@ class GitChangeObserverTest {
     @Test
     fun `getChangedFilesVsBaseline is called once per batch`() =
         runBlocking {
-            mockGitChangeLister.changedFiles = setOf("test1.ts", "test2.ts", "test3.ts")
+            mockGitChangeLister.changedFiles =
+                setOf(
+                    "$workspacePath/test1.ts",
+                    "$workspacePath/test2.ts",
+                    "$workspacePath/test3.ts",
+                )
             observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/test1.ts"))
             observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/test2.ts"))
             observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/test3.ts"))
@@ -192,12 +210,69 @@ class GitChangeObserverTest {
     @Test
     fun `duplicate change events in same batch only trigger one callback`() =
         runBlocking {
-            mockGitChangeLister.changedFiles = setOf("test.ts")
+            mockGitChangeLister.changedFiles = setOf("$workspacePath/test.ts")
             observer.queueEvent(FileEvent(FileEventType.CHANGE, "/workspace/test.ts"))
             observer.queueEvent(FileEvent(FileEventType.CHANGE, "/workspace/test.ts"))
             observer.queueEvent(FileEvent(FileEventType.CHANGE, "/workspace/test.ts"))
             observer.processQueuedEvents()
 
             assertEquals(1, changedFiles.size)
+        }
+
+    @Test
+    fun `CREATE event tracks file without requiring git4idea confirmation`() =
+        runBlocking {
+            mockGitChangeLister.changedFiles = emptySet()
+            observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/new-file.ts"))
+            observer.processQueuedEvents()
+
+            assertTrue(observer.getTrackedFiles().contains("/workspace/new-file.ts"))
+            assertTrue(changedFiles.contains("/workspace/new-file.ts"))
+        }
+
+    @Test
+    fun `CREATE event skips unsupported file extensions`() =
+        runBlocking {
+            mockGitChangeLister.changedFiles = emptySet()
+            observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/readme.txt"))
+            observer.processQueuedEvents()
+
+            assertFalse(observer.getTrackedFiles().contains("/workspace/readme.txt"))
+            assertFalse(changedFiles.contains("/workspace/readme.txt"))
+        }
+
+    @Test
+    fun `CREATE event skips non-existent files`() =
+        runBlocking {
+            mockFileSystem.fileExistsOverrides["/workspace/ghost.ts"] = false
+            mockGitChangeLister.changedFiles = emptySet()
+            observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/ghost.ts"))
+            observer.processQueuedEvents()
+
+            assertFalse(observer.getTrackedFiles().contains("/workspace/ghost.ts"))
+            assertFalse(changedFiles.contains("/workspace/ghost.ts"))
+        }
+
+    @Test
+    fun `CREATE event processes file even when not in git changed list`() =
+        runBlocking {
+            mockGitChangeLister.changedFiles = setOf("$workspacePath/other.ts")
+            observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/brand-new.ts"))
+            observer.processQueuedEvents()
+
+            assertTrue(observer.getTrackedFiles().contains("/workspace/brand-new.ts"))
+            assertTrue(changedFiles.contains("/workspace/brand-new.ts"))
+        }
+
+    @Test
+    fun `CREATE event skips gitignored files`() =
+        runBlocking {
+            mockGitService.ignoredFiles.add("/workspace/ignored.ts")
+            mockGitChangeLister.changedFiles = emptySet()
+            observer.queueEvent(FileEvent(FileEventType.CREATE, "/workspace/ignored.ts"))
+            observer.processQueuedEvents()
+
+            assertFalse(observer.getTrackedFiles().contains("/workspace/ignored.ts"))
+            assertFalse(changedFiles.contains("/workspace/ignored.ts"))
         }
 }
