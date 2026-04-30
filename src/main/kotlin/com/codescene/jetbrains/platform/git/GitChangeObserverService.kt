@@ -17,6 +17,27 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.LocalFileSystem
 import git4idea.repo.GitRepositoryManager
 
+/**
+ * Event-driven git change observer that reacts to VFS file events.
+ *
+ * This service handles real-time file change detection within the IDE:
+ * - Listens to VFS events (create, change, delete) via [VfsEventBridge]
+ * - Listens to git staging area changes via [GitRepoStateListener]
+ * - Batches and debounces rapid events (1s intervals)
+ * - Validates events against git state before triggering actions
+ * - Handles file deletions with proper cache invalidation
+ *
+ * This complements [PeriodicChangeListerService] which polls git state periodically.
+ * Both are needed because:
+ * - This service: immediate response to IDE events + proper delete handling + cache invalidation
+ * - PeriodicChangeListerService: catches changes made outside IDE (git CLI, external editors)
+ *
+ * Both call [Git4IdeaChangeLister.getAllChangedFiles] but use it differently:
+ * - This service validates VFS events against git state
+ * - PeriodicChangeListerService discovers files to review
+ *
+ * Results merge naturally via the shared delta cache.
+ */
 @Service(Service.Level.PROJECT)
 class GitChangeObserverService(
     private val project: Project,

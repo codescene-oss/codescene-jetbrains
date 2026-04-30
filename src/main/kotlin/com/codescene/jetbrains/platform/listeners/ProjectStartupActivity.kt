@@ -9,6 +9,7 @@ import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.editor.UIRefreshService
 import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.platform.git.GitChangeObserverService
+import com.codescene.jetbrains.platform.git.PeriodicChangeListerService
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.platform.telemetry.TelemetryService
 import com.codescene.jetbrains.platform.telemetry.installGlobalUncaughtErrorTelemetry
@@ -105,6 +106,9 @@ class ProjectStartupActivity : ProjectActivity {
 
         val gitChangeObserverService = project.service<GitChangeObserverService>()
         gitChangeObserverService.start()
+
+        val periodicChangeListerService = project.service<PeriodicChangeListerService>()
+        periodicChangeListerService.start()
 
         registerCodeSceneToolWindowTelemetry(project, disposable)
 
