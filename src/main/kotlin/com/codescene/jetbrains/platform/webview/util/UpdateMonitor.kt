@@ -37,10 +37,8 @@ fun updateMonitor(project: Project) {
     val deltaResults = PlatformDeltaCacheService.getInstance(project).getAll()
     val activeJobs = CachedReviewService.getInstance(project).activeReviewCalls.toList()
 
-    if (activeJobs.isNotEmpty()) {
-        val shortNames = activeJobs.map { it.substringAfterLast('/') }
-        Log.info("Active jobs: $shortNames", "UpdateMonitor")
-    }
+    val shortNames = activeJobs.map { it.substringAfterLast('/') }
+    Log.info("Active jobs: $shortNames deltaResults=${deltaResults.size}", "UpdateMonitor")
 
     val update =
         codeHealthMonitorMapper.buildUpdate(
