@@ -58,7 +58,7 @@ class GitChangeObserver(
     }
 
     fun queueEvent(event: FileEvent) {
-        logger.info("Queued event type=${event.type} path=${event.path.substringAfterLast('/')}", "GitChangeObserver")
+        logger.info("Queued event type=${event.type} path=${pathFileName(event.path)}", "GitChangeObserver")
         synchronized(eventQueue) {
             eventQueue.add(event)
         }
@@ -78,7 +78,7 @@ class GitChangeObserver(
 
         val deduplicatedEvents =
             events
-                .groupBy { it.path }
+                .groupBy { comparisonKey(it.path) }
                 .mapValues { it.value.last() }
                 .values
                 .toList()
@@ -104,8 +104,9 @@ class GitChangeObserver(
     }
 
     fun removeFromTracker(filePath: String) {
+        val key = comparisonKey(filePath)
         synchronized(tracker) {
-            tracker.remove(filePath)
+            tracker.removeIf { comparisonKey(it) == key }
         }
     }
 
@@ -141,7 +142,8 @@ class GitChangeObserver(
         filePath: String,
         changedFiles: Set<String>,
     ): Boolean {
-        return changedFiles.contains(filePath)
+        val key = comparisonKey(filePath)
+        return changedFiles.any { comparisonKey(it) == key }
     }
 
     private suspend fun handleFileCreate(filePath: String) {
@@ -160,9 +162,7 @@ class GitChangeObserver(
             return
         }
 
-        synchronized(tracker) {
-            tracker.add(filePath)
-        }
+        addToTracker(filePath)
         logger.info("Added created file to tracker", "GitChangeObserver")
         onFileChanged(filePath)
     }
@@ -182,9 +182,7 @@ class GitChangeObserver(
             return
         }
 
-        synchronized(tracker) {
-            tracker.add(filePath)
-        }
+        addToTracker(filePath)
         logger.info("Added file to tracker", "GitChangeObserver")
         onFileChanged(filePath)
     }
@@ -193,11 +191,13 @@ class GitChangeObserver(
         filePath: String,
         changedFiles: Set<String>,
     ) {
+        val key = comparisonKey(filePath)
         synchronized(tracker) {
-            if (tracker.contains(filePath)) {
-                tracker.remove(filePath)
+            val trackedFile = tracker.firstOrNull { comparisonKey(it) == key }
+            if (trackedFile != null) {
+                tracker.remove(trackedFile)
                 logger.info("Removing tracked file", "GitChangeObserver")
-                onFileDeleted(filePath)
+                onFileDeleted(trackedFile)
                 return
             }
         }
@@ -211,12 +211,12 @@ class GitChangeObserver(
         val isDirectory = extension.isEmpty()
 
         if (isDirectory) {
-            val normalizedDirPath = filePath.replace('\\', '/')
+            val normalizedDirPath = pathComparisonKey(filePath)
             val directoryPrefix =
                 if (normalizedDirPath.endsWith("/")) normalizedDirPath else normalizedDirPath + "/"
             val filesToDelete: List<String>
             synchronized(tracker) {
-                filesToDelete = tracker.filter { it.replace('\\', '/').startsWith(directoryPrefix) }
+                filesToDelete = tracker.filter { pathComparisonKey(it).startsWith(directoryPrefix) }
             }
 
             logger.info("Directory deletion cascade files=${filesToDelete.size}", "GitChangeObserver")
@@ -229,4 +229,14 @@ class GitChangeObserver(
             }
         }
     }
+
+    private fun addToTracker(filePath: String) {
+        val key = comparisonKey(filePath)
+        synchronized(tracker) {
+            tracker.removeIf { comparisonKey(it) == key }
+            tracker.add(filePath)
+        }
+    }
+
+    private fun comparisonKey(filePath: String): String = gitRelativeComparisonKey(gitRootPath, filePath)
 }

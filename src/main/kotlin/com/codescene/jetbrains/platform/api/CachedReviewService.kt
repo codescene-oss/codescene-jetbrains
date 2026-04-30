@@ -4,6 +4,7 @@ import com.codescene.ExtensionAPI.CacheParams
 import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.jetbrains.core.delta.DeltaCacheEntry
 import com.codescene.jetbrains.core.delta.DeltaCacheQuery
+import com.codescene.jetbrains.core.git.pathFileName
 import com.codescene.jetbrains.core.review.BaselineReviewCacheEntry
 import com.codescene.jetbrains.core.review.BaselineReviewCacheQuery
 import com.codescene.jetbrains.core.review.CodeReviewer
@@ -71,7 +72,7 @@ class CachedReviewService(
     }
 
     fun reviewByPath(filePath: String) {
-        val fileName = filePath.substringAfterLast('/')
+        val fileName = pathFileName(filePath)
         val serviceName = "$serviceImplementation - ${project.name}"
 
         reviewOrchestrator.reviewFile(
@@ -115,12 +116,12 @@ class CachedReviewService(
             review = reviewService.performCodeReview(editor)
         }
         if (review == null) {
-            val f = path.substringAfterLast('/')
+            val f = pathFileName(path)
             Log.debug("cached review no result file=$f len=${currentCode.length}", "CodeSceneCachedReview")
             return
         }
 
-        val f = path.substringAfterLast('/')
+        val f = pathFileName(path)
         Log.debug("cached review file=$f reviewMiss=$reviewMiss len=${currentCode.length}", "CodeSceneCachedReview")
 
         val aceUpdated =
@@ -169,16 +170,16 @@ class CachedReviewService(
             val query = DeltaCacheQuery(path, baselineCode, currentCode)
             val (deltaHit, _) = serviceProvider.deltaCacheService.get(query)
             if (deltaHit) {
-                val df = path.substringAfterLast('/')
+                val df = pathFileName(path)
                 Log.debug(
                     "handleDelta hit skip file=$df baseLen=${baselineCode.length}",
                     "CodeSceneCachedReview",
                 )
-                serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(path, false)
+                serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(path, true)
                 updateMonitor(project)
                 return DeltaHandlingResult(didHandleDelta = false)
             }
-            val df = path.substringAfterLast('/')
+            val df = pathFileName(path)
             Log.debug(
                 "handleDelta miss cachedReview file=$df baseLen=${baselineCode.length}",
                 "CodeSceneCachedReview",
@@ -187,7 +188,7 @@ class CachedReviewService(
 
         val deltaResult = deltaService.performDeltaAnalysis(editor)
         serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(path, reviewMiss)
-        val df2 = path.substringAfterLast('/')
+        val df2 = pathFileName(path)
         Log.debug(
             "handleDelta done file=$df2 reviewMiss=$reviewMiss " +
                 "deltaNull=${deltaResult.delta == null}",

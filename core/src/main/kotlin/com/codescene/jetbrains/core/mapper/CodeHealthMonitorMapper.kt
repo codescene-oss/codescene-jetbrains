@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.core.mapper
 
 import com.codescene.jetbrains.core.delta.DeltaCacheItem
+import com.codescene.jetbrains.core.git.pathFileName
 import com.codescene.jetbrains.core.models.CwfData
 import com.codescene.jetbrains.core.models.View
 import com.codescene.jetbrains.core.models.shared.AnalysisJob
@@ -96,7 +97,7 @@ class CodeHealthMonitorMapper {
             AnalysisJob(
                 type = DELTA_ANALYSIS_JOB,
                 state = JOB_STATE_RUNNING,
-                file = FileMetaType(fileName = job),
+                file = FileMetaType(fileName = pathFileName(job)),
             )
         }
 

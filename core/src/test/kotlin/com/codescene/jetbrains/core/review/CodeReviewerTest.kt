@@ -84,6 +84,43 @@ class CodeReviewerTest {
     }
 
     @Test
+    fun `reviewFile cancels previous scheduled call for same Windows path with different separators`() {
+        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), TestLogger, defaultDebounceDelayMs = 200)
+        val firstExecuted = AtomicBoolean(false)
+        val secondExecuted = CountDownLatch(1)
+        val firstError = AtomicReference<FailureType?>()
+        val firstErrorObserved = CountDownLatch(1)
+
+        reviewer.reviewFile(
+            filePath = "C:\\repo\\src\\File.kt",
+            timeout = 2000,
+            runWithProgress = { action -> action() },
+            performAction = {
+                firstExecuted.set(true)
+            },
+            onError = { type, _ ->
+                firstError.set(type)
+                firstErrorObserved.countDown()
+            },
+        )
+
+        reviewer.reviewFile(
+            filePath = "C:/repo/src/File.kt",
+            timeout = 2000,
+            runWithProgress = { action -> action() },
+            performAction = {
+                secondExecuted.countDown()
+            },
+            onError = { _, _ -> },
+        )
+
+        assertTrue(secondExecuted.await(2, TimeUnit.SECONDS))
+        assertTrue(firstErrorObserved.await(2, TimeUnit.SECONDS))
+        assertEquals(false, firstExecuted.get())
+        assertEquals(FailureType.CANCELLED, firstError.get())
+    }
+
+    @Test
     fun `reviewFile executes action and invokes lifecycle callbacks`() {
         val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), TestLogger, defaultDebounceDelayMs = 10)
         val scheduled = AtomicBoolean(false)
