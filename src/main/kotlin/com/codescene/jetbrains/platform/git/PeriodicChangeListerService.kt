@@ -8,15 +8,10 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import git4idea.repo.GitRepositoryManager
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.runBlocking
 
 /**
  * Periodically polls git for changed files and triggers reviews.
@@ -37,89 +32,81 @@ import kotlinx.coroutines.launch
  * Results merge naturally via the shared delta cache in [CachedReviewService].
  */
 @Service(Service.Level.PROJECT)
-class PeriodicChangeListerService
-    @JvmOverloads
-    constructor(
-        private val project: Project,
-        dispatcher: CoroutineDispatcher = Dispatchers.IO,
-    ) : Disposable {
-        companion object {
-            fun getInstance(project: Project): PeriodicChangeListerService = project.service()
+class PeriodicChangeListerService(
+    private val project: Project,
+) : Disposable {
+    companion object {
+        fun getInstance(project: Project): PeriodicChangeListerService = project.service()
 
-            private const val INTERVAL_MS = 3000L
+        private const val INTERVAL_MS = 9000L
+    }
+
+    private val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+    private var workspacePath: String? = null
+    private var gitRootPath: String? = null
+    private val reviewedFiles = mutableSetOf<String>()
+
+    fun start() {
+        val wsPath = project.basePath
+        if (wsPath == null) {
+            Log.warn("Cannot start: project base path is null", "PeriodicChangeListerService")
+            return
         }
+        workspacePath = wsPath
 
-        private val scope = CoroutineScope(SupervisorJob() + dispatcher)
-        private var pollingJob: Job? = null
-        private var workspacePath: String? = null
-        private var gitRootPath: String? = null
-        private val reviewedFiles = mutableSetOf<String>()
-
-        fun start() {
-            val wsPath = project.basePath
-            if (wsPath == null) {
-                Log.warn("Cannot start: project base path is null", "PeriodicChangeListerService")
-                return
-            }
-            workspacePath = wsPath
-
-            val gitRoot = resolveGitRootPath(wsPath)
-            if (gitRoot == null) {
-                Log.warn("Cannot start: could not resolve git root", "PeriodicChangeListerService")
-                return
-            }
-            gitRootPath = gitRoot
-
-            Log.info("Starting periodic change lister interval=${INTERVAL_MS}ms", "PeriodicChangeListerService")
-            pollingJob?.cancel()
-            pollingJob =
-                scope.launch {
-                    while (isActive) {
-                        delay(INTERVAL_MS)
-                        pollChangedFiles()
-                    }
-                }
+        val gitRoot = resolveGitRootPath(wsPath)
+        if (gitRoot == null) {
+            Log.warn("Cannot start: could not resolve git root", "PeriodicChangeListerService")
+            return
         }
+        gitRootPath = gitRoot
 
-        private suspend fun pollChangedFiles() {
-            val wsPath = workspacePath ?: return
-            val gitRoot = gitRootPath ?: return
+        Log.info("Starting periodic change lister interval=${INTERVAL_MS}ms", "PeriodicChangeListerService")
+        scheduler.scheduleWithFixedDelay(
+            { pollChangedFiles() },
+            INTERVAL_MS,
+            INTERVAL_MS,
+            TimeUnit.MILLISECONDS,
+        )
+    }
 
-            val changeLister = Git4IdeaChangeLister.getInstance(project)
-            val changedFiles = changeLister.getAllChangedFiles(gitRoot, wsPath, emptySet())
+    private fun pollChangedFiles() {
+        val wsPath = workspacePath ?: return
+        val gitRoot = gitRootPath ?: return
 
-            Log.info("Poll found ${changedFiles.size} changed files", "PeriodicChangeListerService")
+        val changeLister = Git4IdeaChangeLister.getInstance(project)
+        val changedFiles = runBlocking { changeLister.getAllChangedFiles(gitRoot, wsPath, emptySet()) }
 
-            synchronized(reviewedFiles) {
-                val removedFiles = reviewedFiles - changedFiles
-                for (file in removedFiles) {
-                    Log.info("File no longer changed: ${file.substringAfterLast('/')}", "PeriodicChangeListerService")
-                    reviewedFiles.remove(file)
-                }
-            }
+        Log.info("Poll found ${changedFiles.size} changed files", "PeriodicChangeListerService")
 
-            for (filePath in changedFiles) {
-                val alreadyReviewed = synchronized(reviewedFiles) { reviewedFiles.contains(filePath) }
-                if (alreadyReviewed) {
-                    continue
-                }
-
-                Log.info("Triggering review for: ${filePath.substringAfterLast('/')}", "PeriodicChangeListerService")
-                synchronized(reviewedFiles) { reviewedFiles.add(filePath) }
-                CachedReviewService.getInstance(project).reviewByPath(filePath)
+        synchronized(reviewedFiles) {
+            val removedFiles = reviewedFiles - changedFiles
+            for (file in removedFiles) {
+                Log.info("File no longer changed: ${file.substringAfterLast('/')}", "PeriodicChangeListerService")
+                reviewedFiles.remove(file)
             }
         }
 
-        private fun resolveGitRootPath(workspacePath: String): String? {
-            val virtualFile = LocalFileSystem.getInstance().findFileByPath(workspacePath) ?: return null
-            val repository = GitRepositoryManager.getInstance(project).getRepositoryForFile(virtualFile)
-            return repository?.root?.path ?: workspacePath
-        }
+        for (filePath in changedFiles) {
+            val alreadyReviewed = synchronized(reviewedFiles) { reviewedFiles.contains(filePath) }
+            if (alreadyReviewed) {
+                continue
+            }
 
-        override fun dispose() {
-            Log.info("Disposing", "PeriodicChangeListerService")
-            pollingJob?.cancel()
-            pollingJob = null
-            scope.cancel()
+            Log.info("Triggering review for: ${filePath.substringAfterLast('/')}", "PeriodicChangeListerService")
+            synchronized(reviewedFiles) { reviewedFiles.add(filePath) }
+            CachedReviewService.getInstance(project).reviewByPath(filePath)
         }
     }
+
+    private fun resolveGitRootPath(workspacePath: String): String? {
+        val virtualFile = LocalFileSystem.getInstance().findFileByPath(workspacePath) ?: return null
+        val repository = GitRepositoryManager.getInstance(project).getRepositoryForFile(virtualFile)
+        return repository?.root?.path ?: workspacePath
+    }
+
+    override fun dispose() {
+        Log.info("Disposing", "PeriodicChangeListerService")
+        scheduler.shutdown()
+    }
+}
