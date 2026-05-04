@@ -1,0 +1,65 @@
+src/main/kotlin/com/codescene/jetbrains/platform/api/CachedReviewService.kt
+  35f150d274b6fbd3 7,75,119,124,173,178,182,191
+core/src/test/kotlin/com/codescene/jetbrains/core/review/ReviewCacheServiceTest.kt
+  35f150d274b6fbd3 63-73
+src/main/kotlin/com/codescene/jetbrains/platform/delta/PlatformDeltaCacheService.kt
+  35f150d274b6fbd3 6,28,56
+core/src/test/kotlin/com/codescene/jetbrains/core/review/BaselineReviewCacheServiceTest.kt
+  35f150d274b6fbd3 50-60
+core/src/main/kotlin/com/codescene/jetbrains/core/delta/DeltaCacheService.kt
+  43bc7d0e73526a2e 5
+  35f150d274b6fbd3 6,55,65,89,97,110,126-127
+core/src/main/kotlin/com/codescene/jetbrains/core/git/GitPathUtils.kt
+  43bc7d0e73526a2e 6-28,31-37
+  35f150d274b6fbd3 29-30
+core/src/test/kotlin/com/codescene/jetbrains/core/review/CodeReviewerTest.kt
+  35f150d274b6fbd3 87-114
+src/main/kotlin/com/codescene/jetbrains/platform/git/VfsEventBridge.kt
+  43bc7d0e73526a2e 5,61
+core/src/main/kotlin/com/codescene/jetbrains/core/review/BaselineReviewCacheService.kt
+  35f150d274b6fbd3 5,35-37,43,45-46
+src/main/kotlin/com/codescene/jetbrains/platform/git/PeriodicChangeListerService.kt
+  35f150d274b6fbd3 3,86,97
+core/src/test/kotlin/com/codescene/jetbrains/core/delta/DeltaCacheServiceTest.kt
+  43bc7d0e73526a2e 145-146,158-167
+  35f150d274b6fbd3 147-157
+src/main/kotlin/com/codescene/jetbrains/platform/git/GitRepoStateListener.kt
+  35f150d274b6fbd3 7,73
+  43bc7d0e73526a2e 5-6,69-70
+src/main/kotlin/com/codescene/jetbrains/platform/git/GitChangeObserverService.kt
+  35f150d274b6fbd3 4,130,139
+src/main/kotlin/com/codescene/jetbrains/platform/webview/util/UpdateMonitor.kt
+  35f150d274b6fbd3 4,49
+src/main/kotlin/com/codescene/jetbrains/platform/api/PathBasedReviewHandler.kt
+  35f150d274b6fbd3 151
+core/src/test/kotlin/com/codescene/jetbrains/core/mapper/CodeHealthMonitorMapperTest.kt
+  35f150d274b6fbd3 216,232
+core/src/main/kotlin/com/codescene/jetbrains/core/git/GitChangeObserver.kt
+  43bc7d0e73526a2e 81,107,109,145-146,165,185,194,196-198,200,214,219,232-241
+  35f150d274b6fbd3 61
+src/test/kotlin/com/codescene/jetbrains/platform/git/VfsEventBridgeTest.kt
+  43bc7d0e73526a2e 123-129
+core/src/main/kotlin/com/codescene/jetbrains/core/mapper/CodeHealthMonitorMapper.kt
+  35f150d274b6fbd3 4,100
+src/test/kotlin/com/codescene/jetbrains/platform/git/Git4IdeaChangeListerWindowsPathTest.kt
+  43bc7d0e73526a2e 1-105
+core/src/main/kotlin/com/codescene/jetbrains/core/review/ReviewCacheService.kt
+  35f150d274b6fbd3 5-6,34,36-38,41,44,57,64,66-67
+core/src/main/kotlin/com/codescene/jetbrains/core/review/CacheService.kt
+  35f150d274b6fbd3 22-25,33-35,38,41,46-47
+src/main/kotlin/com/codescene/jetbrains/platform/editor/codeVision/CodeSceneCodeVisionProvider.kt
+  35f150d274b6fbd3 140
+core/src/main/kotlin/com/codescene/jetbrains/core/review/CodeReviewer.kt
+  35f150d274b6fbd3 4-5,25,38-39,41,44,65,76,82-83,87,90,94-98
+core/src/test/kotlin/com/codescene/jetbrains/core/git/GitChangeObserverTest.kt
+  43bc7d0e73526a2e 223-247
+src/main/kotlin/com/codescene/jetbrains/platform/git/Git4IdeaChangeLister.kt
+  43bc7d0e73526a2e 8,26-30,174-176
+  35f150d274b6fbd3 9,72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "aaa5b3a3c3039bee5afe4d4fe994d73e97be3c8b",
+  "prompts": {}
+}
