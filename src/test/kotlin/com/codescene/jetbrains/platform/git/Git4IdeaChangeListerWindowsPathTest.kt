@@ -15,6 +15,7 @@ import io.mockk.unmockkAll
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -62,6 +63,8 @@ class Git4IdeaChangeListerWindowsPathTest {
     @Test
     fun `getAllChangedFiles matches heuristic exclusions with Windows separator differences`() =
         runBlocking {
+            assumeTrue("This test only runs on Windows", System.getProperty("os.name").startsWith("Windows"))
+
             val gitRoot = "C:/test/repo"
             val workspace = "C:/test/repo"
 
