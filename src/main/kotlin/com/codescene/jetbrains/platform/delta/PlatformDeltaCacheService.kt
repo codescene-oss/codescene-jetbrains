@@ -3,6 +3,7 @@ package com.codescene.jetbrains.platform.delta
 import com.codescene.jetbrains.core.contracts.IDeltaCacheService
 import com.codescene.jetbrains.core.delta.DeltaCacheEntry
 import com.codescene.jetbrains.core.delta.DeltaCacheService
+import com.codescene.jetbrains.core.git.pathCacheKey
 import com.codescene.jetbrains.core.telemetry.monitorMetricsForDelta
 import com.codescene.jetbrains.core.telemetry.visibleInCodeHealthMonitor
 import com.codescene.jetbrains.core.util.TelemetryEvents
@@ -24,7 +25,7 @@ class PlatformDeltaCacheService(
     }
 
     override fun put(entry: DeltaCacheEntry) {
-        val path = entry.filePath
+        val path = pathCacheKey(entry.filePath)
         val previous = cache[path]
         val wasVisible = previous?.visibleInCodeHealthMonitor() == true
         super.put(entry)
@@ -52,7 +53,7 @@ class PlatformDeltaCacheService(
     }
 
     override fun invalidate(filePath: String) {
-        val previous = cache[filePath]
+        val previous = cache[pathCacheKey(filePath)]
         val wasVisible = previous?.visibleInCodeHealthMonitor() == true
         super.invalidate(filePath)
         updateMonitor(project)

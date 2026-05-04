@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.webview.util
 
 import com.codescene.jetbrains.core.flag.RuntimeFlags
+import com.codescene.jetbrains.core.git.pathFileName
 import com.codescene.jetbrains.core.mapper.CodeHealthMonitorMapper
 import com.codescene.jetbrains.core.models.View
 import com.codescene.jetbrains.core.review.AceRefactorableFunctionCacheQuery
@@ -45,7 +46,7 @@ private fun updateMonitorImpl(project: Project) {
     val deltaResults = PlatformDeltaCacheService.getInstance(project).getAll()
     val activeJobs = CachedReviewService.getInstance(project).activeReviewCalls.toList()
 
-    val shortNames = activeJobs.map { it.substringAfterLast('/') }
+    val shortNames = activeJobs.map { pathFileName(it) }
     Log.info("Active jobs: $shortNames deltaResults=${deltaResults.size}", "UpdateMonitor")
 
     val update =

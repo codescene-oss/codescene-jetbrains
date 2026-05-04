@@ -120,6 +120,14 @@ class VfsEventBridgeTest {
     }
 
     @Test
+    fun `isWithinWorkspace handles Windows separator differences`() {
+        val windowsBridge = VfsEventBridge(project, "C:\\repo", observer)
+        assertTrue(windowsBridge.isWithinWorkspace("C:/repo/src/file.kt"))
+        assertTrue(windowsBridge.isWithinWorkspace("c:/repo/src/file.kt"))
+        assertFalse(windowsBridge.isWithinWorkspace("C:/repo-other/src/file.kt"))
+    }
+
+    @Test
     fun `start subscribes to MessageBus VFS_CHANGES`() {
         val messageBus = mockk<MessageBus>(relaxed = true)
         val connection = mockk<MessageBusConnection>(relaxed = true)

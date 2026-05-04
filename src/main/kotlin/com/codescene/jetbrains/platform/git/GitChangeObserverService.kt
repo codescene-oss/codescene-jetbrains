@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.git
 
 import com.codescene.jetbrains.core.git.FileSystemAdapter
+import com.codescene.jetbrains.core.git.pathFileName
 import com.codescene.jetbrains.core.review.FileEventHandler
 import com.codescene.jetbrains.platform.api.CachedReviewService
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
@@ -126,7 +127,7 @@ class GitChangeObserverService(
             fileSystem = fileSystem,
             gitService = gitService,
             onFileDeleted = { filePath ->
-                val fileName = filePath.substringAfterLast('/')
+                val fileName = pathFileName(filePath)
                 Log.info("File deletion callback path=$fileName", "GitChangeObserverService")
                 ApplicationManager.getApplication().invokeLater {
                     if (project.isDisposed) return@invokeLater
@@ -135,7 +136,7 @@ class GitChangeObserverService(
                 }
             },
             onFileChanged = { filePath ->
-                val fileName = filePath.substringAfterLast('/')
+                val fileName = pathFileName(filePath)
                 ApplicationManager.getApplication().invokeLater {
                     if (project.isDisposed) return@invokeLater
                     val editor = getEditorForFile(filePath)

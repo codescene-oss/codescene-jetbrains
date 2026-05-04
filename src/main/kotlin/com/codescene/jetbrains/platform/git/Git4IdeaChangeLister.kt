@@ -5,6 +5,8 @@ import com.codescene.jetbrains.core.contracts.IGitChangeLister
 import com.codescene.jetbrains.core.git.FileSystemAdapter
 import com.codescene.jetbrains.core.git.MAX_UNTRACKED_FILES_PER_LOCATION
 import com.codescene.jetbrains.core.git.createWorkspacePrefix
+import com.codescene.jetbrains.core.git.pathComparisonKey
+import com.codescene.jetbrains.core.git.pathFileName
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -18,11 +20,15 @@ import kotlinx.coroutines.withContext
 
 private val MAIN_BRANCH_NAMES = listOf("main", "master", "develop", "trunk", "dev", "development")
 
-private fun hasWindowsDriveLetter(path: String): Boolean = path.length >= 3 && path[1] == ':' && path[2] == '/'
+private fun hasWindowsDriveLetter(path: String): Boolean = path.drop(1).startsWith(":/")
 
 private fun normalizePathForComparison(path: String): String {
-    val normalized = path.replace('\\', '/')
-    return if (hasWindowsDriveLetter(normalized)) normalized.substring(2) else normalized
+    val normalized = pathComparisonKey(path)
+    return if (hasWindowsDriveLetter(normalized)) {
+        normalized.substring(2)
+    } else {
+        normalized
+    }
 }
 
 private fun resolveAbsolutePath(
@@ -63,7 +69,7 @@ class Git4IdeaChangeLister
             workspacePath: String,
             filesToExcludeFromHeuristic: Set<String>,
         ): Set<String> {
-            Log.info("Getting changed files gitRoot=${gitRootPath.substringAfterLast('/')}", "Git4IdeaChangeLister")
+            Log.info("Getting changed files gitRoot=${pathFileName(gitRootPath)}", "Git4IdeaChangeLister")
             val repository = getRepository(gitRootPath)
             if (repository == null) {
                 Log.info("No repository found", "Git4IdeaChangeLister")
@@ -165,7 +171,10 @@ class Git4IdeaChangeLister
 
                     for (filePath in filesList) {
                         val absolutePath = resolveAbsolutePath(fileSystem, gitRootPath, filePath)
-                        val shouldExcludeFromHeuristic = filesToExcludeFromHeuristic.contains(absolutePath)
+                        val shouldExcludeFromHeuristic =
+                            filesToExcludeFromHeuristic.any {
+                                normalizePathForComparison(it) == normalizePathForComparison(absolutePath)
+                            }
                         val exists = fileSystem.fileExists(absolutePath)
                         val reviewable = shouldReviewFile(absolutePath)
 

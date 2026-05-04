@@ -19,9 +19,10 @@ abstract class CacheService<Q, E, V, R>(
     abstract fun put(entry: E)
 
     open fun invalidate(filePath: String) {
-        cache[filePath]?.let {
-            cache.remove(filePath)
-            log.debug("[$cacheImplementation] entry for key $filePath has been invalidated.")
+        val key = key(filePath)
+        cache[key]?.let {
+            cache.remove(key)
+            log.debug("[$cacheImplementation] entry for key $key has been invalidated.")
         }
     }
 
@@ -29,15 +30,19 @@ abstract class CacheService<Q, E, V, R>(
         oldFilePath: String,
         newFilePath: String,
     ) {
-        val entry = cache[oldFilePath]
+        val oldKey = key(oldFilePath)
+        val newKey = key(newFilePath)
+        val entry = cache[oldKey]
 
         if (entry != null) {
-            cache[newFilePath] = entry
+            cache[newKey] = entry
 
             invalidate(oldFilePath)
-            log.debug("[$cacheImplementation] $oldFilePath to $newFilePath.")
+            log.debug("[$cacheImplementation] $oldKey to $newKey.")
         }
     }
 
     open fun getAll(): List<Pair<String, V>> = cache.entries.map { it.key to it.value }
+
+    protected open fun key(filePath: String): String = filePath
 }

@@ -1,6 +1,8 @@
 package com.codescene.jetbrains.core.review
 
 import com.codescene.jetbrains.core.contracts.ILogger
+import com.codescene.jetbrains.core.git.pathCacheKey
+import com.codescene.jetbrains.core.git.pathFileName
 import com.codescene.jetbrains.core.models.FailureType
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
@@ -20,7 +22,7 @@ class CodeReviewer(
     private val logger: ILogger,
     private val defaultDebounceDelayMs: Long = TimeUnit.SECONDS.toMillis(3),
 ) {
-    private val activeCalls = ConcurrentHashMap<String, Job>()
+    private val activeCalls = ConcurrentHashMap<String, ActiveReviewCall>()
 
     fun reviewFile(
         filePath: String,
@@ -33,12 +35,13 @@ class CodeReviewer(
         onFinished: (() -> Unit)? = null,
     ) {
         val delayBeforeRun = debounceDelayMs ?: defaultDebounceDelayMs
-        val shortPath = filePath.substringAfterLast('/')
+        val callKey = pathCacheKey(filePath)
+        val shortPath = pathFileName(filePath)
 
-        val existingJob = activeCalls[filePath]
+        val existingJob = activeCalls[callKey]
         if (existingJob != null) {
             logger.info("Cancelling existing job file=$shortPath", LOG_TAG)
-            existingJob.cancel()
+            existingJob.job.cancel()
         }
 
         lateinit var job: Job
@@ -59,7 +62,7 @@ class CodeReviewer(
                 } catch (e: Exception) {
                     onError(FailureType.FAILED, e.message)
                 } finally {
-                    val removed = activeCalls.remove(filePath, job)
+                    val removed = activeCalls.remove(callKey, ActiveReviewCall(filePath, job))
                     if (removed) {
                         logger.info("Job removed file=$shortPath active=${activeCalls.size}", LOG_TAG)
                         onFinished?.invoke()
@@ -70,21 +73,26 @@ class CodeReviewer(
             }
 
         logger.info("Job added file=$shortPath active=${activeCalls.size + 1}", LOG_TAG)
-        activeCalls[filePath] = job
+        activeCalls[callKey] = ActiveReviewCall(filePath, job)
         onScheduled?.invoke()
         job.start()
     }
 
     fun cancel(filePath: String): Boolean {
-        val job = activeCalls.remove(filePath) ?: return false
-        job.cancel()
+        val job = activeCalls.remove(pathCacheKey(filePath)) ?: return false
+        job.job.cancel()
         return true
     }
 
-    fun activeFilePaths(): Set<String> = activeCalls.keys
+    fun activeFilePaths(): Set<String> = activeCalls.values.mapTo(mutableSetOf()) { it.filePath }
 
     fun dispose() {
-        activeCalls.values.forEach { it.cancel() }
+        activeCalls.values.forEach { it.job.cancel() }
         activeCalls.clear()
     }
 }
+
+private data class ActiveReviewCall(
+    val filePath: String,
+    val job: Job,
+)
