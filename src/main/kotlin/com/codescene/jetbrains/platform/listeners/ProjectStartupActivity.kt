@@ -5,7 +5,6 @@ import com.codescene.jetbrains.core.util.SettingsChangeAction
 import com.codescene.jetbrains.core.util.TelemetryEvents
 import com.codescene.jetbrains.core.util.resolveSettingsChangeActions
 import com.codescene.jetbrains.platform.api.AceService
-import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.editor.UIRefreshService
 import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
@@ -51,7 +50,6 @@ class ProjectStartupActivity : ProjectActivity {
     }
 
     private suspend fun runStartup(project: Project) {
-        CodeSceneApplicationServiceProvider.getInstance().deviceIdStore.get()
         val disposable = project as Disposable
         val settingsStore = CodeSceneGlobalSettingsStore.getInstance()
 
@@ -103,7 +101,13 @@ class ProjectStartupActivity : ProjectActivity {
 
         registerCodeSceneToolWindowTelemetry(project, disposable)
 
-        AceService.getInstance().runPreflight(true)
+        runAcePreflightOutsideUnitTests()
+    }
+
+    private suspend fun runAcePreflightOutsideUnitTests() {
+        if (!ApplicationManager.getApplication().isUnitTestMode) {
+            AceService.getInstance().runPreflight(true)
+        }
     }
 
     private fun addStateListener() =

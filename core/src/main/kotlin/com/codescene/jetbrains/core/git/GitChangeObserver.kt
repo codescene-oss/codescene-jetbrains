@@ -4,7 +4,6 @@ import com.codescene.jetbrains.core.contracts.IFileSystem
 import com.codescene.jetbrains.core.contracts.IGitChangeLister
 import com.codescene.jetbrains.core.contracts.IOpenFilesObserver
 import com.codescene.jetbrains.core.contracts.ISavedFilesTracker
-import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -134,8 +133,8 @@ class GitChangeObserver(
         filePath: String,
         changedFiles: Set<String>,
     ): Boolean {
-        val relativePath = fileSystem.getRelativePath(workspacePath, filePath)
-        return changedFiles.contains(relativePath)
+        val relativePath = fileSystem.getRelativePath(workspacePath, filePath).normalizePathSeparators()
+        return changedFiles.any { it.normalizePathSeparators() == relativePath }
     }
 
     private suspend fun handleFileChange(
@@ -178,11 +177,13 @@ class GitChangeObserver(
         val isDirectory = extension.isEmpty()
 
         if (isDirectory) {
-            val directoryPrefix =
-                if (filePath.endsWith(File.separator)) filePath else filePath + File.separator
+            val directoryPath = filePath.trimEnd('/', '\\')
             val filesToDelete: List<String>
             synchronized(tracker) {
-                filesToDelete = tracker.filter { it.startsWith(directoryPrefix) }
+                filesToDelete =
+                    tracker.filter {
+                        it.startsWith("$directoryPath/") || it.startsWith("$directoryPath\\")
+                    }
             }
 
             for (fileToDelete in filesToDelete) {
@@ -194,3 +195,5 @@ class GitChangeObserver(
         }
     }
 }
+
+private fun String.normalizePathSeparators(): String = replace('\\', '/')
