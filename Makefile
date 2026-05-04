@@ -7,7 +7,7 @@ NULL := /dev/null
 IDEA_LOG := build/idea-sandbox/*/log/idea.log
 endif
 
-.PHONY: install-cli check-bb build test format format-check delta iter coverage-summary bump-version release test-release class-size-mine run-ide kill-ide kill-ide kill-ide logs
+.PHONY: install-cli check-bb build test format format-check delta iter coverage-summary bump-version release test-release class-size-mine run-ide kill-ide kill-ide kill-ide logs rm-nul
 
 install-cli: check-bb
 	@$(BB) -f .github/install-cli.clj
@@ -97,3 +97,6 @@ ifeq ($(OS),Windows_NT)
 else
 	@tail -n +1 -f $(IDEA_LOG) | grep -F "codescene.jetbrains"
 endif
+
+rm-nul:
+	@rm -f NUL
