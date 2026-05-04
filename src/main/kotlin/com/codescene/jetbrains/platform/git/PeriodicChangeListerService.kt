@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.platform.git
 
+import com.codescene.jetbrains.core.git.pathFileName
 import com.codescene.jetbrains.platform.api.CachedReviewService
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.Disposable
@@ -82,7 +83,7 @@ class PeriodicChangeListerService(
         synchronized(reviewedFiles) {
             val removedFiles = reviewedFiles - changedFiles
             for (file in removedFiles) {
-                Log.info("File no longer changed: ${file.substringAfterLast('/')}", "PeriodicChangeListerService")
+                Log.info("File no longer changed: ${pathFileName(file)}", "PeriodicChangeListerService")
                 reviewedFiles.remove(file)
             }
         }
@@ -93,7 +94,7 @@ class PeriodicChangeListerService(
                 continue
             }
 
-            Log.info("Triggering review for: ${filePath.substringAfterLast('/')}", "PeriodicChangeListerService")
+            Log.info("Triggering review for: ${pathFileName(filePath)}", "PeriodicChangeListerService")
             synchronized(reviewedFiles) { reviewedFiles.add(filePath) }
             CachedReviewService.getInstance(project).reviewByPath(filePath)
         }

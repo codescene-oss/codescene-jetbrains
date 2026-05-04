@@ -148,7 +148,7 @@ class PathBasedReviewHandler(private val project: Project) {
                 "handleDeltaByPath cache hit file=$fileName totalTime=${System.currentTimeMillis() - startTime}ms",
                 "CodeSceneCachedReview",
             )
-            serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(filePath, false)
+            serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(filePath, true)
             updateMonitor(project)
             return
         }

@@ -2,6 +2,9 @@ package com.codescene.jetbrains.platform.git
 
 import com.codescene.jetbrains.core.git.FileEvent
 import com.codescene.jetbrains.core.git.FileEventType
+import com.codescene.jetbrains.core.git.gitRelativeComparisonKey
+import com.codescene.jetbrains.core.git.pathComparisonKey
+import com.codescene.jetbrains.core.git.pathFileName
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
@@ -35,7 +38,7 @@ class GitRepoStateListener(
             GitStagingAreaHolder.TOPIC,
             object : GitStagingAreaHolder.StagingAreaListener {
                 override fun stagingAreaChanged(repository: GitRepository) {
-                    if (repository.root.path == gitRootPath) {
+                    if (pathComparisonKey(repository.root.path) == pathComparisonKey(gitRootPath)) {
                         Log.info("Staging area changed, scheduling reconciliation", "GitRepoStateListener")
                         scheduleReconciliation()
                     }
@@ -63,9 +66,11 @@ class GitRepoStateListener(
         )
 
         for (trackedPath in trackedFiles) {
-            if (!currentChangedFiles.contains(trackedPath)) {
+            val trackedKey = gitRelativeComparisonKey(gitRootPath, trackedPath)
+            val isStillChanged = currentChangedFiles.any { gitRelativeComparisonKey(gitRootPath, it) == trackedKey }
+            if (!isStillChanged) {
                 Log.info(
-                    "Queueing DELETE for file no longer changed: ${trackedPath.substringAfterLast('/')}",
+                    "Queueing DELETE for file no longer changed: ${pathFileName(trackedPath)}",
                     "GitRepoStateListener",
                 )
                 observer.queueEvent(FileEvent(FileEventType.DELETE, trackedPath))

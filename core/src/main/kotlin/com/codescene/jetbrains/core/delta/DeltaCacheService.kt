@@ -2,6 +2,8 @@ package com.codescene.jetbrains.core.delta
 
 import com.codescene.data.delta.Delta
 import com.codescene.jetbrains.core.contracts.ILogger
+import com.codescene.jetbrains.core.git.pathCacheKey
+import com.codescene.jetbrains.core.git.pathFileName
 import com.codescene.jetbrains.core.review.CacheService
 import org.apache.commons.codec.digest.DigestUtils
 
@@ -10,6 +12,7 @@ data class DeltaCacheItem(
     val currentHash: String,
     val deltaApiResponse: Delta?,
     val includeInCodeHealthMonitor: Boolean = true,
+    val filePath: String = "",
 )
 
 data class DeltaCacheEntry(
@@ -49,19 +52,20 @@ open class DeltaCacheService(
         val oldHash = DigestUtils.sha256Hex(headCommitContent)
         val newHash = DigestUtils.sha256Hex(currentFileContent)
 
-        val entry = cache[filePath]
+        val cacheKey = key(filePath)
+        val entry = cache[cacheKey]
         val apiResponse = entry?.deltaApiResponse
 
         val headMatches = entry?.headHash == oldHash
         val currentMatches = entry?.currentHash == newHash
         val contentsMatch = headMatches && currentMatches
-        val isCacheHitOrNotStale = cache.containsKey(filePath) && contentsMatch
+        val isCacheHitOrNotStale = cache.containsKey(cacheKey) && contentsMatch
 
         if (!isCacheHitOrNotStale) {
-            val shortPath = filePath.substringAfterLast('/')
+            val shortPath = pathFileName(filePath)
             val reason =
                 when {
-                    !cache.containsKey(filePath) -> "no_entry"
+                    !cache.containsKey(cacheKey) -> "no_entry"
                     !headMatches && !currentMatches -> "head_and_current_mismatch"
                     !headMatches -> "head_mismatch"
                     else -> "current_mismatch"
@@ -82,14 +86,15 @@ open class DeltaCacheService(
         val headHash = DigestUtils.sha256Hex(entry.headContent)
         val currentContentHash = DigestUtils.sha256Hex(entry.currentFileContent)
 
-        cache[entry.filePath] =
+        cache[key(entry.filePath)] =
             DeltaCacheItem(
                 headHash,
                 currentContentHash,
                 entry.deltaApiResponse,
                 entry.includeInCodeHealthMonitor,
+                entry.filePath,
             )
-        val shortPath = entry.filePath.substringAfterLast('/')
+        val shortPath = pathFileName(entry.filePath)
         log.debug(
             "delta cache put file=$shortPath head=${headHash.take(8)} cur=${currentContentHash.take(8)} " +
                 "lenBaseline=${entry.headContent.length} lenCurrent=${entry.currentFileContent.length} " +
@@ -102,13 +107,14 @@ open class DeltaCacheService(
         filePath: String,
         include: Boolean,
     ) {
-        val existing = cache[filePath] ?: return
-        cache[filePath] = existing.copy(includeInCodeHealthMonitor = include)
+        val cacheKey = key(filePath)
+        val existing = cache[cacheKey] ?: return
+        cache[cacheKey] = existing.copy(includeInCodeHealthMonitor = include)
     }
 
     override fun getAll(): List<Pair<String, DeltaCacheItem>> {
         return cache.entries
-            .map { it.key to it.value }
+            .map { (key, item) -> (item.filePath.ifEmpty { key }) to item }
             .filter { (_, item) ->
                 if (!item.includeInCodeHealthMonitor) return@filter false
                 val delta = item.deltaApiResponse ?: return@filter false
@@ -117,4 +123,6 @@ open class DeltaCacheService(
                 scoreChanged || codeChanged
             }
     }
+
+    override fun key(filePath: String): String = pathCacheKey(filePath)
 }

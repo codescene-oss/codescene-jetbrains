@@ -220,6 +220,32 @@ class GitChangeObserverTest {
         }
 
     @Test
+    fun `change event matches git changed file with Windows separator differences`() =
+        runBlocking {
+            val windowsObserver =
+                GitChangeObserver(
+                    gitChangeLister = mockGitChangeLister,
+                    savedFilesTracker = mockSavedFilesTracker,
+                    openFilesObserver = mockOpenFilesObserver,
+                    fileSystem = mockFileSystem,
+                    gitService = mockGitService,
+                    onFileDeleted = { deletedFiles.add(it) },
+                    onFileChanged = { changedFiles.add(it) },
+                    workspacePath = "C:/repo",
+                    gitRootPath = "C:/repo",
+                    logger = logger,
+                )
+
+            mockGitChangeLister.changedFiles = setOf("C:\\repo\\src\\file.ts")
+            windowsObserver.queueEvent(FileEvent(FileEventType.CHANGE, "C:/repo/src/file.ts"))
+            windowsObserver.queueEvent(FileEvent(FileEventType.CHANGE, "C:\\repo\\src\\file.ts"))
+            windowsObserver.processQueuedEvents()
+
+            assertEquals(1, changedFiles.size)
+            assertEquals(setOf("C:\\repo\\src\\file.ts"), windowsObserver.getTrackedFiles())
+        }
+
+    @Test
     fun `CREATE event tracks file without requiring git4idea confirmation`() =
         runBlocking {
             mockGitChangeLister.changedFiles = emptySet()

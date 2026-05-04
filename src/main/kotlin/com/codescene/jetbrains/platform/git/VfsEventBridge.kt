@@ -2,6 +2,7 @@ package com.codescene.jetbrains.platform.git
 
 import com.codescene.jetbrains.core.git.FileEvent
 import com.codescene.jetbrains.core.git.FileEventType
+import com.codescene.jetbrains.core.git.isPathUnderRoot
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
@@ -57,8 +58,7 @@ class VfsEventBridge(
     }
 
     internal fun isWithinWorkspace(path: String): Boolean {
-        val normalizedWorkspace = if (workspacePath.endsWith("/")) workspacePath else "$workspacePath/"
-        return path.startsWith(normalizedWorkspace) || path == workspacePath
+        return isPathUnderRoot(path, workspacePath)
     }
 
     internal fun isGitInternalPath(path: String): Boolean {

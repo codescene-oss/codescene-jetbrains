@@ -2,6 +2,8 @@ package com.codescene.jetbrains.core.review
 
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.core.contracts.ILogger
+import com.codescene.jetbrains.core.git.pathCacheKey
+import com.codescene.jetbrains.core.git.pathFileName
 import org.apache.commons.codec.digest.DigestUtils
 
 data class ReviewCacheItem(
@@ -29,16 +31,17 @@ open class ReviewCacheService(
         val (fileContents, filePath) = query
 
         val hash = DigestUtils.sha256Hex(fileContents)
+        val cacheKey = key(filePath)
 
-        val apiResponse = cache[filePath]?.response
-        val storedHash = cache[filePath]?.fileContents
-        val cacheHit = cache.containsKey(filePath) && storedHash == hash
+        val apiResponse = cache[cacheKey]?.response
+        val storedHash = cache[cacheKey]?.fileContents
+        val cacheHit = cache.containsKey(cacheKey) && storedHash == hash
 
         if (!cacheHit) {
-            val shortPath = filePath.substringAfterLast('/')
+            val shortPath = pathFileName(filePath)
             val reason =
                 when {
-                    !cache.containsKey(filePath) -> "no_entry"
+                    !cache.containsKey(cacheKey) -> "no_entry"
                     else -> "content_hash_mismatch"
                 }
             log.debug(
@@ -51,13 +54,15 @@ open class ReviewCacheService(
         return if (cacheHit) apiResponse else null
     }
 
-    fun getLastKnown(filePath: String): Review? = cache[filePath]?.response
+    fun getLastKnown(filePath: String): Review? = cache[key(filePath)]?.response
 
     override fun put(entry: ReviewCacheEntry) {
         val (fileContents, filePath, response) = entry
 
         val contentHash = DigestUtils.sha256Hex(fileContents)
 
-        cache[filePath] = ReviewCacheItem(contentHash, response)
+        cache[key(filePath)] = ReviewCacheItem(contentHash, response)
     }
+
+    override fun key(filePath: String): String = pathCacheKey(filePath)
 }
