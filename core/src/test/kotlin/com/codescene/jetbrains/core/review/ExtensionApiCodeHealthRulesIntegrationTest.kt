@@ -10,7 +10,9 @@ import java.nio.file.Path
 import java.util.Optional
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeNotNull
 import org.junit.Before
 import org.junit.Test
 
@@ -53,15 +55,17 @@ class ExtensionApiCodeHealthRulesIntegrationTest {
 
         val defaultDelta = delta("src/BumpyRoad.cs", simpleCSharpCode, bumpyRoadCSharpCode, defaultRepo)
         val rulesDelta = delta("src/BumpyRoad.cs", simpleCSharpCode, bumpyRoadCSharpCode, rulesRepo)
-        val defaultNewScore = optionalScore(checkNotNull(defaultDelta).newScore)
+        assertNotNull("default delta should be present", defaultDelta)
+        val defaultNewScore = optionalScore(defaultDelta!!.newScore)
 
         assertTrue("default rules should report Bumpy Road degradation", defaultNewScore < 10.0)
-        if (rulesDelta == null) return
+        assumeNotNull(rulesDelta)
+        val rulesNewScore = optionalScore(rulesDelta!!.newScore)
         assertTrue(
             "code-health-rules should improve delta new score",
-            optionalScore(rulesDelta.newScore) > defaultNewScore,
+            rulesNewScore > defaultNewScore,
         )
-        assertEquals(10.0, optionalScore(rulesDelta.newScore), 0.01)
+        assertEquals(10.0, rulesNewScore, 0.01)
     }
 
     private fun review(
