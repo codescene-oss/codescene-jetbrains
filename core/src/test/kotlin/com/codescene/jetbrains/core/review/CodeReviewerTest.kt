@@ -49,6 +49,7 @@ class CodeReviewerTest {
     @Test
     fun `reviewFile cancels previous scheduled call for same path`() {
         val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), TestLogger, defaultDebounceDelayMs = 200)
+        val firstStarted = CountDownLatch(1)
         val firstExecuted = AtomicBoolean(false)
         val secondExecuted = CountDownLatch(1)
         val firstError = AtomicReference<FailureType?>()
@@ -59,6 +60,8 @@ class CodeReviewerTest {
             timeout = 2000,
             runWithProgress = { action -> action() },
             performAction = {
+                firstStarted.countDown()
+                delay(10_000)
                 firstExecuted.set(true)
             },
             onError = { type, _ ->
@@ -66,6 +69,8 @@ class CodeReviewerTest {
                 firstErrorObserved.countDown()
             },
         )
+
+        assertTrue(firstStarted.await(1, TimeUnit.SECONDS))
 
         reviewer.reviewFile(
             filePath = "a.kt",
@@ -86,6 +91,7 @@ class CodeReviewerTest {
     @Test
     fun `reviewFile cancels previous scheduled call for same Windows path with different separators`() {
         val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), TestLogger, defaultDebounceDelayMs = 200)
+        val firstStarted = CountDownLatch(1)
         val firstExecuted = AtomicBoolean(false)
         val secondExecuted = CountDownLatch(1)
         val firstError = AtomicReference<FailureType?>()
@@ -96,6 +102,8 @@ class CodeReviewerTest {
             timeout = 2000,
             runWithProgress = { action -> action() },
             performAction = {
+                firstStarted.countDown()
+                delay(10_000)
                 firstExecuted.set(true)
             },
             onError = { type, _ ->
@@ -103,6 +111,8 @@ class CodeReviewerTest {
                 firstErrorObserved.countDown()
             },
         )
+
+        assertTrue(firstStarted.await(1, TimeUnit.SECONDS))
 
         reviewer.reviewFile(
             filePath = "C:/repo/src/File.kt",
