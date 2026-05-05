@@ -1,0 +1,52 @@
+src/main/kotlin/com/codescene/jetbrains/platform/telemetry/TelemetryService.kt
+  5d8ff6f38ca3ec8e 55,57,74,76,113-116
+  b83791fc2bf3ea54 43-44
+src/main/kotlin/com/codescene/jetbrains/platform/fs/VfsFileSystem.kt
+  b83791fc2bf3ea54 23,28-32,36,38-39
+core/src/test/kotlin/com/codescene/jetbrains/core/review/ExtensionApiIntegrationTest.kt
+  b83791fc2bf3ea54 1-153
+src/main/kotlin/com/codescene/jetbrains/platform/listeners/ProjectStartupActivity.kt
+  b83791fc2bf3ea54 104-110
+src/main/kotlin/com/codescene/jetbrains/platform/git/Git4IdeaChangeLister.kt
+  b83791fc2bf3ea54 58-59,72,76,85,95,97-100,124,152-153,160,163,172,230-238
+core/src/main/kotlin/com/codescene/jetbrains/core/git/GitChangeObserver.kt
+  b83791fc2bf3ea54 136-137,180,183-186,198-199
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "8bd041f81c3fb1f77ba941955b8add17d42ab36a",
+  "prompts": {
+    "5d8ff6f38ca3ec8e": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "7f0b1178-7e3d-4f2f-a077-602bcfc6fb42",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Martin Säfsten",
+      "messages": [],
+      "total_additions": 32,
+      "total_deletions": 0,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    },
+    "b83791fc2bf3ea54": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a66127a9-2bb1-4fe3-9cd8-5ff1dd459e41",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Martin Säfsten",
+      "messages": [],
+      "total_additions": 573,
+      "total_deletions": 104,
+      "accepted_lines": 205,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_0bea9e1dd5ef0d": {
+      "author": "Martin Säfsten"
+    }
+  }
+}
