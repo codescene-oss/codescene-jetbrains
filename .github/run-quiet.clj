@@ -10,7 +10,13 @@
 (let [log-file (first *command-line-args*)
       description (second *command-line-args*)
       prog-args (drop 2 *command-line-args*)
+      start-time (System/currentTimeMillis)
       p @(apply process {:out :string :err :string :continue true} prog-args)
+      end-time (System/currentTimeMillis)
+      duration-ms (- end-time start-time)
+      duration-secs (quot duration-ms 1000)
+      minutes (quot duration-secs 60)
+      seconds (mod duration-secs 60)
       exit (:exit p)
       out (or (:out p) "")
       err (or (:err p) "")
@@ -24,7 +30,7 @@
         (let [lines (clojure.string/split-lines out)]
           (when (seq lines)
             (run! println (take-last 2 lines)))))
-      (println (str "command `" description "` succeeded"))
+      (println (str "command `" description "` succeeded in " minutes ":" (format "%02d" seconds)))
       (fs/delete-if-exists log-file)
       (System/exit 0))
     (do
