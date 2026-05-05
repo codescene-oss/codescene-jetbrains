@@ -55,6 +55,8 @@ class Git4IdeaChangeLister(
         withContext(Dispatchers.IO) {
             val files = mutableSetOf<String>()
             val (normalizedWorkspacePath, workspacePrefix) = createWorkspacePrefix(workspacePath)
+            val normalizedWorkspacePrefix = workspacePrefix.normalizePathSeparators()
+            val workspacePathPrefix = workspacePath.toPathPrefix()
 
             val stagingArea = repository.stagingAreaHolder.allRecords
             for (record in stagingArea) {
@@ -67,10 +69,11 @@ class Git4IdeaChangeLister(
 
                 val filePath = record.path.path
                 val absolutePath = fileSystem.getAbsolutePath(gitRootPath, filePath)
+                val normalizedAbsolutePath = absolutePath.normalizePathSeparators()
 
                 if (
                     fileSystem.fileExists(absolutePath) &&
-                    absolutePath.startsWith(workspacePrefix) &&
+                    normalizedAbsolutePath.isUnderWorkspace(normalizedWorkspacePrefix, workspacePathPrefix) &&
                     shouldReviewFile(absolutePath) &&
                     !isFileIgnored(repository, record.path)
                 ) {
@@ -79,7 +82,7 @@ class Git4IdeaChangeLister(
                             filePath,
                             gitRootPath,
                             normalizedWorkspacePath,
-                        )
+                        ).normalizePathSeparators()
                     files.add(fileSystem.getAbsolutePath(workspacePath, relativeToWorkspace))
                 }
             }
@@ -89,8 +92,12 @@ class Git4IdeaChangeLister(
 
             for (filePath in untrackedFiles) {
                 val absolutePath = fileSystem.getAbsolutePath(gitRootPath, filePath.path)
+                val normalizedAbsolutePath = absolutePath.normalizePathSeparators()
 
-                if (absolutePath.startsWith(workspacePrefix) && !isFileIgnored(repository, filePath)) {
+                if (
+                    normalizedAbsolutePath.isUnderWorkspace(normalizedWorkspacePrefix, workspacePathPrefix) &&
+                    !isFileIgnored(repository, filePath)
+                ) {
                     val dir = fileSystem.getParent(filePath.path) ?: "."
                     val location = if (dir == ".") "__root__" else dir
                     untrackedFilesByLocation.getOrPut(location) { mutableListOf() }.add(filePath.path)
@@ -114,7 +121,7 @@ class Git4IdeaChangeLister(
                                 filePath,
                                 gitRootPath,
                                 normalizedWorkspacePath,
-                            )
+                            ).normalizePathSeparators()
                         files.add(fileSystem.getAbsolutePath(workspacePath, relativeToWorkspace))
                     }
                 }
@@ -142,15 +149,18 @@ class Git4IdeaChangeLister(
             }
 
             val (normalizedWorkspacePath, workspacePrefix) = createWorkspacePrefix(workspacePath)
+            val normalizedWorkspacePrefix = workspacePrefix.normalizePathSeparators()
+            val workspacePathPrefix = workspacePath.toPathPrefix()
 
             for (line in output) {
                 val filePath = line.trim()
                 if (filePath.isEmpty()) continue
 
                 val absolutePath = fileSystem.getAbsolutePath(gitRootPath, filePath)
+                val normalizedAbsolutePath = absolutePath.normalizePathSeparators()
 
                 if (
-                    absolutePath.startsWith(workspacePrefix) &&
+                    normalizedAbsolutePath.isUnderWorkspace(normalizedWorkspacePrefix, workspacePathPrefix) &&
                     fileSystem.fileExists(absolutePath) &&
                     shouldReviewFile(absolutePath)
                 ) {
@@ -159,7 +169,7 @@ class Git4IdeaChangeLister(
                             filePath,
                             gitRootPath,
                             normalizedWorkspacePath,
-                        )
+                        ).normalizePathSeparators()
                     files.add(fileSystem.getAbsolutePath(workspacePath, relativeToWorkspace))
                 }
             }
@@ -217,3 +227,12 @@ class Git4IdeaChangeLister(
         filePath: com.intellij.openapi.vcs.FilePath,
     ): Boolean = repository.ignoredFilesHolder.containsFile(filePath)
 }
+
+private fun String.normalizePathSeparators(): String = replace('\\', '/')
+
+private fun String.toPathPrefix(): String = normalizePathSeparators().trimEnd('/') + "/"
+
+private fun String.isUnderWorkspace(
+    normalizedWorkspacePrefix: String,
+    workspacePathPrefix: String,
+): Boolean = startsWith(normalizedWorkspacePrefix) || startsWith(workspacePathPrefix)

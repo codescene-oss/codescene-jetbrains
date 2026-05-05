@@ -40,6 +40,8 @@ class TelemetryService : BaseService(Log), Disposable, ITelemetryService {
         eventData: Map<String, Any>,
     ) {
         val settings = CodeSceneGlobalSettingsStore.getInstance().currentState()
+        if (!settings.telemetryConsentGiven || !settings.telemetryNoticeShown) return
+
         val eventInfo =
             resolveTelemetryEventData(
                 consentGiven = settings.telemetryConsentGiven,
