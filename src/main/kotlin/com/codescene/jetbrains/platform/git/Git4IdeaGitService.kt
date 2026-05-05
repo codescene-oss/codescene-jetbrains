@@ -39,7 +39,8 @@ class Git4IdeaGitService(val project: Project) : IGitService {
      * - Fallback: branch-creation commit from the current branch’s reflog (same as the previous JetBrains-only behavior).
      */
     override fun getBranchCreationCommitCode(filePath: String): String {
-        val context = getRepositoryContext(filePath) ?: return ""
+        val file = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return ""
+        val context = getRepositoryContext(file) ?: return ""
 
         if (context.repository.state == Repository.State.DETACHED) return ""
 
@@ -49,11 +50,23 @@ class Git4IdeaGitService(val project: Project) : IGitService {
                 return ""
             }
 
-        return getCodeByCommit(context.repository, context.relativePath, commit)
+        val handler =
+            createGitLineHandler(project, context.repository.root, GitCommand.SHOW).apply {
+                addParameters("$commit:${context.relativePath}")
+            }
+
+        return Git.getInstance().runCommand(handler).let {
+            if (it.success()) {
+                it.output.joinToString("\n").replace("\r\n", "\n").replace('\r', '\n')
+            } else {
+                ""
+            }
+        }
     }
 
     override fun getBranchCreationCommitHash(filePath: String): String? {
-        val context = getRepositoryContext(filePath) ?: return null
+        val file = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return null
+        val context = getRepositoryContext(file) ?: return null
 
         if (context.repository.state == Repository.State.DETACHED) {
             return null
@@ -62,24 +75,30 @@ class Git4IdeaGitService(val project: Project) : IGitService {
         return getBaselineCommitSha(context.repository)
     }
 
-    override fun getRepoRelativePath(filePath: String): String? = getRepositoryContext(filePath)?.relativePath
+    override fun getRepoRelativePath(filePath: String): String? =
+        LocalFileSystem.getInstance()
+            .findFileByPath(filePath)
+            ?.let { file -> getRepositoryContext(file)?.relativePath }
+
+    override fun getRepoRoot(filePath: String): String? =
+        LocalFileSystem.getInstance()
+            .findFileByPath(filePath)
+            ?.let { file -> getRepositoryContext(file)?.repository?.root?.path }
 
     override fun isIgnored(filePath: String): Boolean {
-        val context = getRepositoryContext(filePath) ?: return false
+        val file = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return false
+        val context = getRepositoryContext(file) ?: return false
         return context.repository.ignoredFilesHolder.containsFile(VcsUtil.getFilePath(context.file))
     }
-
-    private fun isMainLineBranch(branchName: String): Boolean =
-        MAIN_BRANCH_NAMES.any { it.equals(branchName, ignoreCase = true) }
 
     private fun getBaselineCommitSha(gitRepository: GitRepository): String? {
         val branchName = gitRepository.currentBranchName ?: return null
 
-        if (isMainLineBranch(branchName)) {
+        if (MAIN_BRANCH_NAMES.any { it.equals(branchName, ignoreCase = true) }) {
             return resolveHeadCommitSha(gitRepository)
         }
 
-        val mergeBase = findMergeBaseWithMain(gitRepository, branchName)
+        val mergeBase = findMergeBaseWithMain(gitRepository)
         if (!mergeBase.isNullOrBlank()) {
             return mergeBase.trim()
         }
@@ -101,10 +120,8 @@ class Git4IdeaGitService(val project: Project) : IGitService {
         }
     }
 
-    private fun findMergeBaseWithMain(
-        gitRepository: GitRepository,
-        currentBranchName: String,
-    ): String? {
+    private fun findMergeBaseWithMain(gitRepository: GitRepository): String? {
+        val currentBranchName = gitRepository.currentBranchName ?: return null
         for (mainName in MAIN_BRANCH_NAMES) {
             val refsToTry =
                 listOf(
@@ -112,29 +129,23 @@ class Git4IdeaGitService(val project: Project) : IGitService {
                     "origin/$mainName",
                 )
             for (ref in refsToTry) {
-                val mergeBase = runMergeBase(gitRepository, currentBranchName, ref)
+                val handler =
+                    createGitLineHandler(project, gitRepository.root, GitCommand.MERGE_BASE).apply {
+                        addParameters(currentBranchName, ref)
+                    }
+                val result = Git.getInstance().runCommand(handler)
+                val mergeBase =
+                    if (result.success()) {
+                        result.output.firstOrNull()?.trim()?.takeIf { it.isNotEmpty() }
+                    } else {
+                        null
+                    }
                 if (!mergeBase.isNullOrBlank()) {
                     return mergeBase.trim()
                 }
             }
         }
         return null
-    }
-
-    private fun runMergeBase(
-        gitRepository: GitRepository,
-        rev1: String,
-        rev2: String,
-    ): String? {
-        val handler =
-            createGitLineHandler(project, gitRepository.root, GitCommand.MERGE_BASE).apply {
-                addParameters(rev1, rev2)
-            }
-        val result = Git.getInstance().runCommand(handler)
-        if (!result.success()) {
-            return null
-        }
-        return result.output.firstOrNull()?.trim()?.takeIf { it.isNotEmpty() }
     }
 
     private fun getBranchCreationCommitFromReflog(gitRepository: GitRepository): String? =
@@ -158,29 +169,7 @@ class Git4IdeaGitService(val project: Project) : IGitService {
         }
     }
 
-    private fun getCodeByCommit(
-        gitRepository: GitRepository,
-        relativePath: String,
-        commit: String,
-    ): String {
-        val handler =
-            createGitLineHandler(project, gitRepository.root, GitCommand.SHOW).apply {
-                addParameters("$commit:$relativePath")
-            }
-
-        Git.getInstance().runCommand(handler).let {
-            if (it.success()) {
-                return normalizeVcsLineSeparators(it.output.joinToString("\n"))
-            } else {
-                return ""
-            }
-        }
-    }
-
-    private fun normalizeVcsLineSeparators(text: String): String = text.replace("\r\n", "\n").replace('\r', '\n')
-
-    private fun getRepositoryContext(filePath: String): RepositoryContext? {
-        val file = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return null
+    private fun getRepositoryContext(file: VirtualFile): RepositoryContext? {
         val repository =
             GitRepositoryManager.getInstance(project).getRepositoryForFile(file) ?: run {
                 Log.debug("File ${file.path} is not part of a Git repository.", service)
