@@ -49,7 +49,7 @@ private fun resolveAbsolutePath(
         Log.warn("Invalid doubled path detected: $result (base=$basePath, input=$path)", "Git4IdeaChangeLister")
     }
 
-    return result
+    return java.nio.file.Paths.get(result).normalize().toString()
 }
 
 @Service(Service.Level.PROJECT)

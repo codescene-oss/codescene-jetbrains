@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.git
 
 import com.codescene.jetbrains.core.contracts.IFileSystem
+import com.codescene.jetbrains.core.util.normalizeAbsolutePath
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
@@ -308,11 +309,12 @@ class Git4IdeaChangeListerTest {
             every { untrackedFile.path } returns "$gitRoot/test.ts"
             every { mockRepository.untrackedFilesHolder.retrieveUntrackedFilePaths() } returns listOf(untrackedFile)
 
+            val absolutePath = normalizeAbsolutePath("$gitRoot/test.ts")
             every { mockFileSystem.getAbsolutePath(gitRoot, "$gitRoot/test.ts") } returns "$gitRoot/test.ts"
-            every { mockFileSystem.fileExists("$gitRoot/test.ts") } returns true
-            every { mockFileSystem.getExtension("$gitRoot/test.ts") } returns "ts"
+            every { mockFileSystem.fileExists(absolutePath) } returns true
+            every { mockFileSystem.getExtension(absolutePath) } returns "ts"
             every { mockFileSystem.getParent("$gitRoot/test.ts") } returns gitRoot
-            every { mockFileSystem.getRelativePath(gitRoot, "$gitRoot/test.ts") } returns "test.ts"
+            every { mockFileSystem.getRelativePath(gitRoot, absolutePath) } returns "test.ts"
 
             val changedFiles = git4IdeaChangeLister.getAllChangedFiles(gitRoot, gitRoot)
 

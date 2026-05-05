@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.git
 
 import com.codescene.jetbrains.core.git.FileEventType
+import com.codescene.jetbrains.core.util.normalizeAbsolutePath
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.newvfs.events.VFileContentChangeEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileCreateEvent
@@ -41,7 +42,7 @@ class VfsEventBridgeTest {
         val result = bridge.convertEvent(event)
 
         assertEquals(FileEventType.CREATE, result?.type)
-        assertEquals("$workspacePath/new-file.kt", result?.path)
+        assertEquals(normalizeAbsolutePath("$workspacePath/new-file.kt"), result?.path)
     }
 
     @Test
@@ -52,7 +53,7 @@ class VfsEventBridgeTest {
         val result = bridge.convertEvent(event)
 
         assertEquals(FileEventType.DELETE, result?.type)
-        assertEquals("$workspacePath/deleted-file.kt", result?.path)
+        assertEquals(normalizeAbsolutePath("$workspacePath/deleted-file.kt"), result?.path)
     }
 
     @Test
@@ -63,7 +64,7 @@ class VfsEventBridgeTest {
         val result = bridge.convertEvent(event)
 
         assertEquals(FileEventType.CHANGE, result?.type)
-        assertEquals("$workspacePath/changed-file.kt", result?.path)
+        assertEquals(normalizeAbsolutePath("$workspacePath/changed-file.kt"), result?.path)
     }
 
     @Test
@@ -161,19 +162,20 @@ class VfsEventBridgeTest {
             bridge.convertEvent(event)?.let { observer.queueEvent(it) }
         }
 
-        verify(exactly = 1) {
-            observer.queueEvent(match { it.path == "$workspacePath/file1.kt" && it.type == FileEventType.CREATE })
-        }
-        verify(exactly = 1) {
-            observer.queueEvent(match { it.path == "$workspacePath/file2.kt" && it.type == FileEventType.CREATE })
-        }
-        verify(exactly = 1) {
-            observer.queueEvent(match { it.path == "$workspacePath/file3.kt" && it.type == FileEventType.CHANGE })
-        }
-        verify(exactly = 1) {
-            observer.queueEvent(match { it.path == "$workspacePath/file4.kt" && it.type == FileEventType.DELETE })
-        }
-        verify(exactly = 0) { observer.queueEvent(match { it.path == "$workspacePath/file5.kt" }) }
+        fun np(file: String) = normalizeAbsolutePath("$workspacePath/$file")
+        verify(
+            exactly = 1,
+        ) { observer.queueEvent(match { it.path == np("file1.kt") && it.type == FileEventType.CREATE }) }
+        verify(
+            exactly = 1,
+        ) { observer.queueEvent(match { it.path == np("file2.kt") && it.type == FileEventType.CREATE }) }
+        verify(
+            exactly = 1,
+        ) { observer.queueEvent(match { it.path == np("file3.kt") && it.type == FileEventType.CHANGE }) }
+        verify(
+            exactly = 1,
+        ) { observer.queueEvent(match { it.path == np("file4.kt") && it.type == FileEventType.DELETE }) }
+        verify(exactly = 0) { observer.queueEvent(match { it.path == np("file5.kt") }) }
     }
 
     @Test
@@ -198,7 +200,7 @@ class VfsEventBridgeTest {
         val result = bridge.convertEvent(event)
 
         assertEquals(FileEventType.CREATE, result?.type)
-        assertEquals("$workspacePath/file with spaces.kt", result?.path)
+        assertEquals(normalizeAbsolutePath("$workspacePath/file with spaces.kt"), result?.path)
     }
 
     @Test
@@ -209,7 +211,7 @@ class VfsEventBridgeTest {
         val result = bridge.convertEvent(event)
 
         assertEquals(FileEventType.CREATE, result?.type)
-        assertEquals("$workspacePath/文件.kt", result?.path)
+        assertEquals(normalizeAbsolutePath("$workspacePath/文件.kt"), result?.path)
     }
 
     @Test
@@ -220,7 +222,7 @@ class VfsEventBridgeTest {
         val result = bridge.convertEvent(event)
 
         assertEquals(FileEventType.CREATE, result?.type)
-        assertEquals("$workspacePath/file-with_special.chars.kt", result?.path)
+        assertEquals(normalizeAbsolutePath("$workspacePath/file-with_special.chars.kt"), result?.path)
     }
 
     @Test
@@ -251,7 +253,7 @@ class VfsEventBridgeTest {
         val result = bridge.convertEvent(event)
 
         assertEquals(FileEventType.CREATE, result?.type)
-        assertEquals("$workspacePath/.gitignore", result?.path)
+        assertEquals(normalizeAbsolutePath("$workspacePath/.gitignore"), result?.path)
     }
 
     @Test

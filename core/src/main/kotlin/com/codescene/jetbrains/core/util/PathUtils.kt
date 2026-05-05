@@ -1,6 +1,9 @@
 package com.codescene.jetbrains.core.util
 
 import java.io.File
+import java.nio.file.Paths
+
+fun normalizeAbsolutePath(path: String): String = Paths.get(path).normalize().toString()
 
 fun getRelativePath(
     basePath: String,

@@ -8,10 +8,10 @@ import org.junit.Test
 
 class CliCacheUtilsTest {
     @Test
-    fun `resolveCliCacheFileName uses repo relative path when available`() {
+    fun `resolveCliCacheFileName uses absolute file path`() {
         val result = resolveCliCacheFileName("/repo/src/Main.kt", "src/Main.kt")
 
-        assertEquals("./src/Main.kt", result)
+        assertEquals("/repo/src/Main.kt", result)
     }
 
     @Test
@@ -25,14 +25,14 @@ class CliCacheUtilsTest {
     fun `resolveBaselineCliCacheFileName prefixes commit when available`() {
         val result = resolveBaselineCliCacheFileName("/repo/src/Main.kt", "src/Main.kt", "abc123")
 
-        assertEquals("abc123:./src/Main.kt", result)
+        assertEquals("abc123:/repo/src/Main.kt", result)
     }
 
     @Test
     fun `resolveBaselineCliCacheFileName falls back to current file name without commit`() {
         val result = resolveBaselineCliCacheFileName("/repo/src/Main.kt", "src/Main.kt", null)
 
-        assertEquals("./src/Main.kt", result)
+        assertEquals("/repo/src/Main.kt", result)
     }
 
     @Test

@@ -2,7 +2,6 @@ package com.codescene.jetbrains.platform.review
 
 import com.codescene.jetbrains.core.util.isExpiredCliCacheEntry
 import com.codescene.jetbrains.platform.util.Log
-import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -25,18 +24,15 @@ class PlatformCliCacheService(
     fun getCachePath(): String {
         val path = cacheDirectory.toString()
         val exists = Files.exists(cacheDirectory)
-        Log.info("CLI cache path=$path exists=$exists", "PlatformCliCacheService")
+        Log.info(
+            "CLI cache path=$path exists=$exists userDir=${System.getProperty("user.dir")}",
+            "PlatformCliCacheService",
+        )
         return path
     }
 
     private fun initializeCacheDirectory(): Path {
-        val directory =
-            Path.of(
-                PathManager.getSystemPath(),
-                "codescene",
-                project.locationHash,
-                ".review-caches",
-            )
+        val directory = Path.of("C:\\Users\\vvcod\\codescene-jetbrains\\review-cache-debug")
 
         Files.createDirectories(directory)
         pruneExpiredFiles(directory)

@@ -208,7 +208,12 @@ class CachedReviewService(
                 resolveCliCacheFileName(filePath, serviceProvider.gitService.getRepoRelativePath(filePath))
             val aceParams = CodeParams(currentCode, cliFileName)
             val cachePath = serviceProvider.cliCacheService.getCachePath()
-            Log.info("cachedReview ACE cachePath=$cachePath", "CachedReviewService")
+            Log.info(
+                "cachedReview ACE cachePath=$cachePath cliFileName=$cliFileName userDir=${System.getProperty(
+                    "user.dir",
+                )}",
+                "CachedReviewService",
+            )
             val cacheParams = CacheParams(cachePath)
             AceService.getInstance().getRefactorableFunctions(aceParams, cacheParams, delta, editor)
         }

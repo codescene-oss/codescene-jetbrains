@@ -3,6 +3,7 @@ package com.codescene.jetbrains.platform.git
 import com.codescene.jetbrains.core.git.FileEvent
 import com.codescene.jetbrains.core.git.FileEventType
 import com.codescene.jetbrains.core.git.isPathUnderRoot
+import com.codescene.jetbrains.core.util.normalizeAbsolutePath
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
@@ -42,7 +43,7 @@ class VfsEventBridge(
     }
 
     internal fun convertEvent(event: VFileEvent): FileEvent? {
-        val path = event.path
+        val path = normalizeAbsolutePath(event.path)
         if (!isWithinWorkspace(path)) return null
         if (isGitInternalPath(path)) return null
 

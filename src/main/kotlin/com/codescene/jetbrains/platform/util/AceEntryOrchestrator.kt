@@ -147,7 +147,10 @@ class AceEntryOrchestrator(private val project: Project) {
         val fileName = resolveCliCacheFileName(filePath, services.gitService.getRepoRelativePath(filePath))
         val aceParams = CodeParams(editor.document.text, fileName)
         val cachePath = services.cliCacheService.getCachePath()
-        Log.info("ACE refactorable functions cachePath=$cachePath", "AceEntryOrchestrator")
+        Log.info(
+            "ACE refactorable functions cachePath=$cachePath userDir=${System.getProperty("user.dir")}",
+            "AceEntryOrchestrator",
+        )
         val cacheParams = CacheParams(cachePath)
         return AceService.getInstance().getRefactorableFunctions(aceParams, cacheParams, result, editor)
     }
