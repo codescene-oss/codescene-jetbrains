@@ -82,7 +82,8 @@ class CodeReviewService(private val project: Project) : com.codescene.jetbrains.
         code: String,
         cacheResult: Boolean,
     ): Review? {
-        val params = ReviewParams(reviewPath, code)
+        val repoRoot = resolveRepoRoot(path)
+        val params = ReviewParams(reviewPath, code, repoRoot)
         val cacheParams = CacheParams(serviceProvider.cliCacheService.getCachePath())
         val (result, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.review(params, cacheParams) }
         result ?: return null
@@ -118,4 +119,7 @@ class CodeReviewService(private val project: Project) : com.codescene.jetbrains.
 
         return result
     }
+
+    private fun resolveRepoRoot(path: String): String =
+        gitService.getRepoRoot(path) ?: project.basePath ?: path.substringBeforeLast('/', path)
 }

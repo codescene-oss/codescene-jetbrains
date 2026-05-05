@@ -153,6 +153,8 @@ class GitIgnoreSupportTest {
 
         override fun getRepoRelativePath(filePath: String): String? = null
 
+        override fun getRepoRoot(filePath: String): String? = repoRoot.toString()
+
         override fun isIgnored(filePath: String): Boolean {
             val relativePath = repoRoot.relativize(Paths.get(filePath)).normalize().toGitPath()
             val result =

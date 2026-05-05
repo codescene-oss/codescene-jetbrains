@@ -52,10 +52,14 @@ class CodeDeltaService(private val project: Project) : com.codescene.jetbrains.c
             )
         val currentReviewPath = resolveCliCacheFileName(path, repoRelativePath)
 
-        val oldReview = ReviewParams(baselineReviewPath, oldCode)
-        val newReview = ReviewParams(currentReviewPath, currentCode)
+        val repoRoot = resolveRepoRoot(path)
+        val oldReview = ReviewParams(baselineReviewPath, oldCode, repoRoot)
+        val newReview = ReviewParams(currentReviewPath, currentCode, repoRoot)
         val cacheParams = CacheParams(serviceProvider.cliCacheService.getCachePath())
-        val (rawResult, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview, cacheParams) }
+        val (rawResult, elapsedMs) =
+            runWithClassLoaderChange {
+                ExtensionAPI.delta(oldReview, newReview, cacheParams)
+            }
         val delta = adaptDeltaResult(rawResult)
         StatsCollectorService.getInstance().recordAnalysis(editor.virtualFile.name, elapsedMs.toDouble())
 
@@ -79,4 +83,7 @@ class CodeDeltaService(private val project: Project) : com.codescene.jetbrains.c
             )
         return result
     }
+
+    private fun resolveRepoRoot(path: String): String =
+        gitService.getRepoRoot(path) ?: project.basePath ?: path.substringBeforeLast('/', path)
 }

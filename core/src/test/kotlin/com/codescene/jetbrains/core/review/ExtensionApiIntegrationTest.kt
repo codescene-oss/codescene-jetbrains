@@ -18,20 +18,26 @@ import org.junit.Test
 
 class ExtensionApiIntegrationTest {
     private lateinit var cacheDir: Path
+    private lateinit var defaultRepoRoot: Path
+    private val tempRoots = mutableListOf<Path>()
 
     @Before
     fun setUp() {
         cacheDir = Files.createTempDirectory("codescene-extension-api-cache")
+        defaultRepoRoot = Files.createTempDirectory("codescene-extension-api-repo")
+        tempRoots.add(defaultRepoRoot)
     }
 
     @After
     fun tearDown() {
         cacheDir.toFile().deleteRecursively()
+        tempRoots.forEach { it.toFile().deleteRecursively() }
+        tempRoots.clear()
     }
 
     @Test
     fun `review returns valid response for Kotlin code`() {
-        val review = review("ReviewSubject.kt", simpleKotlinCode)
+        val review = review("ReviewSubject.kt", simpleKotlinCode, defaultRepoRoot)
 
         assertReview(review)
     }
@@ -40,8 +46,8 @@ class ExtensionApiIntegrationTest {
     fun `delta returns valid response for changed Kotlin code`() {
         val delta =
             ExtensionAPI.delta(
-                ReviewParams("./DeltaSubject.kt", simpleKotlinCode),
-                ReviewParams("./DeltaSubject.kt", complexKotlinCode),
+                ReviewParams("./DeltaSubject.kt", simpleKotlinCode, defaultRepoRoot.toString()),
+                ReviewParams("./DeltaSubject.kt", complexKotlinCode, defaultRepoRoot.toString()),
                 cacheParams(),
             )
 
@@ -50,7 +56,7 @@ class ExtensionApiIntegrationTest {
 
     @Test
     fun `fnToRefactor accepts review findings`() {
-        val review = review("AceReviewSubject.kt", complexKotlinCode)
+        val review = review("AceReviewSubject.kt", complexKotlinCode, defaultRepoRoot)
         val codeSmells = review.fileLevelCodeSmells + review.functionLevelCodeSmells.flatMap { it.codeSmells }
 
         val functions =
@@ -67,8 +73,8 @@ class ExtensionApiIntegrationTest {
     fun `fnToRefactor accepts delta response`() {
         val delta =
             ExtensionAPI.delta(
-                ReviewParams("./AceDeltaSubject.kt", simpleKotlinCode),
-                ReviewParams("./AceDeltaSubject.kt", complexKotlinCode),
+                ReviewParams("./AceDeltaSubject.kt", simpleKotlinCode, defaultRepoRoot.toString()),
+                ReviewParams("./AceDeltaSubject.kt", complexKotlinCode, defaultRepoRoot.toString()),
                 cacheParams(),
             )
 
@@ -85,9 +91,10 @@ class ExtensionApiIntegrationTest {
     private fun review(
         fileName: String,
         code: String,
+        repoRoot: Path,
     ): Review =
         ExtensionAPI.review(
-            ReviewParams("./$fileName", code),
+            ReviewParams("./$fileName", code, repoRoot.toString()),
             cacheParams(),
         )
 
