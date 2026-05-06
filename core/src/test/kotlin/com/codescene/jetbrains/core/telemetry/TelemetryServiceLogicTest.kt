@@ -17,6 +17,7 @@ class TelemetryServiceLogicTest {
                         eventName = "open",
                         data = mapOf("key" to "value"),
                         ideInfo = "idea",
+                        editorVersion = "2023.3.8",
                         pluginVersion = "1.0.0",
                         deviceId = "device",
                     ),
@@ -37,6 +38,7 @@ class TelemetryServiceLogicTest {
                         eventName = "open",
                         data = mapOf("key" to "value"),
                         ideInfo = "idea",
+                        editorVersion = "2023.3.8",
                         pluginVersion = "1.0.0",
                         deviceId = "device",
                     ),
@@ -57,6 +59,7 @@ class TelemetryServiceLogicTest {
                         eventName = "open",
                         data = mapOf("key" to "value"),
                         ideInfo = "idea",
+                        editorVersion = "2023.3.8",
                         pluginVersion = "1.0.0",
                         deviceId = "device",
                     ),
@@ -64,6 +67,7 @@ class TelemetryServiceLogicTest {
 
         assertEquals("JetBrains/open", result?.eventName)
         assertEquals("idea", result?.ideInfo)
+        assertEquals("2023.3.8", result?.editorVersion)
         assertEquals("1.0.0", result?.pluginVersion)
     }
 

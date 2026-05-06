@@ -50,6 +50,8 @@ class MockGitService : IGitService {
 
     override fun getRepoRelativePath(filePath: String): String? = filePath
 
+    override fun getRepoRoot(filePath: String): String? = null
+
     override fun isIgnored(filePath: String): Boolean = ignoredFiles.contains(filePath)
 }
 

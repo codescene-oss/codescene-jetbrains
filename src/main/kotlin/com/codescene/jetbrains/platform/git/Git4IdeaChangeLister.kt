@@ -7,6 +7,7 @@ import com.codescene.jetbrains.core.git.MAX_UNTRACKED_FILES_PER_LOCATION
 import com.codescene.jetbrains.core.git.createWorkspacePrefix
 import com.codescene.jetbrains.core.git.pathComparisonKey
 import com.codescene.jetbrains.core.git.pathFileName
+import com.codescene.jetbrains.core.util.normalizeAbsolutePath
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -49,7 +50,7 @@ private fun resolveAbsolutePath(
         Log.warn("Invalid doubled path detected: $result (base=$basePath, input=$path)", "Git4IdeaChangeLister")
     }
 
-    return java.nio.file.Paths.get(result).normalize().toString()
+    return normalizeAbsolutePath(result)
 }
 
 @Service(Service.Level.PROJECT)

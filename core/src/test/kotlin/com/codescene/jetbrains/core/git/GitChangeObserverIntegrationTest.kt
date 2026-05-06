@@ -284,6 +284,8 @@ private class TestGitService(private val testRepoPath: File) : IGitService {
         return base.relativize(file).toString()
     }
 
+    override fun getRepoRoot(filePath: String): String? = testRepoPath.absolutePath
+
     override fun isIgnored(filePath: String): Boolean {
         val relativePath = getRepoRelativePath(filePath) ?: return false
         val result =

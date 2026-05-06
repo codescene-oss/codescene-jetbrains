@@ -5,7 +5,6 @@ import com.codescene.jetbrains.core.git.pathCacheKey
 import com.codescene.jetbrains.core.git.pathFileName
 import com.codescene.jetbrains.core.models.FailureType
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart

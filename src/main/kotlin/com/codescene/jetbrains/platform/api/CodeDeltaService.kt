@@ -70,8 +70,9 @@ class CodeDeltaService(private val project: Project) : com.codescene.jetbrains.c
             )
         val currentReviewPath = resolveCliCacheFileName(path, repoRelativePath)
 
-        val oldReview = ReviewParams(baselineReviewPath, oldCode)
-        val newReview = ReviewParams(currentReviewPath, currentCode)
+        val repoRoot = resolveRepoRoot(path)
+        val oldReview = ReviewParams(baselineReviewPath, oldCode, repoRoot)
+        val newReview = ReviewParams(currentReviewPath, currentCode, repoRoot)
         val cachePath = serviceProvider.cliCacheService.getCachePath()
         val userDir = System.getProperty("user.dir")
         Log.info(
@@ -100,4 +101,7 @@ class CodeDeltaService(private val project: Project) : com.codescene.jetbrains.c
             )
         return result
     }
+
+    private fun resolveRepoRoot(path: String): String =
+        gitService.getRepoRoot(path) ?: project.basePath ?: path.substringBeforeLast('/', path)
 }

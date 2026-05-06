@@ -88,7 +88,8 @@ class CodeReviewService(private val project: Project) : com.codescene.jetbrains.
         code: String,
         cacheResult: Boolean,
     ): Review? {
-        val params = ReviewParams(reviewPath, code)
+        val repoRoot = resolveRepoRoot(path)
+        val params = ReviewParams(reviewPath, code, repoRoot)
         val cachePath = serviceProvider.cliCacheService.getCachePath()
         Log.info(
             "review cachePath=$cachePath reviewPath=$reviewPath userDir=${System.getProperty("user.dir")}",
@@ -129,4 +130,7 @@ class CodeReviewService(private val project: Project) : com.codescene.jetbrains.
 
         return result
     }
+
+    private fun resolveRepoRoot(path: String): String =
+        gitService.getRepoRoot(path) ?: project.basePath ?: path.substringBeforeLast('/', path)
 }

@@ -20,7 +20,7 @@ class VfsFileSystem : IFileSystem {
     override fun getRelativePath(
         basePath: String,
         filePath: String,
-    ): String = coreGetRelativePath(basePath, filePath)
+    ): String = coreGetRelativePath(basePath, filePath).replace('\\', '/')
 
     override fun getAbsolutePath(
         parent: String,
