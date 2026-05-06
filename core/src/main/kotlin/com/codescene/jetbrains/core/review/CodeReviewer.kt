@@ -20,7 +20,7 @@ private const val LOG_TAG = "CodeReviewer"
 class CodeReviewer(
     private val scope: CoroutineScope,
     private val logger: ILogger,
-    private val defaultDebounceDelayMs: Long = TimeUnit.SECONDS.toMillis(3),
+    private val defaultDebounceDelayMs: Long = 325,
 ) {
     private val activeCalls = ConcurrentHashMap<String, ActiveReviewCall>()
 
