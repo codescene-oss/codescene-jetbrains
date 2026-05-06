@@ -38,10 +38,9 @@ class CodeReviewer(
         val callKey = pathCacheKey(filePath)
         val shortPath = pathFileName(filePath)
 
-        val existingJob = activeCalls[callKey]
-        if (existingJob != null) {
-            logger.info("Cancelling existing job file=$shortPath", LOG_TAG)
-            existingJob.job.cancel()
+        if (activeCalls.containsKey(callKey)) {
+            logger.warn("Job already exists file=$shortPath, should be handled by queue", LOG_TAG)
+            return
         }
 
         lateinit var job: Job

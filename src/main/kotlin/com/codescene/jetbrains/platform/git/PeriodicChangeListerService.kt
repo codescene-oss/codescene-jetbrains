@@ -45,7 +45,6 @@ class PeriodicChangeListerService(
     private val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
     private var workspacePath: String? = null
     private var gitRootPath: String? = null
-    private val reviewedFiles = mutableSetOf<String>()
 
     fun start() {
         val wsPath = project.basePath
@@ -80,22 +79,8 @@ class PeriodicChangeListerService(
 
         Log.info("Poll found ${changedFiles.size} changed files", "PeriodicChangeListerService")
 
-        synchronized(reviewedFiles) {
-            val removedFiles = reviewedFiles - changedFiles
-            for (file in removedFiles) {
-                Log.info("File no longer changed: ${pathFileName(file)}", "PeriodicChangeListerService")
-                reviewedFiles.remove(file)
-            }
-        }
-
         for (filePath in changedFiles) {
-            val alreadyReviewed = synchronized(reviewedFiles) { reviewedFiles.contains(filePath) }
-            if (alreadyReviewed) {
-                continue
-            }
-
             Log.info("Triggering review for: ${pathFileName(filePath)}", "PeriodicChangeListerService")
-            synchronized(reviewedFiles) { reviewedFiles.add(filePath) }
             CachedReviewService.getInstance(project).reviewByPath(filePath)
         }
     }

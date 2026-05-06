@@ -10,6 +10,7 @@ import com.codescene.jetbrains.core.review.BaselineReviewCacheQuery
 import com.codescene.jetbrains.core.review.CodeReviewer
 import com.codescene.jetbrains.core.review.ReviewCacheQuery
 import com.codescene.jetbrains.core.review.ReviewOrchestrator
+import com.codescene.jetbrains.core.review.ReviewRequestQueue
 import com.codescene.jetbrains.core.review.resolveDeltaExecutionPlan
 import com.codescene.jetbrains.core.review.shouldCheckRefactorableFunctions
 import com.codescene.jetbrains.core.review.shouldRefreshAfterReviewFlow
@@ -39,6 +40,7 @@ class CachedReviewService(
     private val uiRefreshService = project.service<UIRefreshService>()
     private val pathBasedReviewHandler by lazy { PathBasedReviewHandler.getInstance(project) }
     private val aceEntryOrchestrator by lazy { AceEntryOrchestrator.getInstance(project) }
+    private val reviewRequestQueue = ReviewRequestQueue()
 
     companion object {
         fun getInstance(project: Project): CachedReviewService = project.service<CachedReviewService>()
@@ -57,8 +59,19 @@ class CachedReviewService(
     }
 
     override fun review(editor: Editor) {
+        val filePath = editor.virtualFile.path
+
+        if (!reviewRequestQueue.requestReview(filePath) { review(editor) }) {
+            Log.debug("Review queued file=${pathFileName(filePath)}", "CodeSceneCachedReview")
+            return
+        }
+
         reviewFile(editor) {
-            performCachedReview(editor)
+            try {
+                performCachedReview(editor)
+            } finally {
+                fireQueuedRequest(filePath)
+            }
         }
     }
 
@@ -66,25 +79,42 @@ class CachedReviewService(
         editor: Editor,
         debounceDelayMs: Long?,
     ) {
+        val filePath = editor.virtualFile.path
+
+        if (!reviewRequestQueue.requestReview(filePath) { reviewFromCodeVision(editor, debounceDelayMs) }) {
+            Log.debug("Review queued (codeVision) file=${pathFileName(filePath)}", "CodeSceneCachedReview")
+            return
+        }
+
         reviewFile(editor, debounceDelayMs = debounceDelayMs) {
-            performCachedReview(editor)
+            try {
+                performCachedReview(editor)
+            } finally {
+                fireQueuedRequest(filePath)
+            }
         }
     }
 
     fun reviewByPath(filePath: String) {
-        val fileName = pathFileName(filePath)
-        val serviceName = "$serviceImplementation - ${project.name}"
+        if (!reviewRequestQueue.requestReview(filePath) { reviewByPath(filePath) }) {
+            Log.debug("Review queued (path) file=${pathFileName(filePath)}", "CodeSceneCachedReview")
+            return
+        }
 
+        val fileName = pathFileName(filePath)
         reviewOrchestrator.reviewFile(
             filePath = filePath,
             fileName = fileName,
-            serviceName = serviceName,
+            serviceName = "$serviceImplementation - ${project.name}",
             isCodeReview = true,
             timeout = 300_000,
             debounceDelayMs = null,
             performAction = { pathBasedReviewHandler.performCachedReviewByPath(filePath, fileName) },
             onScheduled = { onReviewScheduled(filePath) },
-            onFinished = { onReviewFinished(filePath) },
+            onFinished = {
+                onReviewFinished(filePath)
+                fireQueuedRequest(filePath)
+            },
         )
     }
 
@@ -102,6 +132,14 @@ class CachedReviewService(
     }
 
     override fun isCodeReview(): Boolean = true
+
+    private fun fireQueuedRequest(filePath: String) {
+        val queuedAction = reviewRequestQueue.finishReview(filePath)
+        if (queuedAction != null) {
+            Log.debug("Firing queued request file=${pathFileName(filePath)}", "CodeSceneCachedReview")
+            queuedAction()
+        }
+    }
 
     private suspend fun performCachedReview(editor: Editor) {
         val file = editor.virtualFile

@@ -5,7 +5,6 @@ import com.codescene.jetbrains.core.models.FailureType
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,118 +15,103 @@ import org.junit.Test
 
 class CodeReviewerTest {
     @Test
-    fun `reviewFile does not invoke onFinished for superseded job`() {
+    fun `reviewFile ignores duplicate request for same file`() {
         val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), TestLogger, defaultDebounceDelayMs = 50)
-        val firstFinishCount = AtomicInteger(0)
-        val secondDone = CountDownLatch(1)
-
-        reviewer.reviewFile(
-            filePath = "a.kt",
-            timeout = 5000,
-            runWithProgress = { action -> action() },
-            performAction = {
-                delay(10_000)
-            },
-            onError = { _, _ -> },
-            onFinished = { firstFinishCount.incrementAndGet() },
-        )
-
-        reviewer.reviewFile(
-            filePath = "a.kt",
-            timeout = 5000,
-            runWithProgress = { action -> action() },
-            performAction = {
-                secondDone.countDown()
-            },
-            onError = { _, _ -> },
-        )
-
-        assertTrue(secondDone.await(3, TimeUnit.SECONDS))
-        assertEquals(0, firstFinishCount.get())
-    }
-
-    @Test
-    fun `reviewFile cancels previous scheduled call for same path`() {
-        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), TestLogger, defaultDebounceDelayMs = 200)
         val firstStarted = CountDownLatch(1)
-        val firstExecuted = AtomicBoolean(false)
-        val secondExecuted = CountDownLatch(1)
-        val firstError = AtomicReference<FailureType?>()
-        val firstErrorObserved = CountDownLatch(1)
+        val firstDone = CountDownLatch(1)
+        val secondScheduled = AtomicBoolean(false)
 
         reviewer.reviewFile(
             filePath = "a.kt",
-            timeout = 2000,
+            timeout = 5000,
             runWithProgress = { action -> action() },
             performAction = {
                 firstStarted.countDown()
-                delay(10_000)
-                firstExecuted.set(true)
+                delay(500)
             },
-            onError = { type, _ ->
-                firstError.set(type)
-                firstErrorObserved.countDown()
-            },
+            onError = { _, _ -> },
+            onFinished = { firstDone.countDown() },
         )
 
         assertTrue(firstStarted.await(1, TimeUnit.SECONDS))
 
         reviewer.reviewFile(
             filePath = "a.kt",
-            timeout = 2000,
+            timeout = 5000,
             runWithProgress = { action -> action() },
-            performAction = {
-                secondExecuted.countDown()
-            },
+            performAction = {},
             onError = { _, _ -> },
+            onScheduled = { secondScheduled.set(true) },
         )
 
-        assertTrue(secondExecuted.await(2, TimeUnit.SECONDS))
-        assertTrue(firstErrorObserved.await(2, TimeUnit.SECONDS))
-        assertEquals(false, firstExecuted.get())
-        assertEquals(FailureType.CANCELLED, firstError.get())
+        assertTrue(firstDone.await(2, TimeUnit.SECONDS))
+        assertEquals(false, secondScheduled.get())
     }
 
     @Test
-    fun `reviewFile cancels previous scheduled call for same Windows path with different separators`() {
-        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), TestLogger, defaultDebounceDelayMs = 200)
+    fun `reviewFile ignores duplicate request for same Windows path with different separators`() {
+        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), TestLogger, defaultDebounceDelayMs = 50)
         val firstStarted = CountDownLatch(1)
-        val firstExecuted = AtomicBoolean(false)
-        val secondExecuted = CountDownLatch(1)
-        val firstError = AtomicReference<FailureType?>()
-        val firstErrorObserved = CountDownLatch(1)
+        val firstDone = CountDownLatch(1)
+        val secondScheduled = AtomicBoolean(false)
 
         reviewer.reviewFile(
             filePath = "C:\\repo\\src\\File.kt",
-            timeout = 2000,
+            timeout = 5000,
             runWithProgress = { action -> action() },
             performAction = {
                 firstStarted.countDown()
-                delay(10_000)
-                firstExecuted.set(true)
+                delay(500)
             },
-            onError = { type, _ ->
-                firstError.set(type)
-                firstErrorObserved.countDown()
-            },
+            onError = { _, _ -> },
+            onFinished = { firstDone.countDown() },
         )
 
         assertTrue(firstStarted.await(1, TimeUnit.SECONDS))
 
         reviewer.reviewFile(
             filePath = "C:/repo/src/File.kt",
-            timeout = 2000,
+            timeout = 5000,
             runWithProgress = { action -> action() },
-            performAction = {
-                secondExecuted.countDown()
-            },
+            performAction = {},
             onError = { _, _ -> },
+            onScheduled = { secondScheduled.set(true) },
         )
 
-        assertTrue(secondExecuted.await(2, TimeUnit.SECONDS))
-        assertTrue(firstErrorObserved.await(2, TimeUnit.SECONDS))
-        assertEquals(false, firstExecuted.get())
-        assertEquals(FailureType.CANCELLED, firstError.get())
+        assertTrue(firstDone.await(2, TimeUnit.SECONDS))
+        assertEquals(false, secondScheduled.get())
+    }
+
+    @Test
+    fun `reviewFile allows sequential requests after completion`() {
+        val reviewer = CodeReviewer(CoroutineScope(Dispatchers.Default), TestLogger, defaultDebounceDelayMs = 10)
+        val firstDone = CountDownLatch(1)
+        val secondDone = CountDownLatch(1)
+        val secondScheduled = AtomicBoolean(false)
+
+        reviewer.reviewFile(
+            filePath = "a.kt",
+            timeout = 5000,
+            runWithProgress = { action -> action() },
+            performAction = {},
+            onError = { _, _ -> },
+            onFinished = { firstDone.countDown() },
+        )
+
+        assertTrue(firstDone.await(2, TimeUnit.SECONDS))
+
+        reviewer.reviewFile(
+            filePath = "a.kt",
+            timeout = 5000,
+            runWithProgress = { action -> action() },
+            performAction = {},
+            onError = { _, _ -> },
+            onScheduled = { secondScheduled.set(true) },
+            onFinished = { secondDone.countDown() },
+        )
+
+        assertTrue(secondDone.await(2, TimeUnit.SECONDS))
+        assertEquals(true, secondScheduled.get())
     }
 
     @Test
