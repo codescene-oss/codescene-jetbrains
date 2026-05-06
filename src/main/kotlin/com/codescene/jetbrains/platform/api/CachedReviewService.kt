@@ -109,8 +109,9 @@ class CachedReviewService(
             isCodeReview = true,
             timeout = 300_000,
             debounceDelayMs = null,
+            showProgress = false,
             performAction = { pathBasedReviewHandler.performCachedReviewByPath(filePath, fileName) },
-            onScheduled = { onReviewScheduled(filePath) },
+            onScheduled = null,
             onFinished = {
                 onReviewFinished(filePath)
                 fireQueuedRequest(filePath)

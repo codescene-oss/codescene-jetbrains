@@ -6,6 +6,7 @@ import com.codescene.jetbrains.core.review.BaselineReviewCacheEntry
 import com.codescene.jetbrains.core.review.BaselineReviewCacheQuery
 import com.codescene.jetbrains.core.review.ReviewCacheQuery
 import com.codescene.jetbrains.core.review.resolveDeltaExecutionPlan
+import com.codescene.jetbrains.core.review.resolveProgressMessage
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
@@ -62,8 +63,20 @@ class PathBasedReviewHandler(private val project: Project) {
             "CodeSceneCachedReview",
         )
         if (cachedReview != null) {
+            val baselineCode = serviceProvider.gitService.getBranchCreationCommitCode(filePath)
+            val deltaQuery = DeltaCacheQuery(filePath, baselineCode, currentCode)
+            val (deltaHit, _) = serviceProvider.deltaCacheService.get(deltaQuery)
+
+            if (deltaHit) {
+                Log.info(
+                    "reviewByPath full cache hit path=$filePath totalTime=${System.currentTimeMillis() - startTime}ms",
+                    "CodeSceneCachedReview",
+                )
+                return
+            }
+
             Log.info(
-                "reviewByPath cache hit path=$filePath totalTime=${System.currentTimeMillis() - startTime}ms",
+                "reviewByPath review cache hit, delta miss path=$filePath",
                 "CodeSceneCachedReview",
             )
             handleDeltaByPath(filePath, fileName, currentCode, cachedReview.score.orElse(null))
@@ -71,7 +84,11 @@ class PathBasedReviewHandler(private val project: Project) {
         }
 
         val reviewStart = System.currentTimeMillis()
-        val review = reviewService.performCodeReviewByPath(filePath, fileName, currentCode)
+        val progressMessage = resolveProgressMessage(fileName, true)
+        val review =
+            serviceProvider.progressService.runWithProgress(progressMessage) {
+                reviewService.performCodeReviewByPath(filePath, fileName, currentCode)
+            }
         Log.info(
             "reviewByPath review took ${System.currentTimeMillis() - reviewStart}ms file=$fileName",
             "CodeSceneCachedReview",
@@ -155,7 +172,10 @@ class PathBasedReviewHandler(private val project: Project) {
         Log.info("handleDeltaByPath cache miss file=$fileName", "CodeSceneCachedReview")
 
         val deltaStart = System.currentTimeMillis()
-        deltaService.performDeltaAnalysisByPath(filePath, fileName, currentCode)
+        val deltaProgressMessage = resolveProgressMessage(fileName, false)
+        serviceProvider.progressService.runWithProgress(deltaProgressMessage) {
+            deltaService.performDeltaAnalysisByPath(filePath, fileName, currentCode)
+        }
         Log.info(
             "handleDeltaByPath deltaAnalysis took ${System.currentTimeMillis() - deltaStart}ms file=$fileName",
             "CodeSceneCachedReview",
@@ -189,7 +209,11 @@ class PathBasedReviewHandler(private val project: Project) {
         }
 
         val reviewStart = System.currentTimeMillis()
-        val baselineScore = reviewService.reviewBaseline(path, fileName, baselineCode)
+        val baselineProgressMessage = resolveProgressMessage(fileName, true)
+        val baselineScore =
+            serviceProvider.progressService.runWithProgress(baselineProgressMessage) {
+                reviewService.reviewBaseline(path, fileName, baselineCode)
+            }
         Log.info(
             "getBaselineScore reviewBaseline took ${System.currentTimeMillis() - reviewStart}ms file=$fileName",
             "CodeSceneCachedReview",
