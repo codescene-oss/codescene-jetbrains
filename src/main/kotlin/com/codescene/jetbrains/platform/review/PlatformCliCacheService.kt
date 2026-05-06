@@ -2,6 +2,7 @@ package com.codescene.jetbrains.platform.review
 
 import com.codescene.jetbrains.core.util.isExpiredCliCacheEntry
 import com.codescene.jetbrains.platform.util.Log
+import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -32,7 +33,13 @@ class PlatformCliCacheService(
     }
 
     private fun initializeCacheDirectory(): Path {
-        val directory = Path.of("C:\\Users\\vvcod\\codescene-jetbrains\\review-cache-debug")
+        val directory =
+            Path.of(
+                PathManager.getSystemPath(),
+                "codescene",
+                project.locationHash,
+                ".review-caches",
+            )
 
         Files.createDirectories(directory)
         pruneExpiredFiles(directory)
