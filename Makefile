@@ -7,7 +7,7 @@ GRADLEW := ./gradlew
 NULL := /dev/null
 endif
 
-.PHONY: install-cli check-bb build test format format-check delta iter coverage-summary bump-version release test-release class-size-mine
+.PHONY: install-cli check-bb build test benchmarks format format-check delta iter coverage-summary bump-version release test-release class-size-mine
 
 install-cli: check-bb
 	@$(BB) -f .github/install-cli.clj
@@ -18,8 +18,9 @@ check-bb:
 KT_FILES := $(wildcard src/main/kotlin/**/*.kt) \
             $(wildcard src/test/kotlin/**/*.kt) \
             $(wildcard core/src/main/kotlin/**/*.kt) \
-            $(wildcard core/src/test/kotlin/**/*.kt)
-GRADLE_FILES := $(wildcard build.gradle.kts) $(wildcard core/build.gradle.kts) $(wildcard settings.gradle.kts) $(wildcard gradle.properties) $(wildcard gradle/libs.versions.toml)
+            $(wildcard core/src/test/kotlin/**/*.kt) \
+            $(wildcard benchmarks/src/jmh/kotlin/**/*.kt)
+GRADLE_FILES := $(wildcard build.gradle.kts) $(wildcard core/build.gradle.kts) $(wildcard benchmarks/build.gradle.kts) $(wildcard settings.gradle.kts) $(wildcard gradle.properties) $(wildcard gradle/libs.versions.toml)
 
 .build-timestamp: check-bb $(KT_FILES) $(GRADLE_FILES)
 	@$(BB) -f .github/run-quiet.clj build.log "gradle buildPlugin" $(GRADLEW) --rerun-tasks --warn buildPlugin
@@ -29,6 +30,9 @@ build: .build-timestamp
 
 test: check-bb build
 	@$(BB) -f .github/run-quiet.clj test.log "gradle test" $(GRADLEW) test
+
+benchmarks: check-bb
+	@$(BB) -f .github/run-quiet.clj benchmarks.log "gradle benchmarks" $(GRADLEW) :benchmarks:jmh
 
 format: check-bb
 	@$(BB) -f .github/run-quiet.clj format.log "gradle ktlintFormat" $(GRADLEW) ktlintFormat
