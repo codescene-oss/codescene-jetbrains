@@ -1,0 +1,21 @@
+benchmarks/src/jmh/kotlin/com/codescene/jetbrains/benchmarks/ReviewDeltaFlowBenchmark.kt
+  s_63072b41385ec9::t_1c8b0ea26c7cc2 28-31
+benchmarks/src/jmh/kotlin/com/codescene/jetbrains/benchmarks/ExtensionApiDeltaBenchmark.kt
+  s_63072b41385ec9::t_7c2003513000c3 44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "da2f13d0bb489f69062b05d5b25914ce634b9435",
+  "prompts": {},
+  "sessions": {
+    "s_63072b41385ec9": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "f8fda28a-3ff3-47cc-ac85-d9a9c4b685a2",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Martin Säfsten <martin.safsten@codescene.com>"
+    }
+  }
+}
