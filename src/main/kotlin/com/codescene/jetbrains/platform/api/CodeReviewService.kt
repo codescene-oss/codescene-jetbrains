@@ -32,16 +32,22 @@ class CodeReviewService(private val project: Project) : com.codescene.jetbrains.
 
     suspend fun performCodeReview(editor: Editor): Review? {
         val file = editor.virtualFile
-        val reviewPath = resolveCliCacheFileName(file.path, gitService.getRepoRelativePath(file.path))
-        val review =
-            review(
-                reviewPath = reviewPath,
-                path = file.path,
-                fileName = file.name,
-                code = editor.document.text,
-                cacheResult = true,
-            )
-        return review
+        return performCodeReviewByPath(file.path, file.name, editor.document.text)
+    }
+
+    suspend fun performCodeReviewByPath(
+        path: String,
+        fileName: String,
+        code: String,
+    ): Review? {
+        val reviewPath = resolveCliCacheFileName(path, gitService.getRepoRelativePath(path))
+        return review(
+            reviewPath = reviewPath,
+            path = path,
+            fileName = fileName,
+            code = code,
+            cacheResult = true,
+        )
     }
 
     suspend fun reviewBaseline(
@@ -84,7 +90,12 @@ class CodeReviewService(private val project: Project) : com.codescene.jetbrains.
     ): Review? {
         val repoRoot = resolveRepoRoot(path)
         val params = ReviewParams(reviewPath, code, repoRoot)
-        val cacheParams = CacheParams(serviceProvider.cliCacheService.getCachePath())
+        val cachePath = serviceProvider.cliCacheService.getCachePath()
+        Log.info(
+            "review cachePath=$cachePath reviewPath=$reviewPath userDir=${System.getProperty("user.dir")}",
+            "CodeReviewService",
+        )
+        val cacheParams = CacheParams(cachePath)
         val (result, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.review(params, cacheParams) }
         result ?: return null
 

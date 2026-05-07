@@ -3,12 +3,14 @@ package com.codescene.jetbrains.platform.delta
 import com.codescene.jetbrains.core.contracts.IDeltaCacheService
 import com.codescene.jetbrains.core.delta.DeltaCacheEntry
 import com.codescene.jetbrains.core.delta.DeltaCacheService
+import com.codescene.jetbrains.core.git.pathCacheKey
 import com.codescene.jetbrains.core.telemetry.monitorMetricsForDelta
 import com.codescene.jetbrains.core.telemetry.visibleInCodeHealthMonitor
 import com.codescene.jetbrains.core.util.TelemetryEvents
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.telemetry.CodeHealthMonitorTelemetryState
 import com.codescene.jetbrains.platform.util.Log
+import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -23,10 +25,11 @@ class PlatformDeltaCacheService(
     }
 
     override fun put(entry: DeltaCacheEntry) {
-        val path = entry.filePath
+        val path = pathCacheKey(entry.filePath)
         val previous = cache[path]
         val wasVisible = previous?.visibleInCodeHealthMonitor() == true
         super.put(entry)
+        updateMonitor(project)
         val current = cache[path] ?: return
         val delta = current.deltaApiResponse ?: return
         if (!current.visibleInCodeHealthMonitor()) return
@@ -50,9 +53,10 @@ class PlatformDeltaCacheService(
     }
 
     override fun invalidate(filePath: String) {
-        val previous = cache[filePath]
+        val previous = cache[pathCacheKey(filePath)]
         val wasVisible = previous?.visibleInCodeHealthMonitor() == true
         super.invalidate(filePath)
+        updateMonitor(project)
         if (wasVisible) {
             val visible = CodeHealthMonitorTelemetryState.getInstance(project).toolWindowVisible
             CodeSceneProjectServiceProvider.getInstance(project).telemetryService.logUsage(

@@ -7,6 +7,8 @@ import com.codescene.jetbrains.core.util.resolveSettingsChangeActions
 import com.codescene.jetbrains.platform.api.AceService
 import com.codescene.jetbrains.platform.editor.UIRefreshService
 import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionProvider
+import com.codescene.jetbrains.platform.git.GitChangeObserverService
+import com.codescene.jetbrains.platform.git.PeriodicChangeListerService
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.platform.telemetry.TelemetryService
 import com.codescene.jetbrains.platform.telemetry.installGlobalUncaughtErrorTelemetry
@@ -18,6 +20,7 @@ import com.intellij.ide.plugins.PluginInstaller
 import com.intellij.ide.plugins.PluginStateListener
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
@@ -98,6 +101,12 @@ class ProjectStartupActivity : ProjectActivity {
 
         addStateListener()
         VirtualFileManager.getInstance().addAsyncFileListener(FileChangeListener(project), disposable)
+
+        val gitChangeObserverService = project.service<GitChangeObserverService>()
+        gitChangeObserverService.start()
+
+        val periodicChangeListerService = project.service<PeriodicChangeListerService>()
+        periodicChangeListerService.start()
 
         registerCodeSceneToolWindowTelemetry(project, disposable)
 

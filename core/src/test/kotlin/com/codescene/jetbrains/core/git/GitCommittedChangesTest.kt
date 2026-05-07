@@ -50,11 +50,13 @@ class GitCommittedChangesTest {
                     testRepoPath.absolutePath,
                     workspaceDir.absolutePath,
                 )
-            val fileNames = changes.toList()
 
-            assertTrue("Should include committed file inside workspacePath", fileNames.contains("inside.ts"))
-            assertFalse("Should not include committed file outside workspacePath", fileNames.contains("outside.ts"))
-            assertFalse("Should strip workspace prefix", fileNames.contains("workspace${File.separator}inside.ts"))
+            assertTrue("Should include committed file inside workspacePath", changes.any { it.endsWith("inside.ts") })
+            assertFalse(
+                "Should not include committed file outside workspacePath",
+                changes.any { it.endsWith("outside.ts") },
+            )
+            assertTrue("All paths should be absolute", changes.all { File(it).isAbsolute })
         }
 
     @Test
@@ -76,9 +78,8 @@ class GitCommittedChangesTest {
                     workspacePathWithSlash,
                     emptySet(),
                 )
-            val fileNames = changes.toList()
 
-            assertTrue("Should handle committed files with trailing slash", fileNames.contains("file.ts"))
+            assertTrue("Should handle committed files with trailing slash", changes.any { it.endsWith("file.ts") })
         }
 
     @Test
@@ -115,12 +116,11 @@ class GitCommittedChangesTest {
                     uiDir.absolutePath,
                     emptySet(),
                 )
-            val fileNames = changes.toList()
 
-            assertEquals(1, fileNames.size)
-            assertTrue("Should include gc.cpp from ui directory", fileNames.contains("gc.cpp"))
+            assertEquals(1, changes.size)
+            assertTrue("Should include gc.cpp from ui directory", changes.any { it.endsWith("gc.cpp") })
 
-            val returnedFilePath = File(uiDir, fileNames[0])
+            val returnedFilePath = File(changes.first())
             val content = returnedFilePath.readText()
             assertTrue("Should return gc.cpp from ui", content.contains("good gc.cpp in ui"))
             assertFalse("Should not return gc.cpp from root", content.contains("bad gc.cpp at root"))
@@ -145,11 +145,9 @@ class GitCommittedChangesTest {
                     testRepoPath.absolutePath,
                     emptySet(),
                 )
-            val fileNames = changes.toList()
 
-            assertTrue("Should include root-file.ts", fileNames.contains("root-file.ts"))
-            val expectedSubdirPath = "subdir${File.separator}sub-file.ts"
-            assertTrue("Should include $expectedSubdirPath", fileNames.contains(expectedSubdirPath))
+            assertTrue("Should include root-file.ts", changes.any { it.endsWith("root-file.ts") })
+            assertTrue("Should include sub-file.ts in subdir", changes.any { it.endsWith("sub-file.ts") })
         }
 
     @Test
@@ -171,14 +169,12 @@ class GitCommittedChangesTest {
                     testRepoPath.absolutePath,
                     emptySet(),
                 )
-            val fileNames = changes.toList()
 
-            assertTrue("Should include new filename", fileNames.contains("new-name.ts"))
-            assertFalse("Should not include old filename", fileNames.contains("old-name.ts"))
+            assertTrue("Should include new filename", changes.any { it.endsWith("new-name.ts") })
+            assertFalse("Should not include old filename", changes.any { it.endsWith("old-name.ts") })
 
-            for (fileName in fileNames) {
-                val filePath = File(testRepoPath, fileName)
-                assertTrue("File should exist: $fileName", filePath.exists())
+            for (filePath in changes) {
+                assertTrue("File should exist: $filePath", File(filePath).exists())
             }
         }
 }

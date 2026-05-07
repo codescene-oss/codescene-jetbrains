@@ -4,11 +4,13 @@ import com.codescene.ExtensionAPI.CacheParams
 import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.jetbrains.core.delta.DeltaCacheEntry
 import com.codescene.jetbrains.core.delta.DeltaCacheQuery
+import com.codescene.jetbrains.core.git.pathFileName
 import com.codescene.jetbrains.core.review.BaselineReviewCacheEntry
 import com.codescene.jetbrains.core.review.BaselineReviewCacheQuery
 import com.codescene.jetbrains.core.review.CodeReviewer
 import com.codescene.jetbrains.core.review.ReviewCacheQuery
 import com.codescene.jetbrains.core.review.ReviewOrchestrator
+import com.codescene.jetbrains.core.review.ReviewRequestQueue
 import com.codescene.jetbrains.core.review.resolveDeltaExecutionPlan
 import com.codescene.jetbrains.core.review.shouldCheckRefactorableFunctions
 import com.codescene.jetbrains.core.review.shouldRefreshAfterReviewFlow
@@ -36,14 +38,16 @@ class CachedReviewService(
     private val reviewService = project.service<CodeReviewService>()
     private val deltaService = project.service<CodeDeltaService>()
     private val uiRefreshService = project.service<UIRefreshService>()
+    private val pathBasedReviewHandler by lazy { PathBasedReviewHandler.getInstance(project) }
     private val aceEntryOrchestrator by lazy { AceEntryOrchestrator.getInstance(project) }
+    private val reviewRequestQueue = ReviewRequestQueue()
 
     companion object {
         fun getInstance(project: Project): CachedReviewService = project.service<CachedReviewService>()
     }
 
     override val scope = CoroutineScope(Dispatchers.IO)
-    override val codeReviewer = CodeReviewer(scope)
+    override val codeReviewer = CodeReviewer(scope, Log)
     override val reviewOrchestrator: ReviewOrchestrator by lazy {
         ReviewOrchestrator(
             codeReviewer = codeReviewer,
@@ -55,8 +59,19 @@ class CachedReviewService(
     }
 
     override fun review(editor: Editor) {
+        val filePath = editor.virtualFile.path
+
+        if (!reviewRequestQueue.requestReview(filePath) { review(editor) }) {
+            Log.debug("Review queued file=${pathFileName(filePath)}", "CodeSceneCachedReview")
+            return
+        }
+
         reviewFile(editor) {
-            performCachedReview(editor)
+            try {
+                performCachedReview(editor)
+            } finally {
+                fireQueuedRequest(filePath)
+            }
         }
     }
 
@@ -64,9 +79,44 @@ class CachedReviewService(
         editor: Editor,
         debounceDelayMs: Long?,
     ) {
-        reviewFile(editor, debounceDelayMs = debounceDelayMs) {
-            performCachedReview(editor)
+        val filePath = editor.virtualFile.path
+
+        if (!reviewRequestQueue.requestReview(filePath) { reviewFromCodeVision(editor, debounceDelayMs) }) {
+            Log.debug("Review queued (codeVision) file=${pathFileName(filePath)}", "CodeSceneCachedReview")
+            return
         }
+
+        reviewFile(editor, debounceDelayMs = debounceDelayMs) {
+            try {
+                performCachedReview(editor)
+            } finally {
+                fireQueuedRequest(filePath)
+            }
+        }
+    }
+
+    fun reviewByPath(filePath: String) {
+        if (!reviewRequestQueue.requestReview(filePath) { reviewByPath(filePath) }) {
+            Log.debug("Review queued (path) file=${pathFileName(filePath)}", "CodeSceneCachedReview")
+            return
+        }
+
+        val fileName = pathFileName(filePath)
+        reviewOrchestrator.reviewFile(
+            filePath = filePath,
+            fileName = fileName,
+            serviceName = "$serviceImplementation - ${project.name}",
+            isCodeReview = true,
+            timeout = 300_000,
+            debounceDelayMs = null,
+            showProgress = false,
+            performAction = { pathBasedReviewHandler.performCachedReviewByPath(filePath, fileName) },
+            onScheduled = null,
+            onFinished = {
+                onReviewFinished(filePath)
+                fireQueuedRequest(filePath)
+            },
+        )
     }
 
     override fun onReviewScheduled(filePath: String) {
@@ -84,6 +134,14 @@ class CachedReviewService(
 
     override fun isCodeReview(): Boolean = true
 
+    private fun fireQueuedRequest(filePath: String) {
+        val queuedAction = reviewRequestQueue.finishReview(filePath)
+        if (queuedAction != null) {
+            Log.debug("Firing queued request file=${pathFileName(filePath)}", "CodeSceneCachedReview")
+            queuedAction()
+        }
+    }
+
     private suspend fun performCachedReview(editor: Editor) {
         val file = editor.virtualFile
         val path = file.path
@@ -97,12 +155,12 @@ class CachedReviewService(
             review = reviewService.performCodeReview(editor)
         }
         if (review == null) {
-            val f = path.substringAfterLast('/')
+            val f = pathFileName(path)
             Log.debug("cached review no result file=$f len=${currentCode.length}", "CodeSceneCachedReview")
             return
         }
 
-        val f = path.substringAfterLast('/')
+        val f = pathFileName(path)
         Log.debug("cached review file=$f reviewMiss=$reviewMiss len=${currentCode.length}", "CodeSceneCachedReview")
 
         val aceUpdated =
@@ -151,15 +209,16 @@ class CachedReviewService(
             val query = DeltaCacheQuery(path, baselineCode, currentCode)
             val (deltaHit, _) = serviceProvider.deltaCacheService.get(query)
             if (deltaHit) {
-                val df = path.substringAfterLast('/')
+                val df = pathFileName(path)
                 Log.debug(
                     "handleDelta hit skip file=$df baseLen=${baselineCode.length}",
                     "CodeSceneCachedReview",
                 )
-                serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(path, false)
+                serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(path, true)
+                updateMonitor(project)
                 return DeltaHandlingResult(didHandleDelta = false)
             }
-            val df = path.substringAfterLast('/')
+            val df = pathFileName(path)
             Log.debug(
                 "handleDelta miss cachedReview file=$df baseLen=${baselineCode.length}",
                 "CodeSceneCachedReview",
@@ -168,7 +227,7 @@ class CachedReviewService(
 
         val deltaResult = deltaService.performDeltaAnalysis(editor)
         serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(path, reviewMiss)
-        val df2 = path.substringAfterLast('/')
+        val df2 = pathFileName(path)
         Log.debug(
             "handleDelta done file=$df2 reviewMiss=$reviewMiss " +
                 "deltaNull=${deltaResult.delta == null}",
@@ -187,7 +246,14 @@ class CachedReviewService(
             val cliFileName =
                 resolveCliCacheFileName(filePath, serviceProvider.gitService.getRepoRelativePath(filePath))
             val aceParams = CodeParams(currentCode, cliFileName)
-            val cacheParams = CacheParams(serviceProvider.cliCacheService.getCachePath())
+            val cachePath = serviceProvider.cliCacheService.getCachePath()
+            Log.info(
+                "cachedReview ACE cachePath=$cachePath cliFileName=$cliFileName userDir=${System.getProperty(
+                    "user.dir",
+                )}",
+                "CachedReviewService",
+            )
+            val cacheParams = CacheParams(cachePath)
             AceService.getInstance().getRefactorableFunctions(aceParams, cacheParams, delta, editor)
         }
         return DeltaHandlingResult(didHandleDelta = true)

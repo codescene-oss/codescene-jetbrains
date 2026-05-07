@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.git
 
 import com.codescene.jetbrains.core.contracts.IFileSystem
+import com.codescene.jetbrains.core.util.normalizeAbsolutePath
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
@@ -23,6 +24,7 @@ import org.junit.Before
 import org.junit.Test
 
 class Git4IdeaChangeListerTest {
+    private val gitRoot = "/test/repo"
     private lateinit var project: Project
     private lateinit var git4IdeaChangeLister: Git4IdeaChangeLister
     private lateinit var mockRepository: GitRepository
@@ -93,9 +95,6 @@ class Git4IdeaChangeListerTest {
     @Test
     fun `getAllChangedFiles detects new untracked files`() =
         runBlocking {
-            val gitRoot = "/test/repo"
-            val workspace = "/test/repo"
-
             Git4IdeaTestSupport.setupRepositoryAccess(
                 mockLocalFileSystem,
                 mockRepoManager,
@@ -111,9 +110,9 @@ class Git4IdeaChangeListerTest {
             every { untrackedFile.path } returns "test.ts"
             every { mockRepository.untrackedFilesHolder.retrieveUntrackedFilePaths() } returns listOf(untrackedFile)
 
-            Git4IdeaTestSupport.setupFileSystemForFile(mockFileSystem, gitRoot, workspace, "test.ts", "ts")
+            Git4IdeaTestSupport.setupFileSystemForFile(mockFileSystem, gitRoot, gitRoot, "test.ts", "ts")
 
-            val changedFiles = git4IdeaChangeLister.getAllChangedFiles(gitRoot, workspace)
+            val changedFiles = git4IdeaChangeLister.getAllChangedFiles(gitRoot, gitRoot)
 
             assertTrue(changedFiles.size > 0)
             assertTrue(changedFiles.any { it.endsWith("test.ts") })
@@ -122,9 +121,6 @@ class Git4IdeaChangeListerTest {
     @Test
     fun `getAllChangedFiles detects modified files in staging area`() =
         runBlocking {
-            val gitRoot = "/test/repo"
-            val workspace = "/test/repo"
-
             Git4IdeaTestSupport.setupRepositoryAccess(
                 mockLocalFileSystem,
                 mockRepoManager,
@@ -138,18 +134,15 @@ class Git4IdeaChangeListerTest {
 
             val mockFilePath = mockk<com.intellij.openapi.vcs.FilePath>()
             every { mockFilePath.path } returns "index.js"
-
             val mockRecord = mockk<GitFileStatus>()
             every { mockRecord.path } returns mockFilePath
             every { mockRecord.index } returns 'M'
             every { mockRecord.workTree } returns ' '
-
             every { mockRepository.stagingAreaHolder } returns mockStagingArea
             every { mockStagingArea.allRecords } returns listOf(mockRecord)
+            Git4IdeaTestSupport.setupFileSystemForFile(mockFileSystem, gitRoot, gitRoot, "index.js", "js")
 
-            Git4IdeaTestSupport.setupFileSystemForFile(mockFileSystem, gitRoot, workspace, "index.js", "js")
-
-            val changedFiles = git4IdeaChangeLister.getAllChangedFiles(gitRoot, workspace)
+            val changedFiles = git4IdeaChangeLister.getAllChangedFiles(gitRoot, gitRoot)
 
             assertTrue(changedFiles.size > 0)
             assertTrue(changedFiles.any { it.endsWith("index.js") })
@@ -295,5 +288,37 @@ class Git4IdeaChangeListerTest {
             val fileNames = changedFiles.map { File(it).name }
             assertTrue("Should include untracked2.ts", fileNames.contains("untracked2.ts"))
             assertTrue("Should include untracked5.ts", fileNames.contains("untracked5.ts"))
+        }
+
+    @Test
+    fun `getAllChangedFiles handles untracked files with absolute paths`() =
+        runBlocking {
+            val gitRoot = "/test/repo"
+            Git4IdeaTestSupport.setupRepositoryAccess(
+                mockLocalFileSystem,
+                mockRepoManager,
+                mockRepository,
+                mockVirtualFile,
+                gitRoot,
+            )
+            Git4IdeaTestSupport.setupEmptyStagingArea(mockRepository, mockStagingArea)
+            every { mockRepository.currentBranchName } returns "master"
+            every { mockGitExecutor.runRevParse(mockRepository) } returns "abc123"
+
+            val untrackedFile = mockk<com.intellij.openapi.vcs.FilePath>()
+            every { untrackedFile.path } returns "$gitRoot/test.ts"
+            every { mockRepository.untrackedFilesHolder.retrieveUntrackedFilePaths() } returns listOf(untrackedFile)
+
+            val absolutePath = normalizeAbsolutePath("$gitRoot/test.ts")
+            every { mockFileSystem.getAbsolutePath(gitRoot, "$gitRoot/test.ts") } returns "$gitRoot/test.ts"
+            every { mockFileSystem.fileExists(absolutePath) } returns true
+            every { mockFileSystem.getExtension(absolutePath) } returns "ts"
+            every { mockFileSystem.getParent("$gitRoot/test.ts") } returns gitRoot
+            every { mockFileSystem.getRelativePath(gitRoot, absolutePath) } returns "test.ts"
+
+            val changedFiles = git4IdeaChangeLister.getAllChangedFiles(gitRoot, gitRoot)
+
+            assertTrue("Should find untracked file with absolute path", changedFiles.isNotEmpty())
+            assertTrue("Should resolve absolute path correctly", changedFiles.any { it.endsWith("test.ts") })
         }
 }
