@@ -1,0 +1,55 @@
+name: Benchmark Review Paths
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+  deployments: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GH_USERNAME: ${{ secrets.GH_USERNAME }}
+  GH_PACKAGE_TOKEN: ${{ secrets.GH_PACKAGE_TOKEN }}
+
+jobs:
+  benchmarks:
+    name: Run ExtensionAPI benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Sources
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-home-cache-excludes: |
+            caches/modules-2/files-2.1/idea/**
+            caches/**/transforms/**
+
+      - name: Run ExtensionAPI benchmarks
+        run: ./gradlew :benchmarks:jmh
+
+      - name: Store ExtensionAPI benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: JetBrains Plugin - ExtensionAPI
+          tool: 'jmh'
+          output-file-path: benchmarks/build/reports/jmh/results.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          comment-on-alert: true
+          fail-on-alert: true
+          alert-comment-cc-users: '@martinsafsten-codescene'

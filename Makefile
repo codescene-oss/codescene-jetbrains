@@ -7,7 +7,7 @@ NULL := /dev/null
 IDEA_LOG := build/idea-sandbox/*/log/idea.log
 endif
 
-.PHONY: install-cli check-bb build test format format-check delta iter coverage-summary bump-version release test-release class-size-mine run-ide kill-ide kill-ide kill-ide logs rm-nul
+.PHONY: install-cli check-bb build test benchmarks format format-check delta iter coverage-summary bump-version release test-release class-size-mine run-ide kill-ide logs rm-nul
 
 install-cli: check-bb
 	@$(BB) -f .github/install-cli.clj
@@ -18,8 +18,9 @@ check-bb:
 KT_FILES := $(wildcard src/main/kotlin/**/*.kt) \
             $(wildcard src/test/kotlin/**/*.kt) \
             $(wildcard core/src/main/kotlin/**/*.kt) \
-            $(wildcard core/src/test/kotlin/**/*.kt)
-GRADLE_FILES := $(wildcard build.gradle.kts) $(wildcard core/build.gradle.kts) $(wildcard settings.gradle.kts) $(wildcard gradle.properties) $(wildcard gradle/libs.versions.toml)
+            $(wildcard core/src/test/kotlin/**/*.kt) \
+            $(wildcard benchmarks/src/jmh/kotlin/**/*.kt)
+GRADLE_FILES := $(wildcard build.gradle.kts) $(wildcard core/build.gradle.kts) $(wildcard benchmarks/build.gradle.kts) $(wildcard settings.gradle.kts) $(wildcard gradle.properties) $(wildcard gradle/libs.versions.toml)
 
 .build-timestamp: check-bb $(KT_FILES) $(GRADLE_FILES)
 ifeq ($(OS),Windows_NT)
@@ -37,6 +38,9 @@ ifeq ($(OS),Windows_NT)
 else
 	@$(BB) -f .github/run-quiet.clj test.log "gradle test" ./gradlew test
 endif
+
+benchmarks: check-bb
+	@$(BB) -f .github/run-quiet.clj benchmarks.log "gradle benchmarks" $(GRADLEW) :benchmarks:jmh
 
 format: check-bb
 ifeq ($(OS),Windows_NT)
