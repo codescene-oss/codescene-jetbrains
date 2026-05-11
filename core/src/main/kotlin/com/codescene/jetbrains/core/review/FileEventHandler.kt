@@ -19,9 +19,19 @@ class FileEventHandler(
     }
 
     fun handleDelete(path: String) {
-        deltaCache.invalidate(path)
-        reviewCache.invalidate(path)
-        baselineReviewCache.invalidate(path)
+        // All three caches are content-based: they use file paths as keys but validate content
+        // hashes on lookup. This means cache hits require BOTH path match AND content match.
+        //
+        // When files are temporarily deleted (e.g., git stash) then restored (git stash apply)
+        // with identical content, the caches should hit. Not invalidating avoids expensive
+        // 4-9 second re-analysis for unchanged files.
+        //
+        // If a file is deleted and a different file is created at the same path, the cache
+        // will correctly miss because the content hash won't match.
+        //
+        // We hide the file from the Code Health Monitor UI by setting includeInCodeHealthMonitor
+        // to false. When the file is restored and re-analyzed, put() will reset this to true.
+        deltaCache.setIncludeInCodeHealthMonitor(path, false)
     }
 
     fun handleMove(

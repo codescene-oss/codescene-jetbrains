@@ -1,7 +1,9 @@
 package com.codescene.jetbrains.platform.delta
 
+import com.codescene.data.delta.Delta
 import com.codescene.jetbrains.core.contracts.IDeltaCacheService
 import com.codescene.jetbrains.core.delta.DeltaCacheEntry
+import com.codescene.jetbrains.core.delta.DeltaCacheQuery
 import com.codescene.jetbrains.core.delta.DeltaCacheService
 import com.codescene.jetbrains.core.git.pathCacheKey
 import com.codescene.jetbrains.core.telemetry.monitorMetricsForDelta
@@ -22,6 +24,16 @@ class PlatformDeltaCacheService(
     IDeltaCacheService {
     companion object {
         fun getInstance(project: Project): PlatformDeltaCacheService = project.service()
+    }
+
+    override fun get(query: DeltaCacheQuery): Pair<Boolean, Delta?> {
+        val result = super.get(query)
+        val (hit, _) = result
+        if (hit) {
+            setIncludeInCodeHealthMonitor(query.filePath, true)
+            updateMonitor(project)
+        }
+        return result
     }
 
     override fun put(entry: DeltaCacheEntry) {

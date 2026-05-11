@@ -44,12 +44,13 @@ class GitChangeObserverCallbackTest {
     }
 
     @Test
-    fun `handleDelete invalidates all caches`() {
+    fun `handleDelete hides file from Code Health Monitor but preserves all caches`() {
         fileEventHandler.handleDelete("/test/path/file.kt")
 
-        verify(exactly = 1) { deltaCache.invalidate("/test/path/file.kt") }
-        verify(exactly = 1) { reviewCache.invalidate("/test/path/file.kt") }
-        verify(exactly = 1) { baselineReviewCache.invalidate("/test/path/file.kt") }
+        verify(exactly = 1) { deltaCache.setIncludeInCodeHealthMonitor("/test/path/file.kt", false) }
+        verify(exactly = 0) { deltaCache.invalidate("/test/path/file.kt") }
+        verify(exactly = 0) { reviewCache.invalidate("/test/path/file.kt") }
+        verify(exactly = 0) { baselineReviewCache.invalidate("/test/path/file.kt") }
     }
 
     @Test

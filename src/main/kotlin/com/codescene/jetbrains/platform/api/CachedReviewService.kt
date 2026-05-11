@@ -214,8 +214,6 @@ class CachedReviewService(
                     "handleDelta hit skip file=$df baseLen=${baselineCode.length}",
                     "CodeSceneCachedReview",
                 )
-                serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(path, true)
-                updateMonitor(project)
                 return DeltaHandlingResult(didHandleDelta = false)
             }
             val df = pathFileName(path)
@@ -226,7 +224,6 @@ class CachedReviewService(
         }
 
         val deltaResult = deltaService.performDeltaAnalysis(editor)
-        serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(path, reviewMiss)
         val df2 = pathFileName(path)
         Log.debug(
             "handleDelta done file=$df2 reviewMiss=$reviewMiss " +

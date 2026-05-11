@@ -9,7 +9,6 @@ import com.codescene.jetbrains.core.review.resolveDeltaExecutionPlan
 import com.codescene.jetbrains.core.review.resolveProgressMessage
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.util.Log
-import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -165,8 +164,6 @@ class PathBasedReviewHandler(private val project: Project) {
                 "handleDeltaByPath cache hit file=$fileName totalTime=${System.currentTimeMillis() - startTime}ms",
                 "CodeSceneCachedReview",
             )
-            serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(filePath, true)
-            updateMonitor(project)
             return
         }
         Log.info("handleDeltaByPath cache miss file=$fileName", "CodeSceneCachedReview")
@@ -180,7 +177,6 @@ class PathBasedReviewHandler(private val project: Project) {
             "handleDeltaByPath deltaAnalysis took ${System.currentTimeMillis() - deltaStart}ms file=$fileName",
             "CodeSceneCachedReview",
         )
-        serviceProvider.deltaCacheService.setIncludeInCodeHealthMonitor(filePath, true)
         Log.info(
             "handleDeltaByPath done file=$fileName totalTime=${System.currentTimeMillis() - startTime}ms",
             "CodeSceneCachedReview",
