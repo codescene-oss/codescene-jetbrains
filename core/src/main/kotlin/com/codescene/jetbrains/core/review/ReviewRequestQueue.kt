@@ -1,27 +1,31 @@
 package com.codescene.jetbrains.core.review
 
 import com.codescene.jetbrains.core.git.pathCacheKey
-import java.util.concurrent.ConcurrentHashMap
 
 class ReviewRequestQueue {
-    private val ongoingReviews = ConcurrentHashMap.newKeySet<String>()
-    private val queue = ConcurrentHashMap<String, () -> Unit>()
+    private val lock = Any()
+    private val ongoingReviews = mutableSetOf<String>()
+    private val queue = mutableMapOf<String, () -> Unit>()
 
     fun requestReview(
         filePath: String,
         reviewAction: () -> Unit,
     ): Boolean {
         val key = pathCacheKey(filePath)
-        if (!ongoingReviews.add(key)) {
-            queue[key] = reviewAction
-            return false
+        synchronized(lock) {
+            if (!ongoingReviews.add(key)) {
+                queue[key] = reviewAction
+                return false
+            }
+            return true
         }
-        return true
     }
 
     fun finishReview(filePath: String): (() -> Unit)? {
         val key = pathCacheKey(filePath)
-        ongoingReviews.remove(key)
-        return queue.remove(key)
+        synchronized(lock) {
+            ongoingReviews.remove(key)
+            return queue.remove(key)
+        }
     }
 }
