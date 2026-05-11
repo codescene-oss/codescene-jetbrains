@@ -40,7 +40,11 @@ else
 endif
 
 benchmarks: check-bb
-	@$(BB) -f .github/run-quiet.clj benchmarks.log "gradle benchmarks" $(GRADLEW) :benchmarks:jmh
+ifeq ($(OS),Windows_NT)
+	@$(BB) -f .github/run-quiet.clj benchmarks.log "gradle benchmarks" cmd //c ".\\gradlew.bat :benchmarks:jmh"
+else
+	@$(BB) -f .github/run-quiet.clj benchmarks.log "gradle benchmarks" ./gradlew :benchmarks:jmh
+endif
 
 format: check-bb
 ifeq ($(OS),Windows_NT)
