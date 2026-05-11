@@ -33,14 +33,18 @@ import com.intellij.openapi.project.Project
 private val codeHealthMonitorMapper = CodeHealthMonitorMapper()
 
 fun updateMonitor(project: Project) {
+    val queueTime = System.currentTimeMillis()
     ApplicationManager.getApplication().invokeLater {
         if (project.isDisposed) return@invokeLater
+        val waitTime = System.currentTimeMillis() - queueTime
+        Log.info("updateMonitor invokeLater executed after ${waitTime}ms queue delay", "UpdateMonitor")
         updateMonitorImpl(project)
     }
 }
 
 private fun updateMonitorImpl(project: Project) {
     Log.info("Updating monitor for project '${project.name}'...")
+    val startTime = System.currentTimeMillis()
 
     val services = CodeSceneProjectServiceProvider.getInstance(project)
     val deltaResults = PlatformDeltaCacheService.getInstance(project).getAll()
@@ -71,4 +75,7 @@ private fun updateMonitorImpl(project: Project) {
         ),
     )
     CwfMessageHandler.getInstance(project).postMessage(View.HOME, update.message)
+
+    val elapsedTime = System.currentTimeMillis() - startTime
+    Log.info("Completed updating monitor for project '${project.name}' in ${elapsedTime}ms", "UpdateMonitor")
 }

@@ -84,7 +84,7 @@ else
 	@.github/kill-ide.sh > $(NULL) 2>&1 || true
 endif
 
-run-ide:
+run-ide: build
 ifeq ($(OS),Windows_NT)
 	@powershell -Command "Remove-Item -Force -ErrorAction SilentlyContinue '$(IDEA_LOG)'"
 	cmd //c ".\\gradlew.bat runIde"

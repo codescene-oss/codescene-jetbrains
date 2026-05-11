@@ -22,11 +22,12 @@ class FileEventHandlerTest {
     }
 
     @Test
-    fun `handleDelete invalidates all caches`() {
+    fun `handleDelete hides file from Code Health Monitor but preserves all caches`() {
         handler.handleDelete("a.kt")
-        verify(exactly = 1) { deltaCache.invalidate("a.kt") }
-        verify(exactly = 1) { reviewCache.invalidate("a.kt") }
-        verify(exactly = 1) { baselineReviewCache.invalidate("a.kt") }
+        verify(exactly = 1) { deltaCache.setIncludeInCodeHealthMonitor("a.kt", false) }
+        verify(exactly = 0) { deltaCache.invalidate("a.kt") }
+        verify(exactly = 0) { reviewCache.invalidate("a.kt") }
+        verify(exactly = 0) { baselineReviewCache.invalidate("a.kt") }
     }
 
     @Test
@@ -54,10 +55,11 @@ class FileEventHandlerTest {
     }
 
     @Test
-    fun `handleFileCacheUpdate routes Delete to invalidate on all caches`() {
+    fun `handleFileCacheUpdate routes Delete to hide from UI but preserve all caches`() {
         handler.handleFileCacheUpdate(FileCacheUpdate.Delete("z.kt"))
-        verify(exactly = 1) { deltaCache.invalidate("z.kt") }
-        verify(exactly = 1) { reviewCache.invalidate("z.kt") }
-        verify(exactly = 1) { baselineReviewCache.invalidate("z.kt") }
+        verify(exactly = 1) { deltaCache.setIncludeInCodeHealthMonitor("z.kt", false) }
+        verify(exactly = 0) { deltaCache.invalidate("z.kt") }
+        verify(exactly = 0) { reviewCache.invalidate("z.kt") }
+        verify(exactly = 0) { baselineReviewCache.invalidate("z.kt") }
     }
 }

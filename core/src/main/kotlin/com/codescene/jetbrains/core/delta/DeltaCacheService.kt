@@ -70,11 +70,18 @@ open class DeltaCacheService(
                     !headMatches -> "head_mismatch"
                     else -> "current_mismatch"
                 }
-            log.debug(
+            log.info(
                 "delta cache miss file=$shortPath reason=$reason " +
                     "qHead=${oldHash.take(8)} qCur=${newHash.take(8)} " +
                     "lenBaseline=${headCommitContent.length} lenCurrent=${currentFileContent.length} " +
                     "sHead=${entry?.headHash?.take(8)} sCur=${entry?.currentHash?.take(8)}",
+                DELTA_CACHE_LOG,
+            )
+        } else {
+            val shortPath = pathFileName(filePath)
+            log.info(
+                "delta cache HIT file=$shortPath " +
+                    "head=${oldHash.take(8)} cur=${newHash.take(8)}",
                 DELTA_CACHE_LOG,
             )
         }
@@ -95,7 +102,7 @@ open class DeltaCacheService(
                 entry.filePath,
             )
         val shortPath = pathFileName(entry.filePath)
-        log.debug(
+        log.info(
             "delta cache put file=$shortPath head=${headHash.take(8)} cur=${currentContentHash.take(8)} " +
                 "lenBaseline=${entry.headContent.length} lenCurrent=${entry.currentFileContent.length} " +
                 "deltaNull=${entry.deltaApiResponse == null}",
