@@ -143,7 +143,6 @@ intellijPlatform {
     pluginVerification {
         failureLevel.set(listOf(VerifyPluginTask.FailureLevel.COMPATIBILITY_PROBLEMS))
         ides {
-            create(IntelliJPlatformType.IntellijIdeaCommunity, "2023.3.8") { useInstaller = true }
             create(IntelliJPlatformType.IntellijIdeaCommunity, "2024.3.7") { useInstaller = true }
             create(IntelliJPlatformType.IntellijIdea, "2025.3.2") { useInstaller = true }
             select {

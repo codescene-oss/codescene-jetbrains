@@ -234,18 +234,20 @@ jobs:
               echo "::group::$version"
               echo "=== $version ==="
               echo "### $version" >> $GITHUB_STEP_SUMMARY
+              verdict_file=$(find "$version_dir" -name 'verification-verdict.txt' | sort | head -n 1)
+              if [ -n "$verdict_file" ]; then
+                cat "$verdict_file" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "Verifier report generated." >> $GITHUB_STEP_SUMMARY
+              fi
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "Full report is available in the \`pluginVerifier-result\` artifact." >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
               find "$version_dir" -name '*.txt' | sort | while read -r file; do
                 fname=$(basename "$file")
                 echo "--- $fname ---"
                 cat "$file"
                 echo ""
-                echo "<details><summary>$fname</summary>" >> $GITHUB_STEP_SUMMARY
-                echo "" >> $GITHUB_STEP_SUMMARY
-                echo '```' >> $GITHUB_STEP_SUMMARY
-                cat "$file" >> $GITHUB_STEP_SUMMARY
-                echo '```' >> $GITHUB_STEP_SUMMARY
-                echo "</details>" >> $GITHUB_STEP_SUMMARY
-                echo "" >> $GITHUB_STEP_SUMMARY
               done
               echo "::endgroup::"
             done
