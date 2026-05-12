@@ -193,17 +193,10 @@ class AceService :
                         Pair("language", request.language ?: ""),
                     ),
                 )
-                try {
-                    StatsCollectorService.getInstance().recordAnalysis(
-                        request.filePath.substringAfterLast('/', request.filePath),
-                        elapsedMs.toDouble(),
-                    )
-                } catch (t: Throwable) {
-                    Log.warn(
-                        "Failed to record ACE analysis stats for ${request.filePath}: ${t.message}",
-                        serviceImplementation,
-                    )
-                }
+                StatsCollectorService.getInstance().recordAnalysis(
+                    request.filePath.substringAfterLast('/', request.filePath),
+                    elapsedMs.toDouble(),
+                )
             },
         )
 }

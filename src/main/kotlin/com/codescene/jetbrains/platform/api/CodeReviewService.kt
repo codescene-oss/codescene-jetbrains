@@ -122,11 +122,7 @@ class CodeReviewService(private val project: Project) : com.codescene.jetbrains.
                 serviceName = serviceName,
             )
         }
-        try {
-            StatsCollectorService.getInstance().recordAnalysis(fileName, elapsedMs.toDouble())
-        } catch (t: Throwable) {
-            Log.warn("Failed to record review analysis stats for $fileName: ${t.message}", serviceName)
-        }
+        StatsCollectorService.getInstance().recordAnalysis(fileName, elapsedMs.toDouble())
 
         return result
     }

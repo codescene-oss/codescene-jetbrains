@@ -33,7 +33,13 @@ class StatsCollectorService :
     fun recordAnalysis(
         fileName: String,
         time: Double,
-    ) = collector.recordAnalysis(fileName, time)
+    ) {
+        try {
+            collector.recordAnalysis(fileName, time)
+        } catch (t: Throwable) {
+            Log.warn("Failed to record analysis stats for $fileName: ${t.message}", "StatsCollectorService")
+        }
+    }
 
     private fun flushStats() {
         val snapshot = stats.analysis.toList()
