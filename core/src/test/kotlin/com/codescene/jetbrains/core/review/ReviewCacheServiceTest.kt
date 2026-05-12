@@ -60,6 +60,18 @@ class ReviewCacheServiceTest {
     }
 
     @Test
+    fun `cache matches Windows paths across separator differences`() {
+        val backslashPath = "C:\\repo\\src\\File.kt"
+        val slashPath = "C:/repo/src/File.kt"
+        reviewCacheService.put(ReviewCacheEntry(fileContents, backslashPath, response))
+
+        val cachedResponse = reviewCacheService.get(ReviewCacheQuery(fileContents, slashPath))
+
+        assertEquals(response, cachedResponse)
+        assertEquals(response, reviewCacheService.getLastKnown(slashPath))
+    }
+
+    @Test
     fun `invalidate removes cache entry and get returns null`() {
         val entry = ReviewCacheEntry(fileContents, filePath, response)
         reviewCacheService.put(entry)

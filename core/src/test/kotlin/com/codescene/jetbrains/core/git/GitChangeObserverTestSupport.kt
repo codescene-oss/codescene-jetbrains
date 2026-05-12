@@ -2,6 +2,7 @@ package com.codescene.jetbrains.core.git
 
 import com.codescene.jetbrains.core.contracts.IFileSystem
 import com.codescene.jetbrains.core.contracts.IGitChangeLister
+import com.codescene.jetbrains.core.contracts.IGitService
 import com.codescene.jetbrains.core.contracts.IOpenFilesObserver
 import com.codescene.jetbrains.core.contracts.ISavedFilesTracker
 import java.nio.file.Paths
@@ -40,12 +41,27 @@ class MockOpenFilesObserver : IOpenFilesObserver {
     override fun getAllVisibleFileNames(): Set<String> = files
 }
 
+class MockGitService : IGitService {
+    var ignoredFiles: MutableSet<String> = mutableSetOf()
+
+    override fun getBranchCreationCommitCode(filePath: String): String = ""
+
+    override fun getBranchCreationCommitHash(filePath: String): String? = null
+
+    override fun getRepoRelativePath(filePath: String): String? = filePath
+
+    override fun getRepoRoot(filePath: String): String? = null
+
+    override fun isIgnored(filePath: String): Boolean = ignoredFiles.contains(filePath)
+}
+
 class MockFileSystem : IFileSystem {
     var extensionOverrides: MutableMap<String, String> = mutableMapOf()
+    var fileExistsOverrides: MutableMap<String, Boolean> = mutableMapOf()
 
     override fun readFile(path: String): String? = null
 
-    override fun fileExists(path: String): Boolean = true
+    override fun fileExists(path: String): Boolean = fileExistsOverrides.getOrDefault(path, true)
 
     override fun getRelativePath(
         basePath: String,
@@ -54,7 +70,7 @@ class MockFileSystem : IFileSystem {
         return try {
             val base = Paths.get(basePath)
             val file = Paths.get(filePath)
-            base.relativize(file).toString()
+            base.relativize(file).toString().replace('\\', '/')
         } catch (e: IllegalArgumentException) {
             filePath
         }

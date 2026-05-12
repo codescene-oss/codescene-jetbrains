@@ -1,5 +1,7 @@
 package com.codescene.jetbrains.core.git
 
+import com.codescene.jetbrains.core.contracts.ILogger
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -12,6 +14,8 @@ class GitChangeObserverPrePopulationTest {
     private lateinit var mockSavedFilesTracker: MockSavedFilesTracker
     private lateinit var mockOpenFilesObserver: MockOpenFilesObserver
     private lateinit var mockFileSystem: MockFileSystem
+    private lateinit var mockGitService: MockGitService
+    private lateinit var logger: ILogger
     private var deletedFiles: MutableList<String> = mutableListOf()
     private var changedFiles: MutableList<String> = mutableListOf()
 
@@ -26,6 +30,8 @@ class GitChangeObserverPrePopulationTest {
         mockSavedFilesTracker = MockSavedFilesTracker()
         mockOpenFilesObserver = MockOpenFilesObserver()
         mockFileSystem = MockFileSystem()
+        mockGitService = MockGitService()
+        logger = mockk(relaxed = true)
     }
 
     private fun createObserver(): GitChangeObserver =
@@ -34,41 +40,48 @@ class GitChangeObserverPrePopulationTest {
             savedFilesTracker = mockSavedFilesTracker,
             openFilesObserver = mockOpenFilesObserver,
             fileSystem = mockFileSystem,
+            gitService = mockGitService,
             onFileDeleted = { deletedFiles.add(it) },
             onFileChanged = { changedFiles.add(it) },
             workspacePath = workspacePath,
             gitRootPath = gitRootPath,
+            logger = logger,
         )
 
     @Test
-    fun `tracker is pre-populated on construction`() {
-        mockGitChangeLister.changedFiles = setOf("src/file1.ts", "src/file2.ts")
+    fun `tracker is pre-populated when populateTrackerFromRepoState is called`() =
+        runBlocking {
+            mockGitChangeLister.changedFiles = setOf("$workspacePath/src/file1.ts", "$workspacePath/src/file2.ts")
 
-        val observer = createObserver()
+            val observer = createObserver()
+            observer.populateTrackerFromRepoState()
 
-        val trackedFiles = observer.getTrackedFiles()
-        assertTrue(trackedFiles.contains("/workspace/src/file1.ts"))
-        assertTrue(trackedFiles.contains("/workspace/src/file2.ts"))
-        assertEquals(2, trackedFiles.size)
-    }
+            val trackedFiles = observer.getTrackedFiles()
+            assertTrue(trackedFiles.contains("/workspace/src/file1.ts"))
+            assertTrue(trackedFiles.contains("/workspace/src/file2.ts"))
+            assertEquals(2, trackedFiles.size)
+        }
 
     @Test
-    fun `pre-population converts relative paths to absolute paths`() {
-        mockGitChangeLister.changedFiles = setOf("src/file.ts")
+    fun `pre-population uses absolute paths from getAllChangedFiles`() =
+        runBlocking {
+            mockGitChangeLister.changedFiles = setOf("$workspacePath/src/file.ts")
 
-        val observer = createObserver()
+            val observer = createObserver()
+            observer.populateTrackerFromRepoState()
 
-        val trackedFiles = observer.getTrackedFiles()
-        assertTrue(trackedFiles.contains("/workspace/src/file.ts"))
-        assertFalse(trackedFiles.contains("src/file.ts"))
-    }
+            val trackedFiles = observer.getTrackedFiles()
+            assertTrue(trackedFiles.contains("/workspace/src/file.ts"))
+            assertFalse(trackedFiles.contains("src/file.ts"))
+        }
 
     @Test
     fun `pre-populated files can be deleted without prior change event`() =
         runBlocking {
-            mockGitChangeLister.changedFiles = setOf("src/file.ts")
+            mockGitChangeLister.changedFiles = setOf("$workspacePath/src/file.ts")
 
             val observer = createObserver()
+            observer.populateTrackerFromRepoState()
 
             assertTrue(observer.getTrackedFiles().contains("/workspace/src/file.ts"))
 
@@ -81,21 +94,24 @@ class GitChangeObserverPrePopulationTest {
         }
 
     @Test
-    fun `pre-population handles empty changed files list`() {
-        mockGitChangeLister.changedFiles = emptySet()
+    fun `pre-population handles empty changed files list`() =
+        runBlocking {
+            mockGitChangeLister.changedFiles = emptySet()
 
-        val observer = createObserver()
+            val observer = createObserver()
+            observer.populateTrackerFromRepoState()
 
-        assertTrue(observer.getTrackedFiles().isEmpty())
-    }
+            assertTrue(observer.getTrackedFiles().isEmpty())
+        }
 
     @Test
-    fun `delete event fires for file that was open in editor during init`() =
+    fun `delete event fires for file that was open in editor when populateTrackerFromRepoState is called`() =
         runBlocking {
-            mockGitChangeLister.changedFiles = setOf("src/open-in-editor.ts")
+            mockGitChangeLister.changedFiles = setOf("$workspacePath/src/open-in-editor.ts")
             mockOpenFilesObserver.files = setOf("/workspace/src/open-in-editor.ts")
 
             val observer = createObserver()
+            observer.populateTrackerFromRepoState()
 
             assertTrue(observer.getTrackedFiles().contains("/workspace/src/open-in-editor.ts"))
 

@@ -1,11 +1,19 @@
 package com.codescene.jetbrains.core.util
 
 import java.io.File
+import java.nio.file.Paths
+
+fun normalizeAbsolutePath(path: String): String = Paths.get(path).normalize().toString()
 
 fun getRelativePath(
     basePath: String,
     filePath: String,
 ): String = File(basePath).toPath().relativize(File(filePath).toPath()).toString()
+
+fun extractExtension(fileName: String): String? {
+    val lastIndex = fileName.lastIndexOf('.')
+    return if (lastIndex <= 0) null else fileName.substring(lastIndex + 1)
+}
 
 fun pathsAfterRename(
     parentPath: String,

@@ -2,6 +2,7 @@ package com.codescene.jetbrains.core.review
 
 import com.codescene.jetbrains.core.contracts.IBaselineReviewCacheService
 import com.codescene.jetbrains.core.contracts.ILogger
+import com.codescene.jetbrains.core.git.pathCacheKey
 
 data class BaselineReviewCacheItem(
     val fileContents: String,
@@ -31,13 +32,16 @@ open class BaselineReviewCacheService(
     override fun get(query: BaselineReviewCacheQuery): Pair<Boolean, Double?> {
         val (fileContents, filePath) = query
         val hash = hash(fileContents)
-        val entry = cache[filePath]
-        val cacheHit = cache.containsKey(filePath) && entry?.fileContents == hash
+        val cacheKey = key(filePath)
+        val entry = cache[cacheKey]
+        val cacheHit = cache.containsKey(cacheKey) && entry?.fileContents == hash
         return cacheHit to entry?.score
     }
 
     override fun put(entry: BaselineReviewCacheEntry) {
         val (fileContents, filePath, score) = entry
-        cache[filePath] = BaselineReviewCacheItem(hash(fileContents), score)
+        cache[key(filePath)] = BaselineReviewCacheItem(hash(fileContents), score)
     }
+
+    override fun key(filePath: String): String = pathCacheKey(filePath)
 }

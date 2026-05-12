@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.git
 
 import com.codescene.jetbrains.core.contracts.IFileSystem
+import com.codescene.jetbrains.core.util.normalizeAbsolutePath
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import git4idea.repo.GitRepository
@@ -63,9 +64,10 @@ object Git4IdeaTestSupport {
         fileName: String,
         extension: String,
     ) {
+        val absolutePath = normalizeAbsolutePath("$gitRoot/$fileName")
         every { mockFileSystem.getAbsolutePath(gitRoot, fileName) } returns "$gitRoot/$fileName"
-        every { mockFileSystem.fileExists("$gitRoot/$fileName") } returns true
-        every { mockFileSystem.getExtension("$gitRoot/$fileName") } returns extension
+        every { mockFileSystem.fileExists(absolutePath) } returns true
+        every { mockFileSystem.getExtension(absolutePath) } returns extension
         every { mockFileSystem.getAbsolutePath(workspace, fileName) } returns "$workspace/$fileName"
     }
 }

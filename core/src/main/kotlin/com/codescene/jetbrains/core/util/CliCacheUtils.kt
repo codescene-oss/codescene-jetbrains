@@ -6,8 +6,7 @@ fun resolveCliCacheFileName(
     filePath: String,
     repoRelativePath: String?,
 ): String {
-    val normalizedPath = repoRelativePath?.removePrefix("./")?.takeIf { it.isNotBlank() }
-    return normalizedPath?.let { "./$it" } ?: filePath
+    return filePath
 }
 
 fun resolveBaselineCliCacheFileName(

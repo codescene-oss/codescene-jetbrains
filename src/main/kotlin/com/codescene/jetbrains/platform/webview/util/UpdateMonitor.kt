@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.webview.util
 
 import com.codescene.jetbrains.core.flag.RuntimeFlags
+import com.codescene.jetbrains.core.git.pathFileName
 import com.codescene.jetbrains.core.mapper.CodeHealthMonitorMapper
 import com.codescene.jetbrains.core.models.View
 import com.codescene.jetbrains.core.review.AceRefactorableFunctionCacheQuery
@@ -15,6 +16,7 @@ import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.UpdateToolWindowIconParams
 import com.codescene.jetbrains.platform.util.updateToolWindowIcon
 import com.codescene.jetbrains.platform.webview.handler.CwfMessageHandler
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 
 /**
@@ -31,11 +33,25 @@ import com.intellij.openapi.project.Project
 private val codeHealthMonitorMapper = CodeHealthMonitorMapper()
 
 fun updateMonitor(project: Project) {
+    val queueTime = System.currentTimeMillis()
+    ApplicationManager.getApplication().invokeLater {
+        if (project.isDisposed) return@invokeLater
+        val waitTime = System.currentTimeMillis() - queueTime
+        Log.info("updateMonitor invokeLater executed after ${waitTime}ms queue delay", "UpdateMonitor")
+        updateMonitorImpl(project)
+    }
+}
+
+private fun updateMonitorImpl(project: Project) {
     Log.info("Updating monitor for project '${project.name}'...")
+    val startTime = System.currentTimeMillis()
 
     val services = CodeSceneProjectServiceProvider.getInstance(project)
     val deltaResults = PlatformDeltaCacheService.getInstance(project).getAll()
     val activeJobs = CachedReviewService.getInstance(project).activeReviewCalls.toList()
+
+    val shortNames = activeJobs.map { pathFileName(it) }
+    Log.info("Active jobs: $shortNames deltaResults=${deltaResults.size}", "UpdateMonitor")
 
     val update =
         codeHealthMonitorMapper.buildUpdate(
@@ -59,4 +75,7 @@ fun updateMonitor(project: Project) {
         ),
     )
     CwfMessageHandler.getInstance(project).postMessage(View.HOME, update.message)
+
+    val elapsedTime = System.currentTimeMillis() - startTime
+    Log.info("Completed updating monitor for project '${project.name}' in ${elapsedTime}ms", "UpdateMonitor")
 }

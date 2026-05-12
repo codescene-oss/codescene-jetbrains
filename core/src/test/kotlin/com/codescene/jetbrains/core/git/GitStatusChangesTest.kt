@@ -56,15 +56,14 @@ class GitStatusChangesTest {
                     testRepoPath.absolutePath,
                     emptySet(),
                 )
-            val fileNames = changes.toList()
 
-            assertTrue("Should detect ?? status", fileNames.contains("untracked.ts"))
-            assertTrue("Should detect A status", fileNames.contains("added.js"))
-            assertTrue("Should detect M status", fileNames.contains("to-modify.py"))
-            assertTrue("Should detect MM status", fileNames.contains("existing.ts"))
-            assertTrue("Should detect AM status", fileNames.contains("new-modified.ts"))
-            assertTrue("Should detect R status", fileNames.contains("renamed.js"))
-            assertTrue("Should detect C or A status", fileNames.contains("copied.ts"))
+            assertTrue("Should detect ?? status", changes.any { it.endsWith("untracked.ts") })
+            assertTrue("Should detect A status", changes.any { it.endsWith("added.js") })
+            assertTrue("Should detect M status", changes.any { it.endsWith("to-modify.py") })
+            assertTrue("Should detect MM status", changes.any { it.endsWith("existing.ts") })
+            assertTrue("Should detect AM status", changes.any { it.endsWith("new-modified.ts") })
+            assertTrue("Should detect R status", changes.any { it.endsWith("renamed.js") })
+            assertTrue("Should detect C or A status", changes.any { it.endsWith("copied.ts") })
         }
 
     @Test
@@ -100,15 +99,14 @@ class GitStatusChangesTest {
                     testRepoPath.absolutePath,
                     emptySet(),
                 )
-            val fileNames = changes.toList()
 
-            assertTrue("Should detect ?? with spaces", fileNames.contains("untracked file.ts"))
-            assertTrue("Should detect A with spaces", fileNames.contains("staged file.py"))
-            assertTrue("Should detect M with spaces", fileNames.contains("spaced file.ts"))
-            assertTrue("Should detect MM with spaces", fileNames.contains("staged modified.rs"))
-            assertTrue("Should detect AM with spaces", fileNames.contains("new modified file.js"))
-            assertTrue("Should detect R with spaces", fileNames.contains("new name.ts"))
-            assertTrue("Should detect C or A with spaces", fileNames.contains("copied file.ts"))
+            assertTrue("Should detect ?? with spaces", changes.any { it.endsWith("untracked file.ts") })
+            assertTrue("Should detect A with spaces", changes.any { it.endsWith("staged file.py") })
+            assertTrue("Should detect M with spaces", changes.any { it.endsWith("spaced file.ts") })
+            assertTrue("Should detect MM with spaces", changes.any { it.endsWith("staged modified.rs") })
+            assertTrue("Should detect AM with spaces", changes.any { it.endsWith("new modified file.js") })
+            assertTrue("Should detect R with spaces", changes.any { it.endsWith("new name.ts") })
+            assertTrue("Should detect C or A with spaces", changes.any { it.endsWith("copied file.ts") })
         }
 
     @Test
@@ -128,8 +126,7 @@ class GitStatusChangesTest {
                     testRepoPath.absolutePath,
                     emptySet(),
                 )
-            val fileNames = changes.toList()
-            assertFalse("Should not include deleted file", fileNames.contains("existing.ts"))
+            assertFalse("Should not include deleted file", changes.any { it.endsWith("existing.ts") })
         }
 
     @Test
@@ -141,14 +138,10 @@ class GitStatusChangesTest {
             File(testRepoPath, "outside.ts").writeText("export const outside = 1;")
 
             val changes = gitChangeLister.getAllChangedFiles(testRepoPath.absolutePath, subDir.absolutePath, emptySet())
-            val fileNames = changes.toList()
 
-            assertTrue("Should include file inside workspacePath", fileNames.contains("inside.ts"))
-            assertFalse("Should not include file outside workspacePath", fileNames.contains("outside.ts"))
-            assertFalse(
-                "Should strip workspace prefix",
-                fileNames.contains("workspace-subdir${File.separator}inside.ts"),
-            )
+            assertTrue("Should include file inside workspacePath", changes.any { it.endsWith("inside.ts") })
+            assertFalse("Should not include file outside workspacePath", changes.any { it.endsWith("outside.ts") })
+            assertTrue("All paths should be absolute", changes.all { File(it).isAbsolute })
         }
 
     @Test
@@ -165,9 +158,8 @@ class GitStatusChangesTest {
                     workspacePathWithSlash,
                     emptySet(),
                 )
-            val fileNames = changes.toList()
 
-            assertTrue("Should handle workspacePath with trailing slash", fileNames.contains("file.ts"))
+            assertTrue("Should handle workspacePath with trailing slash", changes.any { it.endsWith("file.ts") })
         }
 
     @Test
@@ -179,12 +171,11 @@ class GitStatusChangesTest {
             File(uiDir, "gc.cpp").writeText("// good gc.cpp in ui")
 
             val changes = gitChangeLister.getAllChangedFiles(testRepoPath.absolutePath, uiDir.absolutePath, emptySet())
-            val fileNames = changes.toList()
 
-            assertEquals(1, fileNames.size)
-            assertTrue("Should include gc.cpp from ui directory", fileNames.contains("gc.cpp"))
+            assertEquals(1, changes.size)
+            assertTrue("Should include gc.cpp from ui directory", changes.any { it.endsWith("gc.cpp") })
 
-            val returnedFilePath = File(uiDir, fileNames[0])
+            val returnedFilePath = File(changes.first())
             val content = returnedFilePath.readText()
             assertTrue("Should return gc.cpp from ui", content.contains("good gc.cpp in ui"))
             assertFalse("Should not return gc.cpp from root", content.contains("bad gc.cpp at root"))
@@ -205,14 +196,12 @@ class GitStatusChangesTest {
                     testRepoPath.absolutePath,
                     emptySet(),
                 )
-            val fileNames = changes.toList()
 
-            assertTrue("Should include new filename", fileNames.contains("file-renamed.ts"))
-            assertFalse("Should not include old filename", fileNames.contains("file-to-rename.ts"))
+            assertTrue("Should include new filename", changes.any { it.endsWith("file-renamed.ts") })
+            assertFalse("Should not include old filename", changes.any { it.endsWith("file-to-rename.ts") })
 
-            for (fileName in fileNames) {
-                val filePath = File(testRepoPath, fileName)
-                assertTrue("File should exist: $fileName", filePath.exists())
+            for (filePath in changes) {
+                assertTrue("File should exist: $filePath", File(filePath).exists())
             }
         }
 }

@@ -47,6 +47,18 @@ class BaselineReviewCacheServiceTest {
     }
 
     @Test
+    fun `cache matches Windows paths across separator differences`() {
+        val backslashPath = "C:\\repo\\src\\File.kt"
+        val slashPath = "C:/repo/src/File.kt"
+        cache.put(BaselineReviewCacheEntry(fileContents, backslashPath, 8.5))
+
+        val (found, score) = cache.get(BaselineReviewCacheQuery(fileContents, slashPath))
+
+        assertTrue(found)
+        assertEquals(8.5, score)
+    }
+
+    @Test
     fun `cache can store null score as hit`() {
         cache.put(BaselineReviewCacheEntry(fileContents, filePath, null))
 

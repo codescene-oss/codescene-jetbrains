@@ -6,7 +6,6 @@ import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.ace.RefactoringOptions
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.core.models.AceCwfParams
-import com.codescene.jetbrains.core.models.CurrentAceViewData
 import com.codescene.jetbrains.core.models.RefactoringRequest
 import com.codescene.jetbrains.core.models.View
 import com.codescene.jetbrains.core.models.settings.AceStatus
@@ -17,8 +16,6 @@ import com.codescene.jetbrains.core.review.AceRefactorableFunctionCacheQuery
 import com.codescene.jetbrains.core.review.resolveAceEntryPointCommand
 import com.codescene.jetbrains.core.review.resolveAceErrorViewParams
 import com.codescene.jetbrains.core.review.resolveAceStatusChange
-import com.codescene.jetbrains.core.review.resolveAceViewUpdateParams
-import com.codescene.jetbrains.core.review.resolveRefactoringRequest
 import com.codescene.jetbrains.core.util.AceEntryPoint
 import com.codescene.jetbrains.core.util.resolveCliCacheFileName
 import com.codescene.jetbrains.platform.UiLabelsBundle
@@ -28,10 +25,8 @@ import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.review.PlatformAceRefactorableFunctionsCacheService
 import com.codescene.jetbrains.platform.webview.WebViewInitializer
 import com.codescene.jetbrains.platform.webview.util.OpenAceAcknowledgementParams
-import com.codescene.jetbrains.platform.webview.util.getAceUserData
 import com.codescene.jetbrains.platform.webview.util.openAceAcknowledgeView
 import com.codescene.jetbrains.platform.webview.util.openAceWindow
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
@@ -54,6 +49,7 @@ data class RefactoringParams(
 class AceEntryOrchestrator(private val project: Project) {
     private val services get() = CodeSceneProjectServiceProvider.getInstance(project)
     private val appServices get() = CodeSceneApplicationServiceProvider.getInstance()
+    private val cwfHandler by lazy { AceCwfHandler.getInstance(project) }
 
     @Volatile private var pendingAceUpdate: AceCwfParams? = null
 
@@ -150,7 +146,12 @@ class AceEntryOrchestrator(private val project: Project) {
         val filePath = editor.virtualFile.path
         val fileName = resolveCliCacheFileName(filePath, services.gitService.getRepoRelativePath(filePath))
         val aceParams = CodeParams(editor.document.text, fileName)
-        val cacheParams = CacheParams(services.cliCacheService.getCachePath())
+        val cachePath = services.cliCacheService.getCachePath()
+        Log.info(
+            "ACE refactorable functions cachePath=$cachePath userDir=${System.getProperty("user.dir")}",
+            "AceEntryOrchestrator",
+        )
+        val cacheParams = CacheParams(cachePath)
         return AceService.getInstance().getRefactorableFunctions(aceParams, cacheParams, result, editor)
     }
 
@@ -201,110 +202,16 @@ class AceEntryOrchestrator(private val project: Project) {
         }
     }
 
-    /**
-     * Initiates refactoring for a file from CWF.
-     *
-     * This function can be called from three views: `home`, `ace`, and `aceAcknowledge`.
-     * The `ace` and `aceAcknowledge` views provide direct access to the `fnToRefactor` instance
-     * through user data (stored on the native side), while the `home` view does not.
-     *
-     * A potential improvement would be to have CWF pass this value directly to the native side,
-     * avoiding the need to look it up in the cache.
-     *
-     * This function:
-     * 1. Resolves the file from the local file system.
-     * 2. Reads the file contents under a read action.
-     * 3. Fetches the ACE refactorable functions cache for the file.
-     * 4. Finds the matching function in the cache that corresponds to the acknowledged function.
-     * 5. If found, invokes [handleAceEntryPoint] with the resolved fnToRefactor.
-     */
     fun handleRefactoringFromCwf(
         fileData: FileMetaType,
         source: AceEntryPoint,
         fnToRefactor: FnToRefactor? = null,
     ) {
-        if (fnToRefactor != null) {
-            ApplicationManager.getApplication().invokeLater {
-                val editor = getSelectedTextEditor(project, fileData.fileName)
-                val language = editor?.virtualFile?.extension
-                handleAceEntryPoint(
-                    RefactoringParams(
-                        project = project,
-                        editor = editor,
-                        request =
-                            RefactoringRequest(
-                                filePath = fileData.fileName,
-                                language = language,
-                                function = fnToRefactor,
-                                source = source,
-                            ),
-                    ),
-                )
-            }
-            return
-        }
-
-        ApplicationManager.getApplication().executeOnPooledThread {
-            val request =
-                resolveRefactoringRequest(
-                    fileData = fileData,
-                    source = source,
-                    fnToRefactor = null,
-                    fileSystem = services.fileSystem,
-                    cache = services.aceRefactorableFunctionsCache,
-                    logger = appServices.logger,
-                ) ?: return@executeOnPooledThread
-
-            val editor = getSelectedTextEditor(project, fileData.fileName)
-            val language = editor?.virtualFile?.extension
-            val requestWithLanguage = request.copy(language = language)
-
-            handleAceEntryPoint(
-                RefactoringParams(
-                    project = project,
-                    editor = editor,
-                    request = requestWithLanguage,
-                ),
-            )
-        }
+        cwfHandler.handleRefactoringFromCwf(fileData, source, fnToRefactor)
     }
 
-    /**
-     * Updates the CWF ACE view for a function if the related file has changed.
-     *
-     * Context:
-     * If the user modifies a file that contains a function to refactor currently displayed in the ACE view,
-     * this method ensures the ACE view stays consistent with the file.
-     *
-     * Behavior:
-     * 1. If the function itself still exists in the updated file:
-     *    - Update the function displayed in the ACE view to reflect the latest range and content in the editor.
-     *    - The view is considered not stale if the function body has not changed.
-     *    - If the body has not changed but the range has, the view will be refreshed with the updated range.
-     * 2. If the function has been deleted or its body has changed:
-     *    - Mark the ACE view as stale so the user knows it's out of date.
-     *
-     * Limitation:
-     * - When a file contains multiple functions with the same name (e.g. due to method overloading),
-     *   we cannot uniquely identify which function is being tracked. The current logic only compares by name,
-     *   so if ranges or bodies shift, we may incorrectly mark a function as stale or up to date.
-     */
     fun updateCurrentAceView(entry: AceRefactorableFunctionCacheEntry) {
-        val platformData = getAceUserData(project)
-        val filePath = platformData?.aceData?.fileData?.fileName ?: return
-        if (filePath != entry.filePath) return
-
-        val currentAceData =
-            CurrentAceViewData(
-                filePath = filePath,
-                functionToRefactor = platformData.functionToRefactor,
-                refactorResponse = platformData.refactorResponse,
-                clientTraceId = platformData.clientTraceId,
-                skipCache = platformData.skipCache,
-            )
-
-        val params = resolveAceViewUpdateParams(currentAceData, entry)
-        if (params != null) openAceWindow(params, project)
+        cwfHandler.updateCurrentAceView(entry)
     }
 
     fun openAceErrorView(

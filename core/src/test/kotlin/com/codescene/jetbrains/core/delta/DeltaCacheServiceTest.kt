@@ -142,4 +142,39 @@ class DeltaCacheServiceTest {
 
         assertEquals(0, deltaCacheService.getAll().size)
     }
+
+    @Test
+    fun `setIncludeInCodeHealthMonitor restores visible cache entry`() {
+        val delta = mockk<Delta>()
+        every { delta.scoreChange } returns 1.0
+        deltaCacheService.put(DeltaCacheEntry(filePath, headCommitContent, currentFileContent, delta))
+
+        deltaCacheService.setIncludeInCodeHealthMonitor(filePath, false)
+        deltaCacheService.setIncludeInCodeHealthMonitor(filePath, true)
+
+        assertEquals(1, deltaCacheService.getAll().size)
+    }
+
+    @Test
+    fun `cache operations match Windows paths across separator differences`() {
+        val delta = mockk<Delta>()
+        every { delta.scoreChange } returns 1.0
+        val backslashPath = "C:\\repo\\src\\file.kt"
+        val slashPath = "C:/repo/src/file.kt"
+        deltaCacheService.put(DeltaCacheEntry(backslashPath, headCommitContent, currentFileContent, delta))
+
+        val cachedResponse =
+            deltaCacheService.get(DeltaCacheQuery(slashPath, headCommitContent, currentFileContent))
+
+        assertEquals(true, cachedResponse.first)
+        assertEquals(delta, cachedResponse.second)
+
+        deltaCacheService.setIncludeInCodeHealthMonitor(slashPath, false)
+        assertEquals(0, deltaCacheService.getAll().size)
+
+        deltaCacheService.setIncludeInCodeHealthMonitor(slashPath, true)
+        val all = deltaCacheService.getAll()
+        assertEquals(1, all.size)
+        assertEquals(backslashPath, all[0].first)
+    }
 }

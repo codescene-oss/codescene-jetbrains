@@ -28,6 +28,7 @@ class ReviewOrchestrator(
         isCodeReview: Boolean,
         timeout: Long = 60_000,
         debounceDelayMs: Long? = null,
+        showProgress: Boolean = true,
         performAction: suspend () -> Unit,
         onScheduled: (() -> Unit)? = null,
         onFinished: (() -> Unit)? = null,
@@ -38,7 +39,11 @@ class ReviewOrchestrator(
             timeout = timeout,
             debounceDelayMs = debounceDelayMs,
             runWithProgress = { action ->
-                progressService.runWithProgress(progressMessage) { action() }
+                if (showProgress) {
+                    progressService.runWithProgress(progressMessage) { action() }
+                } else {
+                    action()
+                }
             },
             performAction = {
                 logger.info("Initiating review for file $fileName at path $filePath.", serviceName)

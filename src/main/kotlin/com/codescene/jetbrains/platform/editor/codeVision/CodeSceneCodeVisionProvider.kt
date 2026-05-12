@@ -137,7 +137,7 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
                 ),
             )
 
-        val shortPath = editor.virtualFile.path.substringAfterLast('/')
+        val shortPath = com.codescene.jetbrains.core.git.pathFileName(editor.virtualFile.path)
         Log.debug(
             "code vision file=$shortPath hasReview=${cachedReview != null} hasDelta=${cachedDelta.first} " +
                 "monitor=${settings.codeHealthMonitorEnabled} needsReview=${decision.needsReviewApiCall} " +

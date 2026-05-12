@@ -11,3 +11,7 @@ When you deem it necessary, run `make iter` which runs tests and linters related
 If a linting issue is found, you must prioritize fixing it before resuming your previous intent.
 
 This project uses the git4idea library. You can study its source at ~/intellij-community/plugins/git4idea . If that directory doesn't exist, git clone https://github.com/JetBrains/intellij-community and switch to tag idea/233.15619.7
+
+The `codescene.devtools` dependency source is in ../codescene/devtools
+
+The `codescene.extension:api` dependency source is in ../codescene-ide-protocol

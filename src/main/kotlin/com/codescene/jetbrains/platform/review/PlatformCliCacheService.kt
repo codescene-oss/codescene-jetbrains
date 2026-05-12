@@ -22,7 +22,15 @@ class PlatformCliCacheService(
         fun getInstance(project: Project): PlatformCliCacheService = project.service<PlatformCliCacheService>()
     }
 
-    fun getCachePath(): String = cacheDirectory.toString()
+    fun getCachePath(): String {
+        val path = cacheDirectory.toString()
+        val exists = Files.exists(cacheDirectory)
+        Log.info(
+            "CLI cache path=$path exists=$exists userDir=${System.getProperty("user.dir")}",
+            "PlatformCliCacheService",
+        )
+        return path
+    }
 
     private fun initializeCacheDirectory(): Path {
         val directory =

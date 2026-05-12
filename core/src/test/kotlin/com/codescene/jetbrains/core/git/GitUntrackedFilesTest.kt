@@ -42,10 +42,9 @@ class GitUntrackedFilesTest {
                     testRepoPath.absolutePath,
                     emptySet(),
                 )
-            val fileNames = changes.toList()
 
             for (i in 1..count) {
-                assertFalse("Should not include untracked$i.ts", fileNames.contains("untracked$i.ts"))
+                assertFalse("Should not include untracked$i.ts", changes.any { it.endsWith("untracked$i.ts") })
             }
         }
 
@@ -63,10 +62,9 @@ class GitUntrackedFilesTest {
                     testRepoPath.absolutePath,
                     emptySet(),
                 )
-            val fileNames = changes.toList()
 
             for (i in 1..count) {
-                assertTrue("Should include untracked$i.ts", fileNames.contains("untracked$i.ts"))
+                assertTrue("Should include untracked$i.ts", changes.any { it.endsWith("untracked$i.ts") })
             }
         }
 
@@ -87,10 +85,9 @@ class GitUntrackedFilesTest {
                     testRepoPath.absolutePath,
                     emptySet(),
                 )
-            val fileNames = changes.toList()
 
             for (i in 1..count) {
-                assertFalse("Should not include untracked-dir/file$i.ts", fileNames.any { it.contains("file$i.ts") })
+                assertFalse("Should not include untracked-dir/file$i.ts", changes.any { it.contains("file$i.ts") })
             }
         }
 
@@ -111,11 +108,9 @@ class GitUntrackedFilesTest {
                     testRepoPath.absolutePath,
                     emptySet(),
                 )
-            val fileNames = changes.toList()
 
             for (i in 1..count) {
-                val expectedPath = "untracked-dir${File.separator}file$i.ts"
-                assertTrue("Should include $expectedPath", fileNames.contains(expectedPath))
+                assertTrue("Should include file$i.ts", changes.any { it.endsWith("file$i.ts") })
             }
         }
 
@@ -142,20 +137,21 @@ class GitUntrackedFilesTest {
                     testRepoPath.absolutePath,
                     emptySet(),
                 )
-            val fileNames = changes.toList()
 
             for (i in 1..manyCount) {
                 assertFalse(
                     "Should not include many-files/file$i.ts",
-                    fileNames.any {
+                    changes.any {
                         it.contains("many-files") && it.contains("file$i.ts")
                     },
                 )
             }
 
             for (i in 1..fewCount) {
-                val expectedPath = "few-files${File.separator}file$i.ts"
-                assertTrue("Should include $expectedPath", fileNames.contains(expectedPath))
+                assertTrue(
+                    "Should include file$i.ts from few-files",
+                    changes.any { it.contains("few-files") && it.endsWith("file$i.ts") },
+                )
             }
         }
 
@@ -179,10 +175,9 @@ class GitUntrackedFilesTest {
                     testRepoPath.absolutePath,
                     emptySet(),
                 )
-            val fileNames = changes.toList()
 
             for (i in 1..count) {
-                assertTrue("Should include tracked$i.ts", fileNames.contains("tracked$i.ts"))
+                assertTrue("Should include tracked$i.ts", changes.any { it.endsWith("tracked$i.ts") })
             }
         }
 
@@ -204,14 +199,13 @@ class GitUntrackedFilesTest {
                     testRepoPath.absolutePath,
                     filesToExcludeFromHeuristic,
                 )
-            val fileNames = changes.toList()
 
-            assertTrue("Should include untracked2.ts", fileNames.contains("untracked2.ts"))
-            assertTrue("Should include untracked5.ts", fileNames.contains("untracked5.ts"))
+            assertTrue("Should include untracked2.ts", changes.any { it.endsWith("untracked2.ts") })
+            assertTrue("Should include untracked5.ts", changes.any { it.endsWith("untracked5.ts") })
 
             for (i in 1..count) {
                 if (i != 2 && i != 5) {
-                    assertFalse("Should not include untracked$i.ts", fileNames.contains("untracked$i.ts"))
+                    assertFalse("Should not include untracked$i.ts", changes.any { it.endsWith("untracked$i.ts") })
                 }
             }
         }
@@ -237,14 +231,13 @@ class GitUntrackedFilesTest {
                     testRepoPath.absolutePath,
                     filesToExcludeFromHeuristic,
                 )
-            val fileNames = changes.toList()
 
-            assertTrue("Should include file1.ts", fileNames.any { it.contains("file1.ts") })
-            assertTrue("Should include file4.ts", fileNames.any { it.contains("file4.ts") })
+            assertTrue("Should include file1.ts", changes.any { it.contains("file1.ts") })
+            assertTrue("Should include file4.ts", changes.any { it.contains("file4.ts") })
 
             for (i in 1..count) {
                 if (i != 1 && i != 4) {
-                    assertFalse("Should not include file$i.ts", fileNames.any { it.contains("file$i.ts") })
+                    assertFalse("Should not include file$i.ts", changes.any { it.contains("file$i.ts") })
                 }
             }
         }
@@ -272,14 +265,13 @@ class GitUntrackedFilesTest {
                     testRepoPath.absolutePath,
                     filesToExcludeFromHeuristic,
                 )
-            val fileNames = changes.toList()
 
-            assertTrue("Should include tracked modified file", fileNames.contains("tracked.ts"))
-            assertTrue("Should include untracked3.ts", fileNames.contains("untracked3.ts"))
+            assertTrue("Should include tracked modified file", changes.any { it.endsWith("tracked.ts") })
+            assertTrue("Should include untracked3.ts", changes.any { it.endsWith("untracked3.ts") })
 
             for (i in 1..count) {
                 if (i != 3) {
-                    assertFalse("Should not include untracked$i.ts", fileNames.contains("untracked$i.ts"))
+                    assertFalse("Should not include untracked$i.ts", changes.any { it.endsWith("untracked$i.ts") })
                 }
             }
         }

@@ -213,7 +213,7 @@ class CodeHealthMonitorMapperTest {
         val parsed = Json.decodeFromString(CwfMessage.serializer(), result)
         assertEquals("update-renderer", parsed.messageType)
         assertTrue(result.contains("\"view\": \"home\""))
-        assertTrue(result.contains("\"src/Main.kt\""))
+        assertTrue(result.contains("\"Main.kt\""))
     }
 
     @Test
@@ -229,7 +229,7 @@ class CodeHealthMonitorMapperTest {
             )
 
         assertTrue(result.message.contains("\"view\": \"home\""))
-        assertTrue(result.message.contains("\"src/Main.kt\""))
+        assertTrue(result.message.contains("\"Main.kt\""))
         assertEquals(true, result.hasNotification)
     }
 

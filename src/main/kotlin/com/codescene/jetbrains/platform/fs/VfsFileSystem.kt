@@ -20,20 +20,26 @@ class VfsFileSystem : IFileSystem {
     override fun getRelativePath(
         basePath: String,
         filePath: String,
-    ): String = coreGetRelativePath(basePath, filePath).normalizePathSeparators()
+    ): String = coreGetRelativePath(basePath, filePath).replace('\\', '/')
 
     override fun getAbsolutePath(
         parent: String,
         child: String,
     ): String {
-        val normalizedParent = parent.normalizePathSeparators().trimEnd('/')
-        val normalizedChild = child.normalizePathSeparators().trimStart('/')
+        val normalizedParent = parent.trimEnd('/', '\\')
+        val normalizedChild = child.replace('\\', '/')
         return "$normalizedParent/$normalizedChild"
     }
 
     override fun getExtension(path: String): String = File(path).extension
 
-    override fun getParent(path: String): String? = File(path).parent?.normalizePathSeparators()
+    override fun getParent(path: String): String? {
+        val normalizedPath = path.replace('\\', '/')
+        val lastSeparator = normalizedPath.lastIndexOf('/')
+        return if (lastSeparator > 0) {
+            normalizedPath.substring(0, lastSeparator)
+        } else {
+            null
+        }
+    }
 }
-
-private fun String.normalizePathSeparators(): String = replace('\\', '/')

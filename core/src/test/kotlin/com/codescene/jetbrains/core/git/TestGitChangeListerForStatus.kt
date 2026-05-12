@@ -52,8 +52,7 @@ class TestGitChangeListerForStatus(private val testRepoPath: File) : IGitChangeL
                 val location = if (dir == ".") "__root__" else dir
                 untrackedFilesByLocation.getOrPut(location) { mutableListOf() }.add(filePath)
             } else {
-                val relativeToWorkspace = convertGitPathToWorkspacePath(filePath, gitRootPath, normalizedWorkspacePath)
-                files.add(relativeToWorkspace)
+                files.add(absolutePath)
             }
         }
 
@@ -69,9 +68,7 @@ class TestGitChangeListerForStatus(private val testRepoPath: File) : IGitChangeL
                         absolutePath,
                     ).exists() && shouldReviewFile(absolutePath)
                 ) {
-                    val relativeToWorkspace =
-                        convertGitPathToWorkspacePath(filePath, gitRootPath, normalizedWorkspacePath)
-                    files.add(relativeToWorkspace)
+                    files.add(absolutePath)
                 }
             }
         }

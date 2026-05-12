@@ -28,8 +28,7 @@ class TestGitChangeListerForCommitted(private val testRepoPath: File) : IGitChan
                     workspacePrefix,
                 ) && File(absolutePath).exists() && shouldReviewFile(absolutePath)
             ) {
-                val relativeToWorkspace = convertGitPathToWorkspacePath(filePath, gitRootPath, normalizedWorkspacePath)
-                files.add(relativeToWorkspace)
+                files.add(absolutePath)
             }
         }
 

@@ -46,7 +46,7 @@ class ReviewOrchestratorTest {
         progressLatch: CountDownLatch? = null,
         apiCallLatch: CountDownLatch? = null,
     ) = ReviewOrchestrator(
-        codeReviewer = CodeReviewer(scope, defaultDebounceDelayMs = debounceDelayMs),
+        codeReviewer = CodeReviewer(scope, TestLogger, defaultDebounceDelayMs = debounceDelayMs),
         scope = scope,
         logger = TestLogger,
         telemetryService = telemetry,
