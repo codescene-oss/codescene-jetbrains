@@ -144,14 +144,6 @@ class PathBasedReviewHandler(private val project: Project) {
             return
         }
 
-        if (!plan.shouldRunDelta) {
-            Log.info(
-                "handleDeltaByPath skipDelta totalTime=${System.currentTimeMillis() - startTime}ms file=$fileName",
-                "CodeSceneCachedReview",
-            )
-            return
-        }
-
         val deltaCacheStart = System.currentTimeMillis()
         val query = DeltaCacheQuery(filePath, baselineCode, currentCode)
         val (deltaHit, _) = serviceProvider.deltaCacheService.get(query)
