@@ -25,7 +25,10 @@ import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.LocalFileSystem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
@@ -61,7 +64,7 @@ class CachedReviewService(
     override fun review(editor: Editor) {
         val filePath = editor.virtualFile.path
 
-        if (!reviewRequestQueue.requestReview(filePath) { review(editor) }) {
+        if (!reviewRequestQueue.requestReview(filePath) { replayQueuedReview(filePath) }) {
             Log.debug("Review queued file=${pathFileName(filePath)}", "CodeSceneCachedReview")
             return
         }
@@ -81,7 +84,7 @@ class CachedReviewService(
     ) {
         val filePath = editor.virtualFile.path
 
-        if (!reviewRequestQueue.requestReview(filePath) { reviewFromCodeVision(editor, debounceDelayMs) }) {
+        if (!reviewRequestQueue.requestReview(filePath) { replayQueuedReview(filePath) }) {
             Log.debug("Review queued (codeVision) file=${pathFileName(filePath)}", "CodeSceneCachedReview")
             return
         }
@@ -133,6 +136,24 @@ class CachedReviewService(
     }
 
     override fun isCodeReview(): Boolean = true
+
+    private fun replayQueuedReview(filePath: String) {
+        val fileName = pathFileName(filePath)
+        val editor = findEditorForPath(filePath)
+        if (editor != null && !editor.isDisposed) {
+            Log.info("Replaying queued review with editor file=$fileName", "CodeSceneCachedReview")
+            review(editor)
+        } else {
+            Log.info("Replaying queued review by path (no editor) file=$fileName", "CodeSceneCachedReview")
+            reviewByPath(filePath)
+        }
+    }
+
+    private fun findEditorForPath(filePath: String): Editor? {
+        val virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return null
+        return FileEditorManager.getInstance(project).getEditors(virtualFile)
+            .firstNotNullOfOrNull { (it as? TextEditor)?.editor }
+    }
 
     private fun fireQueuedRequest(filePath: String) {
         val queuedAction = reviewRequestQueue.finishReview(filePath)
