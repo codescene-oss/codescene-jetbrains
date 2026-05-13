@@ -3,10 +3,12 @@ package com.codescene.jetbrains.platform.git
 import com.codescene.jetbrains.core.contracts.IFileSystem
 import com.codescene.jetbrains.core.contracts.IGitChangeLister
 import com.codescene.jetbrains.core.git.FileSystemAdapter
+import com.codescene.jetbrains.core.git.MAIN_LINE_BRANCH_NAMES
 import com.codescene.jetbrains.core.git.MAX_UNTRACKED_FILES_PER_LOCATION
 import com.codescene.jetbrains.core.git.createWorkspacePrefix
 import com.codescene.jetbrains.core.git.pathComparisonKey
 import com.codescene.jetbrains.core.git.pathFileName
+import com.codescene.jetbrains.core.git.resolveClosestMainLineMergeBase
 import com.codescene.jetbrains.core.util.normalizeAbsolutePath
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.components.Service
@@ -18,8 +20,6 @@ import git4idea.repo.GitRepositoryManager
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
-private val MAIN_BRANCH_NAMES = listOf("main", "master", "develop", "trunk", "dev", "development")
 
 private fun hasWindowsDriveLetter(path: String): Boolean = path.drop(1).startsWith(":/")
 
@@ -253,7 +253,7 @@ class Git4IdeaChangeLister
         }
 
         private fun isMainLineBranch(branchName: String): Boolean =
-            MAIN_BRANCH_NAMES.any { it.equals(branchName, ignoreCase = true) }
+            MAIN_LINE_BRANCH_NAMES.any { it.equals(branchName, ignoreCase = true) }
 
         private fun resolveHeadCommitSha(repository: GitRepository): String? = gitExecutor.runRevParse(repository)
 
@@ -261,25 +261,22 @@ class Git4IdeaChangeLister
             repository: GitRepository,
             currentBranchName: String,
         ): String? {
-            for (mainName in MAIN_BRANCH_NAMES) {
-                val refsToTry = listOf(mainName, "origin/$mainName")
-                for (ref in refsToTry) {
-                    val mergeBase = runMergeBase(repository, currentBranchName, ref)
-                    if (!mergeBase.isNullOrBlank()) {
-                        Log.info("Found merge base for ref=$ref", "Git4IdeaChangeLister")
-                        return mergeBase.trim()
-                    }
-                }
+            val resolved =
+                resolveClosestMainLineMergeBase(
+                    isAncestor = { ancestor, descendant ->
+                        gitExecutor.runIsAncestor(repository, ancestor, descendant)
+                    },
+                    mergeBaseForRef = { ref ->
+                        gitExecutor.runMergeBase(repository, currentBranchName, ref)
+                    },
+                )
+            if (resolved != null) {
+                Log.info("Resolved closest main-line merge base", "Git4IdeaChangeLister")
+            } else {
+                Log.info("Could not find merge base with any main branch", "Git4IdeaChangeLister")
             }
-            Log.info("Could not find merge base with any main branch", "Git4IdeaChangeLister")
-            return null
+            return resolved
         }
-
-        private fun runMergeBase(
-            repository: GitRepository,
-            rev1: String,
-            rev2: String,
-        ): String? = gitExecutor.runMergeBase(repository, rev1, rev2)
 
         private fun getRepository(gitRootPath: String): GitRepository? {
             val virtualFile = LocalFileSystem.getInstance().findFileByPath(gitRootPath) ?: return null

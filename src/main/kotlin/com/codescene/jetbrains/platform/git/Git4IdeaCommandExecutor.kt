@@ -48,4 +48,16 @@ class Git4IdeaCommandExecutor(private val project: Project) : GitCommandExecutor
             null
         }
     }
+
+    override fun runIsAncestor(
+        repository: GitRepository,
+        ancestor: String,
+        descendant: String,
+    ): Boolean {
+        val handler =
+            createGitLineHandler(project, repository.root, GitCommand.MERGE_BASE).apply {
+                addParameters("--is-ancestor", ancestor, descendant)
+            }
+        return Git.getInstance().runCommand(handler).success()
+    }
 }

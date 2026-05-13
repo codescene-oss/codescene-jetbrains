@@ -15,4 +15,10 @@ interface GitCommandExecutor {
         rev1: String,
         rev2: String,
     ): String?
+
+    fun runIsAncestor(
+        repository: GitRepository,
+        ancestor: String,
+        descendant: String,
+    ): Boolean
 }
