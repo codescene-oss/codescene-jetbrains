@@ -60,4 +60,27 @@ class PathUtilsTest {
         assertEquals(File(parent, "Old.kt").path, oldPath)
         assertEquals(File(parent, "New.kt").path, newPath)
     }
+
+    @Test
+    fun `normalizeAbsolutePath converts forward slashes to platform separators`() {
+        val input = "C:/Users/test/project/src/Main.kt"
+        val result = normalizeAbsolutePath(input)
+        val sep = File.separator
+        assertEquals("C:${sep}Users${sep}test${sep}project${sep}src${sep}Main.kt", result)
+    }
+
+    @Test
+    fun `normalizeAbsolutePath preserves already normalized paths`() {
+        val input = "C:${File.separator}Users${File.separator}test${File.separator}Main.kt"
+        val result = normalizeAbsolutePath(input)
+        assertEquals(input, result)
+    }
+
+    @Test
+    fun `normalizeAbsolutePath removes redundant path segments`() {
+        val input = "C:/Users/test/../test/project/./src/Main.kt"
+        val result = normalizeAbsolutePath(input)
+        val sep = File.separator
+        assertEquals("C:${sep}Users${sep}test${sep}project${sep}src${sep}Main.kt", result)
+    }
 }

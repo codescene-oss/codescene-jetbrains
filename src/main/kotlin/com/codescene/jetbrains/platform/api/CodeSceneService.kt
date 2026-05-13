@@ -3,6 +3,7 @@ package com.codescene.jetbrains.platform.api
 import com.codescene.jetbrains.core.review.BaseService
 import com.codescene.jetbrains.core.review.CodeReviewer
 import com.codescene.jetbrains.core.review.ReviewOrchestrator
+import com.codescene.jetbrains.core.util.normalizeAbsolutePath
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.editor.Editor
@@ -30,7 +31,7 @@ abstract class CodeSceneService :
         onQueuedCallback: (() -> Unit)? = null,
         performAction: suspend () -> Unit,
     ) {
-        val filePath = editor.virtualFile.path
+        val filePath = normalizeAbsolutePath(editor.virtualFile.path)
         val fileName = editor.virtualFile.name
         val serviceName = "$serviceImplementation - ${editor.project!!.name}"
 

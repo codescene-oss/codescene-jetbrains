@@ -8,6 +8,7 @@ import com.codescene.jetbrains.core.delta.adaptDeltaResult
 import com.codescene.jetbrains.core.delta.completeDeltaAnalysis
 import com.codescene.jetbrains.core.telemetry.resolveTelemetryInfo
 import com.codescene.jetbrains.core.util.extractExtension
+import com.codescene.jetbrains.core.util.normalizeAbsolutePath
 import com.codescene.jetbrains.core.util.resolveBaselineCliCacheFileName
 import com.codescene.jetbrains.core.util.resolveCliCacheFileName
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
@@ -32,7 +33,7 @@ class CodeDeltaService(private val project: Project) : com.codescene.jetbrains.c
     }
 
     suspend fun performDeltaAnalysis(editor: Editor): DeltaAnalysisResult {
-        val path = editor.virtualFile.path
+        val path = normalizeAbsolutePath(editor.virtualFile.path)
         val fileName = editor.virtualFile.name
         val extension = editor.virtualFile.extension
         val currentCode = editor.document.text
