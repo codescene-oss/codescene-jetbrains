@@ -37,6 +37,14 @@ class AceCodeVisionProvider : CodeVisionProvider<Unit> {
         // Precomputations on the UI thread are unnecessary in this context, so this is left intentionally empty.
     }
 
+    @Deprecated("Use computeCodeVision instead")
+    override fun computeForEditor(
+        editor: Editor,
+        uiData: Unit,
+    ): List<Pair<TextRange, CodeVisionEntry>> {
+        return emptyList()
+    }
+
     override fun computeCodeVision(
         editor: Editor,
         uiData: Unit,
