@@ -22,6 +22,7 @@ class CodeReviewer(
     private val defaultDebounceDelayMs: Long = 325,
 ) {
     private val activeCalls = ConcurrentHashMap<String, ActiveReviewCall>()
+    private val pendingRequests = ConcurrentHashMap<String, () -> Unit>()
 
     fun reviewFile(
         filePath: String,
@@ -32,59 +33,83 @@ class CodeReviewer(
         onError: (FailureType, String?) -> Unit,
         onScheduled: (() -> Unit)? = null,
         onFinished: (() -> Unit)? = null,
+        onQueuedCallback: (() -> Unit)? = null,
     ) {
         val delayBeforeRun = debounceDelayMs ?: defaultDebounceDelayMs
         val callKey = pathCacheKey(filePath)
         val shortPath = pathFileName(filePath)
 
-        if (activeCalls.containsKey(callKey)) {
-            logger.warn("Job already exists file=$shortPath, should be handled by queue", LOG_TAG)
-            return
-        }
-
-        lateinit var job: Job
-        job =
-            scope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    withTimeout(timeout) {
-                        runWithProgress {
-                            delay(delayBeforeRun)
-                            performAction()
-                        }
-                    }
-                } catch (e: TimeoutCancellationException) {
-                    onError(FailureType.TIMED_OUT, e.message)
-                } catch (e: CancellationException) {
-                    onError(FailureType.CANCELLED, e.message)
-                    throw e
-                } catch (e: Exception) {
-                    onError(FailureType.FAILED, e.message)
-                } finally {
-                    val removed = activeCalls.remove(callKey, ActiveReviewCall(filePath, job))
-                    if (removed) {
-                        logger.info("Job removed file=$shortPath active=${activeCalls.size}", LOG_TAG)
-                        onFinished?.invoke()
-                    } else {
-                        logger.warn("Job removal failed (replaced?) file=$shortPath", LOG_TAG)
-                    }
+        val job: Job
+        synchronized(activeCalls) {
+            if (activeCalls.containsKey(callKey)) {
+                if (onQueuedCallback != null) {
+                    pendingRequests[callKey] = onQueuedCallback
+                    logger.info("Review queued file=$shortPath", LOG_TAG)
+                } else {
+                    logger.warn("Job already exists file=$shortPath, no callback provided", LOG_TAG)
                 }
+                return
             }
 
-        logger.info("Job added file=$shortPath active=${activeCalls.size + 1}", LOG_TAG)
-        activeCalls[callKey] = ActiveReviewCall(filePath, job)
+            job =
+                scope.launch(start = CoroutineStart.LAZY) {
+                    try {
+                        withTimeout(timeout) {
+                            runWithProgress {
+                                delay(delayBeforeRun)
+                                performAction()
+                            }
+                        }
+                    } catch (e: TimeoutCancellationException) {
+                        onError(FailureType.TIMED_OUT, e.message)
+                    } catch (e: CancellationException) {
+                        onError(FailureType.CANCELLED, e.message)
+                        throw e
+                    } catch (e: Exception) {
+                        onError(FailureType.FAILED, e.message)
+                    } finally {
+                        val pending: (() -> Unit)?
+                        synchronized(activeCalls) {
+                            activeCalls.remove(callKey)
+                            pending = pendingRequests.remove(callKey)
+                        }
+                        logger.info("Job removed file=$shortPath active=${activeCalls.size}", LOG_TAG)
+                        try {
+                            onFinished?.invoke()
+                        } catch (e: Exception) {
+                            logger.warn("onFinished callback failed file=$shortPath: ${e.message}", LOG_TAG)
+                        }
+                        try {
+                            pending?.invoke()
+                        } catch (e: Exception) {
+                            logger.warn("pending callback failed file=$shortPath: ${e.message}", LOG_TAG)
+                        }
+                    }
+                }
+
+            logger.info("Job added file=$shortPath active=${activeCalls.size + 1}", LOG_TAG)
+            activeCalls[callKey] = ActiveReviewCall(filePath, job)
+        }
         onScheduled?.invoke()
         job.start()
     }
 
     fun cancel(filePath: String): Boolean {
-        val job = activeCalls.remove(pathCacheKey(filePath)) ?: return false
-        job.job.cancel()
+        val callKey = pathCacheKey(filePath)
+        val call: ActiveReviewCall?
+        synchronized(activeCalls) {
+            call = activeCalls.remove(callKey)
+            pendingRequests.remove(callKey)
+        }
+        if (call == null) return false
+        call.job.cancel()
         return true
     }
 
     fun activeFilePaths(): Set<String> = activeCalls.values.mapTo(mutableSetOf()) { it.filePath }
 
     fun dispose() {
+        pendingRequests.clear()
         activeCalls.values.forEach { it.job.cancel() }
         activeCalls.clear()
     }

@@ -27,6 +27,7 @@ abstract class CodeSceneService :
         editor: Editor,
         timeout: Long = 300_000,
         debounceDelayMs: Long? = null,
+        onQueuedCallback: (() -> Unit)? = null,
         performAction: suspend () -> Unit,
     ) {
         val filePath = editor.virtualFile.path
@@ -43,6 +44,7 @@ abstract class CodeSceneService :
             performAction = performAction,
             onScheduled = { onReviewScheduled(filePath) },
             onFinished = { onReviewFinished(filePath) },
+            onQueuedCallback = onQueuedCallback,
         )
     }
 

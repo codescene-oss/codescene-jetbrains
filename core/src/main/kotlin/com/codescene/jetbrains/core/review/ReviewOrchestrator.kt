@@ -32,6 +32,7 @@ class ReviewOrchestrator(
         performAction: suspend () -> Unit,
         onScheduled: (() -> Unit)? = null,
         onFinished: (() -> Unit)? = null,
+        onQueuedCallback: (() -> Unit)? = null,
     ) {
         val progressMessage = resolveProgressMessage(fileName, isCodeReview)
         codeReviewer.reviewFile(
@@ -64,6 +65,7 @@ class ReviewOrchestrator(
                 onApiCallComplete(filePath)
                 onFinished?.invoke()
             },
+            onQueuedCallback = onQueuedCallback,
         )
     }
 
