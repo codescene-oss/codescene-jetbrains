@@ -52,6 +52,8 @@ private fun updateMonitorImpl(project: Project) {
 
     val shortNames = activeJobs.map { pathFileName(it) }
     Log.info("Active jobs: $shortNames deltaResults=${deltaResults.size}", "UpdateMonitor")
+    activeJobs.forEach { Log.info("activeJob path=$it", "UpdateMonitor") }
+    deltaResults.forEach { (path, _) -> Log.info("deltaResult path=$path", "UpdateMonitor") }
 
     val update =
         codeHealthMonitorMapper.buildUpdate(

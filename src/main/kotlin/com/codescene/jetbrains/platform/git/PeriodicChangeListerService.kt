@@ -80,7 +80,10 @@ class PeriodicChangeListerService(
         Log.info("Poll found ${changedFiles.size} changed files", "PeriodicChangeListerService")
 
         for (filePath in changedFiles) {
-            Log.info("Triggering review for: ${pathFileName(filePath)}", "PeriodicChangeListerService")
+            Log.info(
+                "Triggering review for: ${pathFileName(filePath)} fullPath=$filePath",
+                "PeriodicChangeListerService",
+            )
             CachedReviewService.getInstance(project).reviewByPath(filePath)
         }
     }

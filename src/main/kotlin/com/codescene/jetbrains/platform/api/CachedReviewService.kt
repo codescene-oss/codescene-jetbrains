@@ -13,6 +13,7 @@ import com.codescene.jetbrains.core.review.ReviewOrchestrator
 import com.codescene.jetbrains.core.review.resolveDeltaExecutionPlan
 import com.codescene.jetbrains.core.review.shouldCheckRefactorableFunctions
 import com.codescene.jetbrains.core.review.shouldRefreshAfterReviewFlow
+import com.codescene.jetbrains.core.util.normalizeAbsolutePath
 import com.codescene.jetbrains.core.util.resolveCliCacheFileName
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
@@ -61,6 +62,7 @@ class CachedReviewService(
 
     override fun review(editor: Editor) {
         val filePath = editor.virtualFile.path
+        Log.info("review(editor) entryPath=$filePath", "CachedReviewService")
         reviewFile(
             editor,
             onQueuedCallback = { replayQueuedReview(filePath) },
@@ -84,6 +86,7 @@ class CachedReviewService(
     }
 
     fun reviewByPath(filePath: String) {
+        Log.info("reviewByPath entryPath=$filePath", "CachedReviewService")
         val fileName = pathFileName(filePath)
         reviewOrchestrator.reviewFile(
             filePath = filePath,
@@ -175,7 +178,8 @@ class CachedReviewService(
         currentScore: Double?,
         reviewMiss: Boolean,
     ): DeltaHandlingResult {
-        val path = editor.virtualFile.path
+        val path = normalizeAbsolutePath(editor.virtualFile.path)
+        Log.info("handleDelta editorPath=$path", "CachedReviewService")
         val baselineCode = serviceProvider.gitService.getBranchCreationCommitCode(path)
         val baselineScore = getBaselineScore(path, fileName, baselineCode)
         val plan = resolveDeltaExecutionPlan(baselineCode, currentCode, currentScore, baselineScore)

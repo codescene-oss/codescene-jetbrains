@@ -62,6 +62,14 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
         handleLensClick(editor, smell)
     }
 
+    @Deprecated("Use computeCodeVision instead")
+    override fun computeForEditor(
+        editor: Editor,
+        uiData: Unit,
+    ): List<Pair<TextRange, CodeVisionEntry>> {
+        return emptyList()
+    }
+
     override fun computeCodeVision(
         editor: Editor,
         uiData: Unit,

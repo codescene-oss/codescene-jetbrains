@@ -37,6 +37,7 @@ class PlatformDeltaCacheService(
     }
 
     override fun put(entry: DeltaCacheEntry) {
+        Log.info("deltaCachePut entryPath=${entry.filePath}", "PlatformDeltaCacheService")
         val path = pathCacheKey(entry.filePath)
         val previous = cache[path]
         val wasVisible = previous?.visibleInCodeHealthMonitor() == true
