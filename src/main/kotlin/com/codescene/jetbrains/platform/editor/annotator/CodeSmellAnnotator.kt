@@ -12,7 +12,7 @@ import com.codescene.jetbrains.platform.editor.intentions.AceRefactorAction
 import com.codescene.jetbrains.platform.editor.intentions.ShowProblemIntentionAction
 import com.codescene.jetbrains.platform.util.AceEntryOrchestrator
 import com.codescene.jetbrains.platform.util.Log
-import com.codescene.jetbrains.platform.util.getTextRange
+import com.codescene.jetbrains.platform.util.getTextRangeOrNull
 import com.codescene.jetbrains.platform.util.isFileSupported
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.lang.annotation.AnnotationHolder
@@ -113,7 +113,11 @@ class CodeSmellAnnotator : ExternalAnnotator<
         refactorableFunctions: List<FnToRefactor> = emptyList(),
     ) {
         val settings = serviceProvider.settingsProvider.currentState()
-        val range = getTextRange(codeSmell.highlightRange.startLine to codeSmell.highlightRange.endLine, document)
+        val range =
+            getTextRangeOrNull(
+                codeSmell.highlightRange.startLine to codeSmell.highlightRange.endLine,
+                document,
+            ) ?: return
         val message = formatCodeSmellMessage(codeSmell.category, codeSmell.details)
 
         Log.debug("Creating annotation for code smell '${codeSmell.category}' at range: $range")
