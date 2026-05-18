@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.util
 
 import com.codescene.jetbrains.core.util.isFileSupportedForAnalysis
+import com.codescene.jetbrains.core.util.isSupportedLanguage
 import com.codescene.jetbrains.core.util.linePairToOffsets
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.intellij.openapi.application.runReadAction
@@ -8,7 +9,9 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
+import java.io.File
 
 fun isFileSupported(
     project: Project,
@@ -33,6 +36,21 @@ fun isFileSupported(
         inProjectContent = isInProject,
         ignoredByGitignore = ignoredByGitignore,
     )
+}
+
+fun isPathSupportedForReview(
+    project: Project,
+    filePath: String,
+): Boolean {
+    val virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath)
+    if (virtualFile != null) {
+        return isFileSupported(project, virtualFile)
+    }
+    val extension = File(filePath).extension
+    if (extension.isEmpty() || !isSupportedLanguage(extension)) {
+        return false
+    }
+    return !CodeSceneProjectServiceProvider.getInstance(project).gitService.isIgnored(filePath)
 }
 
 fun getTextRange(

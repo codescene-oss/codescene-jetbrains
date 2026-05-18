@@ -21,6 +21,8 @@ import com.codescene.jetbrains.platform.editor.UIRefreshService
 import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.platform.util.AceEntryOrchestrator
 import com.codescene.jetbrains.platform.util.Log
+import com.codescene.jetbrains.platform.util.isFileSupported
+import com.codescene.jetbrains.platform.util.isPathSupportedForReview
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -61,6 +63,9 @@ class CachedReviewService(
     }
 
     override fun review(editor: Editor) {
+        if (!isFileSupported(project, editor.virtualFile)) {
+            return
+        }
         val filePath = editor.virtualFile.path
         Log.info("review(editor) entryPath=$filePath", "CachedReviewService")
         reviewFile(
@@ -75,6 +80,9 @@ class CachedReviewService(
         editor: Editor,
         debounceDelayMs: Long?,
     ) {
+        if (!isFileSupported(project, editor.virtualFile)) {
+            return
+        }
         val filePath = editor.virtualFile.path
         reviewFile(
             editor,
@@ -86,6 +94,9 @@ class CachedReviewService(
     }
 
     fun reviewByPath(filePath: String) {
+        if (!isPathSupportedForReview(project, filePath)) {
+            return
+        }
         Log.info("reviewByPath entryPath=$filePath", "CachedReviewService")
         val fileName = pathFileName(filePath)
         reviewOrchestrator.reviewFile(
