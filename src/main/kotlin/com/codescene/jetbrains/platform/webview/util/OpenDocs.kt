@@ -21,6 +21,7 @@ import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.getSelectedTextEditor
 import com.codescene.jetbrains.platform.webview.WebViewInitializer
 import com.codescene.jetbrains.platform.webview.handler.CwfMessageHandler
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
@@ -87,8 +88,13 @@ internal fun resolveFnToRefactorForDocumentation(
         preferredDocumentText
             ?: run {
                 val virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath)
-                val document = virtualFile?.let { FileDocumentManager.getInstance().getDocument(it) }
-                document?.text
+                val fromDocument =
+                    virtualFile?.let { vf ->
+                        runReadAction<String?> {
+                            FileDocumentManager.getInstance().getDocument(vf)?.text
+                        }
+                    }
+                fromDocument
                     ?: runCatching { services.fileSystem.readFile(filePath) }
                         .getOrElse { t ->
                             val kind = t.javaClass.simpleName
