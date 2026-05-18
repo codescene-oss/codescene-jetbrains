@@ -49,21 +49,33 @@ class TestGitChangeListerForCommitted(private val testRepoPath: File) : IGitChan
     private fun getMergeBase(gitRootPath: String): String? {
         val currentBranch = exec("git", "rev-parse", "--abbrev-ref", "HEAD").trim()
 
-        val mainBranchNames = listOf("main", "master", "develop", "trunk", "dev", "development")
-        if (mainBranchNames.any { it.equals(currentBranch, ignoreCase = true) }) {
+        if (MAIN_LINE_BRANCH_NAMES.any { it.equals(currentBranch, ignoreCase = true) }) {
             return exec("git", "rev-parse", "HEAD").trim()
         }
 
-        for (mainName in mainBranchNames) {
-            val refsToTry = listOf(mainName, "origin/$mainName")
-            for (ref in refsToTry) {
-                val output = exec("git", "merge-base", currentBranch, ref).trim()
-                if (output.isNotEmpty() && !output.startsWith("fatal")) {
-                    return output
-                }
-            }
-        }
+        return resolveClosestMainLineMergeBase(
+            isAncestor = { ancestor, descendant -> gitIsAncestor(ancestor, descendant) },
+            mergeBaseForRef = { ref -> gitMergeBaseWithRef(currentBranch, ref) },
+        )
+    }
 
-        return null
+    private fun gitMergeBaseWithRef(
+        currentBranch: String,
+        ref: String,
+    ): String? {
+        val output = exec("git", "merge-base", currentBranch, ref).trim()
+        return if (output.isNotEmpty() && !output.startsWith("fatal")) output else null
+    }
+
+    private fun gitIsAncestor(
+        ancestor: String,
+        descendant: String,
+    ): Boolean {
+        val process =
+            ProcessBuilder("git", "merge-base", "--is-ancestor", ancestor, descendant)
+                .directory(testRepoPath)
+                .redirectErrorStream(true)
+                .start()
+        return process.waitFor() == 0
     }
 }

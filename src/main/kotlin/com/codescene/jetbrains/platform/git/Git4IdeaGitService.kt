@@ -1,6 +1,8 @@
 package com.codescene.jetbrains.platform.git
 
 import com.codescene.jetbrains.core.contracts.IGitService
+import com.codescene.jetbrains.core.git.MAIN_LINE_BRANCH_NAMES
+import com.codescene.jetbrains.core.git.resolveClosestMainLineMergeBase
 import com.codescene.jetbrains.core.util.parseBranchCreationCommitFromReflog
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.dvcs.repo.Repository
@@ -18,6 +20,7 @@ import git4idea.repo.GitRepositoryManager
 @Service(Service.Level.PROJECT)
 class Git4IdeaGitService(val project: Project) : IGitService {
     private val service = "${this::class.java.simpleName} - ${project.name}"
+    private val gitCommandExecutor = Git4IdeaCommandExecutor(project)
 
     private data class RepositoryContext(
         val file: VirtualFile,
@@ -27,15 +30,12 @@ class Git4IdeaGitService(val project: Project) : IGitService {
 
     companion object {
         fun getInstance(project: Project): Git4IdeaGitService = project.service<Git4IdeaGitService>()
-
-        private val MAIN_BRANCH_NAMES =
-            listOf("main", "master", "develop", "trunk", "dev", "development")
     }
 
     /**
      * Resolves baseline file content for delta analysis, aligned with VS / VS Code:
      * - On a main-line branch (main, master, develop, trunk, dev): **HEAD** commit.
-     * - On a feature branch: **merge-base** with the first resolvable main-line ref (local name, then `origin/<name>`).
+     * - On a feature branch: **closest merge-base** among all resolvable main-line refs (same probe order as VS Code).
      * - Fallback: branch-creation commit from the current branch’s reflog (same as the previous JetBrains-only behavior).
      */
     override fun getBranchCreationCommitCode(filePath: String): String {
@@ -94,7 +94,7 @@ class Git4IdeaGitService(val project: Project) : IGitService {
     private fun getBaselineCommitSha(gitRepository: GitRepository): String? {
         val branchName = gitRepository.currentBranchName ?: return null
 
-        if (MAIN_BRANCH_NAMES.any { it.equals(branchName, ignoreCase = true) }) {
+        if (MAIN_LINE_BRANCH_NAMES.any { it.equals(branchName, ignoreCase = true) }) {
             return resolveHeadCommitSha(gitRepository)
         }
 
@@ -122,30 +122,14 @@ class Git4IdeaGitService(val project: Project) : IGitService {
 
     private fun findMergeBaseWithMain(gitRepository: GitRepository): String? {
         val currentBranchName = gitRepository.currentBranchName ?: return null
-        for (mainName in MAIN_BRANCH_NAMES) {
-            val refsToTry =
-                listOf(
-                    mainName,
-                    "origin/$mainName",
-                )
-            for (ref in refsToTry) {
-                val handler =
-                    createGitLineHandler(project, gitRepository.root, GitCommand.MERGE_BASE).apply {
-                        addParameters(currentBranchName, ref)
-                    }
-                val result = Git.getInstance().runCommand(handler)
-                val mergeBase =
-                    if (result.success()) {
-                        result.output.firstOrNull()?.trim()?.takeIf { it.isNotEmpty() }
-                    } else {
-                        null
-                    }
-                if (!mergeBase.isNullOrBlank()) {
-                    return mergeBase.trim()
-                }
-            }
-        }
-        return null
+        return resolveClosestMainLineMergeBase(
+            isAncestor = { ancestor, descendant ->
+                gitCommandExecutor.runIsAncestor(gitRepository, ancestor, descendant)
+            },
+            mergeBaseForRef = { ref ->
+                gitCommandExecutor.runMergeBase(gitRepository, currentBranchName, ref)
+            },
+        )
     }
 
     private fun getBranchCreationCommitFromReflog(gitRepository: GitRepository): String? =
