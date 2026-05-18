@@ -39,10 +39,22 @@ fun getTextRange(
     range: Pair<Int, Int>,
     document: Document,
 ): TextRange {
+    return getTextRangeOrNull(range, document)!!
+}
+
+fun getTextRangeOrNull(
+    range: Pair<Int, Int>,
+    document: Document,
+): TextRange? {
+    val (startLine, endLine) = range
+    if (startLine < 1 || endLine < startLine || endLine > document.lineCount) {
+        return null
+    }
+
     val (start, end) =
         linePairToOffsets(
-            range.first,
-            range.second,
+            startLine,
+            endLine,
             document::getLineStartOffset,
             document::getLineEndOffset,
         )

@@ -10,7 +10,7 @@ import com.codescene.jetbrains.platform.icons.CodeSceneIcons.CODESCENE_ACE
 import com.codescene.jetbrains.platform.util.AceEntryOrchestrator
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.RefactoringParams
-import com.codescene.jetbrains.platform.util.getTextRange
+import com.codescene.jetbrains.platform.util.getTextRangeOrNull
 import com.intellij.codeInsight.codeVision.CodeVisionAnchorKind
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.CodeVisionProvider
@@ -78,7 +78,7 @@ class AceCodeVisionProvider : CodeVisionProvider<Unit> {
 
         return lensData.mapNotNull { data ->
             val function = functionsMap[data.functionName] ?: return@mapNotNull null
-            val range = getTextRange(data.startLine to data.endLine, editor.document)
+            val range = getTextRangeOrNull(data.startLine to data.endLine, editor.document) ?: return@mapNotNull null
             val entry =
                 ClickableTextCodeVisionEntry(
                     text = name,
