@@ -9,14 +9,16 @@ import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.LocalFileSystem
-import git4idea.repo.GitRepositoryManager
+import kotlinx.coroutines.launch
 
 /**
  * Event-driven git change observer that reacts to VFS file events.
@@ -135,37 +137,17 @@ class GitChangeObserverService(
                     updateMonitor(project)
                 }
             },
-            onFileChanged = { filePath ->
-                val fileName = pathFileName(filePath)
-                ApplicationManager.getApplication().invokeLater {
-                    if (project.isDisposed) return@invokeLater
-                    val editor = getEditorForFile(filePath)
-                    if (editor != null) {
-                        Log.info("File change (editor) path=$fileName", "GitChangeObserverService")
-                        CachedReviewService.getInstance(project).review(editor)
-                    } else {
-                        Log.info("File change (reviewByPath) path=$fileName", "GitChangeObserverService")
-                        CachedReviewService.getInstance(project).reviewByPath(filePath)
-                    }
-                }
-            },
+            onFileChanged = { filePath -> scheduleGitChangeReview(project, filePath) },
             workspacePath = workspacePath,
             gitRootPath = gitRootPath,
         )
 
     private fun resolveGitRootPath(workspacePath: String): String? {
         val virtualFile = LocalFileSystem.getInstance().findFileByPath(workspacePath) ?: return null
-        val repository = GitRepositoryManager.getInstance(project).getRepositoryForFile(virtualFile)
+        val repository = Git4IdeaGitService.getInstance(project).resolveRepository(virtualFile)
         val gitRoot = repository?.root?.path ?: workspacePath
         Log.info("Resolved git root", "GitChangeObserverService")
         return gitRoot
-    }
-
-    private fun getEditorForFile(filePath: String): com.intellij.openapi.editor.Editor? {
-        val file = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return null
-        return FileEditorManager.getInstance(project).getEditors(file).firstNotNullOfOrNull { fe ->
-            (fe as? TextEditor)?.editor
-        }
     }
 
     override fun dispose() {
@@ -174,5 +156,37 @@ class GitChangeObserverService(
         vfsEventBridge = null
         repoStateListener = null
         observer = null
+    }
+}
+
+internal fun scheduleGitChangeReview(
+    project: Project,
+    filePath: String,
+) {
+    val fileName = pathFileName(filePath)
+    val reviewService = CachedReviewService.getInstance(project)
+    reviewService.scope.launch {
+        if (project.isDisposed) return@launch
+        val editor =
+            ReadAction.compute<Editor?, RuntimeException> {
+                getEditorForFile(project, filePath)
+            }
+        if (editor != null) {
+            Log.info("File change (editor) path=$fileName", "GitChangeObserverService")
+            reviewService.review(editor)
+        } else {
+            Log.info("File change (reviewByPath) path=$fileName", "GitChangeObserverService")
+            reviewService.reviewByPath(filePath)
+        }
+    }
+}
+
+private fun getEditorForFile(
+    project: Project,
+    filePath: String,
+): Editor? {
+    val file = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return null
+    return FileEditorManager.getInstance(project).getEditors(file).firstNotNullOfOrNull { fe ->
+        (fe as? TextEditor)?.editor
     }
 }
