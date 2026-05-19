@@ -6,9 +6,11 @@ import com.codescene.jetbrains.core.git.resolveClosestMainLineMergeBase
 import com.codescene.jetbrains.core.util.parseBranchCreationCommitFromReflog
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.dvcs.repo.Repository
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vcs.ProjectLevelVcsManager
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.vcsUtil.VcsUtil
@@ -153,9 +155,22 @@ class Git4IdeaGitService(val project: Project) : IGitService {
         }
     }
 
+    internal fun resolveRepository(file: VirtualFile): GitRepository? {
+        val manager = GitRepositoryManager.getInstance(project)
+        if (!ApplicationManager.getApplication().isDispatchThread) {
+            return manager.getRepositoryForFile(file)
+        }
+        val vcsRoot = ProjectLevelVcsManager.getInstance(project).getVcsRootFor(file) ?: return null
+        return manager.getRepositoryForRootQuick(vcsRoot)
+            ?: manager.repositories.firstOrNull { repo ->
+                val rootPath = repo.root.path
+                file.path == rootPath || file.path.startsWith("$rootPath/")
+            }
+    }
+
     private fun getRepositoryContext(file: VirtualFile): RepositoryContext? {
         val repository =
-            GitRepositoryManager.getInstance(project).getRepositoryForFile(file) ?: run {
+            resolveRepository(file) ?: run {
                 Log.debug("File ${file.path} is not part of a Git repository.", service)
                 return null
             }

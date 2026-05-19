@@ -47,6 +47,10 @@
                 {
                     "name": "Global Conditionals",
                     "weight": 0.0
+                },
+                {
+                    "name": "String Heavy Function Arguments",
+                    "weight": 0.0
                 }
             ],
             "thresholds": [
