@@ -20,6 +20,7 @@ import com.codescene.jetbrains.core.util.resolveAceCandidatesForMonitor
 import com.codescene.jetbrains.core.util.resolveCliCacheFileName
 import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.api.AceService
+import com.codescene.jetbrains.platform.api.RefactorableFunctionsSource
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.review.PlatformAceRefactorableFunctionsCacheService
@@ -154,7 +155,14 @@ class AceEntryOrchestrator(private val project: Project) {
             "AceEntryOrchestrator",
         )
         val cacheParams = CacheParams(cachePath)
-        return AceService.getInstance().getRefactorableFunctions(aceParams, cacheParams, result, editor)
+        return AceService.getInstance().getRefactorableFunctions(
+            project = editor.project!!,
+            filePath = filePath,
+            currentCode = editor.document.text,
+            params = aceParams,
+            cacheParams = cacheParams,
+            source = RefactorableFunctionsSource.FromReview(result),
+        )
     }
 
     fun handleRefactoringResult(

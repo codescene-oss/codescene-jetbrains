@@ -27,12 +27,46 @@ import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
-import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.withContext
+
+internal sealed class RefactorableFunctionsSource {
+    abstract fun analysisLabel(): String
+
+    abstract fun fetch(
+        params: CodeParams,
+        cacheParams: CacheParams,
+    ): List<com.codescene.data.ace.FnToRefactor>
+
+    data class FromReview(
+        val review: Review,
+    ) : RefactorableFunctionsSource() {
+        private val codeSmells by lazy {
+            review.fileLevelCodeSmells + review.functionLevelCodeSmells.flatMap { it.codeSmells }
+        }
+
+        override fun analysisLabel(): String = "review with $codeSmells"
+
+        override fun fetch(
+            params: CodeParams,
+            cacheParams: CacheParams,
+        ): List<com.codescene.data.ace.FnToRefactor> = ExtensionAPI.fnToRefactor(params, cacheParams, codeSmells)
+    }
+
+    data class FromDelta(
+        val delta: Delta,
+    ) : RefactorableFunctionsSource() {
+        override fun analysisLabel(): String = "delta"
+
+        override fun fetch(
+            params: CodeParams,
+            cacheParams: CacheParams,
+        ): List<com.codescene.data.ace.FnToRefactor> = ExtensionAPI.fnToRefactor(params, cacheParams, delta)
+    }
+}
 
 @Service
 class AceService :
@@ -57,73 +91,25 @@ class AceService :
         preflightOrchestrator.runPreflight(force = force)
 
     /**
-     * Retrieves refactorable functions based on the full Review result.
+     * Retrieves refactorable functions from a [RefactorableFunctionsSource].
      *
-     * The Review result provides all refactorable functions in a file. This is a more comprehensive analysis
-     * compared to the *Delta review*.
+     * Use [RefactorableFunctionsSource.FromReview] for full review results (more comprehensive than delta).
+     * Use [RefactorableFunctionsSource.FromDelta] for delta-based analysis.
      */
-    suspend fun getRefactorableFunctions(
-        params: CodeParams,
-        cacheParams: CacheParams,
-        review: Review,
-        editor: Editor,
-    ): Boolean =
-        getRefactorableFunctions(
-            project = editor.project!!,
-            filePath = editor.virtualFile.path,
-            currentCode = editor.document.text,
-            params = params,
-            cacheParams = cacheParams,
-            review = review,
-        )
-
-    suspend fun getRefactorableFunctions(
+    internal suspend fun getRefactorableFunctions(
         project: Project,
         filePath: String,
         currentCode: String,
         params: CodeParams,
         cacheParams: CacheParams,
-        review: Review,
+        source: RefactorableFunctionsSource,
     ): Boolean {
-        val codeSmells = review.fileLevelCodeSmells + review.functionLevelCodeSmells.flatMap { it.codeSmells }
         Log.debug(
-            "Getting refactorable functions for $filePath based on review with $codeSmells...",
+            "Getting refactorable functions for $filePath based on ${source.analysisLabel()}...",
             serviceImplementation,
         )
         return refactorableFunctionsHandler(project, filePath, currentCode) {
-            ExtensionAPI.fnToRefactor(params, cacheParams, codeSmells)
-        }
-    }
-
-    suspend fun getRefactorableFunctions(
-        params: CodeParams,
-        cacheParams: CacheParams,
-        delta: Delta,
-        editor: Editor,
-    ): Boolean =
-        getRefactorableFunctions(
-            project = editor.project!!,
-            filePath = editor.virtualFile.path,
-            currentCode = editor.document.text,
-            params = params,
-            cacheParams = cacheParams,
-            delta = delta,
-        )
-
-    suspend fun getRefactorableFunctions(
-        project: Project,
-        filePath: String,
-        currentCode: String,
-        params: CodeParams,
-        cacheParams: CacheParams,
-        delta: Delta,
-    ): Boolean {
-        Log.debug(
-            "Getting refactorable functions for $filePath based on delta...",
-            serviceImplementation,
-        )
-        return refactorableFunctionsHandler(project, filePath, currentCode) {
-            ExtensionAPI.fnToRefactor(params, cacheParams, delta)
+            source.fetch(params, cacheParams)
         }
     }
 

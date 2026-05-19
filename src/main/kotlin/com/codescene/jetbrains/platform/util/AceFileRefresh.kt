@@ -9,6 +9,7 @@ import com.codescene.jetbrains.core.util.extractExtension
 import com.codescene.jetbrains.core.util.normalizeAbsolutePath
 import com.codescene.jetbrains.core.util.resolveCliCacheFileName
 import com.codescene.jetbrains.platform.api.AceService
+import com.codescene.jetbrains.platform.api.RefactorableFunctionsSource
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.intellij.openapi.project.Project
@@ -37,7 +38,7 @@ suspend fun refreshAceFromReview(
         currentCode,
         params,
         cacheParams,
-        review,
+        RefactorableFunctionsSource.FromReview(review),
     )
 }
 
@@ -65,6 +66,6 @@ suspend fun refreshAceFromDelta(
         currentCode,
         params,
         cacheParams,
-        delta,
+        RefactorableFunctionsSource.FromDelta(delta),
     )
 }
