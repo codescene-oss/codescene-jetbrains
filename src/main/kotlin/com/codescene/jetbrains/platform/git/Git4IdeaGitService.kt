@@ -162,11 +162,19 @@ class Git4IdeaGitService(val project: Project) : IGitService {
         }
         val vcsRoot = ProjectLevelVcsManager.getInstance(project).getVcsRootFor(file) ?: return null
         return manager.getRepositoryForRootQuick(vcsRoot)
-            ?: manager.repositories.firstOrNull { repo ->
-                val rootPath = repo.root.path
-                file.path == rootPath || file.path.startsWith("$rootPath/")
-            }
+            ?: findDeepestMatchingRepository(manager.repositories, file.path)
     }
+
+    private fun findDeepestMatchingRepository(
+        repositories: Collection<GitRepository>,
+        filePath: String,
+    ): GitRepository? =
+        repositories
+            .filter { repo ->
+                val rootPath = repo.root.path
+                filePath == rootPath || filePath.startsWith("$rootPath/")
+            }
+            .maxByOrNull { it.root.path.length }
 
     private fun getRepositoryContext(file: VirtualFile): RepositoryContext? {
         val repository =
