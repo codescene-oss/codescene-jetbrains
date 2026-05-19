@@ -67,15 +67,15 @@ class AceService :
         cacheParams: CacheParams,
         review: Review,
         editor: Editor,
-    ): Boolean {
-        val codeSmells = review.fileLevelCodeSmells + review.functionLevelCodeSmells.flatMap { it.codeSmells }
-        Log.debug(
-            "Getting refactorable functions for ${editor.virtualFile.path} based on review with $codeSmells...",
-            serviceImplementation,
+    ): Boolean =
+        getRefactorableFunctions(
+            project = editor.project!!,
+            filePath = editor.virtualFile.path,
+            currentCode = editor.document.text,
+            params = params,
+            cacheParams = cacheParams,
+            review = review,
         )
-
-        return refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, cacheParams, codeSmells) }
-    }
 
     suspend fun getRefactorableFunctions(
         project: Project,
@@ -100,13 +100,15 @@ class AceService :
         cacheParams: CacheParams,
         delta: Delta,
         editor: Editor,
-    ): Boolean {
-        Log.debug(
-            "Getting refactorable functions for ${editor.virtualFile.path} based on delta...",
-            serviceImplementation,
+    ): Boolean =
+        getRefactorableFunctions(
+            project = editor.project!!,
+            filePath = editor.virtualFile.path,
+            currentCode = editor.document.text,
+            params = params,
+            cacheParams = cacheParams,
+            delta = delta,
         )
-        return refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, cacheParams, delta) }
-    }
 
     suspend fun getRefactorableFunctions(
         project: Project,
@@ -156,17 +158,6 @@ class AceService :
     fun cancelActiveRefactor() {
         refactorLaunchCoordinator.cancelActiveRefactor()
     }
-
-    private suspend fun refactorableFunctionsHandler(
-        editor: Editor,
-        getFunctions: () -> List<com.codescene.data.ace.FnToRefactor>,
-    ): Boolean =
-        refactorableFunctionsHandler(
-            project = editor.project!!,
-            filePath = editor.virtualFile.path,
-            content = editor.document.text,
-            getFunctions = getFunctions,
-        )
 
     private suspend fun refactorableFunctionsHandler(
         project: Project,
