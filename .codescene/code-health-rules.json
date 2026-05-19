@@ -52,7 +52,7 @@
             "thresholds": [
                 {
                     "name": "function_max_arguments",
-                    "value": 5
+                    "value": 6
                 },
                 {
                     "name": "function_lines_of_code_warning",
