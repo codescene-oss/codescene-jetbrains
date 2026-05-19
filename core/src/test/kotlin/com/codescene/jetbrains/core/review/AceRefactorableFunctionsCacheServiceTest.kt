@@ -129,4 +129,11 @@ class AceRefactorableFunctionsCacheServiceTest {
         val result = cache.get(query)
         assertEquals(1, result.size)
     }
+
+    @Test
+    fun `put and get normalize file path with pathCacheKey`() {
+        cache.put("C:\\repo\\file.kt", "content", listOf(createFn("fn1")))
+        assertEquals(1, cache.get("c:/repo/file.kt", "content").size)
+        assertEquals(1, cache.getLastKnown("C:\\repo\\file.kt").size)
+    }
 }

@@ -12,14 +12,15 @@ import com.codescene.jetbrains.core.models.settings.AceStatus
 import com.codescene.jetbrains.core.models.shared.FileMetaType
 import com.codescene.jetbrains.core.review.AceEntryCommand
 import com.codescene.jetbrains.core.review.AceRefactorableFunctionCacheEntry
-import com.codescene.jetbrains.core.review.AceRefactorableFunctionCacheQuery
 import com.codescene.jetbrains.core.review.resolveAceEntryPointCommand
 import com.codescene.jetbrains.core.review.resolveAceErrorViewParams
 import com.codescene.jetbrains.core.review.resolveAceStatusChange
 import com.codescene.jetbrains.core.util.AceEntryPoint
+import com.codescene.jetbrains.core.util.resolveAceCandidatesForMonitor
 import com.codescene.jetbrains.core.util.resolveCliCacheFileName
 import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.api.AceService
+import com.codescene.jetbrains.platform.api.RefactorableFunctionsSource
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.review.PlatformAceRefactorableFunctionsCacheService
@@ -121,11 +122,13 @@ class AceEntryOrchestrator(private val project: Project) {
         content: String,
     ): List<FnToRefactor> {
         val cacheService = PlatformAceRefactorableFunctionsCacheService.getInstance(project)
-        val fresh = cacheService.get(AceRefactorableFunctionCacheQuery(path, content))
-        if (fresh.isNotEmpty()) return fresh
-        val stale = cacheService.getLastKnown(path)
-        Log.debug("ACE refactorable functions cache ${if (stale.isEmpty()) "miss" else "stale"} for $path.")
-        return stale
+        val candidates = resolveAceCandidatesForMonitor(cacheService, path, content)
+        if (candidates.isNotEmpty() &&
+            cacheService.get(path, content).isEmpty()
+        ) {
+            Log.debug("ACE refactorable functions cache stale for $path.")
+        }
+        return candidates
     }
 
     suspend fun checkContainsRefactorableFunctions(
@@ -152,7 +155,14 @@ class AceEntryOrchestrator(private val project: Project) {
             "AceEntryOrchestrator",
         )
         val cacheParams = CacheParams(cachePath)
-        return AceService.getInstance().getRefactorableFunctions(aceParams, cacheParams, result, editor)
+        return AceService.getInstance().getRefactorableFunctions(
+            project = editor.project!!,
+            filePath = filePath,
+            currentCode = editor.document.text,
+            params = aceParams,
+            cacheParams = cacheParams,
+            source = RefactorableFunctionsSource.FromReview(result),
+        )
     }
 
     fun handleRefactoringResult(

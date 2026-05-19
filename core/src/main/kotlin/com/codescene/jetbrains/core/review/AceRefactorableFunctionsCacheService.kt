@@ -3,6 +3,7 @@ package com.codescene.jetbrains.core.review
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.jetbrains.core.contracts.IAceRefactorableFunctionsCache
 import com.codescene.jetbrains.core.contracts.ILogger
+import com.codescene.jetbrains.core.git.pathCacheKey
 import com.codescene.jetbrains.core.util.isSha256Hex
 import org.apache.commons.codec.digest.DigestUtils
 
@@ -35,21 +36,23 @@ open class AceRefactorableFunctionsCacheService(
         val (filePath, content) = query
         val code = if (isSha256Hex(content)) content else DigestUtils.sha256Hex(content)
 
-        cache[filePath]?.let {
+        cache[key(filePath)]?.let {
             if (it.content == code) return it.result
         }
 
         return emptyList()
     }
 
-    override fun getLastKnown(filePath: String): List<FnToRefactor> = cache[filePath]?.result.orEmpty()
+    override fun getLastKnown(filePath: String): List<FnToRefactor> = cache[key(filePath)]?.result.orEmpty()
 
     override fun put(entry: AceRefactorableFunctionCacheEntry) {
         val (filePath, content, result) = entry
         val code = DigestUtils.sha256Hex(content)
 
-        cache[filePath] = AceRefactorableFunctionCacheItem(code, result)
+        cache[key(filePath)] = AceRefactorableFunctionCacheItem(code, result)
     }
+
+    override fun key(filePath: String): String = pathCacheKey(filePath)
 
     override fun get(
         filePath: String,

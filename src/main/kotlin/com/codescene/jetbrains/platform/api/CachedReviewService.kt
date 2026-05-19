@@ -1,7 +1,5 @@
 package com.codescene.jetbrains.platform.api
 
-import com.codescene.ExtensionAPI.CacheParams
-import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.jetbrains.core.delta.DeltaCacheEntry
 import com.codescene.jetbrains.core.delta.DeltaCacheQuery
 import com.codescene.jetbrains.core.git.pathFileName
@@ -11,10 +9,8 @@ import com.codescene.jetbrains.core.review.CodeReviewer
 import com.codescene.jetbrains.core.review.ReviewCacheQuery
 import com.codescene.jetbrains.core.review.ReviewOrchestrator
 import com.codescene.jetbrains.core.review.resolveDeltaExecutionPlan
-import com.codescene.jetbrains.core.review.shouldCheckRefactorableFunctions
 import com.codescene.jetbrains.core.review.shouldRefreshAfterReviewFlow
 import com.codescene.jetbrains.core.util.normalizeAbsolutePath
-import com.codescene.jetbrains.core.util.resolveCliCacheFileName
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.editor.UIRefreshService
@@ -23,6 +19,7 @@ import com.codescene.jetbrains.platform.util.AceEntryOrchestrator
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.isFileSupported
 import com.codescene.jetbrains.platform.util.isPathSupportedForReview
+import com.codescene.jetbrains.platform.util.refreshAceFromDelta
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -237,27 +234,8 @@ class CachedReviewService(
             "CodeSceneCachedReview",
         )
         val delta = deltaResult.delta
-        if (delta != null &&
-            !reviewMiss &&
-            shouldCheckRefactorableFunctions(
-                applicationServiceProvider.settingsProvider,
-                applicationServiceProvider.aceService,
-                editor.virtualFile.extension,
-            )
-        ) {
-            val filePath = editor.virtualFile.path
-            val cliFileName =
-                resolveCliCacheFileName(filePath, serviceProvider.gitService.getRepoRelativePath(filePath))
-            val aceParams = CodeParams(currentCode, cliFileName)
-            val cachePath = serviceProvider.cliCacheService.getCachePath()
-            Log.info(
-                "cachedReview ACE cachePath=$cachePath cliFileName=$cliFileName userDir=${System.getProperty(
-                    "user.dir",
-                )}",
-                "CachedReviewService",
-            )
-            val cacheParams = CacheParams(cachePath)
-            AceService.getInstance().getRefactorableFunctions(aceParams, cacheParams, delta, editor)
+        if (delta != null && !reviewMiss) {
+            refreshAceFromDelta(project, path, fileName, currentCode, delta)
         }
         return DeltaHandlingResult(didHandleDelta = true)
     }

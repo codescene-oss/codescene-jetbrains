@@ -31,7 +31,6 @@ class PlatformDeltaCacheService(
         val (hit, _) = result
         if (hit) {
             setIncludeInCodeHealthMonitor(query.filePath, true)
-            updateMonitor(project)
         }
         return result
     }

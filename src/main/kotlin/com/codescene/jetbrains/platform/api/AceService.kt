@@ -16,20 +16,57 @@ import com.codescene.jetbrains.core.review.BaseService
 import com.codescene.jetbrains.core.review.RefactorableFunctionsOrchestrator
 import com.codescene.jetbrains.core.util.Constants.ACE
 import com.codescene.jetbrains.core.util.TelemetryEvents
+import com.codescene.jetbrains.core.util.normalizeAbsolutePath
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.telemetry.StatsCollectorService
 import com.codescene.jetbrains.platform.util.AceEntryOrchestrator
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.RefactoringParams
+import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
-import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.project.Project
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.withContext
+
+internal sealed class RefactorableFunctionsSource {
+    abstract fun analysisLabel(): String
+
+    abstract fun fetch(
+        params: CodeParams,
+        cacheParams: CacheParams,
+    ): List<com.codescene.data.ace.FnToRefactor>
+
+    data class FromReview(
+        val review: Review,
+    ) : RefactorableFunctionsSource() {
+        private val codeSmells by lazy {
+            review.fileLevelCodeSmells + review.functionLevelCodeSmells.flatMap { it.codeSmells }
+        }
+
+        override fun analysisLabel(): String = "review with $codeSmells"
+
+        override fun fetch(
+            params: CodeParams,
+            cacheParams: CacheParams,
+        ): List<com.codescene.data.ace.FnToRefactor> = ExtensionAPI.fnToRefactor(params, cacheParams, codeSmells)
+    }
+
+    data class FromDelta(
+        val delta: Delta,
+    ) : RefactorableFunctionsSource() {
+        override fun analysisLabel(): String = "delta"
+
+        override fun fetch(
+            params: CodeParams,
+            cacheParams: CacheParams,
+        ): List<com.codescene.data.ace.FnToRefactor> = ExtensionAPI.fnToRefactor(params, cacheParams, delta)
+    }
+}
 
 @Service
 class AceService :
@@ -54,37 +91,26 @@ class AceService :
         preflightOrchestrator.runPreflight(force = force)
 
     /**
-     * Retrieves refactorable functions based on the full Review result.
+     * Retrieves refactorable functions from a [RefactorableFunctionsSource].
      *
-     * The Review result provides all refactorable functions in a file. This is a more comprehensive analysis
-     * compared to the *Delta review*.
+     * Use [RefactorableFunctionsSource.FromReview] for full review results (more comprehensive than delta).
+     * Use [RefactorableFunctionsSource.FromDelta] for delta-based analysis.
      */
-    suspend fun getRefactorableFunctions(
+    internal suspend fun getRefactorableFunctions(
+        project: Project,
+        filePath: String,
+        currentCode: String,
         params: CodeParams,
         cacheParams: CacheParams,
-        review: Review,
-        editor: Editor,
-    ): Boolean {
-        val codeSmells = review.fileLevelCodeSmells + review.functionLevelCodeSmells.flatMap { it.codeSmells }
-        Log.debug(
-            "Getting refactorable functions for ${editor.virtualFile.path} based on review with $codeSmells...",
-            serviceImplementation,
-        )
-
-        return refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, cacheParams, codeSmells) }
-    }
-
-    suspend fun getRefactorableFunctions(
-        params: CodeParams,
-        cacheParams: CacheParams,
-        delta: Delta,
-        editor: Editor,
+        source: RefactorableFunctionsSource,
     ): Boolean {
         Log.debug(
-            "Getting refactorable functions for ${editor.virtualFile.path} based on delta...",
+            "Getting refactorable functions for $filePath based on ${source.analysisLabel()}...",
             serviceImplementation,
         )
-        return refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, cacheParams, delta) }
+        return refactorableFunctionsHandler(project, filePath, currentCode) {
+            source.fetch(params, cacheParams)
+        }
     }
 
     fun refactor(
@@ -120,11 +146,12 @@ class AceService :
     }
 
     private suspend fun refactorableFunctionsHandler(
-        editor: Editor,
+        project: Project,
+        filePath: String,
+        content: String,
         getFunctions: () -> List<com.codescene.data.ace.FnToRefactor>,
     ): Boolean {
-        val project = editor.project!!
-        val path = editor.virtualFile.path
+        val path = normalizeAbsolutePath(filePath)
         val projectServiceProvider = CodeSceneProjectServiceProvider.getInstance(project)
         val orchestrator =
             RefactorableFunctionsOrchestrator(
@@ -135,13 +162,14 @@ class AceService :
         val result =
             orchestrator.fetchAndCache(
                 filePath = path,
-                content = editor.document.text,
+                content = content,
                 serviceName = "$serviceImplementation - ${project.name}",
                 getFunctions = { runWithClassLoaderChange { getFunctions() } },
             )
 
         val entry = AceRefactorableFunctionCacheEntry(result.filePath, result.content, result.functions)
         AceEntryOrchestrator.getInstance(project).updateCurrentAceView(entry)
+        updateMonitor(project)
         return result.functions.isNotEmpty()
     }
 
