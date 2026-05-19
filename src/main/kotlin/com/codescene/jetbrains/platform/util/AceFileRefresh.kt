@@ -31,7 +31,14 @@ suspend fun refreshAceFromReview(
         resolveCliCacheFileName(normalizedPath, services.gitService.getRepoRelativePath(normalizedPath))
     val params = CodeParams(currentCode, cliFileName)
     val cacheParams = CacheParams(services.cliCacheService.getCachePath())
-    return AceService.getInstance().getRefactorableFunctions(project, normalizedPath, currentCode, params, cacheParams, review)
+    return AceService.getInstance().getRefactorableFunctions(
+        project,
+        normalizedPath,
+        currentCode,
+        params,
+        cacheParams,
+        review,
+    )
 }
 
 suspend fun refreshAceFromDelta(
@@ -52,5 +59,12 @@ suspend fun refreshAceFromDelta(
         resolveCliCacheFileName(normalizedPath, services.gitService.getRepoRelativePath(normalizedPath))
     val params = CodeParams(currentCode, cliFileName)
     val cacheParams = CacheParams(services.cliCacheService.getCachePath())
-    return AceService.getInstance().getRefactorableFunctions(project, normalizedPath, currentCode, params, cacheParams, delta)
+    return AceService.getInstance().getRefactorableFunctions(
+        project,
+        normalizedPath,
+        currentCode,
+        params,
+        cacheParams,
+        delta,
+    )
 }

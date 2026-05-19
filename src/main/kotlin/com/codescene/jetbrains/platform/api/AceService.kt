@@ -16,10 +16,10 @@ import com.codescene.jetbrains.core.review.BaseService
 import com.codescene.jetbrains.core.review.RefactorableFunctionsOrchestrator
 import com.codescene.jetbrains.core.util.Constants.ACE
 import com.codescene.jetbrains.core.util.TelemetryEvents
+import com.codescene.jetbrains.core.util.normalizeAbsolutePath
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.telemetry.StatsCollectorService
-import com.codescene.jetbrains.core.util.normalizeAbsolutePath
 import com.codescene.jetbrains.platform.util.AceEntryOrchestrator
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.RefactoringParams

@@ -49,7 +49,20 @@
                     "weight": 0.0
                 }
             ],
-            "thresholds": [ ]
+            "thresholds": [
+                {
+                    "name": "function_max_arguments",
+                    "value": 5
+                },
+                {
+                    "name": "function_lines_of_code_warning",
+                    "value": 100
+                },
+                {
+                    "name": "function_lines_of_code_alert",
+                    "value": 200
+                }
+             ]
         }
     ]
 }

@@ -17,9 +17,9 @@ import com.codescene.jetbrains.platform.editor.UIRefreshService
 import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.platform.util.AceEntryOrchestrator
 import com.codescene.jetbrains.platform.util.Log
-import com.codescene.jetbrains.platform.util.refreshAceFromDelta
 import com.codescene.jetbrains.platform.util.isFileSupported
 import com.codescene.jetbrains.platform.util.isPathSupportedForReview
+import com.codescene.jetbrains.platform.util.refreshAceFromDelta
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service

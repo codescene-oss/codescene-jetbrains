@@ -116,9 +116,10 @@ class PathBasedReviewHandler(private val project: Project) {
         currentScore: Double?,
         reviewMiss: Boolean,
     ) {
+        val normalizedPath = normalizeAbsolutePath(filePath)
         val startTime = System.currentTimeMillis()
         val gitStart = System.currentTimeMillis()
-        val baselineCode = serviceProvider.gitService.getBranchCreationCommitCode(filePath)
+        val baselineCode = serviceProvider.gitService.getBranchCreationCommitCode(normalizedPath)
         val gitElapsed = System.currentTimeMillis() - gitStart
         Log.info(
             "handleDeltaByPath gitBaseline took ${gitElapsed}ms file=$fileName baselineLen=${baselineCode.length}",
@@ -137,7 +138,7 @@ class PathBasedReviewHandler(private val project: Project) {
         if (plan.shouldCacheEmptyDelta) {
             serviceProvider.deltaCacheService.put(
                 DeltaCacheEntry(
-                    filePath = filePath,
+                    filePath = normalizedPath,
                     headContent = baselineCode,
                     currentFileContent = currentCode,
                     deltaApiResponse = null,
@@ -151,7 +152,7 @@ class PathBasedReviewHandler(private val project: Project) {
         }
 
         val deltaCacheStart = System.currentTimeMillis()
-        val query = DeltaCacheQuery(filePath, baselineCode, currentCode)
+        val query = DeltaCacheQuery(normalizedPath, baselineCode, currentCode)
         val (deltaHit, _) = serviceProvider.deltaCacheService.get(query)
         Log.info(
             "handleDeltaByPath deltaCacheCheck took ${System.currentTimeMillis() - deltaCacheStart}ms file=$fileName",
@@ -169,16 +170,14 @@ class PathBasedReviewHandler(private val project: Project) {
         val deltaStart = System.currentTimeMillis()
         val deltaProgressMessage = resolveProgressMessage(fileName, false)
         serviceProvider.progressService.runWithProgress(deltaProgressMessage) {
-            deltaService.performDeltaAnalysisByPath(filePath, fileName, currentCode)
+            deltaService.performDeltaAnalysisByPath(normalizedPath, fileName, currentCode)
         }
         Log.info(
             "handleDeltaByPath deltaAnalysis took ${System.currentTimeMillis() - deltaStart}ms file=$fileName",
             "CodeSceneCachedReview",
         )
         if (!reviewMiss) {
-            val path = normalizeAbsolutePath(filePath)
-            val baselineCode = serviceProvider.gitService.getBranchCreationCommitCode(path)
-            val query = DeltaCacheQuery(path, baselineCode, currentCode)
+            val query = DeltaCacheQuery(normalizedPath, baselineCode, currentCode)
             val (_, delta) = serviceProvider.deltaCacheService.get(query)
             if (delta != null) {
                 refreshAceFromDelta(project, filePath, fileName, currentCode, delta)
