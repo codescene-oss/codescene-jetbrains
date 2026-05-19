@@ -7,8 +7,11 @@ import com.codescene.jetbrains.core.review.BaselineReviewCacheQuery
 import com.codescene.jetbrains.core.review.ReviewCacheQuery
 import com.codescene.jetbrains.core.review.resolveDeltaExecutionPlan
 import com.codescene.jetbrains.core.review.resolveProgressMessage
+import com.codescene.jetbrains.core.util.normalizeAbsolutePath
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.util.Log
+import com.codescene.jetbrains.platform.util.refreshAceFromDelta
+import com.codescene.jetbrains.platform.util.refreshAceFromReview
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -78,7 +81,7 @@ class PathBasedReviewHandler(private val project: Project) {
                 "reviewByPath review cache hit, delta miss path=$filePath",
                 "CodeSceneCachedReview",
             )
-            handleDeltaByPath(filePath, fileName, currentCode, cachedReview.score.orElse(null))
+            handleDeltaByPath(filePath, fileName, currentCode, cachedReview.score.orElse(null), reviewMiss = false)
             return
         }
 
@@ -97,11 +100,13 @@ class PathBasedReviewHandler(private val project: Project) {
             return
         }
 
+        refreshAceFromReview(project, filePath, fileName, currentCode, review)
+
         Log.info(
             "reviewByPath completed path=$filePath totalTime=${System.currentTimeMillis() - startTime}ms",
             "CodeSceneCachedReview",
         )
-        handleDeltaByPath(filePath, fileName, currentCode, review.score.orElse(null))
+        handleDeltaByPath(filePath, fileName, currentCode, review.score.orElse(null), reviewMiss = true)
     }
 
     private suspend fun handleDeltaByPath(
@@ -109,6 +114,7 @@ class PathBasedReviewHandler(private val project: Project) {
         fileName: String,
         currentCode: String,
         currentScore: Double?,
+        reviewMiss: Boolean,
     ) {
         val startTime = System.currentTimeMillis()
         val gitStart = System.currentTimeMillis()
@@ -169,6 +175,15 @@ class PathBasedReviewHandler(private val project: Project) {
             "handleDeltaByPath deltaAnalysis took ${System.currentTimeMillis() - deltaStart}ms file=$fileName",
             "CodeSceneCachedReview",
         )
+        if (!reviewMiss) {
+            val path = normalizeAbsolutePath(filePath)
+            val baselineCode = serviceProvider.gitService.getBranchCreationCommitCode(path)
+            val query = DeltaCacheQuery(path, baselineCode, currentCode)
+            val (_, delta) = serviceProvider.deltaCacheService.get(query)
+            if (delta != null) {
+                refreshAceFromDelta(project, filePath, fileName, currentCode, delta)
+            }
+        }
         Log.info(
             "handleDeltaByPath done file=$fileName totalTime=${System.currentTimeMillis() - startTime}ms",
             "CodeSceneCachedReview",

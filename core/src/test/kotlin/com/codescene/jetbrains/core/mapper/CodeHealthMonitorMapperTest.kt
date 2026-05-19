@@ -8,6 +8,7 @@ import com.codescene.jetbrains.core.models.CwfMessage
 import com.codescene.jetbrains.core.models.View
 import com.codescene.jetbrains.core.models.shared.AutoRefactorConfig
 import com.codescene.jetbrains.core.models.view.FunctionToRefactor
+import com.codescene.jetbrains.core.models.view.RefactoringTarget
 import com.codescene.jetbrains.core.util.Constants.DELTA_ANALYSIS_JOB
 import com.codescene.jetbrains.core.util.Constants.JOB_STATE_RUNNING
 import io.mockk.every
@@ -15,6 +16,7 @@ import io.mockk.mockk
 import java.util.Optional
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -160,6 +162,47 @@ class CodeHealthMonitorMapperTest {
     fun `toCwfData maps null file level findings to empty list`() {
         val delta = createDelta(fileLevelFindings = null)
         assertTrue(singleFileDelta(delta).delta.fileLevelFindings.isEmpty())
+    }
+
+    @Test
+    fun `toCwfData maps refactorable-fn when resolver returns match`() {
+        val range = mockk<com.codescene.data.delta.Range>(relaxed = true)
+        every { range.startLine } returns 1
+        every { range.endLine } returns 10
+
+        val function = mockk<com.codescene.data.delta.Function>(relaxed = true)
+        every { function.name } returns "myFn"
+        every { function.range } returns Optional.of(range)
+
+        val fnFinding = mockk<DeltaFunctionFinding>(relaxed = true)
+        every { fnFinding.function } returns function
+        every { fnFinding.changeDetails } returns emptyList()
+
+        val delta = createDelta(scoreChange = 1.0, functionLevelFindings = listOf(fnFinding))
+        val refactorable =
+            FunctionToRefactor(
+                body = "fun myFn() {}",
+                name = "myFn",
+                fileType = "kotlin",
+                functionType = "function",
+                refactoringTargets = listOf(RefactoringTarget(line = 1, category = "Complex Method")),
+            )
+        val resolver: (String, String, DeltaFunctionFinding) -> FunctionToRefactor? = { _, _, _ -> refactorable }
+
+        val fileDelta =
+            mapper
+                .toCwfData(
+                    deltaResults = listOf("file.kt" to createCacheItem(delta)),
+                    activeJobs = emptyList(),
+                    functionToRefactorResolver = resolver,
+                    autoRefactorConfig = autoRefactorConfig,
+                    devmode = false,
+                )
+                .data!!
+                .fileDeltaData[0]
+
+        assertNotNull(fileDelta.delta.functionLevelFindings[0].functionToRefactor)
+        assertEquals("myFn", fileDelta.delta.functionLevelFindings[0].functionToRefactor!!.name)
     }
 
     @Test

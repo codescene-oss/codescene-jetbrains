@@ -19,13 +19,16 @@ import com.codescene.jetbrains.core.util.TelemetryEvents
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.telemetry.StatsCollectorService
+import com.codescene.jetbrains.core.util.normalizeAbsolutePath
 import com.codescene.jetbrains.platform.util.AceEntryOrchestrator
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.RefactoringParams
+import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.project.Project
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -75,6 +78,24 @@ class AceService :
     }
 
     suspend fun getRefactorableFunctions(
+        project: Project,
+        filePath: String,
+        currentCode: String,
+        params: CodeParams,
+        cacheParams: CacheParams,
+        review: Review,
+    ): Boolean {
+        val codeSmells = review.fileLevelCodeSmells + review.functionLevelCodeSmells.flatMap { it.codeSmells }
+        Log.debug(
+            "Getting refactorable functions for $filePath based on review with $codeSmells...",
+            serviceImplementation,
+        )
+        return refactorableFunctionsHandler(project, filePath, currentCode) {
+            ExtensionAPI.fnToRefactor(params, cacheParams, codeSmells)
+        }
+    }
+
+    suspend fun getRefactorableFunctions(
         params: CodeParams,
         cacheParams: CacheParams,
         delta: Delta,
@@ -85,6 +106,23 @@ class AceService :
             serviceImplementation,
         )
         return refactorableFunctionsHandler(editor) { ExtensionAPI.fnToRefactor(params, cacheParams, delta) }
+    }
+
+    suspend fun getRefactorableFunctions(
+        project: Project,
+        filePath: String,
+        currentCode: String,
+        params: CodeParams,
+        cacheParams: CacheParams,
+        delta: Delta,
+    ): Boolean {
+        Log.debug(
+            "Getting refactorable functions for $filePath based on delta...",
+            serviceImplementation,
+        )
+        return refactorableFunctionsHandler(project, filePath, currentCode) {
+            ExtensionAPI.fnToRefactor(params, cacheParams, delta)
+        }
     }
 
     fun refactor(
@@ -122,9 +160,21 @@ class AceService :
     private suspend fun refactorableFunctionsHandler(
         editor: Editor,
         getFunctions: () -> List<com.codescene.data.ace.FnToRefactor>,
+    ): Boolean =
+        refactorableFunctionsHandler(
+            project = editor.project!!,
+            filePath = editor.virtualFile.path,
+            content = editor.document.text,
+            getFunctions = getFunctions,
+        )
+
+    private suspend fun refactorableFunctionsHandler(
+        project: Project,
+        filePath: String,
+        content: String,
+        getFunctions: () -> List<com.codescene.data.ace.FnToRefactor>,
     ): Boolean {
-        val project = editor.project!!
-        val path = editor.virtualFile.path
+        val path = normalizeAbsolutePath(filePath)
         val projectServiceProvider = CodeSceneProjectServiceProvider.getInstance(project)
         val orchestrator =
             RefactorableFunctionsOrchestrator(
@@ -135,13 +185,14 @@ class AceService :
         val result =
             orchestrator.fetchAndCache(
                 filePath = path,
-                content = editor.document.text,
+                content = content,
                 serviceName = "$serviceImplementation - ${project.name}",
                 getFunctions = { runWithClassLoaderChange { getFunctions() } },
             )
 
         val entry = AceRefactorableFunctionCacheEntry(result.filePath, result.content, result.functions)
         AceEntryOrchestrator.getInstance(project).updateCurrentAceView(entry)
+        updateMonitor(project)
         return result.functions.isNotEmpty()
     }
 

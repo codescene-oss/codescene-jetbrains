@@ -4,12 +4,15 @@ import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.ace.RefactoringTarget as AceRefactoringTarget
 import com.codescene.data.delta.Function
 import com.codescene.data.delta.FunctionFinding
+import com.codescene.jetbrains.core.testdoubles.InMemoryAceRefactorableFunctionsCache
 import io.mockk.every
 import io.mockk.mockk
 import java.util.Optional
+import org.apache.commons.codec.digest.DigestUtils
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FunctionToRefactorUtilsTest {
@@ -94,6 +97,32 @@ class FunctionToRefactorUtilsTest {
     fun `resolveFunctionToRefactor returns null for empty candidates`() {
         val finding = createFunctionFinding(name = "myFn")
         assertNull(resolveFunctionToRefactor(emptyList(), finding))
+    }
+
+    @Test
+    fun `resolveAceCandidatesForMonitor returns fresh match by content sha`() {
+        val cache = InMemoryAceRefactorableFunctionsCache()
+        cache.put("a.kt", "content", listOf(createFnToRefactor(name = "fn1")))
+        val sha = DigestUtils.sha256Hex("content")
+        val result = resolveAceCandidatesForMonitor(cache, "a.kt", sha)
+        assertEquals(1, result.size)
+        assertEquals("fn1", result[0].name)
+    }
+
+    @Test
+    fun `resolveAceCandidatesForMonitor returns stale when content sha mismatches`() {
+        val cache = InMemoryAceRefactorableFunctionsCache()
+        cache.put("a.kt", "content", listOf(createFnToRefactor(name = "fn1")))
+        val staleSha = DigestUtils.sha256Hex("different content")
+        val result = resolveAceCandidatesForMonitor(cache, "a.kt", staleSha)
+        assertEquals(1, result.size)
+        assertEquals("fn1", result[0].name)
+    }
+
+    @Test
+    fun `resolveAceCandidatesForMonitor returns empty when no cache entry`() {
+        val cache = InMemoryAceRefactorableFunctionsCache()
+        assertTrue(resolveAceCandidatesForMonitor(cache, "a.kt", DigestUtils.sha256Hex("x")).isEmpty())
     }
 
     @Test

@@ -12,7 +12,7 @@ import com.codescene.jetbrains.core.models.settings.AceStatus
 import com.codescene.jetbrains.core.models.shared.FileMetaType
 import com.codescene.jetbrains.core.review.AceEntryCommand
 import com.codescene.jetbrains.core.review.AceRefactorableFunctionCacheEntry
-import com.codescene.jetbrains.core.review.AceRefactorableFunctionCacheQuery
+import com.codescene.jetbrains.core.util.resolveAceCandidatesForMonitor
 import com.codescene.jetbrains.core.review.resolveAceEntryPointCommand
 import com.codescene.jetbrains.core.review.resolveAceErrorViewParams
 import com.codescene.jetbrains.core.review.resolveAceStatusChange
@@ -121,11 +121,13 @@ class AceEntryOrchestrator(private val project: Project) {
         content: String,
     ): List<FnToRefactor> {
         val cacheService = PlatformAceRefactorableFunctionsCacheService.getInstance(project)
-        val fresh = cacheService.get(AceRefactorableFunctionCacheQuery(path, content))
-        if (fresh.isNotEmpty()) return fresh
-        val stale = cacheService.getLastKnown(path)
-        Log.debug("ACE refactorable functions cache ${if (stale.isEmpty()) "miss" else "stale"} for $path.")
-        return stale
+        val candidates = resolveAceCandidatesForMonitor(cacheService, path, content)
+        if (candidates.isNotEmpty() &&
+            cacheService.get(path, content).isEmpty()
+        ) {
+            Log.debug("ACE refactorable functions cache stale for $path.")
+        }
+        return candidates
     }
 
     suspend fun checkContainsRefactorableFunctions(

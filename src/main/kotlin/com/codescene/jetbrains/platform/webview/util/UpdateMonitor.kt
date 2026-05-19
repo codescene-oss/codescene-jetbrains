@@ -4,7 +4,7 @@ import com.codescene.jetbrains.core.flag.RuntimeFlags
 import com.codescene.jetbrains.core.git.pathFileName
 import com.codescene.jetbrains.core.mapper.CodeHealthMonitorMapper
 import com.codescene.jetbrains.core.models.View
-import com.codescene.jetbrains.core.review.AceRefactorableFunctionCacheQuery
+import com.codescene.jetbrains.core.util.resolveAceCandidatesForMonitor
 import com.codescene.jetbrains.core.util.resolveFunctionToRefactor
 import com.codescene.jetbrains.core.util.toAutoRefactorConfig
 import com.codescene.jetbrains.platform.api.CachedReviewService
@@ -61,7 +61,7 @@ private fun updateMonitorImpl(project: Project) {
             activeJobs = activeJobs,
             functionToRefactorResolver = { filePath, contentSha, fn ->
                 val cache = PlatformAceRefactorableFunctionsCacheService.getInstance(project)
-                val candidates = cache.get(AceRefactorableFunctionCacheQuery(filePath, contentSha))
+                val candidates = resolveAceCandidatesForMonitor(cache, filePath, contentSha)
                 resolveFunctionToRefactor(candidates, fn)
             },
             autoRefactorConfig = toAutoRefactorConfig(services.settingsProvider.currentState()),
