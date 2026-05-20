@@ -53,15 +53,21 @@ class Git4IdeaGitServiceTest {
     }
 
     @Test
-    fun `resolveRepository uses getRepositoryForFile off EDT`() {
+    fun `resolveRepository uses getRepositoryForRootQuick off EDT`() {
+        val vcsRoot = mockk<VirtualFile>(relaxed = true)
+
         every { mockApplication.isDispatchThread } returns false
-        every { mockRepoManager.getRepositoryForFile(file) } returns mockRepository
+        mockkStatic(ProjectLevelVcsManager::class)
+        val mockVcsManager = mockk<ProjectLevelVcsManager>(relaxed = true)
+        every { ProjectLevelVcsManager.getInstance(project) } returns mockVcsManager
+        every { mockVcsManager.getVcsRootFor(file) } returns vcsRoot
+        every { mockRepoManager.getRepositoryForRootQuick(vcsRoot) } returns mockRepository
 
         val result = gitService.resolveRepository(file)
 
         assertSame(mockRepository, result)
-        verify(exactly = 1) { mockRepoManager.getRepositoryForFile(file) }
-        verify(exactly = 0) { mockRepoManager.getRepositoryForRootQuick(any<VirtualFile>()) }
+        verify(exactly = 0) { mockRepoManager.getRepositoryForFile(any<VirtualFile>()) }
+        verify(exactly = 1) { mockRepoManager.getRepositoryForRootQuick(vcsRoot) }
     }
 
     @Test

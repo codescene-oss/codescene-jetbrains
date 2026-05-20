@@ -83,8 +83,7 @@ class FileEditorLifecycleListener : FileEditorManagerListener {
         if (reviewService.activeReviewCalls.contains(file.path)) return
         reviewService.scope.launch {
             if (project.isDisposed) return@launch
-            val supported = ReadAction.compute<Boolean, RuntimeException> { isFileSupported(project, file) }
-            if (!supported) return@launch
+            if (!isFileSupported(project, file)) return@launch
             val text = ReadAction.compute<String, RuntimeException> { editor.document.text }
             val services = CodeSceneProjectServiceProvider.getInstance(project)
             if (services.reviewCacheService.get(ReviewCacheQuery(text, file.path)) != null) return@launch
