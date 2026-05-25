@@ -4,6 +4,7 @@ import com.codescene.data.ace.FnToRefactor
 import com.codescene.jetbrains.core.models.CurrentAceViewData
 import com.codescene.jetbrains.core.models.shared.FileMetaType
 import com.codescene.jetbrains.core.review.AceRefactorableFunctionCacheEntry
+import com.codescene.jetbrains.core.review.FileDataWithContent
 import com.codescene.jetbrains.core.review.resolveAceViewUpdateParams
 import com.codescene.jetbrains.core.review.resolveRefactoringRequest
 import com.codescene.jetbrains.core.util.AceEntryPoint
@@ -56,16 +57,15 @@ class AceCwfHandler(private val project: Project) {
         }
 
         ApplicationManager.getApplication().executeOnPooledThread {
-            val code = resolveFileContent(fileData.fileName)
+            val bufferContent = resolveFileContent(fileData.fileName)
             val request =
                 resolveRefactoringRequest(
-                    fileData = fileData,
+                    fileData = FileDataWithContent(meta = fileData, bufferContent = bufferContent),
                     source = source,
                     fnToRefactor = null,
                     fileSystem = services.fileSystem,
                     cache = services.aceRefactorableFunctionsCache,
                     logger = appServices.logger,
-                    code = code,
                 ) ?: return@executeOnPooledThread
 
             val editor = getSelectedTextEditor(project, fileData.fileName)

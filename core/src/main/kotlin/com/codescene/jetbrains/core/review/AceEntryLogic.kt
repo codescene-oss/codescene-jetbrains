@@ -26,6 +26,11 @@ data class AceStatusChangeResult(
     val message: AceStatusMessage? = null,
 )
 
+data class FileDataWithContent(
+    val meta: FileMetaType,
+    val bufferContent: String? = null,
+)
+
 fun resolveAceStatusChange(
     settingsProvider: ISettingsProvider,
     newStatus: AceStatus,
@@ -39,35 +44,35 @@ fun resolveAceStatusChange(
     return AceStatusChangeResult(shouldNotify = message != null, message = message)
 }
 
-// The optional `code` parameter allows callers to provide file content directly (e.g., from an
-// editor buffer with unsaved changes) instead of reading from disk via fileSystem. This ensures
-// cache lookups use the same content the user is actively working with.
+// Prefers buffer content (e.g., from an editor with unsaved changes) over disk reads.
+// This ensures cache lookups use the same content the user is actively working with.
 fun fetchRefactorableFunctionFromCache(
-    fileData: FileMetaType,
+    fileData: FileDataWithContent,
     fileSystem: IFileSystem,
     cache: IAceRefactorableFunctionsCache,
     logger: ILogger,
-    code: String? = null,
 ): FnToRefactor? {
     val resolvedCode =
-        if (code != null) {
-            logger.debug("Using provided code for cache lookup file=${fileData.fileName}")
-            code
+        if (fileData.bufferContent != null) {
+            logger.debug("Using provided buffer content for cache lookup file=${fileData.meta.fileName}")
+            fileData.bufferContent
         } else {
-            logger.debug("Falling back to disk read for cache lookup file=${fileData.fileName}")
-            fileSystem.readFile(fileData.fileName) ?: ""
+            logger.debug("Falling back to disk read for cache lookup file=${fileData.meta.fileName}")
+            fileSystem.readFile(fileData.meta.fileName) ?: ""
         }
-    val candidates = cache.get(fileData.fileName, resolvedCode)
+    val candidates = cache.get(fileData.meta.fileName, resolvedCode)
 
     if (candidates.isEmpty()) {
-        logger.debug("No ACE refactorable functions cache available for ${fileData.fileName}. Skipping annotation.")
+        logger.debug(
+            "No ACE refactorable functions cache available for ${fileData.meta.fileName}. Skipping annotation.",
+        )
     }
 
     return findMatchingRefactorableFunction(
         aceCache = candidates,
-        functionName = fileData.fn?.name,
-        startLine = fileData.fn?.range?.startLine,
-        endLine = fileData.fn?.range?.endLine,
+        functionName = fileData.meta.fn?.name,
+        startLine = fileData.meta.fn?.range?.startLine,
+        endLine = fileData.meta.fn?.range?.endLine,
     )
 }
 
@@ -113,31 +118,29 @@ fun resolveAceEntryPointCommand(
 }
 
 fun resolveRefactoringRequest(
-    fileData: FileMetaType,
+    fileData: FileDataWithContent,
     source: AceEntryPoint,
     fnToRefactor: FnToRefactor?,
     fileSystem: IFileSystem,
     cache: IAceRefactorableFunctionsCache,
     logger: ILogger,
-    code: String? = null,
 ): RefactoringRequest? {
     val function =
         if (fnToRefactor != null) {
-            logger.debug("Using provided fnToRefactor for file=${fileData.fileName}")
+            logger.debug("Using provided fnToRefactor for file=${fileData.meta.fileName}")
             fnToRefactor
         } else {
-            logger.debug("Falling back to cache lookup for file=${fileData.fileName}")
+            logger.debug("Falling back to cache lookup for file=${fileData.meta.fileName}")
             fetchRefactorableFunctionFromCache(
                 fileData = fileData,
                 fileSystem = fileSystem,
                 cache = cache,
                 logger = logger,
-                code = code,
             )
         }
     return function?.let {
         RefactoringRequest(
-            filePath = fileData.fileName,
+            filePath = fileData.meta.fileName,
             language = null,
             function = it,
             source = source,
