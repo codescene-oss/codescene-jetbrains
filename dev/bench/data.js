@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779273286866,
+  "lastUpdate": 1779697402360,
   "repoUrl": "https://github.com/codescene-oss/codescene-jetbrains",
   "entries": {
     "JetBrains Plugin - ExtensionAPI": [
@@ -1254,6 +1254,90 @@ window.BENCHMARK_DATA = {
           {
             "name": "com.codescene.jetbrains.benchmarks.ReviewDeltaFlowBenchmark.reviewDeltaFlowWarm",
             "value": 14.635556349697485,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "victor.valenzuela+gh@codescene.com",
+            "name": "vemvcs",
+            "username": "vemvcs"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f6f395b4f0a797a0f07c7d0a566a10b149d78fb6",
+          "message": "Fix: prefer editor buffer content to prevent Code Health Monitor flickering (#152)\n\n* Add support for 8 additional file extensions\n\nAdds Elixir (.ex, .exs), Python stub files (.pyi), VisualForce (.efx, .emx),\nTcl (.tcl), and additional C++ variants (.c++, .pcc) for parity with VSCode\nand Visual Studio extensions.\n\n* fix: use editor buffer content to prevent Code Health Monitor flickering\n\nPrefer document content from editor buffers over disk content when available\nfor ACE cache lookups and reviews. This prevents the monitor from flip-flopping\nbetween fixed/unfixed states when a file has unsaved changes, as editor-triggered\nreviews and periodic polling now use the same content source.\n\n* refactor: introduce FileDataWithContent to reduce function arguments\n\nGroup FileMetaType with bufferContent into a single data class, reducing\nparameter count in resolveRefactoringRequest (7→6) and\nfetchRefactorableFunctionFromCache (5→4). Adds test coverage for the\nbuffer content branch.\n\n---------\n\nCo-authored-by: vemv <vemv@users.noreply.github.com>",
+          "timestamp": "2026-05-25T10:09:31+02:00",
+          "tree_id": "be20a4b5dfff5b8870b65f5dc8822b8d351e682e",
+          "url": "https://github.com/codescene-oss/codescene-jetbrains/commit/f6f395b4f0a797a0f07c7d0a566a10b149d78fb6"
+        },
+        "date": 1779697401721,
+        "tool": "jmh",
+        "benches": [
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiDeltaBenchmark.deltaCold",
+            "value": 10.458235309298455,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiDeltaBenchmark.deltaWarm",
+            "value": 5.862005015369827,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiFnToRefactorBenchmark.fnToRefactorCold",
+            "value": 1.7628155371946967,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiFnToRefactorBenchmark.fnToRefactorWarm",
+            "value": 0.2445346301434884,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiReviewBenchmark.baselineReviewCold",
+            "value": 1.7018973648173241,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiReviewBenchmark.baselineReviewWarm",
+            "value": 0.9766154625973765,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiReviewBenchmark.reviewCold",
+            "value": 8.381309610710991,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiReviewBenchmark.reviewWarm",
+            "value": 4.528939933067658,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ReviewDeltaFlowBenchmark.reviewDeltaFlowCold",
+            "value": 16.47027028890681,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ReviewDeltaFlowBenchmark.reviewDeltaFlowWarm",
+            "value": 11.340425922250294,
             "unit": "ms/op",
             "extra": "iterations: 5\nforks: 1\nthreads: 1"
           }
