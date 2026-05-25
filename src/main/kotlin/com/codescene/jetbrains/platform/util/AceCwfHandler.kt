@@ -12,9 +12,12 @@ import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.webview.util.getAceUserData
 import com.codescene.jetbrains.platform.webview.util.openAceWindow
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.LocalFileSystem
 
 @Service(Service.Level.PROJECT)
 class AceCwfHandler(private val project: Project) {
@@ -53,6 +56,7 @@ class AceCwfHandler(private val project: Project) {
         }
 
         ApplicationManager.getApplication().executeOnPooledThread {
+            val code = resolveFileContent(fileData.fileName)
             val request =
                 resolveRefactoringRequest(
                     fileData = fileData,
@@ -61,6 +65,7 @@ class AceCwfHandler(private val project: Project) {
                     fileSystem = services.fileSystem,
                     cache = services.aceRefactorableFunctionsCache,
                     logger = appServices.logger,
+                    code = code,
                 ) ?: return@executeOnPooledThread
 
             val editor = getSelectedTextEditor(project, fileData.fileName)
@@ -93,5 +98,29 @@ class AceCwfHandler(private val project: Project) {
 
         val params = resolveAceViewUpdateParams(currentAceData, entry)
         if (params != null) openAceWindow(params, project)
+    }
+
+    // Prefer document content (editor buffer) over VFS content (disk) when available.
+    // This ensures cache lookups use the user's current edits, not stale disk content.
+    private fun resolveFileContent(filePath: String): String? {
+        val virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return null
+        val fromDocument =
+            runReadAction<String?> {
+                FileDocumentManager.getInstance().getDocument(virtualFile)?.text
+            }
+        return if (fromDocument != null) {
+            Log.debug("resolveFileContent using document content file=$filePath", "AceCwfHandler")
+            fromDocument
+        } else {
+            Log.debug("resolveFileContent falling back to disk read file=$filePath", "AceCwfHandler")
+            runCatching { services.fileSystem.readFile(filePath) }
+                .getOrElse { t ->
+                    Log.warn(
+                        "Failed to read file for refactoring: $filePath (${t.javaClass.simpleName}: ${t.message})",
+                        "AceCwfHandler",
+                    )
+                    null
+                }
+        }
     }
 }

@@ -39,14 +39,25 @@ fun resolveAceStatusChange(
     return AceStatusChangeResult(shouldNotify = message != null, message = message)
 }
 
+// The optional `code` parameter allows callers to provide file content directly (e.g., from an
+// editor buffer with unsaved changes) instead of reading from disk via fileSystem. This ensures
+// cache lookups use the same content the user is actively working with.
 fun fetchRefactorableFunctionFromCache(
     fileData: FileMetaType,
     fileSystem: IFileSystem,
     cache: IAceRefactorableFunctionsCache,
     logger: ILogger,
+    code: String? = null,
 ): FnToRefactor? {
-    val code = fileSystem.readFile(fileData.fileName) ?: ""
-    val candidates = cache.get(fileData.fileName, code)
+    val resolvedCode =
+        if (code != null) {
+            logger.debug("Using provided code for cache lookup file=${fileData.fileName}")
+            code
+        } else {
+            logger.debug("Falling back to disk read for cache lookup file=${fileData.fileName}")
+            fileSystem.readFile(fileData.fileName) ?: ""
+        }
+    val candidates = cache.get(fileData.fileName, resolvedCode)
 
     if (candidates.isEmpty()) {
         logger.debug("No ACE refactorable functions cache available for ${fileData.fileName}. Skipping annotation.")
@@ -108,15 +119,22 @@ fun resolveRefactoringRequest(
     fileSystem: IFileSystem,
     cache: IAceRefactorableFunctionsCache,
     logger: ILogger,
+    code: String? = null,
 ): RefactoringRequest? {
     val function =
-        fnToRefactor
-            ?: fetchRefactorableFunctionFromCache(
+        if (fnToRefactor != null) {
+            logger.debug("Using provided fnToRefactor for file=${fileData.fileName}")
+            fnToRefactor
+        } else {
+            logger.debug("Falling back to cache lookup for file=${fileData.fileName}")
+            fetchRefactorableFunctionFromCache(
                 fileData = fileData,
                 fileSystem = fileSystem,
                 cache = cache,
                 logger = logger,
+                code = code,
             )
+        }
     return function?.let {
         RefactoringRequest(
             filePath = fileData.fileName,
