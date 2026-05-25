@@ -15,9 +15,10 @@ import com.codescene.jetbrains.platform.util.refreshAceFromReview
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
+import com.intellij.openapi.editor.Document
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
-import java.nio.charset.Charset
 
 @Service(Service.Level.PROJECT)
 class PathBasedReviewHandler(private val project: Project) {
@@ -41,18 +42,28 @@ class PathBasedReviewHandler(private val project: Project) {
         }
 
         val fileReadStart = System.currentTimeMillis()
-        val fileData =
-            ReadAction.compute<Pair<ByteArray, Charset>?, Exception> {
+        // Prefer document content (editor buffer) over VFS content (disk) when available.
+        // This prevents Code Health Monitor flickering when a file has unsaved changes:
+        // editor-triggered reviews use document.text while periodic polling would use disk content,
+        // causing the cache to flip-flop between fixed/unfixed states until the file is saved.
+        val currentCode =
+            ReadAction.compute<String?, Exception> {
                 if (!file.isValid) {
                     return@compute null
                 }
-                Pair(file.contentsToByteArray(), file.charset)
+                val document: Document? = FileDocumentManager.getInstance().getDocument(file)
+                if (document != null) {
+                    Log.info("reviewByPath using document content file=$fileName", "CodeSceneCachedReview")
+                    document.text
+                } else {
+                    Log.info("reviewByPath falling back to VFS content file=$fileName", "CodeSceneCachedReview")
+                    String(file.contentsToByteArray(), file.charset)
+                }
             }
-        if (fileData == null) {
+        if (currentCode == null) {
             Log.info("reviewByPath file became invalid path=$filePath", "CodeSceneCachedReview")
             return
         }
-        val currentCode = String(fileData.first, fileData.second)
         Log.info(
             "reviewByPath fileRead took ${System.currentTimeMillis() - fileReadStart}ms file=$fileName",
             "CodeSceneCachedReview",

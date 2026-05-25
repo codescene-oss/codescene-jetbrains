@@ -79,7 +79,32 @@ class AceEntryLogicTest {
 
         val result =
             fetchRefactorableFunctionFromCache(
-                fileData = FileMetaType(fn = Fn("target", RangeCamelCase(20, 1, 10, 1)), fileName = "a.kt"),
+                fileData =
+                    FileDataWithContent(
+                        meta = FileMetaType(fn = Fn("target", RangeCamelCase(20, 1, 10, 1)), fileName = "a.kt"),
+                    ),
+                fileSystem = fileSystem,
+                cache = cache,
+                logger = TestLogger,
+            )
+
+        assertSame(fn, result)
+    }
+
+    @Test
+    fun `fetchRefactorableFunctionFromCache uses buffer content instead of disk read`() {
+        val fileSystem = InMemoryFileSystem(mutableMapOf("a.kt" to "disk-content"))
+        val cache = InMemoryAceRefactorableFunctionsCache()
+        val fn = mockFn("target", "body", 10, 20)
+        cache.put("a.kt", "buffer-content", listOf(fn))
+
+        val result =
+            fetchRefactorableFunctionFromCache(
+                fileData =
+                    FileDataWithContent(
+                        meta = FileMetaType(fn = Fn("target", RangeCamelCase(20, 1, 10, 1)), fileName = "a.kt"),
+                        bufferContent = "buffer-content",
+                    ),
                 fileSystem = fileSystem,
                 cache = cache,
                 logger = TestLogger,
@@ -97,7 +122,10 @@ class AceEntryLogicTest {
 
         val result =
             resolveRefactoringRequest(
-                fileData = FileMetaType(fn = Fn("target", RangeCamelCase(20, 1, 10, 1)), fileName = "a.kt"),
+                fileData =
+                    FileDataWithContent(
+                        meta = FileMetaType(fn = Fn("target", RangeCamelCase(20, 1, 10, 1)), fileName = "a.kt"),
+                    ),
                 source = AceEntryPoint.RETRY,
                 fnToRefactor = null,
                 fileSystem = fileSystem,
@@ -243,7 +271,10 @@ class AceEntryLogicTest {
 
     private fun resolveRequest(fnToRefactor: FnToRefactor?): RefactoringRequest? =
         resolveRefactoringRequest(
-            fileData = FileMetaType(fn = Fn("missing", RangeCamelCase(2, 1, 1, 1)), fileName = "a.kt"),
+            fileData =
+                FileDataWithContent(
+                    meta = FileMetaType(fn = Fn("missing", RangeCamelCase(2, 1, 1, 1)), fileName = "a.kt"),
+                ),
             source = AceEntryPoint.RETRY,
             fnToRefactor = fnToRefactor,
             fileSystem = InMemoryFileSystem(mutableMapOf("a.kt" to "content")),
