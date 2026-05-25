@@ -81,12 +81,10 @@ class UIRefreshService(
 
             Log.info("Refreshing external annotations in file: ${psiFile.name}")
 
-            withContext(Dispatchers.Main) {
-                try {
-                    restartDaemon(psiFile)
-                } catch (e: Exception) {
-                    Log.warn("Failed to refresh annotations for file: ${psiFile.name}. Error: ${e.message}")
-                }
+            try {
+                restartDaemon(psiFile)
+            } catch (e: Exception) {
+                Log.warn("Failed to refresh annotations for file: ${psiFile.name}. Error: ${e.message}")
             }
         }
 
@@ -120,14 +118,16 @@ class UIRefreshService(
     }
 
     private fun restartDaemon(psiFile: PsiFile) {
-        val analyzer = DaemonCodeAnalyzer.getInstance(project)
-        try {
-            analyzer.javaClass
-                .getMethod("restart", PsiFile::class.java, Any::class.java)
-                .invoke(analyzer, psiFile, "CodeScene annotation refresh")
-        } catch (_: NoSuchMethodException) {
-            @Suppress("DEPRECATION")
-            analyzer.restart(psiFile)
+        runReadAction {
+            val analyzer = DaemonCodeAnalyzer.getInstance(project)
+            try {
+                analyzer.javaClass
+                    .getMethod("restart", PsiFile::class.java, Any::class.java)
+                    .invoke(analyzer, psiFile, "CodeScene annotation refresh")
+            } catch (_: NoSuchMethodException) {
+                @Suppress("DEPRECATION")
+                analyzer.restart(psiFile)
+            }
         }
     }
 }
