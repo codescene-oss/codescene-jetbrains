@@ -9,11 +9,42 @@ import org.junit.Test
 
 class AutoRefactorConfigUtilsTest {
     @Test
-    fun `toAutoRefactorConfig sets activated from acknowledgement`() {
-        val settings =
-            CodeSceneGlobalSettings(aceAcknowledged = true, enableAutoRefactor = true, aceAuthToken = "token")
-        val result = toAutoRefactorConfig(settings)
-        assertEquals(true, result.activated)
+    fun `toAutoRefactorConfig activated true when acknowledged`() {
+        val withToken =
+            toAutoRefactorConfig(
+                CodeSceneGlobalSettings(aceAcknowledged = true, aceAuthToken = "token"),
+            )
+        assertTrue(withToken.activated)
+
+        val withoutToken =
+            toAutoRefactorConfig(
+                CodeSceneGlobalSettings(aceAcknowledged = true, aceAuthToken = ""),
+            )
+        assertTrue(withoutToken.activated)
+    }
+
+    @Test
+    fun `toAutoRefactorConfig activated false when unacknowledged and token present`() {
+        val result =
+            toAutoRefactorConfig(
+                CodeSceneGlobalSettings(aceAcknowledged = false, aceAuthToken = "token"),
+            )
+        assertFalse(result.activated)
+    }
+
+    @Test
+    fun `toAutoRefactorConfig activated true when unacknowledged and no token`() {
+        val result =
+            toAutoRefactorConfig(
+                CodeSceneGlobalSettings(aceAcknowledged = false, aceAuthToken = ""),
+            )
+        assertTrue(result.activated)
+
+        val blankToken =
+            toAutoRefactorConfig(
+                CodeSceneGlobalSettings(aceAcknowledged = false, aceAuthToken = "   "),
+            )
+        assertTrue(blankToken.activated)
     }
 
     @Test
