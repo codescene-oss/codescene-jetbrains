@@ -77,4 +77,15 @@ class PlatformDeltaCacheService(
             )
         }
     }
+
+    override fun setIncludeInCodeHealthMonitor(
+        filePath: String,
+        include: Boolean,
+    ) {
+        val cacheKey = pathCacheKey(filePath)
+        val existing = cache[cacheKey] ?: return
+        if (existing.includeInCodeHealthMonitor == include) return
+        super.setIncludeInCodeHealthMonitor(filePath, include)
+        updateMonitor(project)
+    }
 }
