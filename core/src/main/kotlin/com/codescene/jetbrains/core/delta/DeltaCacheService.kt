@@ -110,7 +110,7 @@ open class DeltaCacheService(
         )
     }
 
-    fun setIncludeInCodeHealthMonitor(
+    open fun setIncludeInCodeHealthMonitor(
         filePath: String,
         include: Boolean,
     ) {

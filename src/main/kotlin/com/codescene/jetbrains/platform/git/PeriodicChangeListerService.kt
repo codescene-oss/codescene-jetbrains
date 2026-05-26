@@ -1,7 +1,9 @@
 package com.codescene.jetbrains.platform.git
 
+import com.codescene.jetbrains.core.cleanup.StaleItemCleanup
 import com.codescene.jetbrains.core.git.pathFileName
 import com.codescene.jetbrains.platform.api.CachedReviewService
+import com.codescene.jetbrains.platform.delta.PlatformDeltaCacheService
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
@@ -45,6 +47,8 @@ class PeriodicChangeListerService(
     private val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
     private var workspacePath: String? = null
     private var gitRootPath: String? = null
+    private val openFilesObserver = OpenFilesObserverAdapter(project)
+    private val staleItemCleanup = StaleItemCleanup(PlatformDeltaCacheService.getInstance(project), Log)
 
     fun start() {
         val wsPath = project.basePath
@@ -76,6 +80,12 @@ class PeriodicChangeListerService(
 
         val changeLister = Git4IdeaChangeLister.getInstance(project)
         val changedFiles = runBlocking { changeLister.getAllChangedFiles(gitRoot, wsPath, emptySet()) }
+        val visibleFiles = openFilesObserver.getAllVisibleFileNames()
+
+        val removed = staleItemCleanup.cleanupStaleItems(changedFiles, visibleFiles)
+        if (removed.isNotEmpty()) {
+            Log.info("Cleaned up ${removed.size} stale items", "PeriodicChangeListerService")
+        }
 
         Log.info("Poll found ${changedFiles.size} changed files", "PeriodicChangeListerService")
 
