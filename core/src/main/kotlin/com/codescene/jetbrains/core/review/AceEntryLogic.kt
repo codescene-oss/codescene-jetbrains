@@ -6,6 +6,7 @@ import com.codescene.jetbrains.core.contracts.IAceService
 import com.codescene.jetbrains.core.contracts.IFileSystem
 import com.codescene.jetbrains.core.contracts.ILogger
 import com.codescene.jetbrains.core.contracts.ISettingsProvider
+import com.codescene.jetbrains.core.git.pathComparisonKey
 import com.codescene.jetbrains.core.models.AceCwfParams
 import com.codescene.jetbrains.core.models.CurrentAceViewData
 import com.codescene.jetbrains.core.models.RefactoringRequest
@@ -152,7 +153,7 @@ fun resolveAceViewUpdateParams(
     currentAceData: CurrentAceViewData,
     entry: AceRefactorableFunctionCacheEntry,
 ): AceCwfParams? {
-    if (currentAceData.filePath != entry.filePath) return null
+    if (pathComparisonKey(currentAceData.filePath) != pathComparisonKey(entry.filePath)) return null
 
     val state = resolveAceViewState(currentAceData.functionToRefactor, entry.result)
     if (!state.isStale && !state.isRangeDifferent) return null
