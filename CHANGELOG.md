@@ -7,11 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- **Changed**
-  - Default timeout increased from 15s to 60s.
+### [0.5.0] - 2026-05-27
+- **Added**
+  - Revamped UI to align with other CodeScene IDE Extensions
+  - CodeScene ACE support
+  - Background Git and File Change Observer 
+  - .codescene/code-health-rules.json support (#140)
+
 - **Fixed**
-  - Handling of empty old/new scores, mainly affecting the old native monitor presentation.
-  - Review Code Vision now automatically refreshes for all open files across all projects when settings change, without requiring manual file content refresh.
+  - improved .cpp declaration refactoring support (#116)
+
+- **Changed**
+  - Dropped support for 2023 and below of IDE versions.
+  - Changed telemetry to be opt-out instead of opt-in (#112)
+  - Simplified settings page
 
 ### [0.4.2] - 2026-02-17
 - **Fixed**

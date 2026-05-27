@@ -1,7 +1,7 @@
 # CodeScene - Code Analysis and Refactoring
 
 <!-- Plugin description -->
-[CodeScene](http://www.codescene.com) is the only code analysis tool with a **proven business impact**. 
+[CodeScene](https://www.codescene.com) is the only code analysis tool with a **proven business impact**. 
 
 ## What is CodeScene for JetBrains? ##
 It serves as a **safeguard** against introducing code changes that could negatively affect your business outcomes.
