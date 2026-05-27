@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.util
 
 import com.codescene.data.ace.FnToRefactor
+import com.codescene.jetbrains.core.git.pathComparisonKey
 import com.codescene.jetbrains.core.models.CurrentAceViewData
 import com.codescene.jetbrains.core.models.shared.FileMetaType
 import com.codescene.jetbrains.core.review.AceRefactorableFunctionCacheEntry
@@ -85,7 +86,7 @@ class AceCwfHandler(private val project: Project) {
     fun updateCurrentAceView(entry: AceRefactorableFunctionCacheEntry) {
         val platformData = getAceUserData(project)
         val filePath = platformData?.aceData?.fileData?.fileName ?: return
-        if (filePath != entry.filePath) return
+        if (pathComparisonKey(filePath) != pathComparisonKey(entry.filePath)) return
 
         val currentAceData =
             CurrentAceViewData(

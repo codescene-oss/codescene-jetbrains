@@ -173,6 +173,25 @@ class AceEntryLogicTest {
     }
 
     @Test
+    fun `resolveAceViewUpdateParams matches paths that differ only by separator or drive letter casing`() {
+        val currentFn = mockFn("f", "old", 1, 2)
+        val updatedFn = mockFn("f", "new", 1, 2)
+        val current = CurrentAceViewData("C:/proj/Foo.kt", currentFn, refactorResponse = null)
+        val entry =
+            AceRefactorableFunctionCacheEntry(
+                filePath = "C:\\proj\\foo.kt",
+                content = "c",
+                result = listOf(updatedFn),
+            )
+
+        val result = resolveAceViewUpdateParams(current, entry)
+
+        assertNotNull(result)
+        assertEquals(true, result?.stale)
+        assertSame(updatedFn, result?.function)
+    }
+
+    @Test
     fun `resolveAceViewUpdateParams returns null when no stale and no range change`() {
         val currentFn = mockFn("f", "same", 1, 2)
         val updatedFn = mockFn("f", "same", 1, 2)
