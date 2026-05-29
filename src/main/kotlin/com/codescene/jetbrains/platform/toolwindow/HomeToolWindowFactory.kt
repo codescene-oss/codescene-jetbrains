@@ -2,11 +2,13 @@ package com.codescene.jetbrains.platform.toolwindow
 
 import com.codescene.jetbrains.core.models.View
 import com.codescene.jetbrains.platform.webview.WebViewFactory
+import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 
-internal class HomeToolWindowFactory : ToolWindowFactory {
+// The tool window shell is safe to create during indexing; index-dependent work should guard itself explicitly.
+internal class HomeToolWindowFactory : ToolWindowFactory, DumbAware {
     /**
      * Creates and sets up the content for the *Home* ToolWindow in the JetBrains IDE.
      *
