@@ -13,14 +13,12 @@ import com.codescene.jetbrains.core.util.TelemetryEvents
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.platform.util.Log
-import com.codescene.jetbrains.platform.util.PlatformConstants.CODESCENE_PLUGIN_ID
 import com.codescene.jetbrains.platform.util.PlatformConstants.TELEMETRY_EDITOR_TYPE
-import com.intellij.ide.plugins.PluginManagerCore
+import com.intellij.ide.plugins.cl.PluginAwareClassLoader
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
-import com.intellij.openapi.extensions.PluginId
 import java.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -112,8 +110,13 @@ class TelemetryService : BaseService(Log), Disposable, ITelemetryService {
 
     private fun getEditorVersion(): String = ApplicationInfo.getInstance().fullVersion
 
-    private fun getPluginVersion(): String =
-        PluginManagerCore.getPlugin(PluginId.getId(CODESCENE_PLUGIN_ID))?.version ?: "unknown"
+    private fun getPluginVersion(): String {
+        val classLoader = this.javaClass.getClassLoader()
+        if (classLoader is PluginAwareClassLoader) {
+            return classLoader.pluginDescriptor.version
+        }
+        return "unknown"
+    }
 
     override fun dispose() {
         scope.cancel()
