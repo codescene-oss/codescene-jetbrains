@@ -28,6 +28,13 @@ fun pathCacheKey(path: String): String = pathComparisonKey(path)
 
 fun pathFileName(path: String): String = path.replace('\\', '/').substringAfterLast('/')
 
+const val LOG_FULL_PATHS_PROPERTY = "codescene.diagnostics.logFullPaths"
+
+fun logFullPathsEnabled(): Boolean =
+    System.getProperty(LOG_FULL_PATHS_PROPERTY)?.equals("true", ignoreCase = true) == true
+
+fun pathForLog(path: String): String = if (logFullPathsEnabled()) path else pathFileName(path)
+
 fun isPathUnderRoot(
     path: String,
     rootPath: String,
