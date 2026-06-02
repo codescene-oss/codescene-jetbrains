@@ -28,7 +28,7 @@ data class CodeSceneGlobalSettings(
     var aceStatus: AceStatus = AceStatus.DEACTIVATED,
     var enableCodeLenses: Boolean = true,
     var enableAutoRefactor: Boolean = true,
-    var aceAuthToken: String = "",
+    var aceTokenConfigured: Boolean = false,
     // This is a freemium flag for the Code Health Monitor. If a proper CHM feature flag becomes necessary, use the same approach as ACE and CWF. If not,
     // TODO delete this after the integration with core is complete.
     val codeHealthMonitorEnabled: Boolean = true,

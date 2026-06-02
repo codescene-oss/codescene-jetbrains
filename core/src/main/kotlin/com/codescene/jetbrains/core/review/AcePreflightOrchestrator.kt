@@ -19,7 +19,7 @@ class AcePreflightOrchestrator(
         val decision =
             resolveAcePreflightDecision(
                 autoRefactorEnabled = settings.enableAutoRefactor,
-                token = settings.aceAuthToken,
+                token = settingsProvider.getAceAuthToken(),
                 force = force,
             )
 

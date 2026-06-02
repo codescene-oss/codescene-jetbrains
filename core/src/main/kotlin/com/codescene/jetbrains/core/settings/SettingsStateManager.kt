@@ -51,6 +51,12 @@ class SettingsStateManager {
         notifyListeners(oldState, extensionSettingsState.copy())
     }
 
+    fun updateAceTokenConfigured(configured: Boolean) {
+        val oldState = extensionSettingsState.copy()
+        extensionSettingsState.aceTokenConfigured = configured
+        notifyListeners(oldState, extensionSettingsState.copy())
+    }
+
     fun addSettingsChangeListener(listener: ISettingsChangeListener) {
         listeners += listener
     }
@@ -59,17 +65,21 @@ class SettingsStateManager {
         listeners -= listener
     }
 
-    fun notifyIfStateChanged(oldState: CodeSceneGlobalSettings) {
+    fun notifyIfStateChanged(
+        oldState: CodeSceneGlobalSettings,
+        aceAuthTokenChanged: Boolean = false,
+    ) {
         val newState = extensionSettingsState.copy()
-        if (oldState != newState) {
-            notifyListeners(oldState, newState)
+        if (oldState != newState || aceAuthTokenChanged) {
+            notifyListeners(oldState, newState, aceAuthTokenChanged)
         }
     }
 
     private fun notifyListeners(
         oldState: CodeSceneGlobalSettings,
         newState: CodeSceneGlobalSettings,
+        aceAuthTokenChanged: Boolean = false,
     ) {
-        listeners.forEach { it.onSettingsChanged(oldState, newState) }
+        listeners.forEach { it.onSettingsChanged(oldState, newState, aceAuthTokenChanged) }
     }
 }

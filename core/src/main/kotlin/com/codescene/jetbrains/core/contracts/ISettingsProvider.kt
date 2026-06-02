@@ -6,6 +6,10 @@ import com.codescene.jetbrains.core.models.settings.CodeSceneGlobalSettings
 interface ISettingsProvider {
     fun currentState(): CodeSceneGlobalSettings
 
+    fun getAceAuthToken(): String
+
+    fun setAceAuthToken(token: String)
+
     fun updateTelemetryConsent(hasAccepted: Boolean)
 
     fun updateTelemetryNoticeShown(shown: Boolean)

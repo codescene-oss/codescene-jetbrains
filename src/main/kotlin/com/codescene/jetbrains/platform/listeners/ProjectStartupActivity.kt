@@ -70,8 +70,8 @@ class ProjectStartupActivity : ProjectActivity {
         if (!noticeDisplayed) showTelemetryNoticeNotification(project)
 
         val listener =
-            ISettingsChangeListener { oldState, newState ->
-                val actions = resolveSettingsChangeActions(oldState, newState)
+            ISettingsChangeListener { oldState, newState, aceAuthTokenChanged ->
+                val actions = resolveSettingsChangeActions(oldState, newState, aceAuthTokenChanged)
                 actions.forEach { action ->
                     when (action) {
                         is SettingsChangeAction.RefreshCodeVision -> {

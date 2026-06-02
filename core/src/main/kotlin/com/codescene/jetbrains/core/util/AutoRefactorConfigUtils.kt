@@ -14,7 +14,7 @@ fun mapAceStatusToCwfString(status: AceStatus): String =
     }
 
 fun toAutoRefactorConfig(settings: CodeSceneGlobalSettings): AutoRefactorConfig {
-    val hasToken = settings.aceAuthToken.trim().isNotEmpty()
+    val hasToken = settings.aceTokenConfigured
     val isActivated = !(!settings.aceAcknowledged && hasToken)
     return AutoRefactorConfig(
         activated = isActivated,

@@ -39,11 +39,19 @@ class SettingsChangeActionTest {
     }
 
     @Test
-    fun `returns refresh ace ui when auth token changed`() {
-        val oldState = CodeSceneGlobalSettings(aceAuthToken = "")
-        val newState = oldState.copy(aceAuthToken = "token")
+    fun `returns refresh ace ui when auth token configured flag changed`() {
+        val oldState = CodeSceneGlobalSettings(aceTokenConfigured = false)
+        val newState = oldState.copy(aceTokenConfigured = true)
 
         val result = resolveSettingsChangeActions(oldState, newState)
+
+        assertEquals(listOf(SettingsChangeAction.RefreshAceUI(true)), result)
+    }
+
+    @Test
+    fun `returns refresh ace ui when auth token value changed`() {
+        val state = CodeSceneGlobalSettings(aceTokenConfigured = true)
+        val result = resolveSettingsChangeActions(state, state, aceAuthTokenChanged = true)
 
         assertEquals(listOf(SettingsChangeAction.RefreshAceUI(true)), result)
     }
@@ -54,14 +62,14 @@ class SettingsChangeActionTest {
             CodeSceneGlobalSettings(
                 enableCodeLenses = true,
                 enableAutoRefactor = true,
-                aceAuthToken = "",
+                aceTokenConfigured = false,
                 aceStatus = AceStatus.DEACTIVATED,
             )
         val newState =
             oldState.copy(
                 enableCodeLenses = false,
                 enableAutoRefactor = false,
-                aceAuthToken = "token",
+                aceTokenConfigured = true,
             ).also { it.aceStatus = AceStatus.OFFLINE }
 
         val result = resolveSettingsChangeActions(oldState, newState)

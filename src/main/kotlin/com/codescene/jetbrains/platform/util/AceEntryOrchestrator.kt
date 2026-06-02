@@ -98,7 +98,7 @@ class AceEntryOrchestrator(private val project: Project) {
 
     private fun createRefactoringOptions(skipCache: Boolean) =
         RefactoringOptions().apply {
-            setToken(appServices.settingsProvider.currentState().aceAuthToken)
+            setToken(appServices.settingsProvider.getAceAuthToken())
             setSkipCache(skipCache)
         }
 

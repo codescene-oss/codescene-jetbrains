@@ -14,6 +14,7 @@ sealed class SettingsChangeAction {
 fun resolveSettingsChangeActions(
     oldState: CodeSceneGlobalSettings,
     newState: CodeSceneGlobalSettings,
+    aceAuthTokenChanged: Boolean = false,
 ): List<SettingsChangeAction> {
     val actions = mutableListOf<SettingsChangeAction>()
 
@@ -30,7 +31,7 @@ fun resolveSettingsChangeActions(
         actions.add(SettingsChangeAction.RefreshAceUI(newState.enableAutoRefactor))
     }
 
-    if (oldState.aceAuthToken != newState.aceAuthToken) {
+    if (oldState.aceTokenConfigured != newState.aceTokenConfigured || aceAuthTokenChanged) {
         actions.add(SettingsChangeAction.RefreshAceUI(true))
     }
 

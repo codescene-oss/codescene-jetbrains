@@ -12,16 +12,20 @@ import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.bindSelected
 import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
+import kotlin.properties.Delegates
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Suppress("DialogTitleCapitalization")
 class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
-    private val settings = CodeSceneGlobalSettingsStore.getInstance().currentState()
+    private val settingsStore = CodeSceneGlobalSettingsStore.getInstance()
+    private val settings = settingsStore.currentState()
     private val scope = CoroutineScope(Dispatchers.IO)
+    private var aceAuthToken by Delegates.observable("") { _, _, _ -> }
 
     override fun createPanel(): DialogPanel {
+        aceAuthToken = settingsStore.getAceAuthToken()
         return panel {
             row {
                 checkBox(UiLabelsBundle.message("enableCodeLenses"))
@@ -50,11 +54,10 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                         .align(Align.FILL)
                         .resizableColumn()
                         .comment(UiLabelsBundle.message("aceAuthTokenComment"))
-                        .bindText(settings::aceAuthToken)
+                        .bindText(::aceAuthToken)
                 }
             }
 
-            // TODO: verify naming of this section, currently just a placeholder
             groupRowsRange(UiLabelsBundle.message("cloudConnection")) {
                 row(UiLabelsBundle.message("serverUrl")) {
                     textField()
@@ -83,12 +86,20 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
         }
     }
 
+    override fun reset() {
+        aceAuthToken = settingsStore.getAceAuthToken()
+        super.reset()
+    }
+
     override fun apply() {
         val previousState = settings.copy()
+        val previousToken = settingsStore.getAceAuthToken()
         super.apply()
-        CodeSceneGlobalSettingsStore.getInstance().notifyIfStateChanged(previousState)
+        settingsStore.setAceAuthToken(aceAuthToken)
+        settingsStore.notifyIfStateChanged(previousState, previousToken)
         val onlyTelemetryConsentChanged =
-            previousState.copy(telemetryConsentGiven = settings.telemetryConsentGiven) == settings
+            previousState.copy(telemetryConsentGiven = settings.telemetryConsentGiven) == settings &&
+                previousToken == aceAuthToken
         if (!onlyTelemetryConsentChanged) {
             scope.launch {
                 AceService.getInstance().runPreflight(true)

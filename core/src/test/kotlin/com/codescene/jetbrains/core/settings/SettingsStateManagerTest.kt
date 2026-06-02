@@ -70,22 +70,22 @@ class SettingsStateManagerTest {
     fun `updateTelemetryConsent updates state and notifies listeners`() {
         manager.updateTelemetryConsent(true)
         assertTrue(manager.getState().telemetryConsentGiven)
-        verify(exactly = 1) { listener.onSettingsChanged(any(), any()) }
+        verify(exactly = 1) { listener.onSettingsChanged(any(), any(), any()) }
 
         manager.updateTelemetryConsent(false)
         assertFalse(manager.getState().telemetryConsentGiven)
-        verify(exactly = 2) { listener.onSettingsChanged(any(), any()) }
+        verify(exactly = 2) { listener.onSettingsChanged(any(), any(), any()) }
     }
 
     @Test
     fun `updateTelemetryNoticeShown updates state and notifies listeners`() {
         manager.updateTelemetryNoticeShown(true)
         assertTrue(manager.getState().telemetryNoticeShown)
-        verify(exactly = 1) { listener.onSettingsChanged(any(), any()) }
+        verify(exactly = 1) { listener.onSettingsChanged(any(), any(), any()) }
 
         manager.updateTelemetryNoticeShown(false)
         assertFalse(manager.getState().telemetryNoticeShown)
-        verify(exactly = 2) { listener.onSettingsChanged(any(), any()) }
+        verify(exactly = 2) { listener.onSettingsChanged(any(), any(), any()) }
     }
 
     @Test
@@ -94,7 +94,7 @@ class SettingsStateManagerTest {
 
         manager.loadState(newState)
 
-        verify(exactly = 1) { listener.onSettingsChanged(any(), any()) }
+        verify(exactly = 1) { listener.onSettingsChanged(any(), any(), any()) }
         assertEquals("https://custom.example.com", manager.getState().serverUrl)
     }
 
@@ -104,7 +104,7 @@ class SettingsStateManagerTest {
 
         manager.loadState(CodeSceneGlobalSettings(serverUrl = "https://other.com"))
 
-        verify(exactly = 0) { listener.onSettingsChanged(any(), any()) }
+        verify(exactly = 0) { listener.onSettingsChanged(any(), any(), any()) }
     }
 
     @Test
@@ -112,7 +112,7 @@ class SettingsStateManagerTest {
         manager.updateAceStatus(AceStatus.SIGNED_IN)
 
         assertEquals(AceStatus.SIGNED_IN, manager.getState().aceStatus)
-        verify(exactly = 1) { listener.onSettingsChanged(any(), any()) }
+        verify(exactly = 1) { listener.onSettingsChanged(any(), any(), any()) }
     }
 
     @Test
@@ -122,7 +122,7 @@ class SettingsStateManagerTest {
         manager.updateAceAcknowledged(true)
 
         assertTrue(manager.getState().aceAcknowledged)
-        verify(exactly = 1) { listener.onSettingsChanged(any(), any()) }
+        verify(exactly = 1) { listener.onSettingsChanged(any(), any(), any()) }
     }
 
     @Test
@@ -131,7 +131,7 @@ class SettingsStateManagerTest {
 
         manager.notifyIfStateChanged(snapshot)
 
-        verify(exactly = 0) { listener.onSettingsChanged(any(), any()) }
+        verify(exactly = 0) { listener.onSettingsChanged(any(), any(), any()) }
     }
 
     @Test
@@ -141,7 +141,7 @@ class SettingsStateManagerTest {
 
         manager.notifyIfStateChanged(snapshot)
 
-        verify(exactly = 1) { listener.onSettingsChanged(any(), any()) }
+        verify(exactly = 1) { listener.onSettingsChanged(any(), any(), any()) }
     }
 
     @Test
@@ -151,7 +151,7 @@ class SettingsStateManagerTest {
 
         manager.updateAceStatus(AceStatus.ERROR)
 
-        verify(exactly = 1) { listener.onSettingsChanged(any(), any()) }
-        verify(exactly = 1) { second.onSettingsChanged(any(), any()) }
+        verify(exactly = 1) { listener.onSettingsChanged(any(), any(), any()) }
+        verify(exactly = 1) { second.onSettingsChanged(any(), any(), any()) }
     }
 }
