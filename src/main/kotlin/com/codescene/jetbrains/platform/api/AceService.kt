@@ -8,6 +8,7 @@ import com.codescene.data.ace.RefactoringOptions
 import com.codescene.data.delta.Delta
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.core.contracts.IAceService
+import com.codescene.jetbrains.core.git.pathForLog
 import com.codescene.jetbrains.core.review.AcePreflightOrchestrator
 import com.codescene.jetbrains.core.review.AceRefactorableFunctionCacheEntry
 import com.codescene.jetbrains.core.review.AceRefactoringOrchestrator
@@ -48,7 +49,7 @@ internal sealed class RefactorableFunctionsSource {
             review.fileLevelCodeSmells + review.functionLevelCodeSmells.flatMap { it.codeSmells }
         }
 
-        override fun analysisLabel(): String = "review with $codeSmells"
+        override fun analysisLabel(): String = "review with ${codeSmells.size} code smell(s)"
 
         override fun fetch(
             params: CodeParams,
@@ -105,7 +106,7 @@ class AceService :
         source: RefactorableFunctionsSource,
     ): Boolean {
         Log.debug(
-            "Getting refactorable functions for $filePath based on ${source.analysisLabel()}...",
+            "Getting refactorable functions for ${pathForLog(filePath)} based on ${source.analysisLabel()}...",
             serviceImplementation,
         )
         return refactorableFunctionsHandler(project, filePath, currentCode) {

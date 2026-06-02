@@ -37,7 +37,7 @@ class PathBasedReviewHandler(private val project: Project) {
         val startTime = System.currentTimeMillis()
         val file = LocalFileSystem.getInstance().findFileByPath(filePath)
         if (file == null) {
-            Log.info("reviewByPath file not found path=$filePath", "CodeSceneCachedReview")
+            Log.info("reviewByPath file not found file=$fileName", "CodeSceneCachedReview")
             return
         }
 
@@ -61,7 +61,7 @@ class PathBasedReviewHandler(private val project: Project) {
                 }
             }
         if (currentCode == null) {
-            Log.info("reviewByPath file became invalid path=$filePath", "CodeSceneCachedReview")
+            Log.info("reviewByPath file became invalid file=$fileName", "CodeSceneCachedReview")
             return
         }
         Log.info(
@@ -82,14 +82,14 @@ class PathBasedReviewHandler(private val project: Project) {
 
             if (deltaHit) {
                 Log.info(
-                    "reviewByPath full cache hit path=$filePath totalTime=${System.currentTimeMillis() - startTime}ms",
+                    "reviewByPath full cache hit file=$fileName totalTime=${System.currentTimeMillis() - startTime}ms",
                     "CodeSceneCachedReview",
                 )
                 return
             }
 
             Log.info(
-                "reviewByPath review cache hit, delta miss path=$filePath",
+                "reviewByPath review cache hit, delta miss file=$fileName",
                 "CodeSceneCachedReview",
             )
             handleDeltaByPath(filePath, fileName, currentCode, cachedReview.score.orElse(null), reviewMiss = false)
@@ -107,14 +107,14 @@ class PathBasedReviewHandler(private val project: Project) {
             "CodeSceneCachedReview",
         )
         if (review == null) {
-            Log.info("reviewByPath no result path=$filePath", "CodeSceneCachedReview")
+            Log.info("reviewByPath no result file=$fileName", "CodeSceneCachedReview")
             return
         }
 
         refreshAceFromReview(project, filePath, fileName, currentCode, review)
 
         Log.info(
-            "reviewByPath completed path=$filePath totalTime=${System.currentTimeMillis() - startTime}ms",
+            "reviewByPath completed file=$fileName totalTime=${System.currentTimeMillis() - startTime}ms",
             "CodeSceneCachedReview",
         )
         handleDeltaByPath(filePath, fileName, currentCode, review.score.orElse(null), reviewMiss = true)
