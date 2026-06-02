@@ -16,16 +16,44 @@ import com.intellij.openapi.components.Storage
     storages = [Storage("codescene-settings.xml")],
 )
 @Service(Service.Level.APP)
-class CodeSceneGlobalSettingsStore : PersistentStateComponent<CodeSceneGlobalSettings>, ISettingsProvider {
+class CodeSceneGlobalSettingsStore : PersistentStateComponent<CodeSceneGlobalSettingsPersisted>, ISettingsProvider {
     private val stateManager = SettingsStateManager()
 
-    override fun getState(): CodeSceneGlobalSettings = stateManager.getState()
+    override fun getState(): CodeSceneGlobalSettingsPersisted =
+        stateManager.getState().toPersisted().apply {
+            aceAuthToken = ""
+        }
 
-    override fun loadState(state: CodeSceneGlobalSettings) {
-        stateManager.loadState(state)
+    override fun loadState(state: CodeSceneGlobalSettingsPersisted) {
+        val legacyToken = state.aceAuthToken.takeIf { it.isNotBlank() }
+        val tokenConfigured = state.aceTokenConfigured || legacyToken != null
+        stateManager.loadState(state.toCore().copy(aceTokenConfigured = tokenConfigured))
+        if (legacyToken != null) {
+            migrateLegacyAceAuthToken(legacyToken)
+        }
+    }
+
+    private fun migrateLegacyAceAuthToken(legacyToken: String) {
+        ApplicationManager.getApplication().executeOnPooledThread {
+            AceAuthTokenStore.setToken(legacyToken)
+            stateManager.updateAceTokenConfigured(true)
+            ApplicationManager.getApplication().invokeLater {
+                ApplicationManager.getApplication().saveSettings()
+            }
+        }
     }
 
     override fun currentState(): CodeSceneGlobalSettings = stateManager.currentState()
+
+    override fun getAceAuthToken(): String = AceAuthTokenStore.getToken()
+
+    override fun setAceAuthToken(token: String) {
+        AceAuthTokenStore.setToken(token)
+        stateManager.updateAceTokenConfigured(token.isNotBlank())
+        ApplicationManager.getApplication().invokeLater {
+            ApplicationManager.getApplication().saveSettings()
+        }
+    }
 
     override fun updateTelemetryConsent(hasAccepted: Boolean) {
         stateManager.updateTelemetryConsent(hasAccepted)
@@ -57,8 +85,12 @@ class CodeSceneGlobalSettingsStore : PersistentStateComponent<CodeSceneGlobalSet
         stateManager.removeSettingsChangeListener(listener)
     }
 
-    fun notifyIfStateChanged(oldState: CodeSceneGlobalSettings) {
-        stateManager.notifyIfStateChanged(oldState)
+    fun notifyIfStateChanged(
+        oldState: CodeSceneGlobalSettings,
+        previousAceAuthToken: String? = null,
+    ) {
+        val tokenChanged = previousAceAuthToken != null && previousAceAuthToken != getAceAuthToken()
+        stateManager.notifyIfStateChanged(oldState, tokenChanged)
     }
 
     companion object {

@@ -54,7 +54,7 @@ class AceCodeVisionProvider : CodeVisionProvider<Unit> {
 
         val disabled =
             !settings.enableAutoRefactor ||
-                settings.aceAuthToken.trim().isEmpty() || settings.aceStatus == AceStatus.DEACTIVATED
+                !settings.aceTokenConfigured || settings.aceStatus == AceStatus.DEACTIVATED
         if (disabled) {
             Log.info("Rendering empty code vision providers for file '${editor.virtualFile?.name}'.")
             return CodeVisionState.READY_EMPTY

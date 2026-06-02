@@ -6,8 +6,16 @@ import com.codescene.jetbrains.core.models.settings.CodeSceneGlobalSettings
 
 class InMemorySettingsProvider(
     private var settings: CodeSceneGlobalSettings = CodeSceneGlobalSettings(),
+    private var aceAuthToken: String = "",
 ) : ISettingsProvider {
     override fun currentState(): CodeSceneGlobalSettings = settings
+
+    override fun getAceAuthToken(): String = aceAuthToken
+
+    override fun setAceAuthToken(token: String) {
+        aceAuthToken = token
+        settings = settings.copy(aceTokenConfigured = token.isNotBlank())
+    }
 
     override fun updateTelemetryConsent(hasAccepted: Boolean) {
         settings = settings.copy(telemetryConsentGiven = hasAccepted)
@@ -18,7 +26,7 @@ class InMemorySettingsProvider(
     }
 
     override fun updateAceStatus(status: AceStatus) {
-        settings.aceStatus = status
+        settings = settings.copy(aceStatus = status)
     }
 
     override fun updateAceAcknowledged(acknowledged: Boolean) {

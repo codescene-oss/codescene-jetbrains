@@ -32,14 +32,16 @@ class AcePreflightOrchestratorTest {
         settings: CodeSceneGlobalSettings =
             CodeSceneGlobalSettings(
                 enableAutoRefactor = true,
-                aceAuthToken = "token",
+                aceTokenConfigured = true,
             ),
+        aceAuthToken: String = "token",
         fetchResult: suspend (Boolean) -> TimedResult<PreflightResponse?> = { bypassCache ->
             fetchBypassCache = bypassCache
             TimedResult(preflightResponse, 100)
         },
     ) = AcePreflightOrchestrator(
-        settingsProvider = InMemorySettingsProvider(settings).also { settingsProvider = it },
+        settingsProvider =
+            InMemorySettingsProvider(settings, aceAuthToken = aceAuthToken).also { settingsProvider = it },
         logger = TestLogger,
         serviceName = "Test",
         fetchPreflight = fetchResult,
@@ -57,7 +59,7 @@ class AcePreflightOrchestratorTest {
     @Test
     fun `runPreflight returns null when auto-refactor disabled`() =
         runBlocking {
-            val settings = CodeSceneGlobalSettings(enableAutoRefactor = false, aceAuthToken = "token")
+            val settings = CodeSceneGlobalSettings(enableAutoRefactor = false, aceTokenConfigured = true)
             val orchestrator = createOrchestrator(settings = settings)
             val result = orchestrator.runPreflight()
             assertNull(result)
@@ -90,8 +92,8 @@ class AcePreflightOrchestratorTest {
     @Test
     fun `runPreflight calls onStatusChange with SIGNED_OUT on forced success without token`() =
         runBlocking {
-            val settings = CodeSceneGlobalSettings(enableAutoRefactor = true, aceAuthToken = "")
-            val orchestrator = createOrchestrator(settings = settings)
+            val settings = CodeSceneGlobalSettings(enableAutoRefactor = true, aceTokenConfigured = false)
+            val orchestrator = createOrchestrator(settings = settings, aceAuthToken = "")
             orchestrator.runPreflight(force = true)
             assertTrue(statusChanges.contains(AceStatus.SIGNED_OUT))
         }

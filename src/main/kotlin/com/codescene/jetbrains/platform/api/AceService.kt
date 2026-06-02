@@ -120,7 +120,7 @@ class AceService :
         val (project, editor, request) = params
         val effectiveOptions =
             options ?: RefactoringOptions().apply {
-                setToken(settingsProvider.currentState().aceAuthToken)
+                setToken(settingsProvider.getAceAuthToken())
                 setSkipCache(request.skipCache)
             }
         Log.debug(
@@ -199,7 +199,7 @@ class AceService :
                     ExtensionAPI.refactor(request.function, options)
                 }
             },
-            getToken = { settingsProvider.currentState().aceAuthToken },
+            getToken = { settingsProvider.getAceAuthToken() },
             onStatusChange = { status -> AceEntryOrchestrator.handleAceStatusChange(status) },
             onRequested = { request ->
                 telemetryService.logUsage(

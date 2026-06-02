@@ -37,27 +37,32 @@ class AceCwfHandler(private val project: Project) {
         fnToRefactor: FnToRefactor? = null,
     ) {
         if (fnToRefactor != null) {
-            ApplicationManager.getApplication().invokeLater {
-                val editor = getSelectedTextEditor(project, fileData.fileName)
-                val language = editor?.virtualFile?.extension
-                aceEntryOrchestrator.handleAceEntryPoint(
-                    RefactoringParams(
-                        project = project,
-                        editor = editor,
-                        request =
-                            com.codescene.jetbrains.core.models.RefactoringRequest(
-                                filePath = fileData.fileName,
-                                language = language,
-                                function = fnToRefactor,
-                                source = source,
-                            ),
-                    ),
-                )
+            ApplicationManager.getApplication().executeOnPooledThread {
+                val token = appServices.settingsProvider.getAceAuthToken()
+                ApplicationManager.getApplication().invokeLater {
+                    val editor = getSelectedTextEditor(project, fileData.fileName)
+                    val language = editor?.virtualFile?.extension
+                    aceEntryOrchestrator.handleAceEntryPoint(
+                        RefactoringParams(
+                            project = project,
+                            editor = editor,
+                            request =
+                                com.codescene.jetbrains.core.models.RefactoringRequest(
+                                    filePath = fileData.fileName,
+                                    language = language,
+                                    function = fnToRefactor,
+                                    source = source,
+                                ),
+                        ),
+                        aceAuthToken = token,
+                    )
+                }
             }
             return
         }
 
         ApplicationManager.getApplication().executeOnPooledThread {
+            val token = appServices.settingsProvider.getAceAuthToken()
             val bufferContent = resolveFileContent(fileData.fileName)
             val request =
                 resolveRefactoringRequest(
@@ -73,13 +78,16 @@ class AceCwfHandler(private val project: Project) {
             val language = editor?.virtualFile?.extension
             val requestWithLanguage = request.copy(language = language)
 
-            aceEntryOrchestrator.handleAceEntryPoint(
-                RefactoringParams(
-                    project = project,
-                    editor = editor,
-                    request = requestWithLanguage,
-                ),
-            )
+            ApplicationManager.getApplication().invokeLater {
+                aceEntryOrchestrator.handleAceEntryPoint(
+                    RefactoringParams(
+                        project = project,
+                        editor = editor,
+                        request = requestWithLanguage,
+                    ),
+                    aceAuthToken = token,
+                )
+            }
         }
     }
 

@@ -6,5 +6,6 @@ fun interface ISettingsChangeListener {
     fun onSettingsChanged(
         oldState: CodeSceneGlobalSettings,
         newState: CodeSceneGlobalSettings,
+        aceAuthTokenChanged: Boolean,
     )
 }

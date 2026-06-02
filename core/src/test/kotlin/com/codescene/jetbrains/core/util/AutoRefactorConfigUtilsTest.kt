@@ -12,13 +12,13 @@ class AutoRefactorConfigUtilsTest {
     fun `toAutoRefactorConfig activated true when acknowledged`() {
         val withToken =
             toAutoRefactorConfig(
-                CodeSceneGlobalSettings(aceAcknowledged = true, aceAuthToken = "token"),
+                CodeSceneGlobalSettings(aceAcknowledged = true, aceTokenConfigured = true),
             )
         assertTrue(withToken.activated)
 
         val withoutToken =
             toAutoRefactorConfig(
-                CodeSceneGlobalSettings(aceAcknowledged = true, aceAuthToken = ""),
+                CodeSceneGlobalSettings(aceAcknowledged = true, aceTokenConfigured = false),
             )
         assertTrue(withoutToken.activated)
     }
@@ -27,7 +27,7 @@ class AutoRefactorConfigUtilsTest {
     fun `toAutoRefactorConfig activated false when unacknowledged and token present`() {
         val result =
             toAutoRefactorConfig(
-                CodeSceneGlobalSettings(aceAcknowledged = false, aceAuthToken = "token"),
+                CodeSceneGlobalSettings(aceAcknowledged = false, aceTokenConfigured = true),
             )
         assertFalse(result.activated)
     }
@@ -36,15 +36,9 @@ class AutoRefactorConfigUtilsTest {
     fun `toAutoRefactorConfig activated true when unacknowledged and no token`() {
         val result =
             toAutoRefactorConfig(
-                CodeSceneGlobalSettings(aceAcknowledged = false, aceAuthToken = ""),
+                CodeSceneGlobalSettings(aceAcknowledged = false, aceTokenConfigured = false),
             )
         assertTrue(result.activated)
-
-        val blankToken =
-            toAutoRefactorConfig(
-                CodeSceneGlobalSettings(aceAcknowledged = false, aceAuthToken = "   "),
-            )
-        assertTrue(blankToken.activated)
     }
 
     @Test
@@ -57,8 +51,8 @@ class AutoRefactorConfigUtilsTest {
     }
 
     @Test
-    fun `toAutoRefactorConfig disabled is true when token is blank`() {
-        val result = toAutoRefactorConfig(CodeSceneGlobalSettings(aceAuthToken = "   "))
+    fun `toAutoRefactorConfig disabled is true when token not configured`() {
+        val result = toAutoRefactorConfig(CodeSceneGlobalSettings(aceTokenConfigured = false))
         assertEquals(true, result.disabled)
     }
 
@@ -90,7 +84,7 @@ class AutoRefactorConfigUtilsTest {
             toAutoRefactorConfig(
                 CodeSceneGlobalSettings(
                     aceStatus = AceStatus.SIGNED_IN,
-                    aceAuthToken = "tok",
+                    aceTokenConfigured = true,
                 ),
             )
         assertTrue(result.aceStatus.hasToken)
@@ -103,7 +97,7 @@ class AutoRefactorConfigUtilsTest {
             toAutoRefactorConfig(
                 CodeSceneGlobalSettings(
                     aceStatus = AceStatus.SIGNED_OUT,
-                    aceAuthToken = "",
+                    aceTokenConfigured = false,
                 ),
             )
         assertFalse(result.aceStatus.hasToken)
@@ -116,7 +110,7 @@ class AutoRefactorConfigUtilsTest {
             toAutoRefactorConfig(
                 CodeSceneGlobalSettings(
                     aceStatus = AceStatus.DEACTIVATED,
-                    aceAuthToken = "tok",
+                    aceTokenConfigured = true,
                 ),
             )
         assertEquals("disabled", result.aceStatus.status)
@@ -125,7 +119,7 @@ class AutoRefactorConfigUtilsTest {
     @Test
     fun `autoRefactorConfigForDocsView hides auto refactor for general code health doc`() {
         val settings =
-            CodeSceneGlobalSettings(enableAutoRefactor = true, aceAuthToken = "tok")
+            CodeSceneGlobalSettings(enableAutoRefactor = true, aceTokenConfigured = true)
         val result =
             autoRefactorConfigForDocsView(
                 settings,
@@ -139,7 +133,7 @@ class AutoRefactorConfigUtilsTest {
     @Test
     fun `autoRefactorConfigForDocsView hides auto refactor for code health monitor doc`() {
         val settings =
-            CodeSceneGlobalSettings(enableAutoRefactor = true, aceAuthToken = "tok")
+            CodeSceneGlobalSettings(enableAutoRefactor = true, aceTokenConfigured = true)
         val result =
             autoRefactorConfigForDocsView(
                 settings,
@@ -153,7 +147,7 @@ class AutoRefactorConfigUtilsTest {
     @Test
     fun `autoRefactorConfigForDocsView hides auto refactor when code smell has no refactor target`() {
         val settings =
-            CodeSceneGlobalSettings(enableAutoRefactor = true, aceAuthToken = "tok")
+            CodeSceneGlobalSettings(enableAutoRefactor = true, aceTokenConfigured = true)
         val result =
             autoRefactorConfigForDocsView(
                 settings,
@@ -167,7 +161,7 @@ class AutoRefactorConfigUtilsTest {
     @Test
     fun `autoRefactorConfigForDocsView uses base config when code smell has refactor target`() {
         val settings =
-            CodeSceneGlobalSettings(enableAutoRefactor = true, aceAuthToken = "tok")
+            CodeSceneGlobalSettings(enableAutoRefactor = true, aceTokenConfigured = true)
         val result =
             autoRefactorConfigForDocsView(
                 settings,
