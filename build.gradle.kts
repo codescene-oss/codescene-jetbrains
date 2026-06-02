@@ -407,6 +407,12 @@ fun unzip(
                     ?: entry.name
 
             val outFile = File(outputDir, relativePath)
+            val outDirCanonical = outputDir.canonicalPath
+            val outCanonical = outFile.canonicalPath
+
+            require(outCanonical == outDirCanonical || outCanonical.startsWith(outDirCanonical + File.separator)) {
+                "Zip entry escapes target directory: ${entry.name}"
+            }
 
             if (entry.isDirectory) {
                 outFile.mkdirs()
