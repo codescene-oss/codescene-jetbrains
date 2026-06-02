@@ -19,6 +19,12 @@ val mockkVersion = rootProject.providers.gradleProperty("mockkVersion").get()
 val slf4jNopVersion = rootProject.providers.gradleProperty("slf4jNopVersion").get()
 val kotlinxCoroutinesVersion = rootProject.providers.gradleProperty("kotlinxCoroutinesVersion").get()
 
+fun requiredEnv(name: String): String =
+    System.getenv(name)
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+        ?: throw GradleException("Missing required environment variable: $name")
+
 repositories {
     mavenLocal()
     mavenCentral()
@@ -26,7 +32,7 @@ repositories {
         url = uri(codeSceneRepository)
         credentials {
             username = System.getenv("GH_USERNAME")
-            password = System.getenv("GH_PACKAGE_TOKEN")
+            password = requiredEnv("GH_PACKAGE_TOKEN")
         }
     }
 }

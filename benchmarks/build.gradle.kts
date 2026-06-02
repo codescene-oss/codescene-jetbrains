@@ -17,6 +17,12 @@ val codeSceneExtensionAPIVersion = rootProject.providers.gradleProperty("codeSce
 val codeSceneRepository = rootProject.providers.gradleProperty("codeSceneRepository").get()
 val slf4jNopVersion = rootProject.providers.gradleProperty("slf4jNopVersion").get()
 
+fun requiredEnv(name: String): String =
+    System.getenv(name)
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+        ?: throw GradleException("Missing required environment variable: $name")
+
 repositories {
     mavenLocal()
     mavenCentral()
@@ -24,7 +30,7 @@ repositories {
         url = uri(codeSceneRepository)
         credentials {
             username = System.getenv("GH_USERNAME")
-            password = System.getenv("GH_PACKAGE_TOKEN")
+            password = requiredEnv("GH_PACKAGE_TOKEN")
         }
     }
 }
