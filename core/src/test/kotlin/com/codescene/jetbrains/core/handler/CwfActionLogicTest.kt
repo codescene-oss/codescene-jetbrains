@@ -15,16 +15,15 @@ import com.codescene.jetbrains.core.models.view.RefactoringProperties
 import com.codescene.jetbrains.core.util.TelemetryEvents
 import io.mockk.every
 import io.mockk.mockk
-import java.io.File
 import java.nio.file.InvalidPathException
 import java.nio.file.Path
 import java.nio.file.Paths
-import org.junit.Assume.assumeTrue
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 
 class CwfActionLogicTest {
@@ -110,7 +109,13 @@ class CwfActionLogicTest {
         val roots = listOf(root)
 
         val outsideRoot =
-            Paths.get(root).resolveSibling("cwf-guard-outside").resolve("secret.txt").toAbsolutePath().normalize().toString()
+            Paths
+                .get(root)
+                .resolveSibling("cwf-guard-outside")
+                .resolve("secret.txt")
+                .toAbsolutePath()
+                .normalize()
+                .toString()
 
         assertFalse(isCwfLocalFilePathAllowed("", roots))
         assertFalse(isCwfLocalFilePathAllowed("file:///etc/passwd", roots))
@@ -159,7 +164,12 @@ class CwfActionLogicTest {
             Paths.get(invalidRoot)
             assumeTrue("Paths.get accepted invalid root on this OS", false)
         } catch (_: InvalidPathException) {
-            assertFalse(isCwfLocalFilePathAllowed(Paths.get(absolute).toAbsolutePath().toString(), listOf(invalidRoot)))
+            assertFalse(
+                isCwfLocalFilePathAllowed(
+                    Paths.get(absolute).toAbsolutePath().toString(),
+                    listOf(invalidRoot),
+                ),
+            )
         }
     }
 
