@@ -13,9 +13,13 @@ import com.codescene.jetbrains.core.models.view.RecommendedAction
 import com.codescene.jetbrains.core.models.view.RefactorResponse
 import com.codescene.jetbrains.core.models.view.RefactoringProperties
 import com.codescene.jetbrains.core.util.TelemetryEvents
+import java.io.File
+import java.nio.file.Paths
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CwfActionLogicTest {
@@ -93,6 +97,31 @@ class CwfActionLogicTest {
     fun `resolveCopyAction uses client trace when no result data`() {
         val action = resolveCopyAction(null, codeFromPayload = "code", clientTraceId = "client-t")
         assertEquals(CopyAction("code", "client-t"), action)
+    }
+
+    @Test
+    fun `isCwfLocalFilePathAllowed rejects blank uri and paths outside roots`() {
+        val root =
+            Paths.get(
+                System.getProperty("java.io.tmpdir"),
+                "cwf-guard-test",
+            ).toAbsolutePath().normalize().toString()
+        val roots = listOf(root)
+
+        val outsideRoot =
+            Paths.get(
+                root,
+            ).resolveSibling("cwf-guard-outside").resolve("secret.txt").toAbsolutePath().normalize().toString()
+
+        assertFalse(isCwfLocalFilePathAllowed("", roots))
+        assertFalse(isCwfLocalFilePathAllowed("file:///etc/passwd", roots))
+        assertFalse(isCwfLocalFilePathAllowed(outsideRoot, roots))
+        assertFalse(isCwfLocalFilePathAllowed("../../../cwf-guard-outside/secret.txt", roots))
+
+        val inside = Paths.get(root, "src", "Main.kt").toString()
+        File(Paths.get(root, "src").toString()).mkdirs()
+        assertTrue(isCwfLocalFilePathAllowed(inside, roots))
+        assertTrue(isCwfLocalFilePathAllowed("src/Main.kt", roots))
     }
 
     @Test

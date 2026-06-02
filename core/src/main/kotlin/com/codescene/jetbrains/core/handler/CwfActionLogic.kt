@@ -1,11 +1,13 @@
 package com.codescene.jetbrains.core.handler
 
+import com.codescene.jetbrains.core.git.isPathUnderRoot
 import com.codescene.jetbrains.core.models.message.OpenDocsForFunction
 import com.codescene.jetbrains.core.models.shared.FileMetaType
 import com.codescene.jetbrains.core.models.view.AceData
 import com.codescene.jetbrains.core.models.view.DocsData
 import com.codescene.jetbrains.core.util.Constants.ALLOWED_DOMAINS
 import com.codescene.jetbrains.core.util.TelemetryEvents
+import java.nio.file.Paths
 
 data class ApplyAction(
     val filePath: String,
@@ -50,6 +52,34 @@ fun resolveCopyAction(
 }
 
 fun isUrlAllowed(url: String): Boolean = url.isNotBlank() && ALLOWED_DOMAINS.any { url.startsWith(it) }
+
+fun isCwfLocalFilePathAllowed(
+    filePath: String,
+    allowedRoots: Collection<String>,
+): Boolean {
+    val trimmed = filePath.trim()
+    if (trimmed.isEmpty() || trimmed.indexOf('\u0000') >= 0) {
+        return false
+    }
+    val lower = trimmed.lowercase()
+    if (lower.startsWith("file:")) {
+        return false
+    }
+
+    val path = Paths.get(trimmed)
+    if (path.isAbsolute || trimmed.startsWith("/")) {
+        val normalized = path.toAbsolutePath().normalize().toString()
+        return allowedRoots.any { root -> root.isNotBlank() && isPathUnderRoot(normalized, root) }
+    }
+
+    return allowedRoots.any { root ->
+        if (root.isBlank()) {
+            return@any false
+        }
+        val resolved = Paths.get(root, trimmed).normalize().toAbsolutePath().toString()
+        isPathUnderRoot(resolved, root)
+    }
+}
 
 fun toDocsData(docsForFunction: OpenDocsForFunction): DocsData =
     DocsData(
