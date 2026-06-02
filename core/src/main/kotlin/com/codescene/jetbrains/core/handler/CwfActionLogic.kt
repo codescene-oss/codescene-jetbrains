@@ -146,8 +146,6 @@ private fun sanitizedTelemetryUrl(url: String): String {
         URI(uri.scheme, null, uri.host, -1, uri.path, null, null).toString()
     } catch (_: URISyntaxException) {
         ""
-    } catch (_: IllegalArgumentException) {
-        ""
     }
 }
 
