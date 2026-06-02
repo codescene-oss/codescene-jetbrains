@@ -1,13 +1,18 @@
 package com.codescene.jetbrains.core.handler
 
+import com.codescene.jetbrains.core.git.isPathUnderRoot
 import com.codescene.jetbrains.core.models.message.OpenDocsForFunction
 import com.codescene.jetbrains.core.models.shared.FileMetaType
 import com.codescene.jetbrains.core.models.view.AceData
 import com.codescene.jetbrains.core.models.view.DocsData
 import com.codescene.jetbrains.core.util.Constants.ALLOWED_DOMAINS
 import com.codescene.jetbrains.core.util.TelemetryEvents
+import java.io.IOException
 import java.net.URI
 import java.net.URISyntaxException
+import java.nio.file.InvalidPathException
+import java.nio.file.Path
+import java.nio.file.Paths
 
 data class ApplyAction(
     val filePath: String,
@@ -52,6 +57,79 @@ fun resolveCopyAction(
 }
 
 fun isUrlAllowed(url: String): Boolean = url.isNotBlank() && ALLOWED_DOMAINS.any { url.startsWith(it) }
+
+internal fun resolveRealPathString(path: Path): String? =
+    try {
+        path.toRealPath().toString()
+    } catch (_: IOException) {
+        null
+    } catch (_: SecurityException) {
+        null
+    }
+
+internal fun isRealPathUnderAllowedRoot(
+    candidatePath: Path,
+    root: String,
+): Boolean {
+    if (root.isBlank()) {
+        return false
+    }
+    val rootPath =
+        try {
+            Paths.get(root)
+        } catch (_: InvalidPathException) {
+            return false
+        }
+    val realRoot = resolveRealPathString(rootPath) ?: return false
+    val realTarget = resolveRealPathString(candidatePath) ?: return false
+    return isPathUnderRoot(realTarget, realRoot)
+}
+
+private fun isRejectedCwfFilePathInput(trimmed: String): Boolean =
+    trimmed.isEmpty() || trimmed.indexOf('\u0000') >= 0 || trimmed.lowercase().startsWith("file:")
+
+internal fun parseCwfPath(trimmed: String): Path? =
+    try {
+        Paths.get(trimmed)
+    } catch (_: InvalidPathException) {
+        null
+    }
+
+private fun isAbsoluteCwfPathAllowed(
+    path: Path,
+    allowedRoots: Collection<String>,
+): Boolean {
+    return allowedRoots.any { root -> isRealPathUnderAllowedRoot(path.toAbsolutePath(), root) }
+}
+
+private fun isRelativeCwfPathAllowed(
+    trimmed: String,
+    allowedRoots: Collection<String>,
+): Boolean =
+    allowedRoots.any { root ->
+        val combined =
+            try {
+                Paths.get(root, trimmed).toAbsolutePath().normalize()
+            } catch (_: InvalidPathException) {
+                return@any false
+            }
+        isRealPathUnderAllowedRoot(combined, root)
+    }
+
+fun isCwfLocalFilePathAllowed(
+    filePath: String,
+    allowedRoots: Collection<String>,
+): Boolean {
+    val trimmed = filePath.trim()
+    if (isRejectedCwfFilePathInput(trimmed)) {
+        return false
+    }
+    val path = parseCwfPath(trimmed) ?: return false
+    return when {
+        path.isAbsolute || trimmed.startsWith("/") -> isAbsoluteCwfPathAllowed(path, allowedRoots)
+        else -> isRelativeCwfPathAllowed(trimmed, allowedRoots)
+    }
+}
 
 fun toDocsData(docsForFunction: OpenDocsForFunction): DocsData =
     DocsData(

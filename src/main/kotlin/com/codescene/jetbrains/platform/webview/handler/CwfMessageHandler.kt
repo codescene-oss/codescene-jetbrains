@@ -20,6 +20,7 @@ import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.util.AceEntryOrchestrator
 import com.codescene.jetbrains.platform.util.Log
+import com.codescene.jetbrains.platform.util.isCwfLocalFilePathAllowedForProject
 import com.codescene.jetbrains.platform.webview.CwfWebviewLifecycle
 import com.codescene.jetbrains.platform.webview.WebViewInitializer
 import com.codescene.jetbrains.platform.webview.util.JsEmbedEscapes
@@ -193,6 +194,11 @@ class CwfMessageHandler(
     }
 
     override fun handleOpenDocs(docsForFunction: OpenDocsForFunction) {
+        val filePath = docsForFunction.fileName
+        if (!isCwfLocalFilePathAllowedForProject(project, filePath)) {
+            Log.warn("Rejected CWF open docs for path outside project roots", serviceName)
+            return
+        }
         val docsData = toDocsData(docsForFunction)
         val fnToRefactor =
             resolveFnToRefactorForDocumentation(
@@ -242,6 +248,10 @@ class CwfMessageHandler(
 
     private fun handleOpenFile(message: GotoFunctionLocation) {
         val filePath = message.fileName ?: return
+        if (!isCwfLocalFilePathAllowedForProject(project, filePath)) {
+            Log.warn("Rejected CWF goto location for path outside project roots", serviceName)
+            return
+        }
         val line = message.fn?.range?.startLine ?: 0
         val column = message.fn?.range?.startColumn ?: 0
 
