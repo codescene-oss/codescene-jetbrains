@@ -83,37 +83,34 @@ private fun isRealPathUnderAllowedRoot(
     return isPathUnderRoot(realTarget, realRoot)
 }
 
-fun isCwfLocalFilePathAllowed(
-    filePath: String,
-    allowedRoots: Collection<String>,
-): Boolean {
-    val trimmed = filePath.trim()
-    if (trimmed.isEmpty() || trimmed.indexOf('\u0000') >= 0) {
-        return false
-    }
-    val lower = trimmed.lowercase()
-    if (lower.startsWith("file:")) {
-        return false
+private fun isRejectedCwfFilePathInput(trimmed: String): Boolean =
+    trimmed.isEmpty() || trimmed.indexOf('\u0000') >= 0 || trimmed.lowercase().startsWith("file:")
+
+private fun parseCwfPath(trimmed: String): Path? =
+    try {
+        Paths.get(trimmed)
+    } catch (_: InvalidPathException) {
+        null
     }
 
-    val path =
+private fun isAbsoluteCwfPathAllowed(
+    path: Path,
+    allowedRoots: Collection<String>,
+): Boolean {
+    val absolute =
         try {
-            Paths.get(trimmed)
+            path.toAbsolutePath()
         } catch (_: InvalidPathException) {
             return false
         }
+    return allowedRoots.any { root -> isRealPathUnderAllowedRoot(absolute, root) }
+}
 
-    if (path.isAbsolute || trimmed.startsWith("/")) {
-        val absolute =
-            try {
-                path.toAbsolutePath()
-            } catch (_: InvalidPathException) {
-                return false
-            }
-        return allowedRoots.any { root -> isRealPathUnderAllowedRoot(absolute, root) }
-    }
-
-    return allowedRoots.any { root ->
+private fun isRelativeCwfPathAllowed(
+    trimmed: String,
+    allowedRoots: Collection<String>,
+): Boolean =
+    allowedRoots.any { root ->
         val combined =
             try {
                 Paths.get(root, trimmed).toAbsolutePath().normalize()
@@ -121,6 +118,20 @@ fun isCwfLocalFilePathAllowed(
                 return@any false
             }
         isRealPathUnderAllowedRoot(combined, root)
+    }
+
+fun isCwfLocalFilePathAllowed(
+    filePath: String,
+    allowedRoots: Collection<String>,
+): Boolean {
+    val trimmed = filePath.trim()
+    if (isRejectedCwfFilePathInput(trimmed)) {
+        return false
+    }
+    val path = parseCwfPath(trimmed) ?: return false
+    return when {
+        path.isAbsolute || trimmed.startsWith("/") -> isAbsoluteCwfPathAllowed(path, allowedRoots)
+        else -> isRelativeCwfPathAllowed(trimmed, allowedRoots)
     }
 }
 
