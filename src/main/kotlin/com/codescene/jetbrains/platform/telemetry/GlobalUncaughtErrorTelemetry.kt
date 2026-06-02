@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.platform.telemetry
 
+import com.codescene.jetbrains.core.telemetry.isOriginatingFromCodescene
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.util.Key
 
@@ -15,7 +16,9 @@ fun installGlobalUncaughtErrorTelemetry() {
     app.putUserData(UNCAUGHT_TELEMETRY_INSTALLED, true)
     Thread.setDefaultUncaughtExceptionHandler { thread, exception ->
         try {
-            TelemetryService.getInstance().logUnhandledError(exception, emptyMap())
+            if (isOriginatingFromCodescene(exception)) {
+                TelemetryService.getInstance().logUnhandledError(exception, emptyMap())
+            }
         } catch (_: Throwable) {
         }
         previous?.uncaughtException(thread, exception)

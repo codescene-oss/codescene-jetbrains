@@ -20,8 +20,10 @@ import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.util.AceEntryOrchestrator
 import com.codescene.jetbrains.platform.util.Log
+import com.codescene.jetbrains.platform.util.isCwfLocalFilePathAllowedForProject
 import com.codescene.jetbrains.platform.webview.CwfWebviewLifecycle
 import com.codescene.jetbrains.platform.webview.WebViewInitializer
+import com.codescene.jetbrains.platform.webview.util.JsEmbedEscapes
 import com.codescene.jetbrains.platform.webview.util.aceAcknowledgeRefreshMessage
 import com.codescene.jetbrains.platform.webview.util.docsRefreshMessage
 import com.codescene.jetbrains.platform.webview.util.openDocs
@@ -77,7 +79,14 @@ class CwfMessageHandler(
                 ignoreUnknownKeys = true
             }
 
-        val message = json.decodeFromString<CwfMessage>(request)
+        val message =
+            try {
+                json.decodeFromString<CwfMessage>(request)
+            } catch (e: Throwable) {
+                Log.warn("Failed to parse CWF message: ${e.message}", serviceName)
+                callback?.failure(0, "Invalid message.")
+                return true
+            }
         val processed = routeCwfMessage(message, this, json)
         if (!processed) {
             Log.warn("Message could not be processed: ${message.messageType}", serviceName)
@@ -121,8 +130,9 @@ class CwfMessageHandler(
             Log.warn("postMessageDirect browser null view=${view.value}", serviceName)
             return
         }
+        val messageLiteral = JsEmbedEscapes.toJsStringLiteral(message)
         registeredBrowser.cefBrowser.executeJavaScript(
-            "window.postMessage($message);",
+            "window.postMessage(JSON.parse($messageLiteral));",
             null,
             0,
         )
@@ -191,6 +201,11 @@ class CwfMessageHandler(
     }
 
     override fun handleOpenDocs(docsForFunction: OpenDocsForFunction) {
+        val filePath = docsForFunction.fileName
+        if (!isCwfLocalFilePathAllowedForProject(project, filePath)) {
+            Log.warn("Rejected CWF open docs for path outside project roots", serviceName)
+            return
+        }
         val docsData = toDocsData(docsForFunction)
         val fnToRefactor =
             resolveFnToRefactorForDocumentation(
@@ -240,6 +255,10 @@ class CwfMessageHandler(
 
     private fun handleOpenFile(message: GotoFunctionLocation) {
         val filePath = message.fileName ?: return
+        if (!isCwfLocalFilePathAllowedForProject(project, filePath)) {
+            Log.warn("Rejected CWF goto location for path outside project roots", serviceName)
+            return
+        }
         val line = message.fn?.range?.startLine ?: 0
         val column = message.fn?.range?.startColumn ?: 0
 

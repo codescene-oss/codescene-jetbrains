@@ -21,6 +21,7 @@ import com.codescene.jetbrains.platform.util.AceEntryOrchestrator
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.ReplaceCodeSnippetArgs
 import com.codescene.jetbrains.platform.util.closeWindow
+import com.codescene.jetbrains.platform.util.isCwfLocalFilePathAllowedForProject
 import com.codescene.jetbrains.platform.util.replaceCodeSnippet
 import com.codescene.jetbrains.platform.util.showAceDiff
 import com.codescene.jetbrains.platform.util.showInfoNotification
@@ -73,6 +74,10 @@ class CwfAceActionHandler(
 
     fun handleRequestAndPresentRefactoring(request: RequestAndPresentRefactoring) {
         val filePath = request.filePath ?: request.fileName
+        if (!isCwfLocalFilePathAllowedForProject(project, filePath)) {
+            Log.warn("Rejected CWF refactoring request for path outside project roots", serviceName)
+            return
+        }
         val fnToRefactor = resolveRequestedFunctionToRefactor(request, filePath)
         orchestrator.handleRefactoringFromCwf(
             FileMetaType(
@@ -85,6 +90,9 @@ class CwfAceActionHandler(
     }
 
     private fun contentForAceCacheLookup(filePath: String): String? {
+        if (!isCwfLocalFilePathAllowedForProject(project, filePath)) {
+            return null
+        }
         val virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return null
         val fromDocument =
             runReadAction<String?> {
@@ -147,6 +155,10 @@ class CwfAceActionHandler(
     ): Pair<FileMetaType, FnToRefactor?>? {
         payload ?: return null
         val filePath = payload.filePath ?: payload.fileName ?: return null
+        if (!isCwfLocalFilePathAllowedForProject(project, filePath)) {
+            Log.warn("Rejected CWF acknowledged refactor for path outside project roots", serviceName)
+            return null
+        }
         val baseFn = payload.fn ?: return null
         val fnWithRange =
             when {

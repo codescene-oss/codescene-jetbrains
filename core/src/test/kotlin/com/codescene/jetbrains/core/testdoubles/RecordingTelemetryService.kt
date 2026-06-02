@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.core.testdoubles
 
 import com.codescene.jetbrains.core.contracts.ITelemetryService
+import com.codescene.jetbrains.core.telemetry.buildUnhandledErrorPayload
 import com.codescene.jetbrains.core.util.TelemetryEvents
 
 class RecordingTelemetryService : ITelemetryService {
@@ -19,12 +20,7 @@ class RecordingTelemetryService : ITelemetryService {
     ) {
         logUsage(
             TelemetryEvents.UNHANDLED_ERROR,
-            buildMap {
-                put("name", throwable::class.java.name)
-                put("message", throwable.message ?: "")
-                put("stack", throwable.stackTraceToString())
-                if (extraData.isNotEmpty()) put("extraData", extraData)
-            },
+            buildUnhandledErrorPayload(throwable, emptyList(), extraData),
         )
     }
 

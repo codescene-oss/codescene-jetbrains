@@ -19,6 +19,7 @@ import com.codescene.jetbrains.platform.fileeditor.documentation.CWF_DOCS_FN_TO_
 import com.codescene.jetbrains.platform.util.FileUtils
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.getSelectedTextEditor
+import com.codescene.jetbrains.platform.util.isCwfLocalFilePathAllowedForProject
 import com.codescene.jetbrains.platform.webview.WebViewInitializer
 import com.codescene.jetbrains.platform.webview.handler.CwfMessageHandler
 import com.intellij.openapi.application.runReadAction
@@ -83,6 +84,9 @@ internal fun resolveFnToRefactorForDocumentation(
 ): FnToRefactor? {
     val filePath = fileData.fileName
     if (filePath.isBlank()) return null
+    if (!isCwfLocalFilePathAllowedForProject(project, filePath)) {
+        return null
+    }
     val services = CodeSceneProjectServiceProvider.getInstance(project)
     val code =
         preferredDocumentText

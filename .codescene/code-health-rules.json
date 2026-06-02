@@ -1,6 +1,16 @@
 {
     "rule_sets": [
         {
+            "matching_content_path": "**/platform/webview/CwfWebView*.kt",
+            "matching_content_path_doc": "JCEF CefRequestHandler callbacks use framework-fixed arity",
+            "rules": [
+                {
+                    "name": "Excess Number of Function Arguments",
+                    "weight": 0.0
+                }
+            ]
+        },
+        {
             "matching_content_path": "**/src/test/**/*.kt",
             "matching_content_path_doc": "All test files - relaxed rules for test code",
             "rules": [

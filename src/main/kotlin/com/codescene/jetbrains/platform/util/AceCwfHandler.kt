@@ -36,6 +36,10 @@ class AceCwfHandler(private val project: Project) {
         source: AceEntryPoint,
         fnToRefactor: FnToRefactor? = null,
     ) {
+        if (!isCwfLocalFilePathAllowedForProject(project, fileData.fileName)) {
+            Log.warn("Rejected CWF refactoring for path outside project roots", "AceCwfHandler")
+            return
+        }
         if (fnToRefactor != null) {
             ApplicationManager.getApplication().executeOnPooledThread {
                 val token = appServices.settingsProvider.getAceAuthToken()

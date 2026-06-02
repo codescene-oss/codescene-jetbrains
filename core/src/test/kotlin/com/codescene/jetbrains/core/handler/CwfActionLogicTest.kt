@@ -13,9 +13,15 @@ import com.codescene.jetbrains.core.models.view.RecommendedAction
 import com.codescene.jetbrains.core.models.view.RefactorResponse
 import com.codescene.jetbrains.core.models.view.RefactoringProperties
 import com.codescene.jetbrains.core.util.TelemetryEvents
+import io.mockk.every
+import io.mockk.mockk
+import java.nio.file.Path
+import java.nio.file.Paths
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CwfActionLogicTest {
@@ -139,6 +145,82 @@ class CwfActionLogicTest {
     }
 
     @Test
+    fun `isCwfLocalFilePathAllowed rejects blank uri and paths outside roots`() {
+        val root = createCwfGuardRoot()
+        val roots = listOf(root)
+
+        val outsideRoot =
+            Paths
+                .get(root)
+                .resolveSibling("cwf-guard-outside")
+                .resolve("secret.txt")
+                .toAbsolutePath()
+                .normalize()
+                .toString()
+
+        assertFalse(isCwfLocalFilePathAllowed("", roots))
+        assertFalse(isCwfLocalFilePathAllowed("file:///etc/passwd", roots))
+        assertFalse(isCwfLocalFilePathAllowed(outsideRoot, roots))
+        assertFalse(isCwfLocalFilePathAllowed("../../../cwf-guard-outside/secret.txt", roots))
+
+        writeFileUnderRoot(root, "src/Main.kt")
+        assertTrue(isCwfLocalFilePathAllowed(Paths.get(root, "src/Main.kt").toString(), roots))
+        assertTrue(isCwfLocalFilePathAllowed("src/Main.kt", roots))
+        assertFalse(isCwfLocalFilePathAllowed("<<<", roots))
+    }
+
+    @Test
+    fun `isCwfLocalFilePathAllowed rejects blank invalid or unresolvable roots`() {
+        val root = createCwfGuardRoot()
+        writeFileUnderRoot(root, "src/Main.kt")
+
+        assertFalse(isCwfLocalFilePathAllowed("src/Main.kt", listOf("")))
+        assertFalse(isCwfLocalFilePathAllowed("src/Main.kt", listOf("   ")))
+        assertFalse(isCwfLocalFilePathAllowed("src/Main.kt", listOf("<<<")))
+        assertTrue(isCwfLocalFilePathAllowed("src/Main.kt", listOf(root, "<<<")))
+        assertFalse(isCwfLocalFilePathAllowed("src/missing.kt", listOf(root)))
+        assertFalse(isCwfLocalFilePathAllowed("a\u0000b.kt", listOf(root)))
+    }
+
+    @Test
+    fun `parseCwfPath returns null when path string is not valid`() {
+        assertNull(parseCwfPath("bad\u0000file.kt"))
+    }
+
+    @Test
+    fun `isCwfLocalFilePathAllowed fails closed for invalid root path syntax`() {
+        val root = createCwfGuardRoot()
+        val file = Paths.get(writeFileUnderRoot(root, "ok.kt"))
+        val invalidRoot = invalidRootForPathsGet()
+
+        assertFalse(isRealPathUnderAllowedRoot(file, invalidRoot))
+        assertFalse(isCwfLocalFilePathAllowed("ok.kt", listOf(invalidRoot)))
+    }
+
+    @Test
+    fun `isCwfLocalFilePathAllowed allows absolute path under root`() {
+        val root = createCwfGuardRoot()
+        val absolute = writeFileUnderRoot(root, "Abs.kt")
+        assertTrue(isCwfLocalFilePathAllowed(Paths.get(absolute).toAbsolutePath().toString(), listOf(root)))
+        assertFalse(
+            isCwfLocalFilePathAllowed(
+                Paths.get(absolute).toAbsolutePath().toString(),
+                listOf(invalidRootForPathsGet()),
+            ),
+        )
+    }
+
+    @Test
+    fun `resolveRealPathString returns null when path is missing or access is denied`() {
+        val missing = Paths.get(System.getProperty("java.io.tmpdir"), "cwf-missing-${System.nanoTime()}")
+        assertNull(resolveRealPathString(missing))
+
+        val path = mockk<Path>()
+        every { path.toRealPath() } throws SecurityException("denied")
+        assertNull(resolveRealPathString(path))
+    }
+
+    @Test
     fun `toDocsData maps open docs message`() {
         val fn = Fn(name = "x", range = RangeCamelCase(1, 1, 1, 1))
         val docs = OpenDocsForFunction(docType = "type", fileName = "/a.kt", fn = fn)
@@ -160,6 +242,53 @@ class CwfActionLogicTest {
         assertEquals(TelemetryEvents.ACE_DIFF_SHOWN, telemetryForShowDiff(true, null, false)?.eventName)
         assertNull(telemetryForShowDiff(false, null, false))
     }
+
+    @Test
+    fun `telemetryForOpenUrl strips sensitive url parts`() {
+        assertEquals(
+            mapOf("url" to "https://codescene.io/docs/page"),
+            telemetryForOpenUrl("https://codescene.io/docs/page?token=secret#section").data,
+        )
+        assertEquals(
+            mapOf("url" to "https://codescene.io/docs"),
+            telemetryForOpenUrl("https://user:password@codescene.io/docs").data,
+        )
+        assertEquals(
+            mapOf("url" to "https://codescene.io"),
+            telemetryForOpenUrl("https://codescene.io").data,
+        )
+        assertEquals(
+            mapOf("url" to ""),
+            telemetryForOpenUrl("not a url ?token=secret").data,
+        )
+        assertEquals(
+            mapOf("url" to ""),
+            telemetryForOpenUrl("https://[::1").data,
+        )
+    }
+
+    private fun createCwfGuardRoot(): String {
+        val root = Paths.get(System.getProperty("java.io.tmpdir"), "cwf-guard-test-${System.nanoTime()}")
+        root.toFile().mkdirs()
+        return root.toAbsolutePath().normalize().toString()
+    }
+
+    private fun writeFileUnderRoot(
+        root: String,
+        relative: String,
+    ): String {
+        val path = Paths.get(root, relative)
+        path.parent?.toFile()?.mkdirs()
+        path.toFile().writeText("")
+        return path.toString()
+    }
+
+    private fun invalidRootForPathsGet(): String =
+        if (System.getProperty("os.name").lowercase().contains("win")) {
+            "C:\\temp\\bad\u0000file"
+        } else {
+            "/tmp/bad\u0000file"
+        }
 
     private fun buildAceData(
         fileData: FileMetaType = FileMetaType(fn = Fn("f", RangeCamelCase(7, 1, 3, 1)), fileName = "/a.kt"),

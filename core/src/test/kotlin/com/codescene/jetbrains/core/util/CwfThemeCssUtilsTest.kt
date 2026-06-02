@@ -47,6 +47,57 @@ class CwfThemeCssUtilsTest {
     }
 
     @Test
+    fun `escapeCssSingleQuotedString escapes quotes and angle brackets`() {
+        assertEquals(
+            "'Evil\\'; color: red; /*'",
+            escapeCssSingleQuotedString("Evil'; color: red; /*"),
+        )
+        assertEquals(
+            "'Font\\3c /style>'",
+            escapeCssSingleQuotedString("Font</style>"),
+        )
+    }
+
+    @Test
+    fun `escapeCssSingleQuotedString escapes backslashes`() {
+        assertEquals(
+            "'a\\\\b'",
+            escapeCssSingleQuotedString("""a\b"""),
+        )
+    }
+
+    @Test
+    fun `escapeCssSingleQuotedString escapes line breaks as CSS line feed`() {
+        assertEquals("'a\\A b'", escapeCssSingleQuotedString("a\nb"))
+        assertEquals("'a\\A b'", escapeCssSingleQuotedString("a\rb"))
+        assertEquals("'a\\A b'", escapeCssSingleQuotedString("a\u000Cb"))
+    }
+
+    @Test
+    fun `buildCwfThemeCssVariables escapes hostile editor font family`() {
+        val css =
+            buildCwfThemeCssVariables(
+                CwfThemeCssInputs(
+                    textForegroundHex = "111111",
+                    linkForegroundHex = "222222",
+                    buttonForegroundHex = "333333",
+                    buttonBackgroundHex = "444444",
+                    editorBackgroundHex = "555555",
+                    scrollbarThumbHex = "66666666",
+                    buttonSecondaryBackgroundHex = "777777",
+                    fontSizePx = 12,
+                    editorFontFamily = "Evil'; color: red; /*",
+                    editorFontSizePx = 13,
+                ),
+            )
+
+        assertEquals(
+            "  --cs-theme-editor-font-family: 'Evil\\'; color: red; /*', monospace;",
+            css.lines()[8],
+        )
+    }
+
+    @Test
     fun `buildCwfThemeCssVariables produces expected root block`() {
         val inputs =
             CwfThemeCssInputs(
