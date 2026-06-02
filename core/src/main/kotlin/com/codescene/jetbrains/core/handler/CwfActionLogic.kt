@@ -56,7 +56,7 @@ fun resolveCopyAction(
 
 fun isUrlAllowed(url: String): Boolean = url.isNotBlank() && ALLOWED_DOMAINS.any { url.startsWith(it) }
 
-private fun resolveRealPathString(path: Path): String? =
+internal fun resolveRealPathString(path: Path): String? =
     try {
         path.toRealPath().toString()
     } catch (_: IOException) {
@@ -65,7 +65,7 @@ private fun resolveRealPathString(path: Path): String? =
         null
     }
 
-private fun isRealPathUnderAllowedRoot(
+internal fun isRealPathUnderAllowedRoot(
     candidatePath: Path,
     root: String,
 ): Boolean {
@@ -97,13 +97,7 @@ private fun isAbsoluteCwfPathAllowed(
     path: Path,
     allowedRoots: Collection<String>,
 ): Boolean {
-    val absolute =
-        try {
-            path.toAbsolutePath()
-        } catch (_: InvalidPathException) {
-            return false
-        }
-    return allowedRoots.any { root -> isRealPathUnderAllowedRoot(absolute, root) }
+    return allowedRoots.any { root -> isRealPathUnderAllowedRoot(path.toAbsolutePath(), root) }
 }
 
 private fun isRelativeCwfPathAllowed(
