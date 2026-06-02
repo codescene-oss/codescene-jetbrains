@@ -28,6 +28,7 @@ import com.codescene.jetbrains.platform.webview.WebViewInitializer
 import com.codescene.jetbrains.platform.webview.util.OpenAceAcknowledgementParams
 import com.codescene.jetbrains.platform.webview.util.openAceAcknowledgeView
 import com.codescene.jetbrains.platform.webview.util.openAceWindow
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
@@ -75,7 +76,10 @@ class AceEntryOrchestrator(private val project: Project) {
         }
     }
 
-    fun handleAceEntryPoint(params: RefactoringParams) {
+    fun handleAceEntryPoint(
+        params: RefactoringParams,
+        aceAuthToken: String? = null,
+    ) {
         val (_, editor, request) = params
         editor ?: return
 
@@ -87,20 +91,39 @@ class AceEntryOrchestrator(private val project: Project) {
             )
         when (command) {
             is AceEntryCommand.Skip -> Log.warn("Cannot use ACE as it is disabled.")
-            is AceEntryCommand.StartRefactor -> {
-                val options = createRefactoringOptions(command.skipCache)
-                AceService.getInstance().refactor(params, options)
-            }
+            is AceEntryCommand.StartRefactor -> startRefactor(params, command.skipCache, aceAuthToken)
             is AceEntryCommand.OpenAcknowledgement ->
                 handleOpenAceAcknowledgement(editor, command.function, command.source)
         }
     }
 
-    private fun createRefactoringOptions(skipCache: Boolean) =
-        RefactoringOptions().apply {
-            setToken(appServices.settingsProvider.getAceAuthToken())
-            setSkipCache(skipCache)
+    private fun startRefactor(
+        params: RefactoringParams,
+        skipCache: Boolean,
+        aceAuthToken: String? = null,
+    ) {
+        fun runRefactor(token: String) {
+            ApplicationManager.getApplication().invokeLater {
+                AceService.getInstance().refactor(params, createRefactoringOptions(token, skipCache))
+            }
         }
+        val token = aceAuthToken
+        if (token != null) {
+            runRefactor(token)
+            return
+        }
+        ApplicationManager.getApplication().executeOnPooledThread {
+            runRefactor(appServices.settingsProvider.getAceAuthToken())
+        }
+    }
+
+    private fun createRefactoringOptions(
+        token: String,
+        skipCache: Boolean,
+    ) = RefactoringOptions().apply {
+        setToken(token)
+        setSkipCache(skipCache)
+    }
 
     fun handleOpenAceAcknowledgement(
         editor: Editor,

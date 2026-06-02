@@ -126,6 +126,21 @@ class SettingsStateManagerTest {
     }
 
     @Test
+    fun `updateAceTokenConfigured notifies listeners and updates state`() {
+        assertFalse(manager.getState().aceTokenConfigured)
+
+        manager.updateAceTokenConfigured(true)
+
+        assertTrue(manager.getState().aceTokenConfigured)
+        verify(exactly = 1) { listener.onSettingsChanged(any(), any(), any()) }
+
+        manager.updateAceTokenConfigured(false)
+
+        assertFalse(manager.getState().aceTokenConfigured)
+        verify(exactly = 2) { listener.onSettingsChanged(any(), any(), any()) }
+    }
+
+    @Test
     fun `notifyIfStateChanged does nothing when state is unchanged`() {
         val snapshot = manager.currentState().copy()
 
