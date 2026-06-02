@@ -1,5 +1,11 @@
 package com.codescene.jetbrains.core.util
 
+data class AllowedUrlRule(
+    val host: String,
+    val includeSubdomains: Boolean = true,
+    val pathPrefix: String? = null,
+)
+
 object Constants {
     const val CODESCENE = "CodeScene"
     const val CODESCENE_SERVER_URL = "https://codescene.io"
@@ -62,16 +68,16 @@ object Constants {
     const val STRING_HEAVY_FUNCTION_ARGUMENTS = "String Heavy Function Arguments"
 
     const val IDE_TYPE = "JetBrains"
-    val ALLOWED_DOMAINS =
+    val ALLOWED_URL_RULES =
         listOf(
-            "https://refactoring.com",
-            "https://en.wikipedia.org",
-            "https://codescene.io",
-            "https://codescene.com",
-            "https://blog.ploeh.dk/2018/08/27/on-constructor-over-injection/",
-            "https://supporthub.codescene.com",
-            "https://helpcenter.codescene.com",
-            "https://forms.clickup.com",
+            AllowedUrlRule("refactoring.com"),
+            AllowedUrlRule("en.wikipedia.org"),
+            AllowedUrlRule("codescene.io"),
+            AllowedUrlRule("codescene.com"),
+            AllowedUrlRule("blog.ploeh.dk", pathPrefix = "/2018/08/27/on-constructor-over-injection/"),
+            AllowedUrlRule("supporthub.codescene.com"),
+            AllowedUrlRule("helpcenter.codescene.com"),
+            AllowedUrlRule("forms.clickup.com"),
         )
     const val DELTA_ANALYSIS_JOB = "deltaAnalysis"
     const val AUTO_REFACTOR_JOB = "autoRefactor"

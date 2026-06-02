@@ -5,7 +5,8 @@ import com.codescene.jetbrains.core.models.message.OpenDocsForFunction
 import com.codescene.jetbrains.core.models.shared.FileMetaType
 import com.codescene.jetbrains.core.models.view.AceData
 import com.codescene.jetbrains.core.models.view.DocsData
-import com.codescene.jetbrains.core.util.Constants.ALLOWED_DOMAINS
+import com.codescene.jetbrains.core.util.AllowedUrlRule
+import com.codescene.jetbrains.core.util.Constants.ALLOWED_URL_RULES
 import com.codescene.jetbrains.core.util.TelemetryEvents
 import java.io.IOException
 import java.net.URI
@@ -56,7 +57,25 @@ fun resolveCopyAction(
     return CopyAction(code = code, traceId = traceId)
 }
 
-fun isUrlAllowed(url: String): Boolean = url.isNotBlank() && ALLOWED_DOMAINS.any { url.startsWith(it) }
+fun isUrlAllowed(url: String): Boolean {
+    if (url.isBlank()) return false
+
+    val uri = runCatching { URI(url) }.getOrNull() ?: return false
+    val host = uri.host?.lowercase()?.takeIf { it.isNotBlank() } ?: return false
+
+    return uri.scheme == "https" &&
+        uri.userInfo == null &&
+        uri.port == -1 &&
+        !host.endsWith(".") &&
+        ALLOWED_URL_RULES.any { it.matches(host, uri.path.orEmpty()) }
+}
+
+private fun AllowedUrlRule.matches(
+    host: String,
+    path: String,
+): Boolean =
+    (host == this.host || (includeSubdomains && host.endsWith(".${this.host}"))) &&
+        (pathPrefix == null || path.startsWith(pathPrefix))
 
 internal fun resolveRealPathString(path: Path): String? =
     try {

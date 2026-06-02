@@ -102,6 +102,49 @@ class CwfActionLogicTest {
     }
 
     @Test
+    fun `isUrlAllowed accepts known allowed https destinations`() {
+        val allowedUrls =
+            listOf(
+                "https://codescene.io/docs/page",
+                "https://docs.codescene.io/page",
+                "https://codescene.com/product/free-trial",
+                "https://supporthub.codescene.com/kb-tickets/new",
+                "https://helpcenter.codescene.com/articles/a",
+                "https://forms.clickup.com/form/a",
+                "https://refactoring.com/catalog/replaceTempWithQuery.html",
+                "https://en.wikipedia.org/wiki/Code_smell",
+                "https://blog.ploeh.dk/2018/08/27/on-constructor-over-injection/",
+            )
+
+        allowedUrls.forEach { url ->
+            assertEquals(url, true, isUrlAllowed(url))
+        }
+    }
+
+    @Test
+    fun `isUrlAllowed rejects malformed and bypass URLs`() {
+        val rejectedUrls =
+            listOf(
+                "https://example.com",
+                "https://codescene.io.evil.com/foo",
+                "https://codescene.io@evil.test",
+                "http://codescene.io",
+                "https://codescene.io:444/foo",
+                "",
+                "   ",
+                "/relative/path",
+                "not a url",
+                "https:///missing-host",
+                "https://codescene.io.",
+                "https://blog.ploeh.dk/2018/08/27/other-article/",
+            )
+
+        rejectedUrls.forEach { url ->
+            assertEquals(url, false, isUrlAllowed(url))
+        }
+    }
+
+    @Test
     fun `isCwfLocalFilePathAllowed rejects blank uri and paths outside roots`() {
         val root = createCwfGuardRoot()
         val roots = listOf(root)
@@ -175,13 +218,6 @@ class CwfActionLogicTest {
         val path = mockk<Path>()
         every { path.toRealPath() } throws SecurityException("denied")
         assertNull(resolveRealPathString(path))
-    }
-
-    @Test
-    fun `isUrlAllowed validates allowed domain and non blank`() {
-        assertEquals(true, isUrlAllowed("https://codescene.io/docs/page"))
-        assertEquals(false, isUrlAllowed("https://example.com"))
-        assertEquals(false, isUrlAllowed(""))
     }
 
     @Test
