@@ -41,9 +41,10 @@ fun optionalEnv(name: String): String? =
         ?.trim()
         ?.takeIf { it.isNotEmpty() }
 
-fun requireGithubPackageTokenForDependencyResolution() {
+fun requireGithubPackageCredentialsForDependencyResolution() {
     configurations.configureEach {
         incoming.beforeResolve {
+            requiredEnv("GH_USERNAME")
             requiredEnv("GH_PACKAGE_TOKEN")
         }
     }
@@ -56,7 +57,7 @@ val cwfTokenEnvName =
         "GH_PACKAGE_TOKEN"
     }
 
-requireGithubPackageTokenForDependencyResolution()
+requireGithubPackageCredentialsForDependencyResolution()
 
 // Set the JVM language level used to build the project.
 kotlin {
@@ -71,7 +72,7 @@ repositories {
     maven {
         url = uri(codeSceneRepository)
         credentials {
-            username = System.getenv("GH_USERNAME")
+            username = optionalEnv("GH_USERNAME")
             password = optionalEnv("GH_PACKAGE_TOKEN")
         }
     }
