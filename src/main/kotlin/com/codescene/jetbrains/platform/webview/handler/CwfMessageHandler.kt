@@ -22,6 +22,7 @@ import com.codescene.jetbrains.platform.util.AceEntryOrchestrator
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.webview.CwfWebviewLifecycle
 import com.codescene.jetbrains.platform.webview.WebViewInitializer
+import com.codescene.jetbrains.platform.webview.util.JsEmbedEscapes
 import com.codescene.jetbrains.platform.webview.util.aceAcknowledgeRefreshMessage
 import com.codescene.jetbrains.platform.webview.util.docsRefreshMessage
 import com.codescene.jetbrains.platform.webview.util.openDocs
@@ -121,8 +122,9 @@ class CwfMessageHandler(
             Log.warn("postMessageDirect browser null view=${view.value}", serviceName)
             return
         }
+        val messageLiteral = JsEmbedEscapes.toJsStringLiteral(message)
         registeredBrowser.cefBrowser.executeJavaScript(
-            "window.postMessage($message);",
+            "window.postMessage(JSON.parse($messageLiteral));",
             null,
             0,
         )
