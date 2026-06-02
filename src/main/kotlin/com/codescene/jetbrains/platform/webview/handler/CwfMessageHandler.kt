@@ -79,7 +79,14 @@ class CwfMessageHandler(
                 ignoreUnknownKeys = true
             }
 
-        val message = json.decodeFromString<CwfMessage>(request)
+        val message =
+            try {
+                json.decodeFromString<CwfMessage>(request)
+            } catch (e: Throwable) {
+                Log.warn("Failed to parse CWF message: ${e.message}", serviceName)
+                callback?.failure(0, "Invalid message.")
+                return true
+            }
         val processed = routeCwfMessage(message, this, json)
         if (!processed) {
             Log.warn("Message could not be processed: ${message.messageType}", serviceName)
