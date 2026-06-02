@@ -125,6 +125,30 @@ class CwfActionLogicTest {
         assertNull(telemetryForShowDiff(false, null, false))
     }
 
+    @Test
+    fun `telemetryForOpenUrl strips sensitive url parts`() {
+        assertEquals(
+            mapOf("url" to "https://codescene.io/docs/page"),
+            telemetryForOpenUrl("https://codescene.io/docs/page?token=secret#section").data,
+        )
+        assertEquals(
+            mapOf("url" to "https://codescene.io/docs"),
+            telemetryForOpenUrl("https://user:password@codescene.io/docs").data,
+        )
+        assertEquals(
+            mapOf("url" to "https://codescene.io"),
+            telemetryForOpenUrl("https://codescene.io").data,
+        )
+        assertEquals(
+            mapOf("url" to ""),
+            telemetryForOpenUrl("not a url ?token=secret").data,
+        )
+        assertEquals(
+            mapOf("url" to ""),
+            telemetryForOpenUrl("https://[::1").data,
+        )
+    }
+
     private fun buildAceData(
         fileData: FileMetaType = FileMetaType(fn = Fn("f", RangeCamelCase(7, 1, 3, 1)), fileName = "/a.kt"),
         code: String,
