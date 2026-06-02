@@ -8,6 +8,8 @@ import com.codescene.jetbrains.core.models.view.DocsData
 import com.codescene.jetbrains.core.util.Constants.ALLOWED_DOMAINS
 import com.codescene.jetbrains.core.util.TelemetryEvents
 import java.io.IOException
+import java.net.URI
+import java.net.URISyntaxException
 import java.nio.file.InvalidPathException
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -213,6 +215,16 @@ fun telemetryForShowDiff(
     }
 
 fun telemetryForOpenUrl(url: String): CwfTelemetryEvent =
-    CwfTelemetryEvent(TelemetryEvents.OPEN_LINK, mutableMapOf(Pair("url", url)))
+    CwfTelemetryEvent(TelemetryEvents.OPEN_LINK, mutableMapOf(Pair("url", sanitizedTelemetryUrl(url))))
+
+private fun sanitizedTelemetryUrl(url: String): String {
+    return try {
+        val uri = URI(url)
+        if (uri.scheme.isNullOrBlank() || uri.host.isNullOrBlank()) return ""
+        URI(uri.scheme, null, uri.host, -1, uri.path, null, null).toString()
+    } catch (_: URISyntaxException) {
+        ""
+    }
+}
 
 fun telemetryForOpenSettings(): CwfTelemetryEvent = CwfTelemetryEvent(TelemetryEvents.OPEN_SETTINGS)

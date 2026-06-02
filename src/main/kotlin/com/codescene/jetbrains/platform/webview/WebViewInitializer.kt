@@ -8,6 +8,7 @@ import com.codescene.jetbrains.core.models.view.AceAcknowledgeData
 import com.codescene.jetbrains.core.models.view.AceData
 import com.codescene.jetbrains.core.models.view.DocsData
 import com.codescene.jetbrains.core.models.view.HomeData
+import com.codescene.jetbrains.platform.webview.util.JsEmbedEscapes
 import com.codescene.jetbrains.platform.webview.util.StyleHelper
 import com.intellij.ide.ui.LafManager
 import com.intellij.ide.ui.LafManagerListener
@@ -70,6 +71,10 @@ class WebViewInitializer(
 
         val css = getFileContent("cs-cwf/index.css")
         val js = getFileContent("cs-cwf/index.js")
+        val ideContextJson =
+            JsEmbedEscapes.escapeJsonForHtmlScript(getInitialContext(view, initialData))
+        val themeCssLiteral =
+            JsEmbedEscapes.toJsStringLiteral(StyleHelper.getInstance().generateCssVariablesFromTheme())
 
         return """
             <!DOCTYPE html>
@@ -87,14 +92,14 @@ class WebViewInitializer(
                 ">
                 <title>JetBrains React Webview</title>
                 <style>$css</style>
+                <script type="application/json" id="ide-context">$ideContextJson</script>
                 <script type="module">
                   ${getLinkClickHandler()}
                   function setContext() {
-                    window.ideContext = ${getInitialContext(view, initialData)}
-                    const css = `${StyleHelper.getInstance().generateCssVariablesFromTheme()}`;
+                    window.ideContext = JSON.parse(document.getElementById('ide-context').textContent);
                     const style = document.createElement('style');
                     style.id = '{STYLE_ELEMENT_ID}';
-                    style.textContent = css;
+                    style.textContent = $themeCssLiteral;
                     document.head.appendChild(style);
                   }
                   setContext();
@@ -122,6 +127,7 @@ class WebViewInitializer(
      */
     override fun lookAndFeelChanged(p0: LafManager) {
         val css = StyleHelper.getInstance().generateCssVariablesFromTheme()
+        val cssLiteral = JsEmbedEscapes.toJsStringLiteral(css)
 
         val js =
             """
@@ -132,7 +138,7 @@ class WebViewInitializer(
                     style.id = '{STYLE_ELEMENT_ID}';
                     document.head.appendChild(style);
                 }
-                style.textContent = `$css`;
+                style.textContent = $cssLiteral;
             })();
             """.trimIndent()
 
