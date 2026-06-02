@@ -50,81 +50,56 @@ class WebViewInitializer(
 
     fun getBrowser(view: View): JBCefBrowser? = browsers[view]
 
-    /**
-     * Prepares and modifies the HTML document by embedding the CSS and JavaScript directly into the HTML.
-     * This eliminates the need to pull them from external resources at runtime.
-     * While it is possible to pull the files from resources dynamically, for the sake of this demo,
-     * it was chosen to embed the script and style in the HTML document.
-     *
-     * The function:
-     * - Retrieves the content of the HTML, CSS, and JavaScript files.
-     * - Replaces specific placeholders in the HTML with the embedded CSS and JavaScript code.
-     *
-     * @return The modified HTML document as a string.
-     */
-    fun getInitialScript(
+    fun loadInitialContent(
         view: View,
         browser: JBCefBrowser,
         initialData: Any? = null,
-    ): String {
+    ) {
         registerBrowser(view, browser)
 
         val css = getFileContent("cs-cwf/index.css")
         val js = getFileContent("cs-cwf/index.js")
-        val ideContextJson =
-            JsEmbedEscapes.escapeJsonForHtmlScript(getInitialContext(view, initialData))
-        val themeCssLiteral =
-            JsEmbedEscapes.toJsStringLiteral(StyleHelper.getInstance().generateCssVariablesFromTheme())
+        val bootstrap = buildBootstrapScript()
+        val themeCss = StyleHelper.getInstance().generateCssVariablesFromTheme()
+        val ideContextJson = getInitialContext(view, initialData)
+        val contentSecurityPolicy = WebViewCsp.buildContentSecurityPolicy(bootstrap, js)
+        val html = buildInitialHtml(css, themeCss, ideContextJson, bootstrap, js)
+        val document = CwfWebViewDocument(html, contentSecurityPolicy)
 
-        return """
-            <!DOCTYPE html>
-            <html lang="en">
-              <head>
-                <meta charset="UTF-8" />
-                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                <meta http-equiv="Content-Security-Policy" content="
-                default-src 'none';
-                script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*;
-                style-src 'self' 'unsafe-inline' https://*;
-                img-src 'self' data: 'unsafe-inline' https://*;
-                font-src 'self';
-                connect-src https://*;
-                ">
-                <title>JetBrains React Webview</title>
-                <style>$css</style>
-                <script type="application/json" id="ide-context">$ideContextJson</script>
-                <script type="module">
-                  ${getLinkClickHandler()}
-                  function setContext() {
-                    window.ideContext = JSON.parse(document.getElementById('ide-context').textContent);
-                    const style = document.createElement('style');
-                    style.id = '{STYLE_ELEMENT_ID}';
-                    style.textContent = $themeCssLiteral;
-                    document.head.appendChild(style);
-                  }
-                  setContext();
-                </script>
-              </head>
-              <body>
-                <div id="root"></div>
-                <script type="module">$js</script>
-              </body>
-            </html>
-            """.trimIndent()
+        val loadUrl = CwfWebViewContentRegistry.register(browser.cefBrowser, document)
+        browser.loadURL(loadUrl)
     }
 
-    /**
-     * Callback invoked when the IDE look-and-feel (theme) changes.
-     *
-     * This method regenerates a set of CSS variables based on the current
-     * IDE theme (via [StyleHelper.generateCssVariablesFromTheme]) and
-     * injects them into the WebView (CWF) content.
-     *
-     * The CSS variables are applied by dynamically creating or updating
-     * a `<style>` element with a fixed ID (`{STYLE_ELEMENT_ID}`) inside
-     * the WebView's DOM. This ensures that the WebView's styling always
-     * matches the active IDE theme.
-     */
+    private fun buildInitialHtml(
+        css: String,
+        themeCss: String,
+        ideContextJson: String,
+        bootstrap: String,
+        js: String,
+    ): String {
+        val escapedContext = JsEmbedEscapes.escapeJsonForHtmlScript(ideContextJson)
+        return buildString {
+            appendLine("<!DOCTYPE html>")
+            appendLine("<html lang=\"en\">")
+            appendLine("  <head>")
+            appendLine("    <meta charset=\"UTF-8\" />")
+            appendLine("    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />")
+            appendLine("    <title>JetBrains React Webview</title>")
+            appendLine("    <style>$css</style>")
+            appendLine("    <style id=\"${WebViewCsp.THEME_STYLE_ELEMENT_ID}\">$themeCss</style>")
+            append("    <script type=\"application/json\" id=\"${WebViewCsp.IDE_CONTEXT_ELEMENT_ID}\">")
+            append(escapedContext)
+            appendLine("</script>")
+            appendLine("  </head>")
+            appendLine("  <body>")
+            appendLine("    <div id=\"root\"></div>")
+            appendLine("    <script>$bootstrap</script>")
+            appendLine("    <script type=\"module\">$js</script>")
+            appendLine("  </body>")
+            appendLine("</html>")
+        }
+    }
+
     override fun lookAndFeelChanged(p0: LafManager) {
         val css = StyleHelper.getInstance().generateCssVariablesFromTheme()
         val cssLiteral = JsEmbedEscapes.toJsStringLiteral(css)
@@ -132,10 +107,10 @@ class WebViewInitializer(
         val js =
             """
             (function() {
-                let style = document.getElementById('{STYLE_ELEMENT_ID}');
+                let style = document.getElementById('${WebViewCsp.THEME_STYLE_ELEMENT_ID}');
                 if (!style) {
                     style = document.createElement('style');
-                    style.id = '{STYLE_ELEMENT_ID}';
+                    style.id = '${WebViewCsp.THEME_STYLE_ELEMENT_ID}';
                     document.head.appendChild(style);
                 }
                 style.textContent = $cssLiteral;
@@ -145,20 +120,6 @@ class WebViewInitializer(
         browsers.values.forEach { it.cefBrowser.executeJavaScript(js, null, 0) }
     }
 
-    /**
-     * Builds the initial JSON context payload for a given WebView.
-     *
-     * The context contains serialized data objects that are passed to
-     * the client-side WebView to initialize its initial state. The structure of
-     * the payload depends on the requested [view].
-     *
-     * Currently supported views:
-     * - [View.HOME]: Creates and serializes a default [HomeData] instance wrapped in [CwfData].
-     * - [View.DOCS]: Creates and serializes a [DocsData] instance wrapped in [CwfData].
-     * - [View.ACE]: Creates and serializes a [AceData] instance wrapped in [CwfData].
-     * - [View.ACE_ACKNOWLEDGE]: Creates and serializes a [AceAcknowledgeData] instance wrapped in [CwfData].
-     * - Any other value: Logs a warning and returns an empty JSON object (`{}`).
-     */
     private fun getInitialContext(
         view: View,
         initialData: Any? = null,
@@ -208,17 +169,17 @@ class WebViewInitializer(
             data = data,
         )
 
-    /**
-     * Provides a JavaScript snippet that intercepts all link clicks inside the WebView.
-     *
-     * By default, clicking a link (`<a href="...">`) in a WebView would try to
-     * navigate the embedded browser instance. Since this is undesirable, the script
-     * overrides the default behavior and instead sends the link URL back to the
-     * host application using `window.cefQuery`.
-     *
-     * The host can then handle the request and open the link in the user's external
-     * browser.
-     */
+    private fun buildBootstrapScript(): String =
+        """
+        (function() {
+            const contextEl = document.getElementById("${WebViewCsp.IDE_CONTEXT_ELEMENT_ID}");
+            if (contextEl) {
+                window.ideContext = JSON.parse(contextEl.textContent);
+            }
+        })();
+        ${getLinkClickHandler()}
+        """.trimIndent()
+
     private fun getLinkClickHandler() =
         """
         document.addEventListener("click", (e) => {
