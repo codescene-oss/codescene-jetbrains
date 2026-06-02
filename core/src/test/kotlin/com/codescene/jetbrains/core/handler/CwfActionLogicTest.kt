@@ -15,7 +15,6 @@ import com.codescene.jetbrains.core.models.view.RefactoringProperties
 import com.codescene.jetbrains.core.util.TelemetryEvents
 import io.mockk.every
 import io.mockk.mockk
-import java.nio.file.InvalidPathException
 import java.nio.file.Path
 import java.nio.file.Paths
 import org.junit.Assert.assertEquals
@@ -23,7 +22,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
 import org.junit.Test
 
 class CwfActionLogicTest {
@@ -142,16 +140,18 @@ class CwfActionLogicTest {
     }
 
     @Test
-    fun `isRealPathUnderAllowedRoot returns false when root cannot be parsed`() {
+    fun `parseCwfPath returns null when path string is not valid`() {
+        assertNull(parseCwfPath("bad\u0000file.kt"))
+    }
+
+    @Test
+    fun `isCwfLocalFilePathAllowed fails closed for invalid root path syntax`() {
         val root = createCwfGuardRoot()
-        val candidate = Paths.get(writeFileUnderRoot(root, "f.kt"))
+        val file = Paths.get(writeFileUnderRoot(root, "ok.kt"))
         val invalidRoot = invalidRootForPathsGet()
-        try {
-            Paths.get(invalidRoot)
-            assumeTrue("Paths.get accepted invalid root on this OS", false)
-        } catch (_: InvalidPathException) {
-            assertFalse(isRealPathUnderAllowedRoot(candidate, invalidRoot))
-        }
+
+        assertFalse(isRealPathUnderAllowedRoot(file, invalidRoot))
+        assertFalse(isCwfLocalFilePathAllowed("ok.kt", listOf(invalidRoot)))
     }
 
     @Test
@@ -159,18 +159,12 @@ class CwfActionLogicTest {
         val root = createCwfGuardRoot()
         val absolute = writeFileUnderRoot(root, "Abs.kt")
         assertTrue(isCwfLocalFilePathAllowed(Paths.get(absolute).toAbsolutePath().toString(), listOf(root)))
-        val invalidRoot = invalidRootForPathsGet()
-        try {
-            Paths.get(invalidRoot)
-            assumeTrue("Paths.get accepted invalid root on this OS", false)
-        } catch (_: InvalidPathException) {
-            assertFalse(
-                isCwfLocalFilePathAllowed(
-                    Paths.get(absolute).toAbsolutePath().toString(),
-                    listOf(invalidRoot),
-                ),
-            )
-        }
+        assertFalse(
+            isCwfLocalFilePathAllowed(
+                Paths.get(absolute).toAbsolutePath().toString(),
+                listOf(invalidRootForPathsGet()),
+            ),
+        )
     }
 
     @Test

@@ -86,7 +86,7 @@ internal fun isRealPathUnderAllowedRoot(
 private fun isRejectedCwfFilePathInput(trimmed: String): Boolean =
     trimmed.isEmpty() || trimmed.indexOf('\u0000') >= 0 || trimmed.lowercase().startsWith("file:")
 
-private fun parseCwfPath(trimmed: String): Path? =
+internal fun parseCwfPath(trimmed: String): Path? =
     try {
         Paths.get(trimmed)
     } catch (_: InvalidPathException) {
