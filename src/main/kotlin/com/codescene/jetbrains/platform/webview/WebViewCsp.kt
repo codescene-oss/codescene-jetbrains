@@ -25,8 +25,6 @@ internal object WebViewCsp {
         ).joinToString("; ")
     }
 
-    fun escapeForHtmlScriptBlock(text: String): String = text.replace("</", "<\\/")
-
     private fun sha256Base64(source: String): String {
         val digest = MessageDigest.getInstance("SHA-256").digest(source.toByteArray(Charsets.UTF_8))
         return Base64.getEncoder().encodeToString(digest)

@@ -21,12 +21,6 @@ class WebViewCspTest {
     }
 
     @Test
-    fun escapeForHtmlScriptBlockBreaksScriptEndTagInEmbeddedJson() {
-        val escaped = WebViewCsp.escapeForHtmlScriptBlock("""{"x":"</script>"}""")
-        assertFalse(escaped.contains("</script>"))
-    }
-
-    @Test
     fun buildContentSecurityPolicyIncludesFrameAncestorsForResponseHeader() {
         val csp = WebViewCsp.buildContentSecurityPolicy("bootstrap();", "import x;")
         assertTrue(csp.contains("frame-ancestors 'none'"))
