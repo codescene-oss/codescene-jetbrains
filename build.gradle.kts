@@ -49,21 +49,11 @@ fun requireGithubPackageTokenForDependencyResolution() {
     }
 }
 
-fun isTaskRequested(name: String): Boolean =
-    gradle.startParameter.taskNames.any { taskName -> taskName == name || taskName.endsWith(":$name") }
-
 val cwfTokenEnvName =
     if (System.getenv("CI") == "true") {
         "CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN"
     } else {
         "GH_PACKAGE_TOKEN"
-    }
-
-val prevalidatedCwfToken =
-    if (isTaskRequested("fetchCwf") || isTaskRequested("buildPlugin")) {
-        requiredEnv(cwfTokenEnvName)
-    } else {
-        null
     }
 
 requireGithubPackageTokenForDependencyResolution()
@@ -339,9 +329,9 @@ tasks.register("fetchCwf") {
     val assetType = "cs-cwf"
     val user = "empear-analytics"
     val repo = "cs-webview"
-    val token = prevalidatedCwfToken ?: requiredEnv(cwfTokenEnvName)
 
     doLast {
+        val token = requiredEnv(cwfTokenEnvName)
         val apiUrl = "https://api.github.com/repos/$user/$repo/releases"
 
         val releasesJson =
