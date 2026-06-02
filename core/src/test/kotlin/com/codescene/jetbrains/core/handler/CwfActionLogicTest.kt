@@ -118,10 +118,12 @@ class CwfActionLogicTest {
         assertFalse(isCwfLocalFilePathAllowed(outsideRoot, roots))
         assertFalse(isCwfLocalFilePathAllowed("../../../cwf-guard-outside/secret.txt", roots))
 
-        val inside = Paths.get(root, "src", "Main.kt").toString()
-        File(Paths.get(root, "src").toString()).mkdirs()
-        assertTrue(isCwfLocalFilePathAllowed(inside, roots))
+        val inside = Paths.get(root, "src", "Main.kt")
+        File(inside.parent.toString()).mkdirs()
+        inside.toFile().writeText("")
+        assertTrue(isCwfLocalFilePathAllowed(inside.toString(), roots))
         assertTrue(isCwfLocalFilePathAllowed("src/Main.kt", roots))
+        assertFalse(isCwfLocalFilePathAllowed("<<<", roots))
     }
 
     @Test

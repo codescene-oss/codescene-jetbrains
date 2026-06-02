@@ -7,6 +7,9 @@ import com.codescene.jetbrains.core.models.view.AceData
 import com.codescene.jetbrains.core.models.view.DocsData
 import com.codescene.jetbrains.core.util.Constants.ALLOWED_DOMAINS
 import com.codescene.jetbrains.core.util.TelemetryEvents
+import java.io.IOException
+import java.nio.file.InvalidPathException
+import java.nio.file.Path
 import java.nio.file.Paths
 
 data class ApplyAction(
@@ -53,6 +56,33 @@ fun resolveCopyAction(
 
 fun isUrlAllowed(url: String): Boolean = url.isNotBlank() && ALLOWED_DOMAINS.any { url.startsWith(it) }
 
+private fun resolveRealPathString(path: Path): String? =
+    try {
+        path.toRealPath().toString()
+    } catch (_: IOException) {
+        null
+    } catch (_: SecurityException) {
+        null
+    }
+
+private fun isRealPathUnderAllowedRoot(
+    candidatePath: Path,
+    root: String,
+): Boolean {
+    if (root.isBlank()) {
+        return false
+    }
+    val rootPath =
+        try {
+            Paths.get(root)
+        } catch (_: InvalidPathException) {
+            return false
+        }
+    val realRoot = resolveRealPathString(rootPath) ?: return false
+    val realTarget = resolveRealPathString(candidatePath) ?: return false
+    return isPathUnderRoot(realTarget, realRoot)
+}
+
 fun isCwfLocalFilePathAllowed(
     filePath: String,
     allowedRoots: Collection<String>,
@@ -66,18 +96,31 @@ fun isCwfLocalFilePathAllowed(
         return false
     }
 
-    val path = Paths.get(trimmed)
+    val path =
+        try {
+            Paths.get(trimmed)
+        } catch (_: InvalidPathException) {
+            return false
+        }
+
     if (path.isAbsolute || trimmed.startsWith("/")) {
-        val normalized = path.toAbsolutePath().normalize().toString()
-        return allowedRoots.any { root -> root.isNotBlank() && isPathUnderRoot(normalized, root) }
+        val absolute =
+            try {
+                path.toAbsolutePath()
+            } catch (_: InvalidPathException) {
+                return false
+            }
+        return allowedRoots.any { root -> isRealPathUnderAllowedRoot(absolute, root) }
     }
 
     return allowedRoots.any { root ->
-        if (root.isBlank()) {
-            return@any false
-        }
-        val resolved = Paths.get(root, trimmed).normalize().toAbsolutePath().toString()
-        isPathUnderRoot(resolved, root)
+        val combined =
+            try {
+                Paths.get(root, trimmed).toAbsolutePath().normalize()
+            } catch (_: InvalidPathException) {
+                return@any false
+            }
+        isRealPathUnderAllowedRoot(combined, root)
     }
 }
 
