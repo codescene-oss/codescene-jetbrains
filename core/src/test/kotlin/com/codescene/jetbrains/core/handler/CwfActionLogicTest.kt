@@ -231,9 +231,9 @@ class CwfActionLogicTest {
 
     private fun invalidRootForPathsGet(): String =
         if (System.getProperty("os.name").lowercase().contains("win")) {
-            "C:\\temp\\bad<file>"
+            "C:\\temp\\bad\u0000file"
         } else {
-            "/tmp/bad<file>"
+            "/tmp/bad\u0000file"
         }
 
     private fun buildAceData(
