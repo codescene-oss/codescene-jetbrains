@@ -25,6 +25,21 @@ fun requiredEnv(name: String): String =
         ?.takeIf { it.isNotEmpty() }
         ?: throw GradleException("Missing required environment variable: $name")
 
+fun optionalEnv(name: String): String? =
+    System.getenv(name)
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+
+fun requireGithubPackageTokenForDependencyResolution() {
+    configurations.configureEach {
+        incoming.beforeResolve {
+            requiredEnv("GH_PACKAGE_TOKEN")
+        }
+    }
+}
+
+requireGithubPackageTokenForDependencyResolution()
+
 repositories {
     mavenLocal()
     mavenCentral()
@@ -32,7 +47,7 @@ repositories {
         url = uri(codeSceneRepository)
         credentials {
             username = System.getenv("GH_USERNAME")
-            password = requiredEnv("GH_PACKAGE_TOKEN")
+            password = optionalEnv("GH_PACKAGE_TOKEN")
         }
     }
 }

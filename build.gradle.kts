@@ -36,6 +36,38 @@ fun requiredEnv(name: String): String =
         ?.takeIf { it.isNotEmpty() }
         ?: throw GradleException("Missing required environment variable: $name")
 
+fun optionalEnv(name: String): String? =
+    System.getenv(name)
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+
+fun requireGithubPackageTokenForDependencyResolution() {
+    configurations.configureEach {
+        incoming.beforeResolve {
+            requiredEnv("GH_PACKAGE_TOKEN")
+        }
+    }
+}
+
+fun isTaskRequested(name: String): Boolean =
+    gradle.startParameter.taskNames.any { taskName -> taskName == name || taskName.endsWith(":$name") }
+
+val cwfTokenEnvName =
+    if (System.getenv("CI") == "true") {
+        "CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN"
+    } else {
+        "GH_PACKAGE_TOKEN"
+    }
+
+val prevalidatedCwfToken =
+    if (isTaskRequested("fetchCwf") || isTaskRequested("buildPlugin")) {
+        requiredEnv(cwfTokenEnvName)
+    } else {
+        null
+    }
+
+requireGithubPackageTokenForDependencyResolution()
+
 // Set the JVM language level used to build the project.
 kotlin {
     jvmToolchain(17)
@@ -50,7 +82,7 @@ repositories {
         url = uri(codeSceneRepository)
         credentials {
             username = System.getenv("GH_USERNAME")
-            password = requiredEnv("GH_PACKAGE_TOKEN")
+            password = optionalEnv("GH_PACKAGE_TOKEN")
         }
     }
 
@@ -307,13 +339,7 @@ tasks.register("fetchCwf") {
     val assetType = "cs-cwf"
     val user = "empear-analytics"
     val repo = "cs-webview"
-    val tokenEnvName =
-        if (System.getenv("CI") == "true") {
-            "CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN"
-        } else {
-            "GH_PACKAGE_TOKEN"
-        }
-    val token = requiredEnv(tokenEnvName)
+    val token = prevalidatedCwfToken ?: requiredEnv(cwfTokenEnvName)
 
     doLast {
         val apiUrl = "https://api.github.com/repos/$user/$repo/releases"
