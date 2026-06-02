@@ -52,6 +52,35 @@ data class CwfThemeCssInputs(
 
 fun toHex(color: RgbColor): String = "%02X%02X%02X".format(color.red, color.green, color.blue)
 
+fun escapeCssSingleQuotedString(value: String): String {
+    val body =
+        buildString(value.length * 2) {
+            value.forEach { ch ->
+                when (ch) {
+                    '\\' -> {
+                        append('\\')
+                        append('\\')
+                    }
+                    '\'' -> {
+                        append('\\')
+                        append('\'')
+                    }
+                    '<' -> {
+                        append('\\')
+                        append("3c ")
+                    }
+                    '\n', '\r', '\u000C' -> {
+                        append('\\')
+                        append('A')
+                        append(' ')
+                    }
+                    else -> append(ch)
+                }
+            }
+        }
+    return "'$body'"
+}
+
 fun buildCwfThemeCssVariables(inputs: CwfThemeSourceInputs): String =
     buildCwfThemeCssVariables(
         CwfThemeCssInputs(
@@ -89,7 +118,7 @@ fun buildCwfThemeCssVariables(inputs: CwfThemeCssInputs): String {
     sb.appendLine("  --cs-theme-textCodeBlock-background: #$editorBg;")
     sb.appendLine("  --cs-theme-scroll-bar-thumb: #$scrollbarThumbHex;")
     sb.appendLine("  --cs-theme-font-size: ${fontSize}px;")
-    sb.appendLine("  --cs-theme-editor-font-family: '$editorFontFamily', monospace;")
+    sb.appendLine("  --cs-theme-editor-font-family: ${escapeCssSingleQuotedString(editorFontFamily)}, monospace;")
     sb.appendLine("  --cs-theme-editor-font-size: ${editorFontSize}px;")
     sb.appendLine("  --cs-theme-button-foreground: #$buttonFg;")
     sb.appendLine("  --cs-theme-button-background: #$buttonBg;")
