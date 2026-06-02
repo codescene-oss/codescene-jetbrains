@@ -52,7 +52,6 @@ object WebViewFactory {
                 .build()
 
         val webViewInitializer = WebViewInitializer.getInstance(project)
-        val html = webViewInitializer.getInitialScript(view, jcefBrowser, initialData)
 
         // Setup message router for IDE ↔ CWF communication
         val messageHandler = CwfMessageHandler.getInstance(project)
@@ -60,8 +59,9 @@ object WebViewFactory {
         messageRouter.addHandler(messageHandler, true)
 
         jcefBrowser.apply {
+            jbCefClient.addRequestHandler(CwfWebViewContentRegistry.requestHandler, cefBrowser)
             jbCefClient.cefClient.addMessageRouter(messageRouter)
-            loadHTML(html)
+            webViewInitializer.loadInitialContent(view, jcefBrowser, initialData)
         }
 
         return contentFactory.createContent(jcefBrowser.component, null, false)
