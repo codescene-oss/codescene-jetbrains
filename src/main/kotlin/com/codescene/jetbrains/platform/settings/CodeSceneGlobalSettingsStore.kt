@@ -19,20 +19,28 @@ import com.intellij.openapi.components.Storage
 class CodeSceneGlobalSettingsStore : PersistentStateComponent<CodeSceneGlobalSettingsPersisted>, ISettingsProvider {
     private val stateManager = SettingsStateManager()
 
-    override fun getState(): CodeSceneGlobalSettingsPersisted {
-        val persisted = stateManager.getState().toPersisted()
-        persisted.aceTokenConfigured = AceAuthTokenStore.hasToken()
-        persisted.aceAuthToken = ""
-        return persisted
-    }
+    override fun getState(): CodeSceneGlobalSettingsPersisted =
+        stateManager.getState().toPersisted().apply {
+            aceAuthToken = ""
+        }
 
     override fun loadState(state: CodeSceneGlobalSettingsPersisted) {
         val legacyToken = state.aceAuthToken.takeIf { it.isNotBlank() }
-        if (legacyToken != null) {
-            AceAuthTokenStore.setToken(legacyToken)
-        }
-        val tokenConfigured = state.aceTokenConfigured || AceAuthTokenStore.hasToken()
+        val tokenConfigured = state.aceTokenConfigured || legacyToken != null
         stateManager.loadState(state.toCore().copy(aceTokenConfigured = tokenConfigured))
+        if (legacyToken != null) {
+            migrateLegacyAceAuthToken(legacyToken)
+        }
+    }
+
+    private fun migrateLegacyAceAuthToken(legacyToken: String) {
+        ApplicationManager.getApplication().executeOnPooledThread {
+            AceAuthTokenStore.setToken(legacyToken)
+            stateManager.updateAceTokenConfigured(true)
+            ApplicationManager.getApplication().invokeLater {
+                ApplicationManager.getApplication().saveSettings()
+            }
+        }
     }
 
     override fun currentState(): CodeSceneGlobalSettings = stateManager.currentState()
@@ -41,7 +49,7 @@ class CodeSceneGlobalSettingsStore : PersistentStateComponent<CodeSceneGlobalSet
 
     override fun setAceAuthToken(token: String) {
         AceAuthTokenStore.setToken(token)
-        stateManager.updateAceTokenConfigured(AceAuthTokenStore.hasToken())
+        stateManager.updateAceTokenConfigured(token.isNotBlank())
         ApplicationManager.getApplication().invokeLater {
             ApplicationManager.getApplication().saveSettings()
         }
