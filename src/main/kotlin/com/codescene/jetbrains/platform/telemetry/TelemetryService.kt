@@ -7,6 +7,7 @@ import com.codescene.jetbrains.core.flag.RuntimeFlags
 import com.codescene.jetbrains.core.review.BaseService
 import com.codescene.jetbrains.core.telemetry.TelemetryRequest
 import com.codescene.jetbrains.core.telemetry.UnhandledErrorTelemetry
+import com.codescene.jetbrains.core.telemetry.buildUnhandledErrorPayload
 import com.codescene.jetbrains.core.telemetry.normalizeIdeName
 import com.codescene.jetbrains.core.telemetry.resolveTelemetryEventData
 import com.codescene.jetbrains.core.util.TelemetryEvents
@@ -97,12 +98,11 @@ class TelemetryService : BaseService(Log), Disposable, ITelemetryService {
         if (!settings.telemetryConsentGiven || !settings.telemetryNoticeShown) return
         if (!UnhandledErrorTelemetry.trySend()) return
         val payload =
-            buildMap<String, Any> {
-                put("name", throwable::class.java.name)
-                put("message", throwable.message ?: "")
-                put("stack", throwable.stackTraceToString())
-                if (extraData.isNotEmpty()) put("extraData", extraData)
-            }
+            buildUnhandledErrorPayload(
+                throwable,
+                openProjectPathPrefixes(),
+                extraData,
+            )
         logUsage(TelemetryEvents.UNHANDLED_ERROR, payload)
     }
 
