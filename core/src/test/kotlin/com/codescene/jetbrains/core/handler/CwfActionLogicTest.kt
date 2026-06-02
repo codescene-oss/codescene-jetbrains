@@ -143,6 +143,10 @@ class CwfActionLogicTest {
             mapOf("url" to ""),
             telemetryForOpenUrl("not a url ?token=secret").data,
         )
+        assertEquals(
+            mapOf("url" to ""),
+            telemetryForOpenUrl("https://[::1").data,
+        )
     }
 
     private fun buildAceData(
