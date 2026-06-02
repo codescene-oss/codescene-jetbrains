@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780410353446,
+  "lastUpdate": 1780411208408,
   "repoUrl": "https://github.com/codescene-oss/codescene-jetbrains",
   "entries": {
     "JetBrains Plugin - ExtensionAPI": [
@@ -2262,6 +2262,90 @@ window.BENCHMARK_DATA = {
           {
             "name": "com.codescene.jetbrains.benchmarks.ReviewDeltaFlowBenchmark.reviewDeltaFlowWarm",
             "value": 12.50716379672792,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "martin.safsten@codescene.com",
+            "name": "Martin Säfsten",
+            "username": "martinsafsten-codescene"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c9dfdd5b127bb0bd901763d4db5307a431a34d8b",
+          "message": "CS-11202: Restrict CWF bridge to project-local file paths (#161)\n\n* CS-11202: Restrict CWF bridge to project-local file paths\n\nReject goto, docs, and refactoring requests whose paths fall outside the IDE\nworkspace and Git repository roots before opening or reading files.\n\nCo-authored-by: Cursor <cursoragent@cursor.com>\n\n* CS-11202: Harden CWF path guard parsing and cache roots\n\nCatch InvalidPathException, resolve paths with toRealPath before\nisPathUnderRoot, and cache allowed roots per project with Git invalidation.\n\nCo-authored-by: Cursor <cursoragent@cursor.com>\n\n* CS-11202: Split CWF path guard to reduce cyclomatic complexity\n\nExtract input parsing and absolute/relative checks so isCwfLocalFilePathAllowed\nstays under CodeScene complexity threshold.\n\nCo-authored-by: Cursor <cursoragent@cursor.com>\n\n* CS-11202: Add Cwf path guard unit test coverage\n\nCover IOException/SecurityException, blank and invalid roots, and absolute\npaths; remove unreachable toAbsolutePath catch.\n\nCo-authored-by: Cursor <cursoragent@cursor.com>\n\n* Fix ktlint issues in CwfActionLogicTest\n\nCo-authored-by: Cursor <cursoragent@cursor.com>\n\n* Use NUL in invalidRootForPathsGet for cross-platform Paths.get failure\n\nCo-authored-by: Cursor <cursoragent@cursor.com>\n\n* CS-11202: Cover InvalidPathException branches in path guard tests\n\nTest parseCwfPath directly with NUL input; add consolidated invalid-root\ntest; drop Assume skips now that invalidRootForPathsGet is cross-platform.\n\nCo-authored-by: Cursor <cursoragent@cursor.com>\n\n---------\n\nCo-authored-by: Cursor <cursoragent@cursor.com>",
+          "timestamp": "2026-06-02T16:25:50+02:00",
+          "tree_id": "df978650488c34da36fef3090389e58ed73c9e4a",
+          "url": "https://github.com/codescene-oss/codescene-jetbrains/commit/c9dfdd5b127bb0bd901763d4db5307a431a34d8b"
+        },
+        "date": 1780411207132,
+        "tool": "jmh",
+        "benches": [
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiDeltaBenchmark.deltaCold",
+            "value": 10.965942000727612,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiDeltaBenchmark.deltaWarm",
+            "value": 6.084805170739733,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiFnToRefactorBenchmark.fnToRefactorCold",
+            "value": 1.8000460575592219,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiFnToRefactorBenchmark.fnToRefactorWarm",
+            "value": 0.2003656892366449,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiReviewBenchmark.baselineReviewCold",
+            "value": 1.7159059632020892,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiReviewBenchmark.baselineReviewWarm",
+            "value": 0.9975389114763873,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiReviewBenchmark.reviewCold",
+            "value": 8.780784726490726,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiReviewBenchmark.reviewWarm",
+            "value": 4.635094585978275,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ReviewDeltaFlowBenchmark.reviewDeltaFlowCold",
+            "value": 16.348723093390994,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ReviewDeltaFlowBenchmark.reviewDeltaFlowWarm",
+            "value": 11.610965545596455,
             "unit": "ms/op",
             "extra": "iterations: 5\nforks: 1\nthreads: 1"
           }
