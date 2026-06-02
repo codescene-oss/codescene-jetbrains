@@ -33,7 +33,7 @@ jobs:
           java-version: 17
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947
         with:
           gradle-home-cache-excludes: |
             caches/modules-2/files-2.1/idea/**
@@ -43,7 +43,7 @@ jobs:
         run: ./gradlew :benchmarks:jmh
 
       - name: Store ExtensionAPI benchmark result
-        uses: benchmark-action/github-action-benchmark@v1
+        uses: benchmark-action/github-action-benchmark@52576c92bccf6ac60c8223ec7eb2565637cae9ba
         with:
           name: JetBrains Plugin - ExtensionAPI
           tool: 'jmh'
