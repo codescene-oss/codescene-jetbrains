@@ -27,7 +27,7 @@ jobs:
           java-version: 17
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947
 
       - name: Run tests with merged coverage
         run: ./gradlew fetchCwf jacocoMergedReport -PFEATURE_CWF_DEVMODE=${{ secrets.FEATURE_CWF_DEVMODE }}

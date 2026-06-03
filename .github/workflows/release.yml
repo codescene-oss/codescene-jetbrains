@@ -18,7 +18,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Maximize Build Space
-        uses: jlumbroso/free-disk-space@main
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
         with:
           tool-cache: true
           large-packages: true
@@ -35,7 +35,7 @@ jobs:
           java-version: 17
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947
 
       - name: Resolve Release Metadata
         id: release
@@ -76,7 +76,7 @@ jobs:
         run: ./gradlew publishPlugin -PreleaseVersion=${{ steps.release.outputs.version }} -PFEATURE_CWF_DEVMODE=${{ secrets.FEATURE_CWF_DEVMODE }}
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
