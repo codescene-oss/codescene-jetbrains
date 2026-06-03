@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780468562509,
+  "lastUpdate": 1780477313276,
   "repoUrl": "https://github.com/codescene-oss/codescene-jetbrains",
   "entries": {
     "JetBrains Plugin - ExtensionAPI": [
@@ -2598,6 +2598,90 @@ window.BENCHMARK_DATA = {
           {
             "name": "com.codescene.jetbrains.benchmarks.ReviewDeltaFlowBenchmark.reviewDeltaFlowWarm",
             "value": 11.952402605169336,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "martin.safsten@codescene.com",
+            "name": "Martin Säfsten",
+            "username": "martinsafsten-codescene"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9a08f701f558a4db58b412ec5cafcafac89d293c",
+          "message": "fix: Improve baseline branch detection (origin/HEAD + .codescene/config.json) (#173)\n\n* CS-11401: Improve baseline branch detection via origin/HEAD and repo config.\n\nPort repo-aware main-line resolution from VS so delta baselines use the actual default branch, optional .codescene/config.json override, and watch config or rules changes for cache invalidation.\n\nCo-authored-by: Cursor <cursoragent@cursor.com>\n\n* Address PR review: tracker repopulate, origin/HEAD guard, safe config read.\n\nClear the change tracker before repopulating, reject stripped origin/HEAD literal, wrap config file reads in IOException handling, and use computeIfAbsent for resolver cache.\n\nCo-authored-by: Cursor <cursoragent@cursor.com>\n\n---------\n\nCo-authored-by: Cursor <cursoragent@cursor.com>",
+          "timestamp": "2026-06-03T10:48:04+02:00",
+          "tree_id": "a53ad147f65c1d66f3b7b11ba39d24d62dc38747",
+          "url": "https://github.com/codescene-oss/codescene-jetbrains/commit/9a08f701f558a4db58b412ec5cafcafac89d293c"
+        },
+        "date": 1780477312244,
+        "tool": "jmh",
+        "benches": [
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiDeltaBenchmark.deltaCold",
+            "value": 11.336820344691937,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiDeltaBenchmark.deltaWarm",
+            "value": 6.16329765784155,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiFnToRefactorBenchmark.fnToRefactorCold",
+            "value": 1.8662152622132322,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiFnToRefactorBenchmark.fnToRefactorWarm",
+            "value": 0.18895743721830124,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiReviewBenchmark.baselineReviewCold",
+            "value": 1.7460179171666668,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiReviewBenchmark.baselineReviewWarm",
+            "value": 0.9677626469762723,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiReviewBenchmark.reviewCold",
+            "value": 8.886416784754578,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ExtensionApiReviewBenchmark.reviewWarm",
+            "value": 4.71407245671527,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ReviewDeltaFlowBenchmark.reviewDeltaFlowCold",
+            "value": 17.011983048917394,
+            "unit": "ms/op",
+            "extra": "iterations: 5\nforks: 1\nthreads: 1"
+          },
+          {
+            "name": "com.codescene.jetbrains.benchmarks.ReviewDeltaFlowBenchmark.reviewDeltaFlowWarm",
+            "value": 11.769290529106495,
             "unit": "ms/op",
             "extra": "iterations: 5\nforks: 1\nthreads: 1"
           }
