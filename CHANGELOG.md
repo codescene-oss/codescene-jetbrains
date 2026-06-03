@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.5.1] - 2026-06-03
+- **Added**
+  - Watch .gitignore and codescene config files changes and refresh analysis caches (#174) (#173)
+
+- **Fixed**
+  - Improve baseline branch detection (origin/HEAD) (#173)
+  - Misc security improvements
+
 ### [0.5.0] - 2026-05-27
 - **Added**
   - Revamped UI to align with other CodeScene IDE Extensions
