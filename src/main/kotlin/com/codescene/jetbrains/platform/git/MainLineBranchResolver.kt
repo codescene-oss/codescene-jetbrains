@@ -7,6 +7,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import git4idea.repo.GitRepository
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.concurrent.ConcurrentHashMap
@@ -22,7 +23,7 @@ class MainLineBranchResolver
 
         fun contextFor(repository: GitRepository): MainLineBranchContext {
             val cacheKey = pathComparisonKey(repository.root.path)
-            return cache.getOrPut(cacheKey) { loadContext(repository) }
+            return cache.computeIfAbsent(cacheKey) { loadContext(repository) }
         }
 
         fun invalidate(gitRoot: String) {
@@ -33,7 +34,11 @@ class MainLineBranchResolver
             val configPath = Paths.get(repository.root.path, ".codescene", "config.json")
             val configText =
                 if (Files.isRegularFile(configPath)) {
-                    Files.readString(configPath)
+                    try {
+                        Files.readString(configPath)
+                    } catch (_: IOException) {
+                        null
+                    }
                 } else {
                     null
                 }

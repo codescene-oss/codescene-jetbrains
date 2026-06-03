@@ -71,7 +71,10 @@ class Git4IdeaCommandExecutor(private val project: Project) : GitCommandExecutor
         val ref = result.output.first().trim()
         val originPrefix = "origin/"
         return when {
-            ref.startsWith(originPrefix) -> ref.removePrefix(originPrefix).takeIf { it.isNotEmpty() }
+            ref.startsWith(originPrefix) -> {
+                val stripped = ref.removePrefix(originPrefix)
+                stripped.takeIf { it.isNotEmpty() && it != "HEAD" }
+            }
             ref == "HEAD" || ref.isEmpty() -> null
             else -> ref
         }
