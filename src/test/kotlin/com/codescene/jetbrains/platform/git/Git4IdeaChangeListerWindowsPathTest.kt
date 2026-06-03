@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.git
 
 import com.codescene.jetbrains.core.contracts.IFileSystem
+import com.codescene.jetbrains.core.git.MainLineBranchContext
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
@@ -29,6 +30,7 @@ class Git4IdeaChangeListerWindowsPathTest {
     private lateinit var mockStagingArea: GitStagingAreaHolder
     private lateinit var mockFileSystem: IFileSystem
     private lateinit var mockGitExecutor: GitCommandExecutor
+    private lateinit var mockMainLineBranchResolver: MainLineBranchResolver
     private lateinit var mockIgnoredFilesHolder: GitRepositoryIgnoredFilesHolder
 
     @Before
@@ -41,6 +43,7 @@ class Git4IdeaChangeListerWindowsPathTest {
         mockStagingArea = mockk(relaxed = true)
         mockFileSystem = mockk(relaxed = true)
         mockGitExecutor = mockk(relaxed = true)
+        mockMainLineBranchResolver = mockk(relaxed = true)
         mockIgnoredFilesHolder = mockk(relaxed = true)
 
         every { mockRepository.ignoredFilesHolder } returns mockIgnoredFilesHolder
@@ -52,7 +55,10 @@ class Git4IdeaChangeListerWindowsPathTest {
         mockkStatic(LocalFileSystem::class)
         every { LocalFileSystem.getInstance() } returns mockLocalFileSystem
 
-        git4IdeaChangeLister = Git4IdeaChangeLister(project, mockFileSystem, mockGitExecutor)
+        every { mockMainLineBranchResolver.contextFor(mockRepository) } returns
+            MainLineBranchContext(defaultBranchFromOriginHead = "main", localBranchNames = setOf("main"))
+        git4IdeaChangeLister =
+            Git4IdeaChangeLister(project, mockFileSystem, mockGitExecutor, mockMainLineBranchResolver)
     }
 
     @After

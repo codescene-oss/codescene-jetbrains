@@ -47,8 +47,9 @@ class ClosestMainLineMergeBaseTest {
     @Test
     fun `collectOrderedUniqueMergeBases preserves probe order and dedupes`() {
         val seen = mutableListOf<String>()
+        val refs = listOf("main", "origin/main", "master", "origin/master")
         val bases =
-            collectOrderedUniqueMergeBases { ref ->
+            collectOrderedUniqueMergeBases(refs) { ref ->
                 seen.add(ref)
                 when (ref) {
                     "main" -> "sha1"

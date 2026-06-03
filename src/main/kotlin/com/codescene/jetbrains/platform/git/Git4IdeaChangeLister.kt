@@ -3,7 +3,6 @@ package com.codescene.jetbrains.platform.git
 import com.codescene.jetbrains.core.contracts.IFileSystem
 import com.codescene.jetbrains.core.contracts.IGitChangeLister
 import com.codescene.jetbrains.core.git.FileSystemAdapter
-import com.codescene.jetbrains.core.git.MAIN_LINE_BRANCH_NAMES
 import com.codescene.jetbrains.core.git.MAX_UNTRACKED_FILES_PER_LOCATION
 import com.codescene.jetbrains.core.git.createWorkspacePrefix
 import com.codescene.jetbrains.core.git.pathComparisonKey
@@ -60,7 +59,11 @@ class Git4IdeaChangeLister
         val project: Project,
         private val fileSystem: IFileSystem = FileSystemAdapter(),
         private val gitExecutor: GitCommandExecutor = Git4IdeaCommandExecutor(project),
+        private val injectedMainLineBranchResolver: MainLineBranchResolver? = null,
     ) : IGitChangeLister {
+        private val mainLineBranchResolver: MainLineBranchResolver
+            get() = injectedMainLineBranchResolver ?: MainLineBranchResolver.getInstance(project)
+
         companion object {
             fun getInstance(project: Project): Git4IdeaChangeLister = project.service<Git4IdeaChangeLister>()
         }
@@ -243,23 +246,22 @@ class Git4IdeaChangeLister
 
         private fun getMergeBase(repository: GitRepository): String? {
             val currentBranch = repository.currentBranchName ?: return null
+            val mainLineContext = mainLineBranchResolver.contextFor(repository)
 
-            if (isMainLineBranch(currentBranch)) {
+            if (mainLineContext.isMainLineBranch(currentBranch)) {
                 Log.info("On mainline branch, using HEAD", "Git4IdeaChangeLister")
                 return resolveHeadCommitSha(repository)
             }
 
-            return findMergeBaseWithMain(repository, currentBranch)
+            return findMergeBaseWithMain(repository, currentBranch, mainLineContext.refsForMergeBaseProbe())
         }
-
-        private fun isMainLineBranch(branchName: String): Boolean =
-            MAIN_LINE_BRANCH_NAMES.any { it.equals(branchName, ignoreCase = true) }
 
         private fun resolveHeadCommitSha(repository: GitRepository): String? = gitExecutor.runRevParse(repository)
 
         private fun findMergeBaseWithMain(
             repository: GitRepository,
             currentBranchName: String,
+            refs: List<String>,
         ): String? {
             val resolved =
                 resolveClosestMainLineMergeBase(
@@ -269,6 +271,7 @@ class Git4IdeaChangeLister
                     mergeBaseForRef = { ref ->
                         gitExecutor.runMergeBase(repository, currentBranchName, ref)
                     },
+                    refs = refs,
                 )
             if (resolved != null) {
                 Log.info("Resolved closest main-line merge base", "Git4IdeaChangeLister")

@@ -53,6 +53,7 @@ class GitChangeObserverService(
     private var vfsEventBridge: VfsEventBridge? = null
     private var savedFilesTracker: SavedFilesTrackerAdapter? = null
     private var repoStateListener: GitRepoStateListener? = null
+    private var codesceneRepoFilesListener: CodesceneRepoFilesListener? = null
 
     fun start() {
         val workspacePath = project.basePath
@@ -107,8 +108,19 @@ class GitChangeObserverService(
         repoStateListener = listener
         Disposer.register(this, listener)
 
+        val repoFilesListener =
+            CodesceneRepoFilesListener(
+                project,
+                gitRootPath,
+                gitChangeObserver,
+                MainLineBranchResolver.getInstance(project),
+            )
+        codesceneRepoFilesListener = repoFilesListener
+        Disposer.register(this, repoFilesListener)
+
         bridge.start()
         listener.start()
+        repoFilesListener.start()
         gitChangeObserver.start()
     }
 
@@ -155,6 +167,7 @@ class GitChangeObserverService(
         savedFilesTracker = null
         vfsEventBridge = null
         repoStateListener = null
+        codesceneRepoFilesListener = null
         observer = null
     }
 }

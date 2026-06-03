@@ -31,6 +31,7 @@ class Git4IdeaChangeListerTest : Git4IdeaChangeListerTestFixture() {
                 "/test/repo",
             )
             Git4IdeaTestSupport.setupCleanRepository(mockRepository, mockStagingArea, mockGitExecutor)
+            stubMainLineContext(localBranchNames = setOf("master"))
 
             val changedFiles = git4IdeaChangeLister.getAllChangedFiles("/test/repo", "/test/repo")
 
@@ -50,6 +51,7 @@ class Git4IdeaChangeListerTest : Git4IdeaChangeListerTestFixture() {
             Git4IdeaTestSupport.setupEmptyStagingArea(mockRepository, mockStagingArea)
             every { mockRepository.currentBranchName } returns "master"
             every { mockGitExecutor.runRevParse(mockRepository) } returns "abc123"
+            stubMainLineContext(localBranchNames = setOf("master"))
 
             val untrackedFile = mockk<com.intellij.openapi.vcs.FilePath>()
             every { untrackedFile.path } returns "test.ts"
@@ -76,6 +78,7 @@ class Git4IdeaChangeListerTest : Git4IdeaChangeListerTestFixture() {
             Git4IdeaTestSupport.setupEmptyUntrackedFiles(mockRepository)
             every { mockRepository.currentBranchName } returns "master"
             every { mockGitExecutor.runRevParse(mockRepository) } returns "abc123"
+            stubMainLineContext(localBranchNames = setOf("master"))
 
             val mockFilePath = mockk<com.intellij.openapi.vcs.FilePath>()
             every { mockFilePath.path } returns "index.js"
@@ -109,6 +112,7 @@ class Git4IdeaChangeListerTest : Git4IdeaChangeListerTestFixture() {
             Git4IdeaTestSupport.setupEmptyStagingArea(mockRepository, mockStagingArea)
             every { mockRepository.currentBranchName } returns "master"
             every { mockGitExecutor.runRevParse(mockRepository) } returns "abc123"
+            stubMainLineContext(localBranchNames = setOf("master"))
 
             val txtFile = mockk<com.intellij.openapi.vcs.FilePath>()
             every { txtFile.path } returns "notes.txt"
