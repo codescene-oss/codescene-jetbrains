@@ -48,14 +48,16 @@ class TestGitChangeListerForCommitted(private val testRepoPath: File) : IGitChan
 
     private fun getMergeBase(gitRootPath: String): String? {
         val currentBranch = exec("git", "rev-parse", "--abbrev-ref", "HEAD").trim()
+        val mainLineContext = mainLineContextFromTestRepo(testRepoPath)
 
-        if (MAIN_LINE_BRANCH_NAMES.any { it.equals(currentBranch, ignoreCase = true) }) {
+        if (mainLineContext.isMainLineBranch(currentBranch)) {
             return exec("git", "rev-parse", "HEAD").trim()
         }
 
         return resolveClosestMainLineMergeBase(
             isAncestor = { ancestor, descendant -> gitIsAncestor(ancestor, descendant) },
             mergeBaseForRef = { ref -> gitMergeBaseWithRef(currentBranch, ref) },
+            refs = mainLineContext.refsForMergeBaseProbe(),
         )
     }
 

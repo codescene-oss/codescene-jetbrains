@@ -33,6 +33,9 @@ class GitChangeObserver(
 
     suspend fun populateTrackerFromRepoState() {
         logger.info("Populating tracker from repo state", "GitChangeObserver")
+        synchronized(tracker) {
+            tracker.clear()
+        }
         val changedFiles = gitChangeLister.getAllChangedFiles(gitRootPath, workspacePath, emptySet())
         logger.info("getAllChangedFiles returned ${changedFiles.size} files", "GitChangeObserver")
         for (absolutePath in changedFiles) {

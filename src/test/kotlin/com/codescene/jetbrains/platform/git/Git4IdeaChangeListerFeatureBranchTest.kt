@@ -11,7 +11,7 @@ import org.junit.Test
 
 class Git4IdeaChangeListerFeatureBranchTest : Git4IdeaChangeListerTestFixture() {
     @Test
-    fun `getAllChangedFiles uses closest merge base when main and develop disagree`() =
+    fun `getAllChangedFiles uses origin default merge base only when main and develop exist`() =
         runBlocking {
             val workspace = "/test/repo"
             val branch = "feature-stacked"
@@ -27,19 +27,21 @@ class Git4IdeaChangeListerFeatureBranchTest : Git4IdeaChangeListerTestFixture() 
             Git4IdeaTestSupport.setupEmptyUntrackedFiles(mockRepository)
             every { mockRepository.currentBranchName } returns branch
             every { mockRepository.root } returns mockVirtualFile
+            stubMainLineContext(
+                defaultBranchFromOriginHead = "main",
+                localBranchNames = setOf("main", "develop"),
+            )
 
             every { mockGitExecutor.runMergeBase(mockRepository, branch, "main") } returns "oldMainMb"
-            every { mockGitExecutor.runMergeBase(mockRepository, branch, "develop") } returns "developMb"
-            every { mockGitExecutor.runIsAncestor(mockRepository, "oldMainMb", "developMb") } returns true
-            every { mockGitExecutor.runIsAncestor(mockRepository, "developMb", "oldMainMb") } returns false
-
-            every { mockGitExecutor.runDiff(mockRepository, "developMb") } returns listOf("stacked.ts")
+            every { mockGitExecutor.runMergeBase(mockRepository, branch, "origin/main") } returns "oldMainMb"
+            every { mockGitExecutor.runDiff(mockRepository, "oldMainMb") } returns listOf("stacked.ts")
 
             Git4IdeaTestSupport.setupFileSystemForFile(mockFileSystem, gitRoot, workspace, "stacked.ts", "ts")
 
             git4IdeaChangeLister.getAllChangedFiles(gitRoot, workspace)
 
-            verify(exactly = 1) { mockGitExecutor.runDiff(mockRepository, "developMb") }
+            verify(exactly = 1) { mockGitExecutor.runDiff(mockRepository, "oldMainMb") }
+            verify(exactly = 0) { mockGitExecutor.runMergeBase(mockRepository, branch, "develop") }
         }
 
     @Test
@@ -116,6 +118,7 @@ class Git4IdeaChangeListerFeatureBranchTest : Git4IdeaChangeListerTestFixture() 
             Git4IdeaTestSupport.setupEmptyStagingArea(mockRepository, mockStagingArea)
             every { mockRepository.currentBranchName } returns "master"
             every { mockGitExecutor.runRevParse(mockRepository) } returns "abc123"
+            stubMainLineContext(localBranchNames = setOf("master"))
 
             val files =
                 (1..10).map { i ->
@@ -160,6 +163,7 @@ class Git4IdeaChangeListerFeatureBranchTest : Git4IdeaChangeListerTestFixture() 
             Git4IdeaTestSupport.setupEmptyStagingArea(mockRepository, mockStagingArea)
             every { mockRepository.currentBranchName } returns "master"
             every { mockGitExecutor.runRevParse(mockRepository) } returns "abc123"
+            stubMainLineContext(localBranchNames = setOf("master"))
 
             val untrackedFile = mockk<com.intellij.openapi.vcs.FilePath>()
             every { untrackedFile.path } returns "$gitRoot/test.ts"

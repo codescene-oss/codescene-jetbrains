@@ -65,6 +65,8 @@ class GitChangeObserverAdapter(
 
     fun getQueuedEventCount(): Int = observer.getQueuedEventCount()
 
+    suspend fun repopulateFromRepoState() = observer.populateTrackerFromRepoState()
+
     override fun dispose() {
         Log.info("Disposing, cancelling scope", "GitChangeObserverAdapter")
         scope.cancel()

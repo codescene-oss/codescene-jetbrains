@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.git
 
 import com.codescene.jetbrains.core.contracts.IFileSystem
+import com.codescene.jetbrains.core.git.MainLineBranchContext
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
@@ -26,6 +27,7 @@ abstract class Git4IdeaChangeListerTestFixture {
     protected lateinit var mockStagingArea: GitStagingAreaHolder
     protected lateinit var mockFileSystem: IFileSystem
     protected lateinit var mockGitExecutor: GitCommandExecutor
+    protected lateinit var mockMainLineBranchResolver: MainLineBranchResolver
     protected lateinit var mockIgnoredFilesHolder: GitRepositoryIgnoredFilesHolder
 
     @Before
@@ -38,6 +40,7 @@ abstract class Git4IdeaChangeListerTestFixture {
         mockStagingArea = mockk(relaxed = true)
         mockFileSystem = mockk(relaxed = true)
         mockGitExecutor = mockk(relaxed = true)
+        mockMainLineBranchResolver = mockk(relaxed = true)
         mockIgnoredFilesHolder = mockk(relaxed = true)
 
         every { mockRepository.ignoredFilesHolder } returns mockIgnoredFilesHolder
@@ -49,7 +52,28 @@ abstract class Git4IdeaChangeListerTestFixture {
         mockkStatic(LocalFileSystem::class)
         every { LocalFileSystem.getInstance() } returns mockLocalFileSystem
 
-        git4IdeaChangeLister = Git4IdeaChangeLister(project, mockFileSystem, mockGitExecutor)
+        stubMainLineContext(defaultBranchFromOriginHead = "main", localBranchNames = setOf("main"))
+
+        git4IdeaChangeLister =
+            Git4IdeaChangeLister(
+                project,
+                mockFileSystem,
+                mockGitExecutor,
+                mockMainLineBranchResolver,
+            )
+    }
+
+    protected fun stubMainLineContext(
+        configuredBaseline: String? = null,
+        defaultBranchFromOriginHead: String? = null,
+        localBranchNames: Set<String> = emptySet(),
+    ) {
+        every { mockMainLineBranchResolver.contextFor(mockRepository) } returns
+            MainLineBranchContext(
+                configuredBaseline = configuredBaseline,
+                defaultBranchFromOriginHead = defaultBranchFromOriginHead,
+                localBranchNames = localBranchNames,
+            )
     }
 
     @After

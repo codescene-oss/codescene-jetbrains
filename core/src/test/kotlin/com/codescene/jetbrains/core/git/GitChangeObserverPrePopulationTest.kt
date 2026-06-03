@@ -94,6 +94,24 @@ class GitChangeObserverPrePopulationTest {
         }
 
     @Test
+    fun `repopulate clears stale tracker entries`() =
+        runBlocking {
+            mockGitChangeLister.changedFiles = setOf("$workspacePath/src/old.ts")
+
+            val observer = createObserver()
+            observer.populateTrackerFromRepoState()
+            assertTrue(observer.getTrackedFiles().contains("/workspace/src/old.ts"))
+
+            mockGitChangeLister.changedFiles = setOf("$workspacePath/src/new.ts")
+            observer.populateTrackerFromRepoState()
+
+            val trackedFiles = observer.getTrackedFiles()
+            assertFalse(trackedFiles.contains("/workspace/src/old.ts"))
+            assertTrue(trackedFiles.contains("/workspace/src/new.ts"))
+            assertEquals(1, trackedFiles.size)
+        }
+
+    @Test
     fun `pre-population handles empty changed files list`() =
         runBlocking {
             mockGitChangeLister.changedFiles = emptySet()

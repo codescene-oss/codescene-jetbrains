@@ -60,4 +60,36 @@ class Git4IdeaCommandExecutor(private val project: Project) : GitCommandExecutor
             }
         return Git.getInstance().runCommand(handler).success()
     }
+
+    override fun resolveOriginHeadBranch(repository: GitRepository): String? {
+        val handler =
+            createGitLineHandler(project, repository.root, GitCommand.REV_PARSE).apply {
+                addParameters("--abbrev-ref", "refs/remotes/origin/HEAD")
+            }
+        val result = Git.getInstance().runCommand(handler)
+        if (!result.success() || result.output.isEmpty()) return null
+        val ref = result.output.first().trim()
+        val originPrefix = "origin/"
+        return when {
+            ref.startsWith(originPrefix) -> {
+                val stripped = ref.removePrefix(originPrefix)
+                stripped.takeIf { it.isNotEmpty() && it != "HEAD" }
+            }
+            ref == "HEAD" || ref.isEmpty() -> null
+            else -> ref
+        }
+    }
+
+    override fun localBranchNames(repository: GitRepository): Set<String> {
+        val handler =
+            createGitLineHandler(project, repository.root, GitCommand.BRANCH).apply {
+                addParameters("--format=%(refname:short)")
+            }
+        val result = Git.getInstance().runCommand(handler)
+        if (!result.success()) return emptySet()
+        return result.output
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .toSet()
+    }
 }

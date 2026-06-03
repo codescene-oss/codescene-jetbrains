@@ -5,10 +5,13 @@ val MAIN_LINE_BRANCH_NAMES =
 
 fun mainLineRefsInProbeOrder(): List<String> = MAIN_LINE_BRANCH_NAMES.flatMap { listOf(it, "origin/$it") }
 
-fun collectOrderedUniqueMergeBases(mergeBaseForRef: (ref: String) -> String?): List<String> {
+fun collectOrderedUniqueMergeBases(
+    refs: List<String>,
+    mergeBaseForRef: (ref: String) -> String?,
+): List<String> {
     val ordered = mutableListOf<String>()
     val seen = mutableSetOf<String>()
-    for (ref in mainLineRefsInProbeOrder()) {
+    for (ref in refs) {
         val sha = mergeBaseForRef(ref)?.trim()?.takeIf { it.isNotEmpty() } ?: continue
         if (seen.add(sha)) {
             ordered.add(sha)
@@ -38,7 +41,8 @@ fun selectClosestMergeBase(
 fun resolveClosestMainLineMergeBase(
     isAncestor: (ancestor: String, descendant: String) -> Boolean,
     mergeBaseForRef: (ref: String) -> String?,
+    refs: List<String> = mainLineRefsInProbeOrder(),
 ): String? {
-    val ordered = collectOrderedUniqueMergeBases(mergeBaseForRef)
+    val ordered = collectOrderedUniqueMergeBases(refs, mergeBaseForRef)
     return selectClosestMergeBase(ordered, isAncestor)
 }

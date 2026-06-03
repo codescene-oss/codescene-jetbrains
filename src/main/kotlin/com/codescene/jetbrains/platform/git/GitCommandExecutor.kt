@@ -21,4 +21,8 @@ interface GitCommandExecutor {
         ancestor: String,
         descendant: String,
     ): Boolean
+
+    fun resolveOriginHeadBranch(repository: GitRepository): String?
+
+    fun localBranchNames(repository: GitRepository): Set<String>
 }
