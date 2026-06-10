@@ -24,8 +24,13 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
     private val scope = CoroutineScope(Dispatchers.IO)
     private var aceAuthToken by Delegates.observable("") { _, _, _ -> }
 
+    init {
+        scope.launch {
+            aceAuthToken = settingsStore.getAceAuthToken()
+        }
+    }
+
     override fun createPanel(): DialogPanel {
-        aceAuthToken = settingsStore.getAceAuthToken()
         return panel {
             row {
                 checkBox(UiLabelsBundle.message("enableCodeLenses"))
@@ -87,7 +92,9 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
     }
 
     override fun reset() {
-        aceAuthToken = settingsStore.getAceAuthToken()
+        scope.launch {
+            aceAuthToken = settingsStore.getAceAuthToken()
+        }
         super.reset()
     }
 

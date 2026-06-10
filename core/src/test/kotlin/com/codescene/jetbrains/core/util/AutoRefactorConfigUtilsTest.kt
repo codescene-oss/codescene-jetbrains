@@ -4,6 +4,7 @@ import com.codescene.jetbrains.core.models.settings.AceStatus
 import com.codescene.jetbrains.core.models.settings.CodeSceneGlobalSettings
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -42,12 +43,49 @@ class AutoRefactorConfigUtilsTest {
     }
 
     @Test
-    fun `toAutoRefactorConfig visible follows enableAutoRefactor`() {
-        val enabled = toAutoRefactorConfig(CodeSceneGlobalSettings(enableAutoRefactor = true))
+    fun `toAutoRefactorConfig visible requires enableAutoRefactor and aceTokenConfigured`() {
+        val enabled =
+            toAutoRefactorConfig(
+                CodeSceneGlobalSettings(
+                    enableAutoRefactor = true,
+                    aceTokenConfigured = true,
+                    aceStatus = AceStatus.SIGNED_IN,
+                ),
+            )
         assertEquals(true, enabled.visible)
 
-        val disabled = toAutoRefactorConfig(CodeSceneGlobalSettings(enableAutoRefactor = false))
-        assertEquals(false, disabled.visible)
+        val disabledNoToken =
+            toAutoRefactorConfig(
+                CodeSceneGlobalSettings(
+                    enableAutoRefactor = true,
+                    aceTokenConfigured = false,
+                    aceStatus = AceStatus.SIGNED_IN,
+                ),
+            )
+        assertEquals(false, disabledNoToken.visible)
+
+        val disabledSetting =
+            toAutoRefactorConfig(
+                CodeSceneGlobalSettings(
+                    enableAutoRefactor = false,
+                    aceTokenConfigured = true,
+                    aceStatus = AceStatus.SIGNED_IN,
+                ),
+            )
+        assertEquals(false, disabledSetting.visible)
+    }
+
+    @Test
+    fun `toAutoRefactorConfig visible false when aceStatus is DEACTIVATED`() {
+        val result =
+            toAutoRefactorConfig(
+                CodeSceneGlobalSettings(
+                    enableAutoRefactor = true,
+                    aceTokenConfigured = true,
+                    aceStatus = AceStatus.DEACTIVATED,
+                ),
+            )
+        assertEquals(false, result.visible)
     }
 
     @Test
@@ -79,33 +117,34 @@ class AutoRefactorConfigUtilsTest {
     }
 
     @Test
-    fun `toAutoRefactorConfig aceStatus hasToken true when token present`() {
+    fun `toAutoRefactorConfig aceStatus present when indicator should show`() {
         val result =
             toAutoRefactorConfig(
                 CodeSceneGlobalSettings(
                     aceStatus = AceStatus.SIGNED_IN,
                     aceTokenConfigured = true,
+                    enableAutoRefactor = true,
                 ),
             )
-        assertTrue(result.aceStatus.hasToken)
-        assertEquals("enabled", result.aceStatus.status)
+        assertTrue(result.aceStatus!!.hasToken)
+        assertEquals("enabled", result.aceStatus!!.status)
     }
 
     @Test
-    fun `toAutoRefactorConfig aceStatus hasToken false when token blank`() {
+    fun `toAutoRefactorConfig aceStatus null when token missing`() {
         val result =
             toAutoRefactorConfig(
                 CodeSceneGlobalSettings(
                     aceStatus = AceStatus.SIGNED_OUT,
                     aceTokenConfigured = false,
+                    enableAutoRefactor = true,
                 ),
             )
-        assertFalse(result.aceStatus.hasToken)
-        assertEquals("enabled", result.aceStatus.status)
+        assertNull(result.aceStatus)
     }
 
     @Test
-    fun `toAutoRefactorConfig aceStatus reflects deactivated`() {
+    fun `toAutoRefactorConfig aceStatus is null when deactivated`() {
         val result =
             toAutoRefactorConfig(
                 CodeSceneGlobalSettings(
@@ -113,7 +152,7 @@ class AutoRefactorConfigUtilsTest {
                     aceTokenConfigured = true,
                 ),
             )
-        assertEquals("disabled", result.aceStatus.status)
+        assertNull(result.aceStatus)
     }
 
     @Test

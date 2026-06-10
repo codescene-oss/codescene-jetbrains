@@ -27,7 +27,13 @@ class CodeSceneGlobalSettingsStore : PersistentStateComponent<CodeSceneGlobalSet
     override fun loadState(state: CodeSceneGlobalSettingsPersisted) {
         val legacyToken = state.aceAuthToken.takeIf { it.isNotBlank() }
         val tokenConfigured = state.aceTokenConfigured || legacyToken != null
-        stateManager.loadState(state.toCore().copy(aceTokenConfigured = tokenConfigured))
+        val coreState = state.toCore()
+        stateManager.loadState(
+            coreState.copy(
+                aceTokenConfigured = tokenConfigured,
+                enableAutoRefactor = coreState.enableAutoRefactor && tokenConfigured,
+            ),
+        )
         if (legacyToken != null) {
             migrateLegacyAceAuthToken(legacyToken)
         }

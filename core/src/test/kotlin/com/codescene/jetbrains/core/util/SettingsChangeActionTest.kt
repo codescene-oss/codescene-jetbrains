@@ -35,7 +35,13 @@ class SettingsChangeActionTest {
 
         val result = resolveSettingsChangeActions(oldState, newState)
 
-        assertEquals(listOf(SettingsChangeAction.RefreshAceUI(false)), result)
+        assertEquals(
+            listOf(
+                SettingsChangeAction.RefreshAceUI(false),
+                SettingsChangeAction.RefreshAceStatusBarWidget,
+            ),
+            result,
+        )
     }
 
     @Test
@@ -45,7 +51,13 @@ class SettingsChangeActionTest {
 
         val result = resolveSettingsChangeActions(oldState, newState)
 
-        assertEquals(listOf(SettingsChangeAction.RefreshAceUI(true)), result)
+        assertEquals(
+            listOf(
+                SettingsChangeAction.RefreshAceUI(true),
+                SettingsChangeAction.RefreshAceStatusBarWidget,
+            ),
+            result,
+        )
     }
 
     @Test
@@ -53,7 +65,13 @@ class SettingsChangeActionTest {
         val state = CodeSceneGlobalSettings(aceTokenConfigured = true)
         val result = resolveSettingsChangeActions(state, state, aceAuthTokenChanged = true)
 
-        assertEquals(listOf(SettingsChangeAction.RefreshAceUI(true)), result)
+        assertEquals(
+            listOf(
+                SettingsChangeAction.RefreshAceUI(true),
+                SettingsChangeAction.RefreshAceStatusBarWidget,
+            ),
+            result,
+        )
     }
 
     @Test
@@ -80,7 +98,9 @@ class SettingsChangeActionTest {
                 SettingsChangeAction.RefreshAceUI(true),
                 SettingsChangeAction.PublishAceStatusChange,
                 SettingsChangeAction.RefreshAceUI(false),
+                SettingsChangeAction.RefreshAceStatusBarWidget,
                 SettingsChangeAction.RefreshAceUI(true),
+                SettingsChangeAction.RefreshAceStatusBarWidget,
             ),
             result,
         )

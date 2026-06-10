@@ -27,7 +27,7 @@ data class CodeSceneGlobalSettings(
     var telemetryNoticeShown: Boolean = false,
     var aceStatus: AceStatus = AceStatus.DEACTIVATED,
     var enableCodeLenses: Boolean = true,
-    var enableAutoRefactor: Boolean = true,
+    var enableAutoRefactor: Boolean = false,
     var aceTokenConfigured: Boolean = false,
     // This is a freemium flag for the Code Health Monitor. If a proper CHM feature flag becomes necessary, use the same approach as ACE and CWF. If not,
     // TODO delete this after the integration with core is complete.

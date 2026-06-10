@@ -10,6 +10,7 @@ import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionPro
 import com.codescene.jetbrains.platform.git.GitChangeObserverService
 import com.codescene.jetbrains.platform.git.PeriodicChangeListerService
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.platform.statusbar.AceStatusBarWidgetFactory
 import com.codescene.jetbrains.platform.telemetry.TelemetryService
 import com.codescene.jetbrains.platform.telemetry.installGlobalUncaughtErrorTelemetry
 import com.codescene.jetbrains.platform.util.Log
@@ -27,6 +28,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.wm.impl.status.widget.StatusBarWidgetsManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -91,6 +93,9 @@ class ProjectStartupActivity : ProjectActivity {
                                 .messageBus
                                 .syncPublisher(AceStatusRefreshNotifier.TOPIC)
                                 .refresh()
+                        is SettingsChangeAction.RefreshAceStatusBarWidget ->
+                            project.service<StatusBarWidgetsManager>()
+                                .updateWidget(AceStatusBarWidgetFactory::class.java)
                     }
                 }
             }

@@ -13,18 +13,29 @@ fun mapAceStatusToCwfString(status: AceStatus): String =
         AceStatus.OFFLINE -> "offline"
     }
 
+fun shouldShowAceStatusIndicator(settings: CodeSceneGlobalSettings): Boolean =
+    settings.enableAutoRefactor &&
+        settings.aceTokenConfigured &&
+        settings.aceStatus != AceStatus.DEACTIVATED
+
 fun toAutoRefactorConfig(settings: CodeSceneGlobalSettings): AutoRefactorConfig {
     val hasToken = settings.aceTokenConfigured
     val isActivated = !(!settings.aceAcknowledged && hasToken)
+    val showIndicator = shouldShowAceStatusIndicator(settings)
     return AutoRefactorConfig(
         activated = isActivated,
-        visible = settings.enableAutoRefactor,
+        visible = showIndicator,
         disabled = !hasToken,
+        // Setting aceStatus to null hides the ACE status indicator in the CWF header
         aceStatus =
-            AceStatusType(
-                status = mapAceStatusToCwfString(settings.aceStatus),
-                hasToken = hasToken,
-            ),
+            if (showIndicator) {
+                AceStatusType(
+                    status = mapAceStatusToCwfString(settings.aceStatus),
+                    hasToken = hasToken,
+                )
+            } else {
+                null
+            },
     )
 }
 
