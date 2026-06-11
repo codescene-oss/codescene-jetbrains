@@ -3,6 +3,7 @@ package com.codescene.jetbrains.core.testdoubles
 import com.codescene.jetbrains.core.contracts.ISettingsProvider
 import com.codescene.jetbrains.core.models.settings.AceStatus
 import com.codescene.jetbrains.core.models.settings.CodeSceneGlobalSettings
+import com.codescene.jetbrains.core.util.isAceTokenConfigured
 
 class InMemorySettingsProvider(
     private var settings: CodeSceneGlobalSettings = CodeSceneGlobalSettings(),
@@ -14,7 +15,7 @@ class InMemorySettingsProvider(
 
     override fun setAceAuthToken(token: String) {
         aceAuthToken = token
-        settings = settings.copy(aceTokenConfigured = token.isNotBlank())
+        settings = settings.copy(aceTokenConfigured = isAceTokenConfigured(token))
     }
 
     override fun updateTelemetryConsent(hasAccepted: Boolean) {

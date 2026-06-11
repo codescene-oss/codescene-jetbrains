@@ -11,6 +11,7 @@ import com.codescene.jetbrains.core.models.view.FunctionToRefactor
 import com.codescene.jetbrains.core.models.view.RefactoringTarget
 import com.codescene.jetbrains.core.util.Constants.DELTA_ANALYSIS_JOB
 import com.codescene.jetbrains.core.util.Constants.JOB_STATE_RUNNING
+import com.codescene.jetbrains.core.util.resolveFeatureFlags
 import io.mockk.every
 import io.mockk.mockk
 import java.util.Optional
@@ -23,6 +24,7 @@ import org.junit.Test
 class CodeHealthMonitorMapperTest {
     private val mapper = CodeHealthMonitorMapper()
     private val autoRefactorConfig = AutoRefactorConfig()
+    private val defaultFeatureFlags = listOf("jobs", "ace-status-indicator")
     private val noRefactorResolver: (String, String, DeltaFunctionFinding) -> FunctionToRefactor? = { _, _, _ -> null }
     private val emptyDeltaResults = emptyList<Pair<String, DeltaCacheItem>>()
 
@@ -48,6 +50,7 @@ class CodeHealthMonitorMapperTest {
     private fun toCwfData(
         deltaResults: List<Pair<String, DeltaCacheItem>> = emptyDeltaResults,
         activeJobs: List<String> = emptyList(),
+        featureFlags: List<String> = defaultFeatureFlags,
         pro: Boolean = true,
         devmode: Boolean = false,
     ) = mapper.toCwfData(
@@ -55,6 +58,7 @@ class CodeHealthMonitorMapperTest {
         activeJobs,
         noRefactorResolver,
         autoRefactorConfig,
+        featureFlags,
         pro,
         devmode,
     )
@@ -81,10 +85,17 @@ class CodeHealthMonitorMapperTest {
     }
 
     @Test
-    fun `toCwfData includes ace-status-indicator feature flag`() {
-        val result = toCwfData()
+    fun `toCwfData includes ace-status-indicator when token is configured`() {
+        val result = toCwfData(featureFlags = resolveFeatureFlags(aceTokenConfigured = true))
         assertTrue(result.featureFlags.contains("jobs"))
         assertTrue(result.featureFlags.contains("ace-status-indicator"))
+    }
+
+    @Test
+    fun `toCwfData excludes ace-status-indicator when token is not configured`() {
+        val result = toCwfData(featureFlags = resolveFeatureFlags(aceTokenConfigured = false))
+        assertTrue(result.featureFlags.contains("jobs"))
+        assertTrue(!result.featureFlags.contains("ace-status-indicator"))
     }
 
     @Test
@@ -196,6 +207,7 @@ class CodeHealthMonitorMapperTest {
                     activeJobs = emptyList(),
                     functionToRefactorResolver = resolver,
                     autoRefactorConfig = autoRefactorConfig,
+                    featureFlags = defaultFeatureFlags,
                     devmode = false,
                 )
                 .data!!
@@ -238,7 +250,15 @@ class CodeHealthMonitorMapperTest {
     @Test
     fun `toCwfData passes autoRefactorConfig through`() {
         val config = AutoRefactorConfig(activated = true, visible = true, disabled = false)
-        val result = mapper.toCwfData(emptyDeltaResults, emptyList(), noRefactorResolver, config, devmode = false)
+        val result =
+            mapper.toCwfData(
+                emptyDeltaResults,
+                emptyList(),
+                noRefactorResolver,
+                config,
+                defaultFeatureFlags,
+                devmode = false,
+            )
         assertEquals(config, result.data!!.autoRefactor)
     }
 
@@ -250,6 +270,7 @@ class CodeHealthMonitorMapperTest {
                 activeJobs = listOf("src/Main.kt"),
                 functionToRefactorResolver = noRefactorResolver,
                 autoRefactorConfig = autoRefactorConfig,
+                featureFlags = defaultFeatureFlags,
                 devmode = true,
             )
 
@@ -268,6 +289,7 @@ class CodeHealthMonitorMapperTest {
                 activeJobs = listOf("src/Main.kt"),
                 functionToRefactorResolver = noRefactorResolver,
                 autoRefactorConfig = autoRefactorConfig,
+                featureFlags = defaultFeatureFlags,
                 devmode = true,
             )
 

@@ -29,23 +29,19 @@ class SettingsChangeActionTest {
     }
 
     @Test
-    fun `returns refresh ace ui when auto refactor toggles`() {
-        val oldState = CodeSceneGlobalSettings(enableAutoRefactor = true)
-        val newState = oldState.copy(enableAutoRefactor = false)
-
-        val result = resolveSettingsChangeActions(oldState, newState)
-
-        assertEquals(listOf(SettingsChangeAction.RefreshAceUI(false)), result)
-    }
-
-    @Test
     fun `returns refresh ace ui when auth token configured flag changed`() {
         val oldState = CodeSceneGlobalSettings(aceTokenConfigured = false)
         val newState = oldState.copy(aceTokenConfigured = true)
 
         val result = resolveSettingsChangeActions(oldState, newState)
 
-        assertEquals(listOf(SettingsChangeAction.RefreshAceUI(true)), result)
+        assertEquals(
+            listOf(
+                SettingsChangeAction.RefreshAceUI(true),
+                SettingsChangeAction.UpdateStatusBarWidget,
+            ),
+            result,
+        )
     }
 
     @Test
@@ -53,7 +49,13 @@ class SettingsChangeActionTest {
         val state = CodeSceneGlobalSettings(aceTokenConfigured = true)
         val result = resolveSettingsChangeActions(state, state, aceAuthTokenChanged = true)
 
-        assertEquals(listOf(SettingsChangeAction.RefreshAceUI(true)), result)
+        assertEquals(
+            listOf(
+                SettingsChangeAction.RefreshAceUI(true),
+                SettingsChangeAction.UpdateStatusBarWidget,
+            ),
+            result,
+        )
     }
 
     @Test
@@ -61,14 +63,12 @@ class SettingsChangeActionTest {
         val oldState =
             CodeSceneGlobalSettings(
                 enableCodeLenses = true,
-                enableAutoRefactor = true,
                 aceTokenConfigured = false,
                 aceStatus = AceStatus.DEACTIVATED,
             )
         val newState =
             oldState.copy(
                 enableCodeLenses = false,
-                enableAutoRefactor = false,
                 aceTokenConfigured = true,
             ).also { it.aceStatus = AceStatus.OFFLINE }
 
@@ -79,8 +79,8 @@ class SettingsChangeActionTest {
                 SettingsChangeAction.RefreshCodeVision,
                 SettingsChangeAction.RefreshAceUI(true),
                 SettingsChangeAction.PublishAceStatusChange,
-                SettingsChangeAction.RefreshAceUI(false),
                 SettingsChangeAction.RefreshAceUI(true),
+                SettingsChangeAction.UpdateStatusBarWidget,
             ),
             result,
         )

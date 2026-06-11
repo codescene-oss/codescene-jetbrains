@@ -10,6 +10,7 @@ import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionPro
 import com.codescene.jetbrains.platform.git.GitChangeObserverService
 import com.codescene.jetbrains.platform.git.PeriodicChangeListerService
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
+import com.codescene.jetbrains.platform.statusbar.AceStatusBarWidgetFactory
 import com.codescene.jetbrains.platform.telemetry.TelemetryService
 import com.codescene.jetbrains.platform.telemetry.installGlobalUncaughtErrorTelemetry
 import com.codescene.jetbrains.platform.util.Log
@@ -27,6 +28,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.wm.impl.status.widget.StatusBarWidgetsManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -56,6 +58,27 @@ class ProjectStartupActivity : ProjectActivity {
         val disposable = project as Disposable
         val settingsStore = CodeSceneGlobalSettingsStore.getInstance()
 
+        logTelemetryStatus(project, settingsStore)
+        setupSettingsChangeListener(project, disposable, settingsStore)
+
+        addStateListener()
+        VirtualFileManager.getInstance().addAsyncFileListener(FileChangeListener(project), disposable)
+
+        val gitChangeObserverService = project.service<GitChangeObserverService>()
+        gitChangeObserverService.start()
+
+        val periodicChangeListerService = project.service<PeriodicChangeListerService>()
+        periodicChangeListerService.start()
+
+        registerCodeSceneToolWindowTelemetry(project, disposable)
+
+        runAcePreflightOutsideUnitTests()
+    }
+
+    private fun logTelemetryStatus(
+        project: Project,
+        settingsStore: CodeSceneGlobalSettingsStore,
+    ) {
         val settings = settingsStore.currentState()
         val noticeDisplayed = settings.telemetryNoticeShown
         val telemetryConsent = settings.telemetryConsentGiven
@@ -68,7 +91,13 @@ class ProjectStartupActivity : ProjectActivity {
         )
 
         if (!noticeDisplayed) showTelemetryNoticeNotification(project)
+    }
 
+    private fun setupSettingsChangeListener(
+        project: Project,
+        disposable: Disposable,
+        settingsStore: CodeSceneGlobalSettingsStore,
+    ) {
         val listener =
             ISettingsChangeListener { oldState, newState, aceAuthTokenChanged ->
                 val actions = resolveSettingsChangeActions(oldState, newState, aceAuthTokenChanged)
@@ -91,6 +120,12 @@ class ProjectStartupActivity : ProjectActivity {
                                 .messageBus
                                 .syncPublisher(AceStatusRefreshNotifier.TOPIC)
                                 .refresh()
+                        is SettingsChangeAction.UpdateStatusBarWidget ->
+                            ApplicationManager.getApplication().invokeLater {
+                                if (project.isDisposed) return@invokeLater
+                                project.service<StatusBarWidgetsManager>()
+                                    .updateWidget(AceStatusBarWidgetFactory::class.java)
+                            }
                     }
                 }
             }
@@ -98,19 +133,6 @@ class ProjectStartupActivity : ProjectActivity {
         Disposer.register(disposable) {
             settingsStore.removeSettingsChangeListener(listener)
         }
-
-        addStateListener()
-        VirtualFileManager.getInstance().addAsyncFileListener(FileChangeListener(project), disposable)
-
-        val gitChangeObserverService = project.service<GitChangeObserverService>()
-        gitChangeObserverService.start()
-
-        val periodicChangeListerService = project.service<PeriodicChangeListerService>()
-        periodicChangeListerService.start()
-
-        registerCodeSceneToolWindowTelemetry(project, disposable)
-
-        runAcePreflightOutsideUnitTests()
     }
 
     private suspend fun runAcePreflightOutsideUnitTests() {

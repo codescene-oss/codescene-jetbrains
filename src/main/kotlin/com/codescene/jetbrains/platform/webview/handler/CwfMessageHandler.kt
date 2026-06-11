@@ -37,9 +37,6 @@ import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.ui.jcef.JBCefBrowser
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
@@ -246,8 +243,10 @@ class CwfMessageHandler(
     }
 
     override fun handleOpenSettings() {
-        CoroutineScope(Dispatchers.Main).launch {
-            ShowSettingsUtil.getInstance().showSettingsDialog(project, "CodeScene")
+        ApplicationManager.getApplication().executeOnPooledThread {
+            ApplicationManager.getApplication().invokeLater {
+                ShowSettingsUtil.getInstance().showSettingsDialog(project, "CodeScene")
+            }
         }
         val event = telemetryForOpenSettings()
         services.telemetryService.logUsage(event.eventName, event.data)

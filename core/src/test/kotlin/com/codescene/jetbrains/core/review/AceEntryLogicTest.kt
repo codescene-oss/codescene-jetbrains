@@ -46,8 +46,8 @@ class AceEntryLogicTest {
     }
 
     @Test
-    fun `resolveAceEntryPointCommand returns skip when auto refactor disabled`() {
-        val settings = CodeSceneGlobalSettings(enableAutoRefactor = false, aceAcknowledged = true)
+    fun `resolveAceEntryPointCommand returns skip when token not configured`() {
+        val settings = CodeSceneGlobalSettings(aceTokenConfigured = false, aceAcknowledged = true)
         val request = RefactoringRequest("a.kt", null, mockFn("f", "body", 1, 2), AceEntryPoint.RETRY)
         val result = resolveAceEntryPointCommand(settings, request = request)
         assertEquals(AceEntryCommand.Skip, result)
@@ -55,7 +55,7 @@ class AceEntryLogicTest {
 
     @Test
     fun `resolveAceEntryPointCommand returns open acknowledgement when not acknowledged`() {
-        val settings = CodeSceneGlobalSettings(enableAutoRefactor = true, aceAcknowledged = false)
+        val settings = CodeSceneGlobalSettings(aceTokenConfigured = true, aceAcknowledged = false)
         val fn = mockFn("f", "body", 1, 2)
         val request = RefactoringRequest("a.kt", null, fn, AceEntryPoint.RETRY)
         val result = resolveAceEntryPointCommand(settings, request = request)
@@ -64,7 +64,7 @@ class AceEntryLogicTest {
 
     @Test
     fun `resolveAceEntryPointCommand returns start refactor when acknowledged`() {
-        val settings = CodeSceneGlobalSettings(enableAutoRefactor = true, aceAcknowledged = true)
+        val settings = CodeSceneGlobalSettings(aceTokenConfigured = true, aceAcknowledged = true)
         val request = RefactoringRequest("a.kt", null, mockFn("f", "body", 1, 2), AceEntryPoint.RETRY, skipCache = true)
         val result = resolveAceEntryPointCommand(settings, request = request)
         assertEquals(AceEntryCommand.StartRefactor(request, true), result)
@@ -214,9 +214,9 @@ class AceEntryLogicTest {
     }
 
     @Test
-    fun `shouldCheckRefactorableFunctions returns false when auto refactor disabled`() =
+    fun `shouldCheckRefactorableFunctions returns false when token not configured`() =
         runBlocking {
-            val settings = InMemorySettingsProvider(CodeSceneGlobalSettings(enableAutoRefactor = false))
+            val settings = InMemorySettingsProvider(CodeSceneGlobalSettings(aceTokenConfigured = false))
             val aceService = mockk<com.codescene.jetbrains.core.contracts.IAceService>(relaxed = true)
 
             val result = shouldCheckRefactorableFunctions(settings, aceService, "kt")
@@ -253,7 +253,7 @@ class AceEntryLogicTest {
     @Test
     fun `shouldCheckRefactorableFunctions returns true when extension is supported by preflight`() =
         runBlocking {
-            val settings = InMemorySettingsProvider(CodeSceneGlobalSettings(enableAutoRefactor = true))
+            val settings = InMemorySettingsProvider(CodeSceneGlobalSettings(aceTokenConfigured = true))
             val preflight = mockk<PreflightResponse>(relaxed = true)
             every { preflight.fileTypes } returns listOf("kt", "java")
             val aceService = mockk<com.codescene.jetbrains.core.contracts.IAceService>()
@@ -266,7 +266,7 @@ class AceEntryLogicTest {
     @Test
     fun `shouldCheckRefactorableFunctions returns false when preflight is null`() =
         runBlocking {
-            val settings = InMemorySettingsProvider(CodeSceneGlobalSettings(enableAutoRefactor = true))
+            val settings = InMemorySettingsProvider(CodeSceneGlobalSettings(aceTokenConfigured = true))
             val aceService = mockk<com.codescene.jetbrains.core.contracts.IAceService>()
             coEvery { aceService.runPreflight() } returns null
 

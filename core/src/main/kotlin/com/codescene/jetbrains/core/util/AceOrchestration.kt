@@ -42,11 +42,11 @@ fun getStatusChangeMessage(
     }
 
 fun resolveAceEntryDecision(
-    autoRefactorEnabled: Boolean,
+    tokenConfigured: Boolean,
     acknowledged: Boolean,
 ): AceEntryDecision =
     when {
-        !autoRefactorEnabled -> AceEntryDecision(AceEntryAction.SKIP)
+        !tokenConfigured -> AceEntryDecision(AceEntryAction.SKIP)
         acknowledged -> AceEntryDecision(AceEntryAction.START_REFACTOR)
         else -> AceEntryDecision(AceEntryAction.OPEN_ACKNOWLEDGEMENT)
     }

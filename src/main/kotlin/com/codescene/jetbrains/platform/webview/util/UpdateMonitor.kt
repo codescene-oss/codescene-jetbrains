@@ -5,6 +5,7 @@ import com.codescene.jetbrains.core.git.pathFileName
 import com.codescene.jetbrains.core.mapper.CodeHealthMonitorMapper
 import com.codescene.jetbrains.core.models.View
 import com.codescene.jetbrains.core.util.resolveAceCandidatesForMonitor
+import com.codescene.jetbrains.core.util.resolveFeatureFlags
 import com.codescene.jetbrains.core.util.resolveFunctionToRefactor
 import com.codescene.jetbrains.core.util.toAutoRefactorConfig
 import com.codescene.jetbrains.platform.api.CachedReviewService
@@ -55,6 +56,7 @@ private fun updateMonitorImpl(project: Project) {
     activeJobs.forEach { Log.info("activeJob path=$it", "UpdateMonitor") }
     deltaResults.forEach { (path, _) -> Log.info("deltaResult path=$path", "UpdateMonitor") }
 
+    val settings = services.settingsProvider.currentState()
     val update =
         codeHealthMonitorMapper.buildUpdate(
             deltaResults = deltaResults,
@@ -64,7 +66,8 @@ private fun updateMonitorImpl(project: Project) {
                 val candidates = resolveAceCandidatesForMonitor(cache, filePath, contentSha)
                 resolveFunctionToRefactor(candidates, fn)
             },
-            autoRefactorConfig = toAutoRefactorConfig(services.settingsProvider.currentState()),
+            autoRefactorConfig = toAutoRefactorConfig(settings),
+            featureFlags = resolveFeatureFlags(settings.aceTokenConfigured),
             devmode = RuntimeFlags.isDevMode,
         )
 

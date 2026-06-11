@@ -31,6 +31,7 @@ class CodeHealthMonitorMapper {
         activeJobs: List<String>,
         functionToRefactorResolver: (String, String, com.codescene.data.delta.FunctionFinding) -> FunctionToRefactor?,
         autoRefactorConfig: AutoRefactorConfig,
+        featureFlags: List<String>,
         pro: Boolean = true,
         devmode: Boolean,
     ): CwfData<HomeData> =
@@ -38,6 +39,7 @@ class CodeHealthMonitorMapper {
             pro = pro,
             devmode = devmode,
             view = View.HOME.value,
+            featureFlags = featureFlags,
             data =
                 HomeData(
                     signedIn = true,
@@ -52,6 +54,7 @@ class CodeHealthMonitorMapper {
         activeJobs: List<String>,
         functionToRefactorResolver: (String, String, com.codescene.data.delta.FunctionFinding) -> FunctionToRefactor?,
         autoRefactorConfig: AutoRefactorConfig,
+        featureFlags: List<String>,
         pro: Boolean = true,
         devmode: Boolean,
     ): String =
@@ -62,6 +65,7 @@ class CodeHealthMonitorMapper {
                     activeJobs = activeJobs,
                     functionToRefactorResolver = functionToRefactorResolver,
                     autoRefactorConfig = autoRefactorConfig,
+                    featureFlags = featureFlags,
                     pro = pro,
                     devmode = devmode,
                 )
@@ -74,6 +78,7 @@ class CodeHealthMonitorMapper {
         activeJobs: List<String>,
         functionToRefactorResolver: (String, String, com.codescene.data.delta.FunctionFinding) -> FunctionToRefactor?,
         autoRefactorConfig: AutoRefactorConfig,
+        featureFlags: List<String>,
         pro: Boolean = true,
         devmode: Boolean,
     ): CodeHealthMonitorUpdate =
@@ -84,6 +89,7 @@ class CodeHealthMonitorMapper {
                     activeJobs = activeJobs,
                     functionToRefactorResolver = functionToRefactorResolver,
                     autoRefactorConfig = autoRefactorConfig,
+                    featureFlags = featureFlags,
                     pro = pro,
                     devmode = devmode,
                 ),

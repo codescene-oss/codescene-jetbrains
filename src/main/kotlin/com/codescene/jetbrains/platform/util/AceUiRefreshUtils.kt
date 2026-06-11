@@ -6,6 +6,7 @@ import com.codescene.jetbrains.platform.editor.UIRefreshService
 import com.codescene.jetbrains.platform.editor.codeVision.providers.AceCodeVisionProvider
 import com.codescene.jetbrains.platform.listeners.AceStatusRefreshNotifier
 import com.codescene.jetbrains.platform.review.PlatformReviewCacheService
+import com.codescene.jetbrains.platform.webview.util.updateDocs
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
@@ -28,11 +29,6 @@ fun aceStatusDelegate(): ReadWriteProperty<Any?, AceStatus> =
             .messageBus
             .syncPublisher(AceStatusRefreshNotifier.TOPIC)
             .refresh()
-    }
-
-fun enableAutoRefactorStatusDelegate(): ReadWriteProperty<Any?, Boolean> =
-    Delegates.observable(true) { _, _, newValue ->
-        refreshAceUi(newValue)
     }
 
 fun aceAuthTokenDelegate(): ReadWriteProperty<Any?, String> =
@@ -67,6 +63,7 @@ fun refreshAceUi(
             refreshUiPerEditor(project, aceEnabled, editors)
 
             updateMonitor(project)
+            updateDocs(project)
         }
 
         Log.info("ACE UI refresh completed.")
@@ -100,5 +97,7 @@ private suspend fun refreshUiPerEditor(
             .getInstance(project)
             .get(ReviewCacheQuery(it.document.text, filePath))
             ?.let { cache -> AceEntryOrchestrator.getInstance(project).checkContainsRefactorableFunctions(it, cache) }
+
+        UIRefreshService.getInstance(project).refreshAnnotations(it)
     }
 }

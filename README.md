@@ -64,8 +64,7 @@ Location: `Code Health Monitor` > `Extension Settings`
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | **Enable Review Code Vision** | Boolean | true | Enables/Disables showing Code Health Score and Code Smells in the active documents |
-| **Enable Auto Refactor** | Boolean | false | Enables/Disables ACE, CodeScenes automatic refactoring tool |
-| **Auth Token** | String | - | CodeScene PAT Token for authentication. Used for Automatic Refactoring in ACE |
+| **Auth Token** | String | - | CodeScene PAT Token for authentication. Providing a token enables ACE features. |
 | **Statistics** | Boolean | true | Enable/Disable collecting anonymized telemetry for tracking usage and feature engagement. |
 
 ### Debug logging ###

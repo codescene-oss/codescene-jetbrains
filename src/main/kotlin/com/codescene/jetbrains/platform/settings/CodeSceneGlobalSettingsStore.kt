@@ -5,6 +5,7 @@ import com.codescene.jetbrains.core.contracts.ISettingsProvider
 import com.codescene.jetbrains.core.models.settings.AceStatus
 import com.codescene.jetbrains.core.models.settings.CodeSceneGlobalSettings
 import com.codescene.jetbrains.core.settings.SettingsStateManager
+import com.codescene.jetbrains.core.util.isAceTokenConfigured
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.Service
@@ -25,7 +26,7 @@ class CodeSceneGlobalSettingsStore : PersistentStateComponent<CodeSceneGlobalSet
         }
 
     override fun loadState(state: CodeSceneGlobalSettingsPersisted) {
-        val legacyToken = state.aceAuthToken.takeIf { it.isNotBlank() }
+        val legacyToken = state.aceAuthToken.takeIf { isAceTokenConfigured(it) }
         val tokenConfigured = state.aceTokenConfigured || legacyToken != null
         stateManager.loadState(state.toCore().copy(aceTokenConfigured = tokenConfigured))
         if (legacyToken != null) {
@@ -49,7 +50,7 @@ class CodeSceneGlobalSettingsStore : PersistentStateComponent<CodeSceneGlobalSet
 
     override fun setAceAuthToken(token: String) {
         AceAuthTokenStore.setToken(token)
-        stateManager.updateAceTokenConfigured(token.isNotBlank())
+        stateManager.updateAceTokenConfigured(isAceTokenConfigured(token))
         ApplicationManager.getApplication().invokeLater {
             ApplicationManager.getApplication().saveSettings()
         }

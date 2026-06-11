@@ -29,23 +29,23 @@ class AceOrchestrationTest {
     }
 
     @Test
-    fun `resolveAceEntryDecision returns skip when auto refactor disabled`() {
+    fun `resolveAceEntryDecision returns skip when token not configured`() {
         val decision =
-            resolveAceEntryDecision(autoRefactorEnabled = false, acknowledged = true)
+            resolveAceEntryDecision(tokenConfigured = false, acknowledged = true)
         assertEquals(AceEntryAction.SKIP, decision.action)
     }
 
     @Test
     fun `resolveAceEntryDecision returns acknowledgement when not acknowledged`() {
         val decision =
-            resolveAceEntryDecision(autoRefactorEnabled = true, acknowledged = false)
+            resolveAceEntryDecision(tokenConfigured = true, acknowledged = false)
         assertEquals(AceEntryAction.OPEN_ACKNOWLEDGEMENT, decision.action)
     }
 
     @Test
     fun `resolveAceEntryDecision returns start refactor when acknowledged`() {
         val decision =
-            resolveAceEntryDecision(autoRefactorEnabled = true, acknowledged = true)
+            resolveAceEntryDecision(tokenConfigured = true, acknowledged = true)
         assertEquals(AceEntryAction.START_REFACTOR, decision.action)
     }
 

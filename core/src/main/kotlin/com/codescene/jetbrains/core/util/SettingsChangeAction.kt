@@ -9,6 +9,8 @@ sealed class SettingsChangeAction {
     data class RefreshAceUI(val enabled: Boolean) : SettingsChangeAction()
 
     object PublishAceStatusChange : SettingsChangeAction()
+
+    object UpdateStatusBarWidget : SettingsChangeAction()
 }
 
 fun resolveSettingsChangeActions(
@@ -27,12 +29,9 @@ fun resolveSettingsChangeActions(
         actions.add(SettingsChangeAction.PublishAceStatusChange)
     }
 
-    if (oldState.enableAutoRefactor != newState.enableAutoRefactor) {
-        actions.add(SettingsChangeAction.RefreshAceUI(newState.enableAutoRefactor))
-    }
-
     if (oldState.aceTokenConfigured != newState.aceTokenConfigured || aceAuthTokenChanged) {
-        actions.add(SettingsChangeAction.RefreshAceUI(true))
+        actions.add(SettingsChangeAction.RefreshAceUI(newState.aceTokenConfigured))
+        actions.add(SettingsChangeAction.UpdateStatusBarWidget)
     }
 
     return actions
