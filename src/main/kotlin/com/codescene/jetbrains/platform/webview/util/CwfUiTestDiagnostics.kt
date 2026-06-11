@@ -6,7 +6,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 
 private fun isUiTestDiagnosticsEnabled(): Boolean =
-    System.getProperty("codescene.uiTestDiagnostics").equals("true", ignoreCase = true)
+    "true".equals(System.getProperty("codescene.uiTestDiagnostics"), ignoreCase = true)
 
 /**
  * Marks the JCEF Swing component for [view] with a stable name/accessibleName so that
