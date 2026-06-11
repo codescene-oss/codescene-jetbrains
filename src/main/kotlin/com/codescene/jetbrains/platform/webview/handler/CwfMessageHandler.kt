@@ -26,6 +26,7 @@ import com.codescene.jetbrains.platform.webview.WebViewInitializer
 import com.codescene.jetbrains.platform.webview.util.JsEmbedEscapes
 import com.codescene.jetbrains.platform.webview.util.aceAcknowledgeRefreshMessage
 import com.codescene.jetbrains.platform.webview.util.docsRefreshMessage
+import com.codescene.jetbrains.platform.webview.util.markCwfInitializedForUiTests
 import com.codescene.jetbrains.platform.webview.util.openDocs
 import com.codescene.jetbrains.platform.webview.util.resolveFnToRefactorForDocumentation
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
@@ -165,6 +166,7 @@ class CwfMessageHandler(
                 lifecycle.setInitialized(View.HOME, true)
                 lifecycle.takePendingHome()
                 updateMonitor(project)
+                markCwfInitializedForUiTests(project, View.HOME)
             }
             View.ACE.value -> {
                 lifecycle.setInitialized(View.ACE, true)
@@ -173,6 +175,7 @@ class CwfMessageHandler(
                     postMessageDirect(View.ACE, queued, browser)
                 }
                 orchestrator.handleAceViewInitialized()
+                markCwfInitializedForUiTests(project, View.ACE)
             }
             View.DOCS.value -> {
                 lifecycle.setInitialized(View.DOCS, true)
@@ -186,6 +189,7 @@ class CwfMessageHandler(
                 if (message != null) {
                     postMessageDirect(View.DOCS, message, browser)
                 }
+                markCwfInitializedForUiTests(project, View.DOCS)
             }
             View.ACE_ACKNOWLEDGE.value -> {
                 lifecycle.setInitialized(View.ACE_ACKNOWLEDGE, true)
@@ -195,6 +199,7 @@ class CwfMessageHandler(
                 if (message != null) {
                     postMessageDirect(View.ACE_ACKNOWLEDGE, message, browser)
                 }
+                markCwfInitializedForUiTests(project, View.ACE_ACKNOWLEDGE)
             }
             else -> Unit
         }
