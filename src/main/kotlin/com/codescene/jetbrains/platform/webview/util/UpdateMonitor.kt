@@ -77,6 +77,7 @@ private fun updateMonitorImpl(project: Project) {
         ),
     )
     CwfMessageHandler.getInstance(project).postMessage(View.HOME, update.message)
+    markCodeHealthMonitorStateForUiTests(project, activeJobs.size, deltaResults.size)
 
     val elapsedTime = System.currentTimeMillis() - startTime
     Log.info("Completed updating monitor for project '${project.name}' in ${elapsedTime}ms", "UpdateMonitor")
