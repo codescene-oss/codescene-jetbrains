@@ -8,10 +8,10 @@ import org.junit.Test
 
 class AcePreflightUtilsTest {
     @Test
-    fun `resolveAcePreflightDecision skips when auto refactor disabled`() {
+    fun `resolveAcePreflightDecision skips when token not configured`() {
         val result =
             resolveAcePreflightDecision(
-                autoRefactorEnabled = false,
+                tokenConfigured = false,
                 token = "token",
                 force = false,
             )
@@ -24,7 +24,7 @@ class AcePreflightUtilsTest {
     fun `resolveAcePreflightDecision runs and includes success status when forced`() {
         val result =
             resolveAcePreflightDecision(
-                autoRefactorEnabled = true,
+                tokenConfigured = true,
                 token = "token",
                 force = true,
             )
@@ -37,7 +37,7 @@ class AcePreflightUtilsTest {
     fun `resolveAcePreflightDecision runs without success status when not forced`() {
         val result =
             resolveAcePreflightDecision(
-                autoRefactorEnabled = true,
+                tokenConfigured = true,
                 token = "token",
                 force = false,
             )

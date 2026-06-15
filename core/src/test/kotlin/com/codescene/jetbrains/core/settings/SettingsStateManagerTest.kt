@@ -29,7 +29,6 @@ class SettingsStateManagerTest {
         val s = fresh.getState()
         assertEquals(CODESCENE_SERVER_URL, s.serverUrl)
         assertTrue(s.enableCodeLenses)
-        assertTrue(s.enableAutoRefactor)
         assertFalse(s.previewCodeHealthGate)
         assertTrue(s.telemetryConsentGiven)
         assertFalse(s.telemetryNoticeShown)

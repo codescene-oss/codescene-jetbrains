@@ -83,7 +83,7 @@ suspend fun shouldCheckRefactorableFunctions(
     fileExtension: String?,
 ): Boolean {
     val state = settingsProvider.currentState()
-    if (!state.enableAutoRefactor) return false
+    if (!state.aceTokenConfigured) return false
 
     val preflightResponse = aceService.runPreflight()
     return preflightResponse?.fileTypes?.contains(fileExtension) ?: false
@@ -107,7 +107,7 @@ fun resolveAceEntryPointCommand(
 ): AceEntryCommand {
     val decision =
         resolveAceEntryDecision(
-            autoRefactorEnabled = settings.enableAutoRefactor,
+            tokenConfigured = settings.aceTokenConfigured,
             acknowledged = settings.aceAcknowledged,
         )
     return when (decision.action) {

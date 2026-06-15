@@ -52,9 +52,7 @@ class AceCodeVisionProvider : CodeVisionProvider<Unit> {
         val project = editor.project ?: return CodeVisionState.READY_EMPTY
         val settings = CodeSceneProjectServiceProvider.getInstance(project).settingsProvider.currentState()
 
-        val disabled =
-            !settings.enableAutoRefactor ||
-                !settings.aceTokenConfigured || settings.aceStatus == AceStatus.DEACTIVATED
+        val disabled = !settings.aceTokenConfigured || settings.aceStatus == AceStatus.DEACTIVATED
         if (disabled) {
             Log.info("Rendering empty code vision providers for file '${editor.virtualFile?.name}'.")
             return CodeVisionState.READY_EMPTY

@@ -11,11 +11,11 @@ data class AcePreflightDecision(
 )
 
 fun resolveAcePreflightDecision(
-    autoRefactorEnabled: Boolean,
+    tokenConfigured: Boolean,
     token: String,
     force: Boolean,
 ): AcePreflightDecision =
-    if (autoRefactorEnabled) {
+    if (tokenConfigured) {
         AcePreflightDecision(
             shouldRun = true,
             successStatus = resolveActivatedAceStatus(token).takeIf { force },

@@ -62,7 +62,8 @@ internal class AceStatusBarWidgetFactory : StatusBarWidgetFactory {
 
     override fun getDisplayName(): String = ACE_STATUS
 
-    override fun isAvailable(project: Project): Boolean = true
+    override fun isAvailable(project: Project): Boolean =
+        CodeSceneGlobalSettingsStore.getInstance().currentState().aceTokenConfigured
 
     override fun canBeEnabledOn(statusBar: StatusBar): Boolean = true
 

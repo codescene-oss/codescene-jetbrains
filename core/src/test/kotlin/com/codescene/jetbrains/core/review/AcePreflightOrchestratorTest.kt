@@ -31,7 +31,6 @@ class AcePreflightOrchestratorTest {
     private fun createOrchestrator(
         settings: CodeSceneGlobalSettings =
             CodeSceneGlobalSettings(
-                enableAutoRefactor = true,
                 aceTokenConfigured = true,
             ),
         aceAuthToken: String = "token",
@@ -49,7 +48,7 @@ class AcePreflightOrchestratorTest {
     )
 
     @Test
-    fun `runPreflight returns response when ace and auto-refactor enabled`() =
+    fun `runPreflight returns response when token configured`() =
         runBlocking {
             val orchestrator = createOrchestrator()
             val result = orchestrator.runPreflight()
@@ -57,9 +56,9 @@ class AcePreflightOrchestratorTest {
         }
 
     @Test
-    fun `runPreflight returns null when auto-refactor disabled`() =
+    fun `runPreflight returns null when token not configured`() =
         runBlocking {
-            val settings = CodeSceneGlobalSettings(enableAutoRefactor = false, aceTokenConfigured = true)
+            val settings = CodeSceneGlobalSettings(aceTokenConfigured = false)
             val orchestrator = createOrchestrator(settings = settings)
             val result = orchestrator.runPreflight()
             assertNull(result)
@@ -92,7 +91,7 @@ class AcePreflightOrchestratorTest {
     @Test
     fun `runPreflight calls onStatusChange with SIGNED_OUT on forced success without token`() =
         runBlocking {
-            val settings = CodeSceneGlobalSettings(enableAutoRefactor = true, aceTokenConfigured = false)
+            val settings = CodeSceneGlobalSettings(aceTokenConfigured = true)
             val orchestrator = createOrchestrator(settings = settings, aceAuthToken = "")
             orchestrator.runPreflight(force = true)
             assertTrue(statusChanges.contains(AceStatus.SIGNED_OUT))

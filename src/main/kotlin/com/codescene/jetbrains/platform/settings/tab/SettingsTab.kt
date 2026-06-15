@@ -6,12 +6,14 @@ import com.codescene.jetbrains.core.util.Constants.TELEMETRY_SAMPLES_URL
 import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.api.AceService
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.bindSelected
 import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
+import javax.swing.JPasswordField
 import kotlin.properties.Delegates
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,9 +25,11 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
     private val settings = settingsStore.currentState()
     private val scope = CoroutineScope(Dispatchers.IO)
     private var aceAuthToken by Delegates.observable("") { _, _, _ -> }
+    private var aceAuthTokenField: JPasswordField? = null
+    private var originalAceAuthToken = ""
 
     override fun createPanel(): DialogPanel {
-        aceAuthToken = settingsStore.getAceAuthToken()
+        loadAceAuthTokenAsync()
         return panel {
             row {
                 checkBox(UiLabelsBundle.message("enableCodeLenses"))
@@ -43,18 +47,13 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                         .visible(RuntimeFlags.isDevMode)
                 }
 
-                row {
-                    checkBox(UiLabelsBundle.message("enableAutoRefactor"))
-                        .bindSelected(settings::enableAutoRefactor)
-                        .comment(UiLabelsBundle.message("enableAutoRefactorComment"))
-                }
-
                 row(UiLabelsBundle.message("aceAuthToken")) {
                     passwordField()
                         .align(Align.FILL)
                         .resizableColumn()
                         .comment(UiLabelsBundle.message("aceAuthTokenComment"))
                         .bindText(::aceAuthToken)
+                        .also { aceAuthTokenField = it.component }
                 }
             }
 
@@ -87,15 +86,27 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
     }
 
     override fun reset() {
-        aceAuthToken = settingsStore.getAceAuthToken()
+        loadAceAuthTokenAsync()
         super.reset()
+    }
+
+    private fun loadAceAuthTokenAsync() {
+        ApplicationManager.getApplication().executeOnPooledThread {
+            val token = settingsStore.getAceAuthToken()
+            ApplicationManager.getApplication().invokeLater {
+                aceAuthToken = token
+                originalAceAuthToken = token
+                aceAuthTokenField?.text = token
+            }
+        }
     }
 
     override fun apply() {
         val previousState = settings.copy()
-        val previousToken = settingsStore.getAceAuthToken()
+        val previousToken = originalAceAuthToken
         super.apply()
         settingsStore.setAceAuthToken(aceAuthToken)
+        originalAceAuthToken = aceAuthToken
         settingsStore.notifyIfStateChanged(previousState, previousToken)
         val onlyTelemetryConsentChanged =
             previousState.copy(telemetryConsentGiven = settings.telemetryConsentGiven) == settings &&

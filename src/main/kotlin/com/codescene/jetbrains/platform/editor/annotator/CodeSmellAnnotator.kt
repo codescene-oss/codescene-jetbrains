@@ -122,8 +122,7 @@ class CodeSmellAnnotator : ExternalAnnotator<
 
         Log.debug("Creating annotation for code smell '${codeSmell.category}' at range: $range")
 
-        val aceAvailable =
-            settings.enableAutoRefactor && settings.aceTokenConfigured
+        val aceAvailable = settings.aceTokenConfigured
         val function =
             if (aceAvailable) {
                 getRefactorableFunction(codeSmell.category, codeSmell.highlightRange.startLine, refactorableFunctions)

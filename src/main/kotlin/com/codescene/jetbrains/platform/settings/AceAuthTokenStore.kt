@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.platform.settings
 
+import com.codescene.jetbrains.core.util.isAceTokenConfigured
 import com.intellij.credentialStore.CredentialAttributes
 import com.intellij.credentialStore.Credentials
 import com.intellij.credentialStore.generateServiceName
@@ -19,5 +20,5 @@ object AceAuthTokenStore {
         }
     }
 
-    fun hasToken(): Boolean = getToken().isNotBlank()
+    fun hasToken(): Boolean = isAceTokenConfigured(getToken())
 }
