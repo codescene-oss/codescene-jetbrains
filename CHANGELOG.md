@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.5.2] - 2026-06-15
+- **Added**
+  - gate ACE features on auth token presence (#176)
+
 ### [0.5.1] - 2026-06-03
 - **Added**
   - Watch .gitignore and codescene config files changes and refresh analysis caches (#174) (#173)
