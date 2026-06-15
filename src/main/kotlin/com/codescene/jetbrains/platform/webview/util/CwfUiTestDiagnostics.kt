@@ -26,3 +26,23 @@ fun markCwfInitializedForUiTests(
         component.accessibleContext.accessibleName = "CodeScene CWF initialized ${view.value}"
     }
 }
+
+fun markCodeHealthMonitorStateForUiTests(
+    project: Project,
+    activeJobCount: Int,
+    deltaResultCount: Int,
+) {
+    if (!isUiTestDiagnosticsEnabled()) return
+    val component = WebViewInitializer.getInstance(project).getBrowser(View.HOME)?.component ?: return
+    val state =
+        when {
+            activeJobCount > 0 -> "running"
+            deltaResultCount > 0 -> "has-results"
+            else -> "clean"
+        }
+    val marker = "CodeScene Code Health Monitor $state"
+    ApplicationManager.getApplication().invokeLater {
+        component.accessibleContext.accessibleDescription = marker
+        component.toolTipText = marker
+    }
+}
