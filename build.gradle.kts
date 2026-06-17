@@ -348,6 +348,60 @@ tasks.register("fetchCwf") {
     }
 }
 
+tasks.register("verifyCwfImportantLinks") {
+    group = "codescene assets"
+    description = "Verify important external links in the generated CWF bundle."
+
+    dependsOn("fetchCwf")
+
+    doLast {
+        val bundleFile = File("src/main/resources/cs-cwf/index.js")
+        if (!bundleFile.isFile) {
+            throw GradleException(
+                "Expected generated CWF bundle at ${bundleFile.absolutePath}. " +
+                    "Run fetchCwf before verifying CWF links.",
+            )
+        }
+
+        val bundle = bundleFile.readText()
+        val expectedLinks =
+            listOf(
+                "Documentation" to "https://codescene.io/docs",
+                "Terms and Policies" to "https://codescene.com/policies",
+                "AI Privacy Principles" to "https://codescene.com/product/ace/principles",
+                "Contact CodeScene" to "https://codescene.com/company/contact-us",
+                "Help Center" to "https://helpcenter.codescene.com/",
+                "Report a Bug" to (
+                    "https://forms.clickup.com/9015696197/f/" +
+                        "8cp16u5-7955/P24KVTPFDHW9G36D17"
+                ),
+            )
+
+        val objectPattern = Regex("""\{[^{}]{0,1500}}""")
+
+        expectedLinks.forEach { (label, url) ->
+            val labelPattern = Regex("""label\s*:\s*["']${Regex.escape(label)}["']""")
+            val linkPattern = Regex("""link\s*:\s*["']${Regex.escape(url)}["']""")
+            val hasMatchingObject =
+                objectPattern.findAll(bundle).any { match ->
+                    val item = match.value
+                    labelPattern.containsMatchIn(item) && linkPattern.containsMatchIn(item)
+                }
+
+            if (!hasMatchingObject) {
+                throw GradleException(
+                    "Expected generated CWF bundle to contain important link " +
+                        "[$label] -> [$url].",
+                )
+            }
+        }
+    }
+}
+
+tasks.named("buildPlugin") {
+    dependsOn("verifyCwfImportantLinks")
+}
+
 @Suppress("UNCHECKED_CAST")
 fun parseResponse(
     json: String,
