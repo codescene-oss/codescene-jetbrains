@@ -67,6 +67,8 @@ class CodesceneRepoFilesListener(
         refreshJob =
             scope.launch {
                 delay(DEBOUNCE_MS)
+                PeriodicChangeListerService.getInstance(project).markDirty()
+                PeriodicChangeListerService.getInstance(project).markWorkspaceFileActivity()
                 if (invalidateMainLineCache) {
                     mainLineBranchResolver.invalidate(gitRootPath)
                 }

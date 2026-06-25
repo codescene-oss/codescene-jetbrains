@@ -36,4 +36,9 @@ class InMemoryDeltaCacheService : IDeltaCacheService {
     }
 
     override fun getAll(): List<Pair<String, DeltaCacheItem>> = delegate.getAll()
+
+    override fun isCachedForCurrentContent(
+        filePath: String,
+        currentFileContent: String,
+    ): Boolean = delegate.isCachedForCurrentContent(filePath, currentFileContent)
 }
