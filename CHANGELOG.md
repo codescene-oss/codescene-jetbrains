@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.5.3] - 2026-08-11
+- **Changed**
+  - Verify generated CWF important links (#179)
+  - Bumped CLI version (#181)
+
 ### [0.5.2] - 2026-06-15
 - **Added**
   - gate ACE features on auth token presence (#176)
