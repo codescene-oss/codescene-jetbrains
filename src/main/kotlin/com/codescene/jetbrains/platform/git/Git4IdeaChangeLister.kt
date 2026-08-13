@@ -66,6 +66,21 @@ class Git4IdeaChangeLister
 
         companion object {
             fun getInstance(project: Project): Git4IdeaChangeLister = project.service<Git4IdeaChangeLister>()
+
+            private const val CHANGED_FILES_CACHE_TTL_MS = 2000L
+        }
+
+        private data class CachedChangedFilesResult(
+            val files: Set<String>,
+            val expiresAtMs: Long,
+        )
+
+        private var cachedChangedFiles: CachedChangedFilesResult? = null
+        private var cachedChangedFilesKey: String? = null
+
+        fun invalidateChangedFilesCache() {
+            cachedChangedFiles = null
+            cachedChangedFilesKey = null
         }
 
         override suspend fun getAllChangedFiles(
@@ -73,6 +88,15 @@ class Git4IdeaChangeLister
             workspacePath: String,
             filesToExcludeFromHeuristic: Set<String>,
         ): Set<String> {
+            val cacheKey =
+                buildChangedFilesCacheKey(gitRootPath, workspacePath, filesToExcludeFromHeuristic)
+            val cached = getCachedChangedFiles(cacheKey)
+            if (cached != null) {
+                return cached
+            }
+
+            val now = System.currentTimeMillis()
+
             Log.info("Getting changed files gitRoot=${pathFileName(gitRootPath)}", "Git4IdeaChangeLister")
             val repository = getRepository(gitRootPath)
             if (repository == null) {
@@ -95,7 +119,32 @@ class Git4IdeaChangeLister
 
             val files = filesFromRepoState + filesFromGitDiff
             Log.info("Found ${files.size} changed files", "Git4IdeaChangeLister")
+            cachedChangedFiles = CachedChangedFilesResult(files, now + CHANGED_FILES_CACHE_TTL_MS)
+            cachedChangedFilesKey = cacheKey
             return files
+        }
+
+        private fun buildChangedFilesCacheKey(
+            gitRootPath: String,
+            workspacePath: String,
+            filesToExcludeFromHeuristic: Set<String>,
+        ): String =
+            listOf(
+                gitRootPath,
+                workspacePath,
+                filesToExcludeFromHeuristic.sorted().joinToString("\u0001"),
+            ).joinToString("\u0002")
+
+        private fun getCachedChangedFiles(cacheKey: String): Set<String>? {
+            val cached = cachedChangedFiles ?: return null
+            if (cachedChangedFilesKey != cacheKey) {
+                return null
+            }
+            if (System.currentTimeMillis() >= cached.expiresAtMs) {
+                return null
+            }
+            Log.info("Returning cached changed files count=${cached.files.size}", "Git4IdeaChangeLister")
+            return cached.files
         }
 
         private suspend fun collectFilesFromRepoState(

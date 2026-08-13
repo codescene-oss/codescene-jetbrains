@@ -123,6 +123,23 @@ class GitChangeObserverPrePopulationTest {
         }
 
     @Test
+    fun `pre-population schedules review only for visible changed files`() =
+        runBlocking {
+            mockGitChangeLister.changedFiles =
+                setOf("$workspacePath/src/visible.ts", "$workspacePath/src/hidden.ts")
+            mockOpenFilesObserver.files = setOf("/workspace/src/visible.ts")
+
+            val reviewed = mutableListOf<String>()
+            val observer = createObserver()
+            observer.populateTrackerFromRepoState { reviewed.add(it) }
+
+            assertEquals(2, observer.getTrackedFiles().size)
+            assertEquals(1, reviewed.size)
+            assertTrue(reviewed.contains("/workspace/src/visible.ts"))
+            assertEquals(0, observer.getQueuedEventCount())
+        }
+
+    @Test
     fun `delete event fires for file that was open in editor when populateTrackerFromRepoState is called`() =
         runBlocking {
             mockGitChangeLister.changedFiles = setOf("$workspacePath/src/open-in-editor.ts")

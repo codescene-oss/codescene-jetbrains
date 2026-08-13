@@ -26,6 +26,7 @@ import org.junit.Test
 class GitRepoStateListenerTest {
     private lateinit var project: Project
     private lateinit var observer: GitChangeObserverAdapter
+    private lateinit var periodicChangeLister: PeriodicChangeListerService
     private lateinit var listener: GitRepoStateListener
     private lateinit var messageBus: MessageBus
     private lateinit var connection: MessageBusConnection
@@ -38,13 +39,22 @@ class GitRepoStateListenerTest {
     fun setup() {
         project = mockk(relaxed = true)
         observer = mockk(relaxed = true)
+        periodicChangeLister = mockk(relaxed = true)
         messageBus = mockk(relaxed = true)
         connection = mockk(relaxed = true)
 
         every { project.messageBus } returns messageBus
         every { messageBus.connect(any<GitRepoStateListener>()) } returns connection
 
-        listener = GitRepoStateListener(project, observer, workspacePath, gitRootPath, testDispatcher)
+        listener =
+            GitRepoStateListener(
+                project,
+                observer,
+                workspacePath,
+                gitRootPath,
+                periodicChangeLister,
+                testDispatcher,
+            )
     }
 
     @After

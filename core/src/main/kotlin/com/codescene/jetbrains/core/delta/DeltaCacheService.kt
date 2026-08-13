@@ -131,5 +131,14 @@ open class DeltaCacheService(
             }
     }
 
+    open fun isCachedForCurrentContent(
+        filePath: String,
+        currentFileContent: String,
+    ): Boolean {
+        val entry = cache[key(filePath)] ?: return false
+        val currentHash = DigestUtils.sha256Hex(currentFileContent)
+        return entry.currentHash == currentHash
+    }
+
     override fun key(filePath: String): String = pathCacheKey(filePath)
 }

@@ -13,6 +13,7 @@ import com.intellij.util.messages.MessageBusConnection
 
 class SavedFilesTrackerAdapter(
     private val project: Project,
+    private val onWorkspaceActivity: () -> Unit = {},
 ) : ISavedFilesTracker, Disposable {
     private var connection: MessageBusConnection? = null
 
@@ -40,6 +41,7 @@ class SavedFilesTrackerAdapter(
                     val file = FileDocumentManager.getInstance().getFile(document)
                     Log.info("Document saving file=${file?.name ?: "null"}", "SavedFilesTrackerAdapter")
                     if (file != null) {
+                        onWorkspaceActivity()
                         tracker.onFileSaved(file.path)
                     }
                 }
