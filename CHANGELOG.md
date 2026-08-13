@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Fixed**
+  - Restore webviews on IntelliJ 2026.2 by declaring an optional JCEF dependency
+
 ### [0.5.3] - 2026-08-11
 - **Changed**
   - Verify generated CWF important links (#179)

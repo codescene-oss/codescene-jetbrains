@@ -5,6 +5,7 @@
     <vendor>CodeScene</vendor>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends optional="true" config-file="codescene-jcef.xml">com.intellij.modules.jcef</depends>
 
     <resource-bundle>messages.UiLabelsBundle</resource-bundle>
 
