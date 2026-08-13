@@ -174,6 +174,7 @@ intellijPlatform {
         ides {
             create(IntelliJPlatformType.IntellijIdeaCommunity, "2024.3.7") { useInstaller = true }
             create(IntelliJPlatformType.IntellijIdea, "2025.3.2") { useInstaller = true }
+            create(IntelliJPlatformType.IntellijIdea, "2026.2.1") { useInstaller = true }
             select {
                 // 2026.1 and later
                 sinceBuild = "261"
