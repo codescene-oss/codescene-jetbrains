@@ -23,12 +23,12 @@ val basePluginVersion = providers.gradleProperty("pluginVersion")
 val effectivePluginVersion = providers.gradleProperty("releaseVersion").orElse(basePluginVersion)
 version = effectivePluginVersion.get()
 
-val codeSceneExtensionAPIVersion = providers.gradleProperty("codeSceneExtensionAPIVersion").get()
-val codeSceneRepository = providers.gradleProperty("codeSceneRepository").get()
 val mockkVersion = providers.gradleProperty("mockkVersion").get()
 val kotlinxSerializationVersion = providers.gradleProperty("kotlinxSerializationVersion").get()
 val slf4jNopVersion = providers.gradleProperty("slf4jNopVersion").get()
 val kotlinxCoroutinesVersion = providers.gradleProperty("kotlinxCoroutinesVersion").get()
+val jacksonVersion = providers.gradleProperty("jacksonVersion").get()
+val csIdeRequiredSha = providers.gradleProperty("csIdeRequiredSha").get()
 
 fun requiredEnv(name: String): String =
     System.getenv(name)
@@ -41,23 +41,12 @@ fun optionalEnv(name: String): String? =
         ?.trim()
         ?.takeIf { it.isNotEmpty() }
 
-fun requireGithubPackageCredentialsForDependencyResolution() {
-    configurations.configureEach {
-        incoming.beforeResolve {
-            requiredEnv("GH_USERNAME")
-            requiredEnv("GH_PACKAGE_TOKEN")
-        }
-    }
-}
-
 val cwfTokenEnvName =
     if (System.getenv("CI") == "true") {
         "CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN"
     } else {
         "GH_PACKAGE_TOKEN"
     }
-
-requireGithubPackageCredentialsForDependencyResolution()
 
 // Set the JVM language level used to build the project.
 kotlin {
@@ -69,14 +58,6 @@ repositories {
     mavenLocal()
     mavenCentral()
 
-    maven {
-        url = uri(codeSceneRepository)
-        credentials {
-            username = optionalEnv("GH_USERNAME")
-            password = optionalEnv("GH_PACKAGE_TOKEN")
-        }
-    }
-
     // IntelliJ Platform Gradle Plugin Repositories Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-repositories-extension.html
     intellijPlatform {
         defaultRepositories()
@@ -86,8 +67,9 @@ repositories {
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
     implementation(project(":core"))
-    implementation("codescene.extension:api:$codeSceneExtensionAPIVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
 
     testImplementation(libs.junit)
     testImplementation("io.mockk:mockk:$mockkVersion")
@@ -221,10 +203,33 @@ tasks {
 
     runIde {
         classpath += sourceSets["main"].runtimeClasspath
+        dependsOn("bundleCli")
 
         val devMode = project.properties["FEATURE_CWF_DEVMODE"]?.toString()?.toBoolean() ?: false
 
         systemProperty("FEATURE_CWF_DEVMODE", devMode)
+    }
+
+    register("bundleCli") {
+        group = "codescene assets"
+        description = "Download the host cs-ide JRE+jar distribution used by runIde."
+        val sha = csIdeRequiredSha
+        val distDir = layout.buildDirectory.dir("cs-ide")
+        inputs.property("csIdeRequiredSha", sha)
+        outputs.dir(distDir)
+        doLast {
+            bundleCsIdeDistribution(sha, distDir.get().asFile)
+        }
+    }
+
+    withType<org.jetbrains.intellij.platform.gradle.tasks.PrepareSandboxTask>().configureEach {
+        val pluginName = providers.gradleProperty("pluginName")
+        val (platform, arch) = hostCsIdePlatform()
+        val distName = "cs-$platform-$arch"
+        dependsOn("bundleCli")
+        from(layout.buildDirectory.dir("cs-ide/$distName")) {
+            into("${pluginName.get()}/$distName")
+        }
     }
 
     register<JavaExec>("run") {
@@ -511,5 +516,124 @@ fun unzip(
         logger.debug("Cleaned up ZIP file: ${zipFile.absolutePath}")
     } else {
         logger.warn("Failed to delete ZIP file: ${zipFile.absolutePath}")
+    }
+}
+
+val CS_IDE_SHA_STAMP = ".cs-ide-sha"
+
+fun hostCsIdePlatform(): Pair<String, String> {
+    val os = System.getProperty("os.name").lowercase()
+    val arch = System.getProperty("os.arch").lowercase()
+    val platform =
+        when {
+            os.contains("win") -> "win32"
+            os.contains("mac") -> "darwin"
+            else -> "linux"
+        }
+    val cliArch = if (arch.contains("aarch64") || arch.contains("arm64")) "arm64" else "x64"
+    return platform to cliArch
+}
+
+fun csIdeArtifactName(
+    sha: String,
+    platform: String,
+    arch: String,
+): String {
+    val osToken =
+        when (platform) {
+            "win32" -> "windows"
+            "darwin" -> "macos"
+            else -> "linux"
+        }
+    val archToken = if (arch == "arm64") "aarch64" else "amd64"
+    return "cs-ide-jre-$osToken-$archToken-$sha.zip"
+}
+
+fun bundleCsIdeDistribution(
+    sha: String,
+    outputRoot: File,
+) {
+    val envPath = System.getenv("CS_IDE_DISTRIBUTION_PATH")?.trim()?.takeIf { it.isNotEmpty() }
+    val (platform, arch) = hostCsIdePlatform()
+    val distName = "cs-$platform-$arch"
+    val target = File(outputRoot, distName)
+    if (envPath != null) {
+        val source = File(envPath)
+        copyCsIdeDistribution(source, target, platform)
+        File(target, CS_IDE_SHA_STAMP).writeText(sha)
+        return
+    }
+    val javaFile = File(target, if (platform == "win32") "jre/bin/java.exe" else "jre/bin/java")
+    val jarFile = File(target, "cs-ide.jar")
+    val stamp = File(target, CS_IDE_SHA_STAMP)
+    if (javaFile.isFile && jarFile.isFile && stamp.isFile && stamp.readText().trim() == sha) {
+        logger.lifecycle("Using existing cs-ide distribution at ${target.absolutePath}")
+        return
+    }
+    val artifact = csIdeArtifactName(sha, platform, arch)
+    val url = URI.create("https://downloads.codescene.io/enterprise/cli/$artifact").toURL()
+    val zipFile = File(outputRoot, artifact)
+    outputRoot.mkdirs()
+    logger.lifecycle("Downloading $url")
+    url.openStream().use { input ->
+        zipFile.outputStream().use { output -> input.copyTo(output) }
+    }
+    val extractDir = File(outputRoot, ".extract-$distName")
+    extractDir.deleteRecursively()
+    extractDir.mkdirs()
+    unzipKeepRoot(zipFile, extractDir)
+    val extracted =
+        if (File(extractDir, "cs-ide.jar").isFile) {
+            extractDir
+        } else {
+            extractDir.listFiles()?.singleOrNull { it.isDirectory } ?: extractDir
+        }
+    copyCsIdeDistribution(extracted, target, platform)
+    File(target, CS_IDE_SHA_STAMP).writeText(sha)
+    zipFile.delete()
+    extractDir.deleteRecursively()
+}
+
+fun copyCsIdeDistribution(
+    source: File,
+    target: File,
+    platform: String,
+) {
+    val javaName = if (platform == "win32") "java.exe" else "java"
+    val javaFile = File(source, "jre/bin/$javaName")
+    val jarFile = File(source, "cs-ide.jar")
+    require(javaFile.isFile && jarFile.isFile) {
+        "cs-ide distribution is incomplete at ${source.absolutePath}"
+    }
+    target.deleteRecursively()
+    source.copyRecursively(target, overwrite = true)
+    if (platform != "win32") {
+        File(target, "jre/bin/java").setExecutable(true)
+    }
+    logger.lifecycle("Bundled cs-ide distribution at ${target.absolutePath}")
+}
+
+fun unzipKeepRoot(
+    zipFile: File,
+    outputDir: File,
+) {
+    ZipInputStream(zipFile.inputStream()).use { zis ->
+        var entry = zis.nextEntry
+        while (entry != null) {
+            val outFile = File(outputDir, entry.name)
+            val outDirCanonical = outputDir.canonicalPath
+            val outCanonical = outFile.canonicalPath
+            require(outCanonical == outDirCanonical || outCanonical.startsWith(outDirCanonical + File.separator)) {
+                "Zip entry escapes target directory: ${entry.name}"
+            }
+            if (entry.isDirectory) {
+                outFile.mkdirs()
+            } else {
+                outFile.parentFile.mkdirs()
+                outFile.outputStream().use { fos -> zis.copyTo(fos) }
+            }
+            zis.closeEntry()
+            entry = zis.nextEntry
+        }
     }
 }

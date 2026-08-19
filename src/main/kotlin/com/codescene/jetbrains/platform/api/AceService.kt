@@ -1,12 +1,12 @@
 package com.codescene.jetbrains.platform.api
 
-import com.codescene.ExtensionAPI
-import com.codescene.ExtensionAPI.CacheParams
-import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.data.ace.PreflightResponse
 import com.codescene.data.ace.RefactoringOptions
 import com.codescene.data.delta.Delta
 import com.codescene.data.review.Review
+import com.codescene.jetbrains.core.cli.AceFileParams
+import com.codescene.jetbrains.core.cli.CliCacheParams
+import com.codescene.jetbrains.core.cli.FnsToRefactorRequest
 import com.codescene.jetbrains.core.contracts.IAceService
 import com.codescene.jetbrains.core.git.pathForLog
 import com.codescene.jetbrains.core.review.AcePreflightOrchestrator
@@ -18,6 +18,7 @@ import com.codescene.jetbrains.core.review.RefactorableFunctionsOrchestrator
 import com.codescene.jetbrains.core.util.Constants.ACE
 import com.codescene.jetbrains.core.util.TelemetryEvents
 import com.codescene.jetbrains.core.util.normalizeAbsolutePath
+import com.codescene.jetbrains.platform.cli.CsIdeServerService
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.telemetry.StatsCollectorService
@@ -37,10 +38,23 @@ import kotlinx.coroutines.withContext
 internal sealed class RefactorableFunctionsSource {
     abstract fun analysisLabel(): String
 
-    abstract fun fetch(
-        params: CodeParams,
-        cacheParams: CacheParams,
-    ): List<com.codescene.data.ace.FnToRefactor>
+    open fun reviewSmells(): List<com.codescene.data.review.CodeSmell>? = null
+
+    open fun reviewDelta(): Delta? = null
+
+    fun fetch(
+        params: AceFileParams,
+        cacheParams: CliCacheParams,
+    ): List<com.codescene.data.ace.FnToRefactor> =
+        CsIdeServerService.getInstance().client().fnsToRefactor(
+            FnsToRefactorRequest(
+                fileName = params.fileName,
+                fileContent = params.content,
+                cachePath = cacheParams.path,
+                codeSmells = reviewSmells(),
+                delta = reviewDelta(),
+            ),
+        )
 
     data class FromReview(
         val review: Review,
@@ -51,10 +65,7 @@ internal sealed class RefactorableFunctionsSource {
 
         override fun analysisLabel(): String = "review with ${codeSmells.size} code smell(s)"
 
-        override fun fetch(
-            params: CodeParams,
-            cacheParams: CacheParams,
-        ): List<com.codescene.data.ace.FnToRefactor> = ExtensionAPI.fnToRefactor(params, cacheParams, codeSmells)
+        override fun reviewSmells(): List<com.codescene.data.review.CodeSmell> = codeSmells
     }
 
     data class FromDelta(
@@ -62,10 +73,7 @@ internal sealed class RefactorableFunctionsSource {
     ) : RefactorableFunctionsSource() {
         override fun analysisLabel(): String = "delta"
 
-        override fun fetch(
-            params: CodeParams,
-            cacheParams: CacheParams,
-        ): List<com.codescene.data.ace.FnToRefactor> = ExtensionAPI.fnToRefactor(params, cacheParams, delta)
+        override fun reviewDelta(): Delta = delta
     }
 }
 
@@ -101,8 +109,8 @@ class AceService :
         project: Project,
         filePath: String,
         currentCode: String,
-        params: CodeParams,
-        cacheParams: CacheParams,
+        params: AceFileParams,
+        cacheParams: CliCacheParams,
         source: RefactorableFunctionsSource,
     ): Boolean {
         Log.debug(
@@ -165,7 +173,7 @@ class AceService :
                 filePath = path,
                 content = content,
                 serviceName = "$serviceImplementation - ${project.name}",
-                getFunctions = { runWithClassLoaderChange { getFunctions() } },
+                getFunctions = { timed { getFunctions() } },
             )
 
         val entry = AceRefactorableFunctionCacheEntry(result.filePath, result.content, result.functions)
@@ -185,7 +193,10 @@ class AceService :
             serviceName = serviceImplementation,
             fetchPreflight = { bypassCache ->
                 withContext(Dispatchers.IO) {
-                    runWithClassLoaderChange { ExtensionAPI.preflight(bypassCache) }
+                    timed {
+                        com.codescene.jetbrains.platform.cli.CsIdeServerService.getInstance().client()
+                            .preflight(bypassCache)
+                    }
                 }
             },
             onStatusChange = { status -> AceEntryOrchestrator.handleAceStatusChange(status) },
@@ -196,8 +207,9 @@ class AceService :
             logger = Log,
             serviceName = serviceImplementation,
             executeRefactor = { request, options ->
-                runWithClassLoaderChange {
-                    ExtensionAPI.refactor(request.function, options)
+                timed {
+                    com.codescene.jetbrains.platform.cli.CsIdeServerService.getInstance().client()
+                        .refactor(request.function, options)
                 }
             },
             getToken = { settingsProvider.getAceAuthToken() },

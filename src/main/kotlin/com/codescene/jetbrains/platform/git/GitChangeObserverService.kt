@@ -3,22 +3,16 @@ package com.codescene.jetbrains.platform.git
 import com.codescene.jetbrains.core.git.FileSystemAdapter
 import com.codescene.jetbrains.core.git.pathFileName
 import com.codescene.jetbrains.core.review.FileEventHandler
-import com.codescene.jetbrains.platform.api.CachedReviewService
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
-import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.fileEditor.FileEditorManager
-import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.LocalFileSystem
-import kotlinx.coroutines.launch
 
 /**
  * Event-driven git change observer that reacts to VFS file events.
@@ -160,7 +154,7 @@ class GitChangeObserverService(
                     updateMonitor(project)
                 }
             },
-            onFileChanged = { filePath -> scheduleGitChangeReview(project, filePath) },
+            onFileChanged = { _ -> },
             workspacePath = workspacePath,
             gitRootPath = gitRootPath,
         )
@@ -181,37 +175,5 @@ class GitChangeObserverService(
         codesceneRepoFilesListener = null
         gitIgnoreFilesListener = null
         observer = null
-    }
-}
-
-internal fun scheduleGitChangeReview(
-    project: Project,
-    filePath: String,
-) {
-    val fileName = pathFileName(filePath)
-    val reviewService = CachedReviewService.getInstance(project)
-    reviewService.scope.launch {
-        if (project.isDisposed) return@launch
-        val editor =
-            ReadAction.compute<Editor?, RuntimeException> {
-                getEditorForFile(project, filePath)
-            }
-        if (editor != null) {
-            Log.info("File change (editor) path=$fileName", "GitChangeObserverService")
-            reviewService.review(editor)
-        } else {
-            Log.info("File change (reviewByPath) path=$fileName", "GitChangeObserverService")
-            reviewService.reviewByPath(filePath)
-        }
-    }
-}
-
-private fun getEditorForFile(
-    project: Project,
-    filePath: String,
-): Editor? {
-    val file = LocalFileSystem.getInstance().findFileByPath(filePath) ?: return null
-    return FileEditorManager.getInstance(project).getEditors(file).firstNotNullOfOrNull { fe ->
-        (fe as? TextEditor)?.editor
     }
 }

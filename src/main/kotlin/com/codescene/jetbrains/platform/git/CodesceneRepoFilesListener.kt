@@ -85,15 +85,10 @@ class CodesceneRepoFilesListener(
     }
 
     private suspend fun refreshReviews() {
-        val gitObserver = observer ?: return
-        gitObserver.repopulateFromRepoState()
-        val paths = (gitObserver.getChangedFilesVsBaseline() + gitObserver.getTrackedFiles()).distinct()
         ApplicationManager.getApplication().invokeLater {
             if (project.isDisposed) return@invokeLater
-            for (path in paths) {
-                scheduleGitChangeReview(project, path)
-            }
-            Log.info("Scheduled ${paths.size} reviews after .codescene file change", "CodesceneRepoFilesListener")
+            com.codescene.jetbrains.platform.cli.WorkspaceReviewService.getInstance(project).rewatch()
+            Log.info("Rewatched git root after .codescene file change", "CodesceneRepoFilesListener")
         }
     }
 

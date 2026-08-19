@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.platform.di
 
-import codescene.devtools.ide.DevToolsAPI
 import com.codescene.jetbrains.core.contracts.IAceService
 import com.codescene.jetbrains.core.contracts.IBrowserService
 import com.codescene.jetbrains.core.contracts.IClipboardService
@@ -36,7 +35,9 @@ class CodeSceneApplicationServiceProvider {
         DeviceIdStore(
             logger = Log,
             classLoader = this::class.java.classLoader,
-            deviceIdProvider = { DevToolsAPI.deviceId() },
+            deviceIdProvider = {
+                com.codescene.jetbrains.platform.cli.CsIdeServerService.getInstance().client().deviceId()
+            },
         )
     }
 

@@ -23,4 +23,12 @@ class CodeSceneDynamicPluginListener : DynamicPluginListener {
             }
         }
     }
+
+    override fun pluginUnloaded(
+        pluginDescriptor: IdeaPluginDescriptor,
+        isUpdate: Boolean,
+    ) {
+        if (pluginDescriptor.pluginId.idString != CODESCENE_PLUGIN_ID) return
+        com.codescene.jetbrains.platform.cli.CsIdeServerService.getInstance().dispose()
+    }
 }

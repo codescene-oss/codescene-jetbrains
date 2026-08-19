@@ -12,50 +12,22 @@ kotlin {
     jvmToolchain(17)
 }
 
-val codeSceneExtensionAPIVersion = rootProject.providers.gradleProperty("codeSceneExtensionAPIVersion").get()
-val codeSceneRepository = rootProject.providers.gradleProperty("codeSceneRepository").get()
 val kotlinxSerializationVersion = rootProject.providers.gradleProperty("kotlinxSerializationVersion").get()
 val mockkVersion = rootProject.providers.gradleProperty("mockkVersion").get()
 val slf4jNopVersion = rootProject.providers.gradleProperty("slf4jNopVersion").get()
 val kotlinxCoroutinesVersion = rootProject.providers.gradleProperty("kotlinxCoroutinesVersion").get()
-
-fun requiredEnv(name: String): String =
-    System.getenv(name)
-        ?.trim()
-        ?.takeIf { it.isNotEmpty() }
-        ?: throw GradleException("Missing required environment variable: $name")
-
-fun optionalEnv(name: String): String? =
-    System.getenv(name)
-        ?.trim()
-        ?.takeIf { it.isNotEmpty() }
-
-fun requireGithubPackageCredentialsForDependencyResolution() {
-    configurations.configureEach {
-        incoming.beforeResolve {
-            requiredEnv("GH_USERNAME")
-            requiredEnv("GH_PACKAGE_TOKEN")
-        }
-    }
-}
-
-requireGithubPackageCredentialsForDependencyResolution()
+val jacksonVersion = rootProject.providers.gradleProperty("jacksonVersion").get()
 
 repositories {
     mavenLocal()
     mavenCentral()
-    maven {
-        url = uri(codeSceneRepository)
-        credentials {
-            username = optionalEnv("GH_USERNAME")
-            password = optionalEnv("GH_PACKAGE_TOKEN")
-        }
-    }
 }
 
 dependencies {
-    implementation("codescene.extension:api:$codeSceneExtensionAPIVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
+    implementation("commons-codec:commons-codec:1.17.1")
     compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
     testImplementation(libs.junit)
@@ -83,5 +55,6 @@ ktlint {
     filter {
         exclude("**/generated/**")
         exclude("**/build/**")
+        exclude("**/com/codescene/data/**")
     }
 }

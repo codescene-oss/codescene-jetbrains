@@ -74,15 +74,10 @@ class GitIgnoreFilesListener(
     }
 
     private suspend fun refreshReviews() {
-        val gitObserver = observer ?: return
-        gitObserver.repopulateFromRepoState()
-        val paths = (gitObserver.getChangedFilesVsBaseline() + gitObserver.getTrackedFiles()).distinct()
         ApplicationManager.getApplication().invokeLater {
             if (project.isDisposed) return@invokeLater
-            for (path in paths) {
-                scheduleGitChangeReview(project, path)
-            }
-            Log.info("Scheduled ${paths.size} reviews after .gitignore change", "GitIgnoreFilesListener")
+            com.codescene.jetbrains.platform.cli.WorkspaceReviewService.getInstance(project).rewatch()
+            Log.info("Rewatched git root after .gitignore change", "GitIgnoreFilesListener")
         }
     }
 

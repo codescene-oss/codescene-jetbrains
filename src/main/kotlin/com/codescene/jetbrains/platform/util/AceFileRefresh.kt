@@ -1,9 +1,9 @@
 package com.codescene.jetbrains.platform.util
 
-import com.codescene.ExtensionAPI.CacheParams
-import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.data.delta.Delta
 import com.codescene.data.review.Review
+import com.codescene.jetbrains.core.cli.AceFileParams
+import com.codescene.jetbrains.core.cli.CliCacheParams
 import com.codescene.jetbrains.core.review.shouldCheckRefactorableFunctions
 import com.codescene.jetbrains.core.util.extractExtension
 import com.codescene.jetbrains.core.util.normalizeAbsolutePath
@@ -30,8 +30,8 @@ suspend fun refreshAceFromReview(
     val normalizedPath = normalizeAbsolutePath(filePath)
     val cliFileName =
         resolveCliCacheFileName(normalizedPath, services.gitService.getRepoRelativePath(normalizedPath))
-    val params = CodeParams(currentCode, cliFileName)
-    val cacheParams = CacheParams(services.cliCacheService.getCachePath())
+    val params = AceFileParams(currentCode, cliFileName)
+    val cacheParams = CliCacheParams(services.cliCacheService.getCachePath())
     return AceService.getInstance().getRefactorableFunctions(
         project,
         normalizedPath,
@@ -58,8 +58,8 @@ suspend fun refreshAceFromDelta(
     val normalizedPath = normalizeAbsolutePath(filePath)
     val cliFileName =
         resolveCliCacheFileName(normalizedPath, services.gitService.getRepoRelativePath(normalizedPath))
-    val params = CodeParams(currentCode, cliFileName)
-    val cacheParams = CacheParams(services.cliCacheService.getCachePath())
+    val params = AceFileParams(currentCode, cliFileName)
+    val cacheParams = CliCacheParams(services.cliCacheService.getCachePath())
     return AceService.getInstance().getRefactorableFunctions(
         project,
         normalizedPath,

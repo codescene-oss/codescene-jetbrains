@@ -17,3 +17,8 @@ test.log
 test-mine.log
 .clj-kondo
 .calva
+cs-win32-*
+cs-darwin-*
+cs-linux-*
+cs-ide-jre-*.zip
+.temp-extract-*

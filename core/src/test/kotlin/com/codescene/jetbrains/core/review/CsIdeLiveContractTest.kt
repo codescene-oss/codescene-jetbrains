@@ -1,101 +1,100 @@
 package com.codescene.jetbrains.core.review
 
-import com.codescene.ExtensionAPI
-import com.codescene.ExtensionAPI.CacheParams
-import com.codescene.ExtensionAPI.CodeParams
-import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.delta.Delta
 import com.codescene.data.review.Review
+import com.codescene.jetbrains.core.cli.CsIdeClient
+import com.codescene.jetbrains.core.cli.CsIdeDistribution
+import com.codescene.jetbrains.core.cli.FnsToRefactorRequest
+import com.codescene.jetbrains.core.cli.ReviewRequest
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Optional
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assume
 import org.junit.Test
 
-class ExtensionApiIntegrationTest {
+class CsIdeLiveContractTest {
+    private var client: CsIdeClient? = null
     private val tempRoots = mutableListOf<Path>()
 
     @After
     fun tearDown() {
+        client?.close()
+        client = null
         tempRoots.forEach { it.toFile().deleteRecursively() }
         tempRoots.clear()
     }
 
     @Test
     fun `review returns valid response for Kotlin code`() {
+        val ide = liveClient()
         withIsolatedWorkspace { cacheDir, repoRoot ->
-            val review = review("ReviewSubject.kt", simpleKotlinCode, repoRoot, cacheDir)
+            val review = review(ide, "ReviewSubject.kt", simpleKotlinCode, repoRoot, cacheDir)
             assertReview(review)
         }
     }
 
     @Test
     fun `delta returns valid response for changed Kotlin code`() {
+        val ide = liveClient()
         withIsolatedWorkspace { cacheDir, repoRoot ->
-            val delta =
-                retryExtensionApi {
-                    ExtensionAPI.delta(
-                        ReviewParams("./DeltaSubject.kt", simpleKotlinCode, repoRoot.toString()),
-                        ReviewParams("./DeltaSubject.kt", complexKotlinCode, repoRoot.toString()),
-                        cacheParams(cacheDir),
-                    )
-                }
+            val previous =
+                review(ide, "DeltaSubject.kt", simpleKotlinCode, repoRoot, cacheDir)
+            val current =
+                review(ide, "DeltaSubject.kt", complexKotlinCode, repoRoot, cacheDir)
+            val delta = ide.delta(previous.rawScore, current.rawScore)
             assertDelta(delta)
         }
     }
 
     @Test
-    fun `fnToRefactor accepts review findings`() {
+    fun `fnsToRefactor accepts review findings`() {
+        val ide = liveClient()
         withIsolatedWorkspace { cacheDir, repoRoot ->
-            val review = review("AceReviewSubject.kt", complexKotlinCode, repoRoot, cacheDir)
+            val review = review(ide, "AceReviewSubject.kt", complexKotlinCode, repoRoot, cacheDir)
             val codeSmells = review.fileLevelCodeSmells + review.functionLevelCodeSmells.flatMap { it.codeSmells }
             assertTrue("review produced no code smells", codeSmells.isNotEmpty())
-
             val functions =
-                retryExtensionApi {
-                    ExtensionAPI.fnToRefactor(
-                        CodeParams(complexKotlinCode, "./AceReviewSubject.kt"),
-                        cacheParams(cacheDir),
-                        codeSmells,
-                    )
-                }
-
+                ide.fnsToRefactor(
+                    FnsToRefactorRequest(
+                        fileName = "./AceReviewSubject.kt",
+                        fileContent = complexKotlinCode,
+                        cachePath = cacheDir.toString(),
+                        codeSmells = codeSmells,
+                    ),
+                )
             assertFunctions(functions)
         }
     }
 
-    @Test
-    fun `fnToRefactor accepts delta response`() {
-        withIsolatedWorkspace { cacheDir, repoRoot ->
-            val delta =
-                retryExtensionApi {
-                    ExtensionAPI.delta(
-                        ReviewParams("./AceDeltaSubject.kt", simpleKotlinCode, repoRoot.toString()),
-                        ReviewParams("./AceDeltaSubject.kt", complexKotlinCode, repoRoot.toString()),
-                        cacheParams(cacheDir),
-                    )
-                }
-            assertDelta(delta)
-
-            val functions =
-                retryExtensionApi {
-                    ExtensionAPI.fnToRefactor(
-                        CodeParams(complexKotlinCode, "./AceDeltaSubject.kt"),
-                        cacheParams(cacheDir),
-                        delta,
-                    )
-                }
-
-            assertFunctions(functions)
-        }
+    private fun liveClient(): CsIdeClient {
+        val existing = client
+        if (existing != null) return existing
+        val distribution =
+            CsIdeDistribution.envDistributionPath()
+                ?: Path.of("build", "cs-ide", CsIdeDistribution.distributionName())
+        Assume.assumeTrue(
+            "cs-ide distribution not present; skipping live contract test",
+            CsIdeDistribution.isComplete(distribution),
+        )
+        val started = CsIdeClient.fromDistribution(distribution, 2)
+        val metadata = started.start()
+        assertEquals(
+            "live cs-ide SHA should match the pinned distribution",
+            CsIdeDistribution.requiredSha(),
+            metadata.sha,
+        )
+        client = started
+        return started
     }
 
     private inline fun withIsolatedWorkspace(block: (cacheDir: Path, repoRoot: Path) -> Unit) {
-        val cacheDir = Files.createTempDirectory("codescene-extension-api-cache")
-        val repoRoot = Files.createTempDirectory("codescene-extension-api-repo")
+        val cacheDir = Files.createTempDirectory("codescene-cs-ide-cache")
+        val repoRoot = Files.createTempDirectory("codescene-cs-ide-repo")
         tempRoots.add(cacheDir)
         tempRoots.add(repoRoot)
         try {
@@ -108,38 +107,21 @@ class ExtensionApiIntegrationTest {
         }
     }
 
-    private inline fun <T> retryExtensionApi(
-        attempts: Int = 3,
-        block: () -> T,
-    ): T {
-        var last: Throwable? = null
-        repeat(attempts) { attempt ->
-            try {
-                return block()
-            } catch (e: Throwable) {
-                last = e
-                if (attempt < attempts - 1) {
-                    Thread.sleep(250)
-                }
-            }
-        }
-        throw last!!
-    }
-
     private fun review(
+        ide: CsIdeClient,
         fileName: String,
         code: String,
         repoRoot: Path,
         cacheDir: Path,
     ): Review =
-        retryExtensionApi {
-            ExtensionAPI.review(
-                ReviewParams("./$fileName", code, repoRoot.toString()),
-                cacheParams(cacheDir),
-            )
-        }
-
-    private fun cacheParams(cacheDir: Path): CacheParams = CacheParams(cacheDir.toString())
+        ide.review(
+            ReviewRequest(
+                path = "./$fileName",
+                fileContent = code,
+                cachePath = cacheDir.toString(),
+                repoPath = repoRoot.toString(),
+            ),
+        )
 
     private fun assertReview(review: Review) {
         assertScoreInRange(review.score)
@@ -147,8 +129,9 @@ class ExtensionApiIntegrationTest {
         assertNotNull(review.functionLevelCodeSmells)
     }
 
-    private fun assertDelta(delta: Delta) {
-        delta.oldScore?.let(::assertOptionalScoreInRange)
+    private fun assertDelta(delta: Delta?) {
+        assertNotNull(delta)
+        delta!!.oldScore?.let(::assertOptionalScoreInRange)
         delta.newScore?.let(::assertOptionalScoreInRange)
         assertNotNull(delta.fileLevelFindings)
         assertNotNull(delta.functionLevelFindings)

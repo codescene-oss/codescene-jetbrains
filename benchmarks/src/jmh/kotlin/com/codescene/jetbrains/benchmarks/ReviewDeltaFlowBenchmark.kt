@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.benchmarks
 
-import com.codescene.ExtensionAPI
 import java.util.concurrent.atomic.AtomicInteger
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.Scope
@@ -31,11 +30,11 @@ open class ReviewDeltaFlowBenchmark {
     fun reviewDeltaFlowWarm(): ReviewDeltaFlowResult = reviewDeltaFlow("flow-warm")
 
     private fun reviewDeltaFlow(suffix: String): ReviewDeltaFlowResult {
-        val baselineParams = environment.baselineReviewParams(suffix)
-        val currentParams = environment.currentReviewParams(suffix)
-        val baselineReview = ExtensionAPI.review(baselineParams, environment.cacheParams)
-        val currentReview = ExtensionAPI.review(currentParams, environment.cacheParams)
-        val delta = ExtensionAPI.delta(baselineParams, currentParams, environment.cacheParams)
+        val baselineRequest = environment.baselineReviewRequest(suffix)
+        val currentRequest = environment.currentReviewRequest(suffix)
+        val baselineReview = environment.client.review(baselineRequest)
+        val currentReview = environment.client.review(currentRequest)
+        val delta = environment.client.delta(baselineReview.rawScore, currentReview.rawScore)
         return ReviewDeltaFlowResult(currentReview, baselineReview, delta)
     }
 }

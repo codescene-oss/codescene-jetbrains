@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.platform.telemetry
 
-import com.codescene.ExtensionAPI
 import com.codescene.data.telemetry.TelemetryEvent
 import com.codescene.jetbrains.core.contracts.ITelemetryService
 import com.codescene.jetbrains.core.flag.RuntimeFlags
@@ -78,8 +77,9 @@ class TelemetryService : BaseService(Log), Disposable, ITelemetryService {
 
         scope.launch {
             try {
-                runWithClassLoaderChange {
-                    ExtensionAPI.sendTelemetry(telemetryEvent)
+                timed {
+                    com.codescene.jetbrains.platform.cli.CsIdeServerService.getInstance().client()
+                        .telemetry(telemetryEvent)
                 }
                 log.debug("Telemetry event logged: ${telemetryEvent.eventName}")
             } catch (e: Exception) {

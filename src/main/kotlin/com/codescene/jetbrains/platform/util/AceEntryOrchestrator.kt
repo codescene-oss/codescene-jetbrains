@@ -1,10 +1,10 @@
 package com.codescene.jetbrains.platform.util
 
-import com.codescene.ExtensionAPI.CacheParams
-import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.ace.RefactoringOptions
 import com.codescene.data.review.Review
+import com.codescene.jetbrains.core.cli.AceFileParams
+import com.codescene.jetbrains.core.cli.CliCacheParams
 import com.codescene.jetbrains.core.models.AceCwfParams
 import com.codescene.jetbrains.core.models.RefactoringRequest
 import com.codescene.jetbrains.core.models.View
@@ -171,13 +171,13 @@ class AceEntryOrchestrator(private val project: Project) {
 
         val filePath = editor.virtualFile.path
         val fileName = resolveCliCacheFileName(filePath, services.gitService.getRepoRelativePath(filePath))
-        val aceParams = CodeParams(editor.document.text, fileName)
+        val aceParams = AceFileParams(editor.document.text, fileName)
         val cachePath = services.cliCacheService.getCachePath()
         Log.info(
             "ACE refactorable functions cachePath=$cachePath userDir=${System.getProperty("user.dir")}",
             "AceEntryOrchestrator",
         )
-        val cacheParams = CacheParams(cachePath)
+        val cacheParams = CliCacheParams(cachePath)
         return AceService.getInstance().getRefactorableFunctions(
             project = editor.project!!,
             filePath = filePath,

@@ -1,8 +1,5 @@
 package com.codescene.jetbrains.platform.api
 
-import com.codescene.ExtensionAPI
-import com.codescene.ExtensionAPI.CacheParams
-import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.jetbrains.core.delta.DeltaAnalysisResult
 import com.codescene.jetbrains.core.delta.adaptDeltaResult
 import com.codescene.jetbrains.core.delta.completeDeltaAnalysis
@@ -11,6 +8,7 @@ import com.codescene.jetbrains.core.util.extractExtension
 import com.codescene.jetbrains.core.util.normalizeAbsolutePath
 import com.codescene.jetbrains.core.util.resolveBaselineCliCacheFileName
 import com.codescene.jetbrains.core.util.resolveCliCacheFileName
+import com.codescene.jetbrains.platform.cli.CsIdeServerService
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.telemetry.StatsCollectorService
 import com.codescene.jetbrains.platform.util.Log
@@ -72,8 +70,6 @@ class CodeDeltaService(private val project: Project) : com.codescene.jetbrains.c
         val currentReviewPath = resolveCliCacheFileName(path, repoRelativePath)
 
         val repoRoot = resolveRepoRoot(path)
-        val oldReview = ReviewParams(baselineReviewPath, oldCode, repoRoot)
-        val newReview = ReviewParams(currentReviewPath, currentCode, repoRoot)
         val cachePath = serviceProvider.cliCacheService.getCachePath()
         val userDir = System.getProperty("user.dir")
         Log.info(
@@ -81,8 +77,29 @@ class CodeDeltaService(private val project: Project) : com.codescene.jetbrains.c
                 "currentReviewPath=$currentReviewPath userDir=$userDir",
             "CodeDeltaService",
         )
-        val cacheParams = CacheParams(cachePath)
-        val (rawResult, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview, cacheParams) }
+        val client = CsIdeServerService.getInstance().client()
+        val (rawResult, elapsedMs) =
+            timed {
+                val previous =
+                    client.review(
+                        com.codescene.jetbrains.core.cli.ReviewRequest(
+                            path = baselineReviewPath,
+                            fileContent = oldCode,
+                            cachePath = cachePath,
+                            repoPath = repoRoot,
+                        ),
+                    )
+                val current =
+                    client.review(
+                        com.codescene.jetbrains.core.cli.ReviewRequest(
+                            path = currentReviewPath,
+                            fileContent = currentCode,
+                            cachePath = cachePath,
+                            repoPath = repoRoot,
+                        ),
+                    )
+                client.delta(previous.rawScore, current.rawScore)
+            }
         val delta = adaptDeltaResult(rawResult)
         StatsCollectorService.getInstance().recordAnalysis(fileName, elapsedMs.toDouble())
 

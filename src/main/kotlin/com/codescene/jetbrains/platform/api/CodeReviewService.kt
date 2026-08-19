@@ -1,9 +1,7 @@
 package com.codescene.jetbrains.platform.api
 
-import com.codescene.ExtensionAPI
-import com.codescene.ExtensionAPI.CacheParams
-import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.data.review.Review
+import com.codescene.jetbrains.core.cli.ReviewRequest
 import com.codescene.jetbrains.core.models.TelemetryInfo
 import com.codescene.jetbrains.core.review.completeReviewAnalysis
 import com.codescene.jetbrains.core.telemetry.resolveTelemetryInfo
@@ -11,6 +9,7 @@ import com.codescene.jetbrains.core.util.Constants.REVIEW
 import com.codescene.jetbrains.core.util.TelemetryEvents
 import com.codescene.jetbrains.core.util.resolveBaselineCliCacheFileName
 import com.codescene.jetbrains.core.util.resolveCliCacheFileName
+import com.codescene.jetbrains.platform.cli.CsIdeServerService
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.telemetry.StatsCollectorService
 import com.codescene.jetbrains.platform.util.Log
@@ -89,15 +88,22 @@ class CodeReviewService(private val project: Project) : com.codescene.jetbrains.
         cacheResult: Boolean,
     ): Review? {
         val repoRoot = resolveRepoRoot(path)
-        val params = ReviewParams(reviewPath, code, repoRoot)
         val cachePath = serviceProvider.cliCacheService.getCachePath()
         Log.info(
             "review cachePath=$cachePath reviewPath=$reviewPath userDir=${System.getProperty("user.dir")}",
             "CodeReviewService",
         )
-        val cacheParams = CacheParams(cachePath)
-        val (result, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.review(params, cacheParams) }
-        result ?: return null
+        val (result, elapsedMs) =
+            timed {
+                CsIdeServerService.getInstance().client().review(
+                    ReviewRequest(
+                        path = reviewPath,
+                        fileContent = code,
+                        cachePath = cachePath,
+                        repoPath = repoRoot,
+                    ),
+                )
+            }
 
         val serviceName = "${this::class.java.simpleName} - ${project.name}"
         val telemetryInfo = resolveTelemetryInfo(code.lines().size, path.substringAfterLast('.', ""))
