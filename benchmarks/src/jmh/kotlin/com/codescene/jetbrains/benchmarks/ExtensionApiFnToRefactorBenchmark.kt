@@ -1,8 +1,8 @@
 package com.codescene.jetbrains.benchmarks
 
-import com.codescene.ExtensionAPI
 import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.delta.Delta
+import com.codescene.jetbrains.core.cli.FnsToRefactorRequest
 import java.util.concurrent.atomic.AtomicInteger
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.Scope
@@ -19,17 +19,11 @@ open class ExtensionApiFnToRefactorBenchmark {
     @Setup
     fun setup() {
         environment = BenchmarkEnvironment()
-        delta =
-            ExtensionAPI.delta(
-                environment.baselineReviewParams("fn-to-refactor-delta"),
-                environment.currentReviewParams("fn-to-refactor-delta"),
-                environment.cacheParams,
-            )
-        ExtensionAPI.fnToRefactor(
-            environment.codeParams("fn-to-refactor-warm"),
-            environment.cacheParams,
-            delta,
-        )
+        val previous = environment.client.review(environment.baselineReviewRequest("fn-to-refactor-delta"))
+        val current = environment.client.review(environment.currentReviewRequest("fn-to-refactor-delta"))
+        delta = environment.client.delta(previous.rawScore, current.rawScore)
+            ?: throw IllegalStateException("delta result was null")
+        environment.client.fnsToRefactor(fnsRequest("fn-to-refactor-warm"))
     }
 
     @TearDown
@@ -39,17 +33,18 @@ open class ExtensionApiFnToRefactorBenchmark {
 
     @Benchmark
     fun fnToRefactorCold(): List<FnToRefactor> =
-        ExtensionAPI.fnToRefactor(
-            environment.codeParams("fn-to-refactor-cold-${coldCounter.incrementAndGet()}"),
-            environment.cacheParams,
-            delta,
-        )
+        environment.client.fnsToRefactor(fnsRequest("fn-to-refactor-cold-${coldCounter.incrementAndGet()}"))
 
     @Benchmark
-    fun fnToRefactorWarm(): List<FnToRefactor> =
-        ExtensionAPI.fnToRefactor(
-            environment.codeParams("fn-to-refactor-warm"),
-            environment.cacheParams,
-            delta,
+    fun fnToRefactorWarm(): List<FnToRefactor> = environment.client.fnsToRefactor(fnsRequest("fn-to-refactor-warm"))
+
+    private fun fnsRequest(suffix: String): FnsToRefactorRequest {
+        val request = environment.currentReviewRequest(suffix)
+        return FnsToRefactorRequest(
+            fileName = request.path,
+            fileContent = request.fileContent.orEmpty(),
+            cachePath = request.cachePath,
+            delta = delta,
         )
+    }
 }

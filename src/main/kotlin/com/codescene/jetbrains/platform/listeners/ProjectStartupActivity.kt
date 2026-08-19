@@ -64,11 +64,19 @@ class ProjectStartupActivity : ProjectActivity {
         addStateListener()
         VirtualFileManager.getInstance().addAsyncFileListener(FileChangeListener(project), disposable)
 
+        try {
+            com.codescene.jetbrains.platform.cli.WorkspaceReviewService.getInstance(project).start()
+        } catch (error: Exception) {
+            Log.error("Failed to start CodeScene CLI: ${error.message}", "ProjectStartupActivity")
+        }
+
         val gitChangeObserverService = project.service<GitChangeObserverService>()
         gitChangeObserverService.start()
 
         val periodicChangeListerService = project.service<PeriodicChangeListerService>()
         periodicChangeListerService.start()
+
+        DocumentChangeReviewListener.install(project, disposable)
 
         registerCodeSceneToolWindowTelemetry(project, disposable)
 

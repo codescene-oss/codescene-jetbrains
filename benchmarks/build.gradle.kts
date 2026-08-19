@@ -13,48 +13,16 @@ kotlin {
     jvmToolchain(17)
 }
 
-val codeSceneExtensionAPIVersion = rootProject.providers.gradleProperty("codeSceneExtensionAPIVersion").get()
-val codeSceneRepository = rootProject.providers.gradleProperty("codeSceneRepository").get()
 val slf4jNopVersion = rootProject.providers.gradleProperty("slf4jNopVersion").get()
-
-fun requiredEnv(name: String): String =
-    System.getenv(name)
-        ?.trim()
-        ?.takeIf { it.isNotEmpty() }
-        ?: throw GradleException("Missing required environment variable: $name")
-
-fun optionalEnv(name: String): String? =
-    System.getenv(name)
-        ?.trim()
-        ?.takeIf { it.isNotEmpty() }
-
-fun requireGithubPackageCredentialsForDependencyResolution() {
-    configurations.configureEach {
-        incoming.beforeResolve {
-            requiredEnv("GH_USERNAME")
-            requiredEnv("GH_PACKAGE_TOKEN")
-        }
-    }
-}
-
-requireGithubPackageCredentialsForDependencyResolution()
 
 repositories {
     mavenLocal()
     mavenCentral()
-    maven {
-        url = uri(codeSceneRepository)
-        credentials {
-            username = optionalEnv("GH_USERNAME")
-            password = optionalEnv("GH_PACKAGE_TOKEN")
-        }
-    }
 }
 
 dependencies {
     add("jmh", project(":core"))
     add("jmh", kotlin("stdlib"))
-    add("jmh", "codescene.extension:api:$codeSceneExtensionAPIVersion")
     add("jmhRuntimeOnly", "org.slf4j:slf4j-nop:$slf4jNopVersion")
 }
 

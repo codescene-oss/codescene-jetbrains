@@ -1,8 +1,6 @@
 package com.codescene.jetbrains.platform.git
 
 import com.codescene.jetbrains.core.cleanup.StaleItemCleanup
-import com.codescene.jetbrains.core.git.pathFileName
-import com.codescene.jetbrains.platform.api.CachedReviewService
 import com.codescene.jetbrains.platform.delta.PlatformDeltaCacheService
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.Disposable
@@ -88,14 +86,6 @@ class PeriodicChangeListerService(
         }
 
         Log.info("Poll found ${changedFiles.size} changed files", "PeriodicChangeListerService")
-
-        for (filePath in changedFiles) {
-            Log.info(
-                "Triggering review for: ${pathFileName(filePath)} fullPath=$filePath",
-                "PeriodicChangeListerService",
-            )
-            CachedReviewService.getInstance(project).reviewByPath(filePath)
-        }
     }
 
     private fun resolveGitRootPath(workspacePath: String): String? {

@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.benchmarks
 
-import com.codescene.ExtensionAPI
 import com.codescene.data.review.Review
 import java.util.concurrent.atomic.AtomicInteger
 import org.openjdk.jmh.annotations.Benchmark
@@ -17,8 +16,8 @@ open class ExtensionApiReviewBenchmark {
     @Setup
     fun setup() {
         environment = BenchmarkEnvironment()
-        ExtensionAPI.review(environment.currentReviewParams("review-warm"), environment.cacheParams)
-        ExtensionAPI.review(environment.baselineReviewParams("baseline-warm"), environment.cacheParams)
+        environment.client.review(environment.currentReviewRequest("review-warm"))
+        environment.client.review(environment.baselineReviewRequest("baseline-warm"))
     }
 
     @TearDown
@@ -28,29 +27,19 @@ open class ExtensionApiReviewBenchmark {
 
     @Benchmark
     fun reviewCold(): Review =
-        ExtensionAPI.review(
-            environment.currentReviewParams("review-cold-${coldCounter.incrementAndGet()}"),
-            environment.cacheParams,
+        environment.client.review(
+            environment.currentReviewRequest("review-cold-${coldCounter.incrementAndGet()}"),
         )
 
     @Benchmark
-    fun reviewWarm(): Review =
-        ExtensionAPI.review(
-            environment.currentReviewParams("review-warm"),
-            environment.cacheParams,
-        )
+    fun reviewWarm(): Review = environment.client.review(environment.currentReviewRequest("review-warm"))
 
     @Benchmark
     fun baselineReviewCold(): Review =
-        ExtensionAPI.review(
-            environment.baselineReviewParams("baseline-cold-${coldCounter.incrementAndGet()}"),
-            environment.cacheParams,
+        environment.client.review(
+            environment.baselineReviewRequest("baseline-cold-${coldCounter.incrementAndGet()}"),
         )
 
     @Benchmark
-    fun baselineReviewWarm(): Review =
-        ExtensionAPI.review(
-            environment.baselineReviewParams("baseline-warm"),
-            environment.cacheParams,
-        )
+    fun baselineReviewWarm(): Review = environment.client.review(environment.baselineReviewRequest("baseline-warm"))
 }

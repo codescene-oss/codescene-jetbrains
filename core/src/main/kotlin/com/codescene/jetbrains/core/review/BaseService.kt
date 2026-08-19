@@ -17,20 +17,20 @@ open class BaseService(
      * - Clojure dependencies failing due to incompatible URLConnection handling
      *   (e.g., ZipResourceFile$MyURLConnection vs JarURLConnection).
      */
+    protected fun <T> timed(action: () -> T): TimedResult<T> {
+        val startTime = System.currentTimeMillis()
+        val result = action()
+        val elapsedTime = System.currentTimeMillis() - startTime
+        log.info("Received response from CodeScene API in ${elapsedTime}ms", serviceImplementation)
+        return TimedResult(result, elapsedTime)
+    }
+
     protected fun <T> runWithClassLoaderChange(action: () -> T): TimedResult<T> {
         val classLoader = this@BaseService.javaClass.classLoader
 
         return try {
             log.debug("Switching to plugin's ClassLoader: ${classLoader.javaClass.name}", serviceImplementation)
-
-            val startTime = System.currentTimeMillis()
-
-            val result = withPluginClassLoader(classLoader, action)
-
-            val elapsedTime = System.currentTimeMillis() - startTime
-
-            log.info("Received response from CodeScene API in ${elapsedTime}ms", serviceImplementation)
-            TimedResult(result, elapsedTime)
+            withPluginClassLoader(classLoader) { timed(action) }
         } catch (e: Exception) {
             log.debug("Exception during CodeScene API operation. Error message: ${e.message}", serviceImplementation)
             throw (e)

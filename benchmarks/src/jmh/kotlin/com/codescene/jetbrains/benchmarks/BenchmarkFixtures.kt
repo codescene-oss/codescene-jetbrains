@@ -1,10 +1,8 @@
 package com.codescene.jetbrains.benchmarks
 
-import com.codescene.ExtensionAPI.CacheParams
-import com.codescene.ExtensionAPI.CodeParams
-import com.codescene.ExtensionAPI.ReviewParams
-import com.codescene.data.delta.Delta
-import com.codescene.data.review.Review
+import com.codescene.jetbrains.core.cli.CsIdeClient
+import com.codescene.jetbrains.core.cli.CsIdeDistribution
+import com.codescene.jetbrains.core.cli.ReviewRequest
 import com.codescene.jetbrains.core.util.resolveBaselineCliCacheFileName
 import com.codescene.jetbrains.core.util.resolveCliCacheFileName
 import java.nio.file.Files
@@ -13,38 +11,51 @@ import java.nio.file.Path
 class BenchmarkEnvironment {
     private val tempRoots = mutableListOf<Path>()
 
-    val cacheDir: Path = createTempRoot("codescene-extension-api-cache")
-    val repoRoot: Path = createTempRoot("codescene-extension-api-repo")
-    val cacheParams: CacheParams = CacheParams(cacheDir.toString())
+    val cacheDir: Path = createTempRoot("codescene-cs-ide-cache")
+    val repoRoot: Path = createTempRoot("codescene-cs-ide-repo")
+    val client: CsIdeClient = startClient()
 
-    fun currentReviewParams(
+    fun currentReviewRequest(
         suffix: String,
         code: String = BenchmarkInputs.complexKotlinCode,
-    ): ReviewParams =
-        ReviewParams(
-            currentReviewPath(suffix),
-            code,
-            repoRoot.toString(),
-        )
+    ): ReviewRequest = reviewRequest(currentReviewPath(suffix), code)
 
-    fun baselineReviewParams(
+    fun baselineReviewRequest(
         suffix: String,
         code: String = BenchmarkInputs.simpleKotlinCode,
-    ): ReviewParams =
-        ReviewParams(
-            baselineReviewPath(suffix),
-            code,
-            repoRoot.toString(),
-        )
-
-    fun codeParams(suffix: String): CodeParams =
-        CodeParams(BenchmarkInputs.complexKotlinCode, currentReviewPath(suffix))
+    ): ReviewRequest = reviewRequest(baselineReviewPath(suffix), code)
 
     fun close() {
+        client.close()
         tempRoots.asReversed().forEach { root ->
             root.toFile().deleteRecursively()
         }
         tempRoots.clear()
+    }
+
+    private fun reviewRequest(
+        path: String,
+        code: String,
+    ): ReviewRequest =
+        ReviewRequest(
+            path = path,
+            fileContent = code,
+            cachePath = cacheDir.toString(),
+            repoPath = repoRoot.toString(),
+        )
+
+    private fun startClient(): CsIdeClient {
+        val distribution =
+            CsIdeDistribution.envDistributionPath()
+                ?: Path.of("build", "cs-ide", CsIdeDistribution.distributionName())
+        if (!CsIdeDistribution.isComplete(distribution)) {
+            throw IllegalStateException(
+                "cs-ide distribution is required for benchmarks. Set ${CsIdeDistribution.DISTRIBUTION_PATH_ENV}.",
+            )
+        }
+        val started = CsIdeClient.fromDistribution(distribution, 2)
+        started.start()
+        return started
     }
 
     private fun currentReviewPath(suffix: String): String {
@@ -72,9 +83,9 @@ class BenchmarkEnvironment {
 }
 
 data class ReviewDeltaFlowResult(
-    val currentReview: Review,
-    val baselineReview: Review,
-    val delta: Delta,
+    val currentReview: com.codescene.data.review.Review,
+    val baselineReview: com.codescene.data.review.Review,
+    val delta: com.codescene.data.delta.Delta?,
 )
 
 object BenchmarkInputs {
