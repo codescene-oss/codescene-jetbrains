@@ -4,6 +4,7 @@ import com.codescene.jetbrains.core.delta.DeltaCacheEntry
 import com.codescene.jetbrains.core.delta.DeltaCacheQuery
 import com.codescene.jetbrains.core.review.BaselineReviewCacheEntry
 import com.codescene.jetbrains.core.review.BaselineReviewCacheQuery
+import com.codescene.jetbrains.core.review.ReviewCacheProbe
 import com.codescene.jetbrains.core.review.ReviewCacheQuery
 import com.codescene.jetbrains.core.review.resolveDeltaExecutionPlan
 import com.codescene.jetbrains.core.review.resolveProgressMessage
@@ -30,44 +31,54 @@ class PathBasedReviewHandler(private val project: Project) {
         fun getInstance(project: Project): PathBasedReviewHandler = project.service<PathBasedReviewHandler>()
     }
 
+    suspend fun reviewByPathIfNeeded(
+        filePath: String,
+        fileName: String,
+    ) {
+        if (isFullyCachedForPath(filePath, fileName)) {
+            Log.info("reviewByPath skipped (fully cached) file=$fileName", "CodeSceneCachedReview")
+            return
+        }
+        performCachedReviewByPath(filePath, fileName)
+    }
+
+    suspend fun isFullyCachedForPath(
+        filePath: String,
+        fileName: String,
+    ): Boolean {
+        val currentCode = readCurrentCode(filePath, fileName) ?: return false
+        return ReviewCacheProbe.isFullyCached(
+            filePath,
+            currentCode,
+            serviceProvider.reviewCacheService,
+            serviceProvider.deltaCacheService,
+        )
+    }
+
     suspend fun performCachedReviewByPath(
         filePath: String,
         fileName: String,
     ) {
         val startTime = System.currentTimeMillis()
-        val file = LocalFileSystem.getInstance().findFileByPath(filePath)
-        if (file == null) {
-            Log.info("reviewByPath file not found file=$fileName", "CodeSceneCachedReview")
-            return
-        }
-
-        val fileReadStart = System.currentTimeMillis()
-        // Prefer document content (editor buffer) over VFS content (disk) when available.
-        // This prevents Code Health Monitor flickering when a file has unsaved changes:
-        // editor-triggered reviews use document.text while periodic polling would use disk content,
-        // causing the cache to flip-flop between fixed/unfixed states until the file is saved.
-        val currentCode =
-            ReadAction.compute<String?, Exception> {
-                if (!file.isValid) {
-                    return@compute null
-                }
-                val document: Document? = FileDocumentManager.getInstance().getDocument(file)
-                if (document != null) {
-                    Log.info("reviewByPath using document content file=$fileName", "CodeSceneCachedReview")
-                    document.text
-                } else {
-                    Log.info("reviewByPath falling back to VFS content file=$fileName", "CodeSceneCachedReview")
-                    String(file.contentsToByteArray(), file.charset)
-                }
-            }
+        val currentCode = readCurrentCode(filePath, fileName)
         if (currentCode == null) {
             Log.info("reviewByPath file became invalid file=$fileName", "CodeSceneCachedReview")
             return
         }
-        Log.info(
-            "reviewByPath fileRead took ${System.currentTimeMillis() - fileReadStart}ms file=$fileName",
-            "CodeSceneCachedReview",
-        )
+
+        if (ReviewCacheProbe.isFullyCached(
+                filePath,
+                currentCode,
+                serviceProvider.reviewCacheService,
+                serviceProvider.deltaCacheService,
+            )
+        ) {
+            Log.info(
+                "reviewByPath full cache hit file=$fileName totalTime=${System.currentTimeMillis() - startTime}ms",
+                "CodeSceneCachedReview",
+            )
+            return
+        }
 
         val cacheCheckStart = System.currentTimeMillis()
         val cachedReview = serviceProvider.reviewCacheService.get(ReviewCacheQuery(currentCode, filePath))
@@ -76,18 +87,6 @@ class PathBasedReviewHandler(private val project: Project) {
             "CodeSceneCachedReview",
         )
         if (cachedReview != null) {
-            val baselineCode = serviceProvider.gitService.getBranchCreationCommitCode(filePath)
-            val deltaQuery = DeltaCacheQuery(filePath, baselineCode, currentCode)
-            val (deltaHit, _) = serviceProvider.deltaCacheService.get(deltaQuery)
-
-            if (deltaHit) {
-                Log.info(
-                    "reviewByPath full cache hit file=$fileName totalTime=${System.currentTimeMillis() - startTime}ms",
-                    "CodeSceneCachedReview",
-                )
-                return
-            }
-
             Log.info(
                 "reviewByPath review cache hit, delta miss file=$fileName",
                 "CodeSceneCachedReview",
@@ -118,6 +117,40 @@ class PathBasedReviewHandler(private val project: Project) {
             "CodeSceneCachedReview",
         )
         handleDeltaByPath(filePath, fileName, currentCode, review.score.orElse(null), reviewMiss = true)
+    }
+
+    private fun readCurrentCode(
+        filePath: String,
+        fileName: String,
+    ): String? {
+        val file = LocalFileSystem.getInstance().findFileByPath(filePath)
+        if (file == null) {
+            Log.info("reviewByPath file not found file=$fileName", "CodeSceneCachedReview")
+            return null
+        }
+
+        val fileReadStart = System.currentTimeMillis()
+        val currentCode =
+            ReadAction.compute<String?, Exception> {
+                if (!file.isValid) {
+                    return@compute null
+                }
+                val document: Document? = FileDocumentManager.getInstance().getDocument(file)
+                if (document != null) {
+                    Log.info("reviewByPath using document content file=$fileName", "CodeSceneCachedReview")
+                    document.text
+                } else {
+                    Log.info("reviewByPath falling back to VFS content file=$fileName", "CodeSceneCachedReview")
+                    String(file.contentsToByteArray(), file.charset)
+                }
+            }
+        if (currentCode != null) {
+            Log.info(
+                "reviewByPath fileRead took ${System.currentTimeMillis() - fileReadStart}ms file=$fileName",
+                "CodeSceneCachedReview",
+            )
+        }
+        return currentCode
     }
 
     private suspend fun handleDeltaByPath(
