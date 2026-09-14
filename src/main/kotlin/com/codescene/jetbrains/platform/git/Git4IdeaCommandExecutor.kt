@@ -1,19 +1,19 @@
 package com.codescene.jetbrains.platform.git
 
+import com.codescene.jetbrains.core.git.committedChangesLogArgs
 import com.intellij.openapi.project.Project
 import git4idea.commands.Git
 import git4idea.commands.GitCommand
 import git4idea.repo.GitRepository
 
 class Git4IdeaCommandExecutor(private val project: Project) : GitCommandExecutor {
-    override fun runDiff(
+    override fun runCommittedChanges(
         repository: GitRepository,
         baseCommit: String,
     ): List<String> {
         val handler =
-            createGitLineHandler(project, repository.root, GitCommand.DIFF).apply {
-                addParameters("--name-only")
-                addParameters("$baseCommit...HEAD")
+            createGitLineHandler(project, repository.root, GitCommand.LOG).apply {
+                addParameters(committedChangesLogArgs(baseCommit))
             }
         val result = Git.getInstance().runCommand(handler)
         return if (result.success()) result.output else emptyList()

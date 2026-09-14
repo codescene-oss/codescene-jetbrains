@@ -34,13 +34,13 @@ class Git4IdeaChangeListerFeatureBranchTest : Git4IdeaChangeListerTestFixture() 
 
             every { mockGitExecutor.runMergeBase(mockRepository, branch, "main") } returns "oldMainMb"
             every { mockGitExecutor.runMergeBase(mockRepository, branch, "origin/main") } returns "oldMainMb"
-            every { mockGitExecutor.runDiff(mockRepository, "oldMainMb") } returns listOf("stacked.ts")
+            every { mockGitExecutor.runCommittedChanges(mockRepository, "oldMainMb") } returns listOf("stacked.ts")
 
             Git4IdeaTestSupport.setupFileSystemForFile(mockFileSystem, gitRoot, workspace, "stacked.ts", "ts")
 
             git4IdeaChangeLister.getAllChangedFiles(gitRoot, workspace)
 
-            verify(exactly = 1) { mockGitExecutor.runDiff(mockRepository, "oldMainMb") }
+            verify(exactly = 1) { mockGitExecutor.runCommittedChanges(mockRepository, "oldMainMb") }
             verify(exactly = 0) { mockGitExecutor.runMergeBase(mockRepository, branch, "develop") }
         }
 
@@ -60,7 +60,7 @@ class Git4IdeaChangeListerFeatureBranchTest : Git4IdeaChangeListerTestFixture() 
             Git4IdeaTestSupport.setupEmptyUntrackedFiles(mockRepository)
             Git4IdeaTestSupport.setupFeatureBranch(mockRepository, mockVirtualFile, mockGitExecutor)
 
-            every { mockGitExecutor.runDiff(mockRepository, "base123") } returns listOf("committed-only.ts")
+            every { mockGitExecutor.runCommittedChanges(mockRepository, "base123") } returns listOf("committed-only.ts")
 
             Git4IdeaTestSupport.setupFileSystemForFile(mockFileSystem, gitRoot, workspace, "committed-only.ts", "ts")
 
@@ -91,7 +91,7 @@ class Git4IdeaChangeListerFeatureBranchTest : Git4IdeaChangeListerTestFixture() 
             every { untrackedFile.path } returns "uncommitted.ts"
             every { mockRepository.untrackedFilesHolder.retrieveUntrackedFilePaths() } returns listOf(untrackedFile)
 
-            every { mockGitExecutor.runDiff(mockRepository, "base123") } returns listOf("committed.ts")
+            every { mockGitExecutor.runCommittedChanges(mockRepository, "base123") } returns listOf("committed.ts")
 
             Git4IdeaTestSupport.setupFileSystemForFile(mockFileSystem, gitRoot, workspace, "uncommitted.ts", "ts")
             Git4IdeaTestSupport.setupFileSystemForFile(mockFileSystem, gitRoot, workspace, "committed.ts", "ts")

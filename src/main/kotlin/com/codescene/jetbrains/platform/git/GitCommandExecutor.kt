@@ -3,7 +3,7 @@ package com.codescene.jetbrains.platform.git
 import git4idea.repo.GitRepository
 
 interface GitCommandExecutor {
-    fun runDiff(
+    fun runCommittedChanges(
         repository: GitRepository,
         baseCommit: String,
     ): List<String>

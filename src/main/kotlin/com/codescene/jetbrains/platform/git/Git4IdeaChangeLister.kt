@@ -91,9 +91,9 @@ class Git4IdeaChangeLister
                     workspacePath,
                     filesToExcludeFromHeuristic,
                 )
-            val filesFromGitDiff = collectFilesFromGitDiff(repository, gitRootPath, workspacePath)
+            val filesFromCommits = collectFilesFromCommittedChanges(repository, gitRootPath, workspacePath)
 
-            val files = filesFromRepoState + filesFromGitDiff
+            val files = filesFromRepoState + filesFromCommits
             Log.info("Found ${files.size} changed files", "Git4IdeaChangeLister")
             return files
         }
@@ -199,7 +199,7 @@ class Git4IdeaChangeLister
                 files
             }
 
-        private suspend fun collectFilesFromGitDiff(
+        private suspend fun collectFilesFromCommittedChanges(
             repository: GitRepository,
             gitRootPath: String,
             workspacePath: String,
@@ -208,7 +208,7 @@ class Git4IdeaChangeLister
                 val files = mutableSetOf<String>()
                 val baseCommit = getMergeBase(repository)
                 if (baseCommit == null) {
-                    Log.info("No merge base, skipping git diff", "Git4IdeaChangeLister")
+                    Log.info("No merge base, skipping committed changes", "Git4IdeaChangeLister")
                     return@withContext files
                 }
 
@@ -216,8 +216,8 @@ class Git4IdeaChangeLister
                     return@withContext files
                 }
 
-                Log.info("Processing git diff from ${baseCommit.take(8)}", "Git4IdeaChangeLister")
-                val output = gitExecutor.runDiff(repository, baseCommit)
+                Log.info("Processing committed changes from ${baseCommit.take(8)}", "Git4IdeaChangeLister")
+                val output = gitExecutor.runCommittedChanges(repository, baseCommit)
                 if (output.isEmpty()) {
                     return@withContext files
                 }

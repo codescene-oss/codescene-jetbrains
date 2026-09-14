@@ -150,6 +150,72 @@ class GitCommittedChangesTest {
             assertTrue("Should include sub-file.ts in subdir", changes.any { it.endsWith("sub-file.ts") })
         }
 
+    private fun mergeMainLineBaselineIntoFeatureBranch(upstreamFileNames: List<String>) {
+        exec("git", "branch", "-f", "main", "HEAD")
+
+        File(testRepoPath, "feature.ts").writeText("export const feature = true;")
+        exec("git", "add", "feature.ts")
+        exec("git", "commit", "-m", "Add feature file")
+
+        exec("git", "checkout", "-b", "upstream", "main")
+        for (fileName in upstreamFileNames) {
+            File(testRepoPath, fileName).writeText("export const value = 1;")
+        }
+        exec("git", "add", ".")
+        exec("git", "commit", "-m", "Advance upstream baseline")
+
+        exec("git", "checkout", "test-feature-branch")
+        exec("git", "merge", "upstream", "-m", "Merge upstream into feature")
+    }
+
+    @Test
+    fun `getAllChangedFiles excludes files introduced only by merging baseline into feature branch`() =
+        runBlocking {
+            val upstreamOnlyFiles = listOf("upstream-a.ts", "upstream-b.ts", "upstream-c.ts")
+            mergeMainLineBaselineIntoFeatureBranch(upstreamOnlyFiles)
+
+            val changes =
+                gitChangeLister.getAllChangedFiles(
+                    testRepoPath.absolutePath,
+                    testRepoPath.absolutePath,
+                    emptySet(),
+                )
+            val fileNames = changes.map { File(it).name }
+
+            assertTrue("Should include feature.ts. Found: $fileNames", fileNames.contains("feature.ts"))
+            for (fileName in upstreamOnlyFiles) {
+                assertFalse(
+                    "Should exclude merge-introduced file $fileName. Found: $fileNames",
+                    fileNames.contains(fileName),
+                )
+            }
+        }
+
+    @Test
+    fun `getAllChangedFiles includes feature commits made after merging baseline`() =
+        runBlocking {
+            mergeMainLineBaselineIntoFeatureBranch(listOf("upstream-only.ts"))
+
+            File(testRepoPath, "after-merge.ts").writeText("export const after = true;")
+            exec("git", "add", "after-merge.ts")
+            exec("git", "commit", "-m", "Feature work after merge")
+
+            val changes =
+                gitChangeLister.getAllChangedFiles(
+                    testRepoPath.absolutePath,
+                    testRepoPath.absolutePath,
+                    emptySet(),
+                )
+            val fileNames = changes.map { File(it).name }
+
+            assertTrue("Should include feature.ts. Found: $fileNames", fileNames.contains("feature.ts"))
+            assertTrue("Should include after-merge.ts. Found: $fileNames", fileNames.contains("after-merge.ts"))
+            assertFalse(
+                "Should exclude merge-introduced upstream-only.ts. Found: $fileNames",
+                fileNames.contains("upstream-only.ts"),
+            )
+        }
+
     @Test
     fun `getAllChangedFiles handles renamed files and excludes old filename`() =
         runBlocking {
