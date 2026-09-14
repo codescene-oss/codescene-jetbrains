@@ -128,58 +128,25 @@ You can also run the build task from the Gradle menu in your IDE.
 The Makefile provides development targets for build, test, format, and CodeScene delta analysis. [Babashka](https://babashka.org) must be installed first.
 
 
-| Target                        | Description                                        |
-| ----------------------------- | -------------------------------------------------- |
-| `make build`                  | Build the plugin (cached)                          |
-| `make test`                   | Run all tests                                      |
-| `make format`                 | Format all Kotlin files with ktlint (both modules) |
-| `make format-check`           | Check format of all Kotlin files                   |
-| `make delta`                  | Run CodeScene delta analysis (requires `cs` CLI)   |
-| `make install-cli`            | Install CodeScene CLI (`cs`)                       |
-| `make iter`                   | Run format-check, delta, build, and test           |
-| `make bump-version BUMP=patch | minor                                              |
-| `make release`                | Prepare a stable release commit and tag            |
-| `make test-release`           | Create a tagged test release from `HEAD`           |
+| Target                                  | Description                                        |
+| --------------------------------------- | -------------------------------------------------- |
+| `make build`                            | Build the plugin (cached)                          |
+| `make test`                             | Run all tests                                      |
+| `make format`                           | Format all Kotlin files with ktlint (both modules) |
+| `make format-check`                     | Check format of all Kotlin files                   |
+| `make delta`                            | Run CodeScene delta analysis (requires `cs` CLI)   |
+| `make install-cli`                      | Install CodeScene CLI (`cs`)                       |
+| `make iter`                             | Run formatting, analysis, build, and tests         |
+| `make release BUMP=patch|minor|major`   | Prepare a stable release commit and tag            |
+| `make test-release [BUMP=minor|major]`  | Create a GitHub-only tagged test release            |
+| `make test-release-script`              | Test the release tooling and tag validation        |
 
 
 ### Release commands
 
-The release flow is tag-driven. Prepare the release locally, then push the annotated tag and let GitHub Actions build from that tag.
+The release flow is tag-driven. Stable releases perform an explicit semantic-version bump, while test releases derive the next version without changing committed metadata.
 
-- `make bump-version BUMP=minor`
-  - increments the current base version in `gradle.properties`
-  - does not create a commit, tag, or GitHub release
-  - lets the branch move to the next planned stable base version before any release is cut
-- `make release`
-  - uses the existing base version from `gradle.properties`
-  - generates a draft release section from commits since the latest non-test tag (skips `*-test.<sha>` tags)
-  - filters out `Merge*` and `chore*` commits
-  - groups conventional commits into `Added`, `Fixed`, and `Changed`
-  - opens `CHANGELOG.md` for manual cleanup
-  - creates a release commit and an annotated `v<baseVersion>` tag
-- `make test-release`
-  - keeps `gradle.properties` unchanged
-  - derives a version like `<baseVersion>-test.<shortSha>`
-  - uses the current `CHANGELOG.md` `Unreleased` section as the test release notes
-  - creates an annotated `v<baseVersion>-test.<shortSha>` tag on the current commit
-  - does not modify or open `CHANGELOG.md`
-
-Push prepared tags with:
-
-```bash
-git push --follow-tags
-```
-
-Set `VISUAL` or `EDITOR`, or make sure `code` is available on `PATH`, before running the release commands.
-
-### Example release checklist
-
-1. Start the next release line with `make bump-version BUMP=minor` or `make bump-version BUMP=major`.
-2. Commit the base version change when appropriate for the branch.
-3. Create GitHub-only tester drops during development with `make test-release`, then `git push --follow-tags`.
-4. When the release is ready, run `make release`.
-5. Review and clean up `CHANGELOG.md` in the editor that opens.
-6. Push the release commit and tag with `git push --follow-tags`.
+See [Releasing CodeScene for JetBrains](.github/RELEASING.md) for commands, validation rules, generated release notes, and test-plugin installation.
 
 ### Run the plugin
 
