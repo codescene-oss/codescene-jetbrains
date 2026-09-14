@@ -12,7 +12,7 @@ class TestGitChangeListerForCommitted(private val testRepoPath: File) : IGitChan
         val baseCommit = getMergeBase(gitRootPath) ?: return emptySet()
         if (baseCommit.isEmpty()) return emptySet()
 
-        val output = exec("git", "diff", "--name-only", "$baseCommit...HEAD")
+        val output = exec("git", "log", *committedChangesLogArgs(baseCommit).toTypedArray())
         if (output.isEmpty()) return emptySet()
 
         val files = mutableSetOf<String>()
