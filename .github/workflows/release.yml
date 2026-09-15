@@ -10,12 +10,33 @@ env:
   CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN: ${{ secrets.CODESCENE_IDE_DOCS_AND_WEBVIEW_TOKEN }}
 
 jobs:
-  release:
-    name: Publish Release
+  metadata:
+    name: Validate Release Metadata
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      is_test: ${{ steps.release.outputs.is_test }}
+      notes_start_tag: ${{ steps.release.outputs.notes_start_tag }}
+      cumulative_notes: ${{ steps.release.outputs.cumulative_notes }}
+    steps:
+      - name: Fetch Sources
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate Tag and Resolve Notes Baseline
+        id: release
+        shell: bash
+        run: bash .github/release_metadata.sh
+
+  build:
+    name: Build and Publish Plugin
+    needs: metadata
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Maximize Build Space
         uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
@@ -25,8 +46,6 @@ jobs:
 
       - name: Fetch Sources
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -37,49 +56,68 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947
 
-      - name: Resolve Release Metadata
-        id: release
-        shell: bash
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          IS_TEST=false
-          NOTES_FILE="$RUNNER_TEMP/release-notes.md"
-
-          if [[ "$VERSION" == *"-test."* ]]; then
-            IS_TEST=true
-          fi
-
-          git tag -l --format='%(contents)' "$GITHUB_REF_NAME" > "$NOTES_FILE"
-
-          if [ ! -s "$NOTES_FILE" ]; then
-            if [ "$IS_TEST" = true ]; then
-              echo "Test release $VERSION" > "$NOTES_FILE"
-            else
-              echo "Release $VERSION" > "$NOTES_FILE"
-            fi
-          fi
-
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "is_test=$IS_TEST" >> "$GITHUB_OUTPUT"
-          echo "notes_file=$NOTES_FILE" >> "$GITHUB_OUTPUT"
-
       - name: Build Plugin
-        run: ./gradlew buildPlugin -PreleaseVersion=${{ steps.release.outputs.version }} -PFEATURE_CWF_DEVMODE=${{ secrets.FEATURE_CWF_DEVMODE }}
+        run: ./gradlew buildPlugin -PreleaseVersion=${{ needs.metadata.outputs.version }} -PFEATURE_CWF_DEVMODE=${{ secrets.FEATURE_CWF_DEVMODE }}
+
+      - name: Verify Plugin Version
+        shell: bash
+        env:
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: bash .github/verify_release_artifact.sh "$VERSION"
 
       - name: Publish Plugin
-        if: ${{ steps.release.outputs.is_test != 'true' }}
+        if: ${{ needs.metadata.outputs.is_test != 'true' }}
         env:
           PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
           CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
           PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}
-        run: ./gradlew publishPlugin -PreleaseVersion=${{ steps.release.outputs.version }} -PFEATURE_CWF_DEVMODE=${{ secrets.FEATURE_CWF_DEVMODE }}
+        run: ./gradlew publishPlugin -PreleaseVersion=${{ needs.metadata.outputs.version }} -PFEATURE_CWF_DEVMODE=${{ secrets.FEATURE_CWF_DEVMODE }}
+
+      - name: Upload Plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-plugin
+          path: ./build/distributions/CodeScene-${{ needs.metadata.outputs.version }}.zip
+
+  release:
+    name: Create GitHub Release
+    needs: [metadata, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - name: Fetch Sources
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download Plugin
+        uses: actions/download-artifact@v4
+        with:
+          name: release-plugin
+          path: ./artifacts
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
-          body_path: ${{ steps.release.outputs.notes_file }}
-          prerelease: ${{ steps.release.outputs.is_test == 'true' }}
-          files: ./build/distributions/*
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ needs.metadata.outputs.version }}
+          IS_TEST: ${{ needs.metadata.outputs.is_test }}
+          NOTES_START_TAG: ${{ needs.metadata.outputs.notes_start_tag }}
+          CUMULATIVE_NOTES: ${{ needs.metadata.outputs.cumulative_notes }}
+        run: |
+          set -euo pipefail
+          ARGS=(release create "$TAG" "./artifacts/CodeScene-${VERSION}.zip" --verify-tag --title "$TAG" --generate-notes)
+
+          if [[ -n "$NOTES_START_TAG" ]]; then
+            ARGS+=(--notes-start-tag "$NOTES_START_TAG")
+          fi
+
+          if [[ "$IS_TEST" == "true" ]]; then
+            ARGS+=(--prerelease --latest=false --notes "$CUMULATIVE_NOTES")
+          fi
+
+          gh "${ARGS[@]}"

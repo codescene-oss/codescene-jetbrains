@@ -1,17 +1,22 @@
 #!/usr/bin/env bb
-(require '[babashka.fs :as fs]
-         '[babashka.process :refer [shell]]
-         '[clojure.string :as str])
+(ns release
+  (:require [babashka.fs :as fs]
+            [babashka.process :refer [shell]]
+            [clojure.string :as str]))
 
-(def repo-dir (str (fs/parent (fs/parent *file*))))
-(def changelog-path (fs/path repo-dir "CHANGELOG.md"))
-(def gradle-properties-path (fs/path repo-dir "gradle.properties"))
+(def ^:dynamic *repo-dir* (str (fs/parent (fs/parent *file*))))
 (def section-header-pattern #"^(##|###) \[")
+(def stable-tag-pattern #"^v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$")
+(def supported-bumps #{"patch" "minor" "major"})
+
+(defn changelog-path []
+  (fs/path *repo-dir* "CHANGELOG.md"))
+
+(defn gradle-properties-path []
+  (fs/path *repo-dir* "gradle.properties"))
 
 (defn fail [message]
-  (binding [*out* *err*]
-    (println message))
-  (System/exit 1))
+  (throw (ex-info message {})))
 
 (defn process-message [result]
   (let [stderr (or (:err result) "")
@@ -20,13 +25,14 @@
 
 (defn sh
   [& args]
-  (let [result (apply shell {:dir repo-dir :out :string :err :string :continue true} args)]
+  (let [result (apply shell {:dir *repo-dir* :out :string :err :string :continue true} args)]
     (if (zero? (:exit result))
       (str/trimr (or (:out result) ""))
       (fail (str (process-message result) "\ncommand failed: " (str/join " " args))))))
 
 (defn command-available? [command]
-  (zero? (:exit (shell {:dir repo-dir :out :string :err :string :continue true} command "--version"))))
+  (zero? (:exit (shell {:dir *repo-dir* :out :string :err :string :continue true}
+                       command "--version"))))
 
 (defn trim-blank-lines [lines]
   (->> lines
@@ -63,7 +69,7 @@
        :body-lines (subvec lines (inc start-index) end-index)})))
 
 (defn changelog-lines []
-  (split-lines (slurp (str changelog-path))))
+  (split-lines (slurp (str (changelog-path)))))
 
 (defn unreleased-section []
   (or (find-section (changelog-lines) #"^## \[Unreleased\]\s*$")
@@ -92,16 +98,24 @@
     (fail (str "Tag already exists: " tag))))
 
 (defn update-plugin-version [version]
-  (let [updated (str/replace (slurp (str gradle-properties-path))
+  (let [path (gradle-properties-path)
+        content (slurp (str path))
+        updated (str/replace content
                              #"(?m)^pluginVersion\s*=\s*.*$"
                              (str "pluginVersion = " version))]
-    (spit (str gradle-properties-path) updated)))
+    (when (= content updated)
+      (fail "Could not update pluginVersion in gradle.properties."))
+    (spit (str path) updated)))
 
 (defn changelog-content []
-  (slurp (str changelog-path)))
+  (slurp (str (changelog-path))))
 
-(defn restore-changelog [content]
-  (spit (str changelog-path) content))
+(defn gradle-properties-content []
+  (slurp (str (gradle-properties-path))))
+
+(defn restore-release-files [properties changelog]
+  (spit (str (gradle-properties-path)) properties)
+  (spit (str (changelog-path)) changelog))
 
 (defn replace-unreleased [release-lines]
   (let [lines (changelog-lines)
@@ -113,37 +127,39 @@
                                release-lines
                                (when (seq release-lines) [""])
                                suffix))]
-    (spit (str changelog-path) (join-lines new-lines))))
+    (spit (str (changelog-path)) (join-lines new-lines))))
 
-(defn test-release-tag-name? [tag]
-  (boolean (re-find #"-test\." tag)))
+(defn stable-release-tag-name? [tag]
+  (boolean (re-matches stable-tag-pattern tag)))
 
-(defn latest-non-test-tag []
-  (let [result (shell {:dir repo-dir :out :string :err :string :continue true}
-                      "git" "tag" "--merged" "HEAD" "--sort=-creatordate")]
-    (when (zero? (:exit result))
+(defn reachable-tags []
+  (let [result (shell {:dir *repo-dir* :out :string :err :string :continue true}
+                      "git" "tag" "--merged" "HEAD" "--sort=-version:refname")]
+    (if (zero? (:exit result))
       (->> (split-lines (str/trim (or (:out result) "")))
-           (remove str/blank?)
-           (remove test-release-tag-name?)
-           first))))
+           (remove str/blank?))
+      (fail (str (process-message result) "\ncommand failed: git tag --merged HEAD")))))
+
+(defn latest-stable-tag []
+  (first (filter stable-release-tag-name? (reachable-tags))))
 
 (defn tag-ref-exists? [tag]
   (let [ref (str "refs/tags/" tag)
-        result (shell {:dir repo-dir :out :string :err :string :continue true}
+        result (shell {:dir *repo-dir* :out :string :err :string :continue true}
                       "git" "rev-parse" "--verify" ref)]
     (zero? (:exit result))))
 
 (defn commit-log-range-arg []
-  (when-let [tag (not-empty (str/trim (or (latest-non-test-tag) "")))]
+  (when-let [tag (latest-stable-tag)]
     (when (tag-ref-exists? tag)
       (str "refs/tags/" tag "..HEAD"))))
 
 (defn commit-subjects []
   (let [range-arg (commit-log-range-arg)
         result (if range-arg
-                 (shell {:dir repo-dir :out :string :err :string :continue true}
+                 (shell {:dir *repo-dir* :out :string :err :string :continue true}
                         "git" "log" "--pretty=format:%s" range-arg)
-                 (shell {:dir repo-dir :out :string :err :string :continue true}
+                 (shell {:dir *repo-dir* :out :string :err :string :continue true}
                         "git" "log" "--pretty=format:%s"))]
     (if (zero? (:exit result))
       (remove str/blank? (split-lines (or (:out result) "")))
@@ -215,7 +231,7 @@
                    (when (command-available? "code") "code --wait"))]
     (when-not editor
       (fail "Set VISUAL or EDITOR, or install `code` on PATH, before running the release command."))
-    (let [result (shell {:dir repo-dir :continue true :inherit true :shell true}
+    (let [result (shell {:dir *repo-dir* :continue true :inherit true :shell true}
                         (str editor " " (shell-quote (str path))))]
       (when-not (zero? (:exit result))
         (fail "Editor command failed.")))))
@@ -226,7 +242,7 @@
   (not= "q" (str/trim (or (read-line) ""))))
 
 (defn commit-and-tag [version tag-message]
-  (sh "git" "add" "--" (str gradle-properties-path) (str changelog-path))
+  (sh "git" "add" "--" (str (gradle-properties-path)) (str (changelog-path)))
   (sh "git" "commit" "-m" (str "chore(release): v" version))
   (sh "git" "tag" "-a" (str "v" version) "-m" tag-message))
 
@@ -234,14 +250,15 @@
   (sh "git" "tag" "-a" (str "v" version) "-m" tag-message))
 
 (defn short-sha []
-  (sh "git" "rev-parse" "--short" "HEAD"))
+  (sh "git" "rev-parse" "--short=7" "HEAD"))
 
 (defn base-plugin-version []
-  (or (second (re-find #"(?m)^pluginVersion\s*=\s*(.+)$" (slurp (str gradle-properties-path))))
+  (or (second (re-find #"(?m)^pluginVersion\s*=\s*(.+)$"
+                       (slurp (str (gradle-properties-path)))))
       (fail "Could not read pluginVersion from gradle.properties.")))
 
 (defn parse-version [version]
-  (if-let [[_ major minor patch] (re-matches #"(\d+)\.(\d+)\.(\d+)" version)]
+  (if-let [[_ major minor patch] (re-matches #"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)" version)]
     [(Long/parseLong major) (Long/parseLong minor) (Long/parseLong patch)]
     (fail (str "Expected base plugin version in x.y.z format, got " version "."))))
 
@@ -251,53 +268,96 @@
       "major" (str (inc major) ".0.0")
       "minor" (str major "." (inc minor) ".0")
       "patch" (str major "." minor "." (inc patch))
-      (fail "Usage: make bump-version BUMP=patch|minor|major"))))
+      (fail "Expected bump in patch|minor|major format."))))
 
-(defn bump-version [bump]
-  (let [version (increment-version (base-plugin-version) bump)]
-    (update-plugin-version version)
-    (println (str "Updated base plugin version to " version ".")))
-  (println "Commit gradle.properties when you are ready."))
+(defn ensure-base-matches-latest-stable []
+  (let [base (base-plugin-version)
+        stable-tag (latest-stable-tag)]
+    (parse-version base)
+    (when-not (= (str "v" base) stable-tag)
+      (fail (str "pluginVersion " base
+                 " must match the latest stable tag"
+                 (when stable-tag (str " " stable-tag))
+                 ".")))
+    base))
 
-(defn stable-release []
-  (ensure-clean-worktree)
-  (let [version (base-plugin-version)
-        original-changelog (changelog-content)]
-    (ensure-tag-missing (str "v" version))
-    (replace-unreleased (generated-release-lines version))
-    (open-in-editor changelog-path)
-    (if-not (continue-after-edit?)
-      (do
-        (restore-changelog original-changelog)
-        (println "Aborted. Changelog reverted."))
-      (let [notes (str/trim (section-text (version-section version)))
-            tag-message (if (seq notes) notes (default-notes version))]
-        (commit-and-tag version tag-message)
-        (println (str "Created release commit and tag v" version "."))
-        (println "Push with: git push --follow-tags")))))
+(defn stable-bump [bump]
+  (if (contains? supported-bumps bump)
+    bump
+    (fail "Usage: make release BUMP=patch|minor|major")))
 
-(defn test-release []
-  (ensure-clean-worktree)
-  (let [version (str (base-plugin-version) "-test." (short-sha))
-        tag (str "v" version)]
-    (ensure-tag-missing tag)
-    (let [tag-message (str/trim (section-text (unreleased-section)))]
-      (tag-test-release version (if (seq tag-message) tag-message (test-default-notes version)))
-      (println (str "Created test release tag " tag "."))
-      (println "Push with: git push --follow-tags"))))
+(defn test-bump [bump]
+  (let [value (if (str/blank? bump) "patch" bump)]
+    (if (contains? supported-bumps value)
+      value
+      (fail "Usage: make test-release [BUMP=patch|minor|major]"))))
+
+(defn review-release-files [original-properties original-changelog]
+  (try
+    (open-in-editor (changelog-path))
+    (continue-after-edit?)
+    (catch Exception error
+      (restore-release-files original-properties original-changelog)
+      (throw error))))
+
+(defn abort-stable-release [original-properties original-changelog]
+  (restore-release-files original-properties original-changelog)
+  (println "Aborted. Version and changelog reverted."))
+
+(defn complete-stable-release [version]
+  (let [notes (str/trim (section-text (version-section version)))
+        tag-message (if (seq notes) notes (default-notes version))]
+    (commit-and-tag version tag-message)
+    (println (str "Created release commit and tag v" version "."))
+    (println "Push with: git push --follow-tags")))
+
+(defn stable-release [bump]
+  (let [requested-bump (stable-bump bump)]
+    (ensure-clean-worktree)
+    (let [base-version (ensure-base-matches-latest-stable)
+          version (increment-version base-version requested-bump)
+          original-properties (gradle-properties-content)
+          original-changelog (changelog-content)]
+      (ensure-tag-missing (str "v" version))
+      (update-plugin-version version)
+      (replace-unreleased (generated-release-lines version))
+      (if (review-release-files original-properties original-changelog)
+        (complete-stable-release version)
+        (abort-stable-release original-properties original-changelog)))))
+
+(defn test-release [bump]
+  (let [requested-bump (test-bump bump)]
+    (ensure-clean-worktree)
+    (let [base-version (ensure-base-matches-latest-stable)
+          version (str (increment-version base-version requested-bump)
+                       "-test."
+                       (short-sha))
+          tag (str "v" version)]
+      (ensure-tag-missing tag)
+      (let [tag-message (str/trim (section-text (unreleased-section)))]
+        (tag-test-release version (if (seq tag-message)
+                                    tag-message
+                                    (test-default-notes version)))
+        (println (str "Created test release tag " tag "."))
+        (println (str "Push with: git push origin " tag))))))
 
 (defn print-notes [mode value]
   (case mode
     "unreleased" (print (section-text (unreleased-section)))
     "version" (print (section-text (version-section value)))
-    (fail "Usage: bb .github/release.clj notes unreleased | notes version <version>")))
+    (fail "Usage: bb --classpath .github -m release notes unreleased | notes version <version>")))
 
-(let [[command arg1 arg2] *command-line-args*]
+(defn dispatch [[command arg1 arg2]]
   (case command
-    "bump-version" (if (seq arg1)
-                     (bump-version arg1)
-                     (fail "Usage: bb .github/release.clj bump-version <patch|minor|major>"))
-    "stable" (stable-release)
-    "test" (test-release)
+    "stable" (stable-release arg1)
+    "test" (test-release arg1)
     "notes" (print-notes arg1 arg2)
-    (fail "Usage: bb .github/release.clj bump-version <patch|minor|major> | stable | test | notes unreleased | notes version <version>")))
+    (fail "Usage: make release BUMP=patch|minor|major | make test-release [BUMP=patch|minor|major]")))
+
+(defn -main [& args]
+  (try
+    (dispatch args)
+    (catch clojure.lang.ExceptionInfo error
+      (binding [*out* *err*]
+        (println (ex-message error)))
+      (System/exit 1))))

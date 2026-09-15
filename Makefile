@@ -6,7 +6,7 @@ else
 IDEA_LOG := build/idea-sandbox/*/log/idea.log
 endif
 
-.PHONY: install-cli check-bb build test benchmarks format format-check delta iter coverage-summary bump-version release test-release class-size-mine run-ide kill-ide logs rm-nul
+.PHONY: install-cli check-bb build test benchmarks format format-check delta iter coverage-summary release test-release test-release-script class-size-mine run-ide kill-ide logs rm-nul
 
 install-cli: check-bb
 	@$(BB) -f .github/install-cli.clj
@@ -68,14 +68,14 @@ coverage-summary: check-bb
 	@$(BB) -f .github/coverage-summary.clj
 
 
-bump-version: check-bb
-	@$(BB) .github/release.clj bump-version "$(BUMP)"
-
 release: check-bb
-	@$(BB) .github/release.clj stable
+	@$(BB) --classpath .github -m release stable "$(BUMP)"
 
 test-release: check-bb
-	@$(BB) .github/release.clj test
+	@$(BB) --classpath .github -m release test "$(BUMP)"
+
+test-release-script: check-bb
+	@$(BB) --classpath .github .github/release_test.clj
 
 class-size-mine: check-bb
 	@$(BB) -f .github/check-class-size-mine.clj
@@ -96,7 +96,7 @@ else
 	./gradlew runIde
 endif
 
-iter: format format-check class-size-mine delta test
+iter: format format-check class-size-mine delta test-release-script test
 
 logs:
 ifeq ($(OS),Windows_NT)
