@@ -26,6 +26,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Restore annotated tag
+        shell: bash
+        run: git fetch --force origin "refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}"
+
       - name: Validate Tag and Resolve Notes Baseline
         id: release
         shell: bash
