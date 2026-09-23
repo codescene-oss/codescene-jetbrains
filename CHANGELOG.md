@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.5.6] - 2026-09-23
+- **Added**
+  - add validated tagged test releases (#187)
+
+- **Fixed**
+  - exclude merge-commit files from Code Health Monitor (#186)
+
 ### [0.5.5] - 2026-09-07
 - **Changed**
   - bump codescene api version
