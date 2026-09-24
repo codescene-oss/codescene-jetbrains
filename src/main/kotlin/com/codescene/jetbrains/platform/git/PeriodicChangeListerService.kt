@@ -1,7 +1,11 @@
 package com.codescene.jetbrains.platform.git
 
 import com.codescene.jetbrains.core.cleanup.StaleItemCleanup
+import com.codescene.jetbrains.core.git.ChangedFilesScanState
+import com.codescene.jetbrains.core.git.WorkspaceActivity
 import com.codescene.jetbrains.core.git.pathFileName
+import com.codescene.jetbrains.core.git.serializeChangedFileSet
+import com.codescene.jetbrains.core.git.sortFilesByPriority
 import com.codescene.jetbrains.platform.api.CachedReviewService
 import com.codescene.jetbrains.platform.delta.PlatformDeltaCacheService
 import com.codescene.jetbrains.platform.util.Log
@@ -47,10 +51,27 @@ class PeriodicChangeListerService(
     private val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
     private var workspacePath: String? = null
     private var gitRootPath: String? = null
+    private var started = false
+    private val scanState = ChangedFilesScanState()
+    private val workspaceActivity = WorkspaceActivity()
     private val openFilesObserver = OpenFilesObserverAdapter(project)
     private val staleItemCleanup = StaleItemCleanup(PlatformDeltaCacheService.getInstance(project), Log)
 
+    fun markDirty() {
+        Log.info("Marking scan dirty", "PeriodicChangeListerService")
+        scanState.markDirty()
+        Git4IdeaChangeLister.getInstance(project).invalidateChangedFilesCache()
+    }
+
+    fun markWorkspaceFileActivity() {
+        workspaceActivity.markWorkspaceFileActivity()
+    }
+
     fun start() {
+        if (started) {
+            Log.info("Already started, skipping", "PeriodicChangeListerService")
+            return
+        }
         val wsPath = project.basePath
         if (wsPath == null) {
             Log.warn("Cannot start: project base path is null", "PeriodicChangeListerService")
@@ -72,29 +93,45 @@ class PeriodicChangeListerService(
             INTERVAL_MS,
             TimeUnit.MILLISECONDS,
         )
+        started = true
     }
 
     private fun pollChangedFiles() {
         val wsPath = workspacePath ?: return
         val gitRoot = gitRootPath ?: return
 
+        val hadWorkspaceActivity = workspaceActivity.consumeWorkspaceFileActivity()
+        if (scanState.shouldSkipIdleScan(hadWorkspaceActivity)) {
+            Log.info("Skipping idle poll tick", "PeriodicChangeListerService")
+            return
+        }
+
         val changeLister = Git4IdeaChangeLister.getInstance(project)
         val changedFiles = runBlocking { changeLister.getAllChangedFiles(gitRoot, wsPath, emptySet()) }
-        val visibleFiles = openFilesObserver.getAllVisibleFileNames()
+        val changedFileSetKey = serializeChangedFileSet(changedFiles)
 
+        val visibleFiles = openFilesObserver.getAllVisibleFileNames()
         val removed = staleItemCleanup.cleanupStaleItems(changedFiles, visibleFiles)
         if (removed.isNotEmpty()) {
             Log.info("Cleaned up ${removed.size} stale items", "PeriodicChangeListerService")
         }
 
+        if (scanState.isUnchangedFileSet(changedFileSetKey)) {
+            Log.info("Skipping poll: changed file set unchanged (${changedFiles.size} files)", "PeriodicChangeListerService")
+            return
+        }
+
+        scanState.recordScan(changedFileSetKey)
         Log.info("Poll found ${changedFiles.size} changed files", "PeriodicChangeListerService")
 
-        for (filePath in changedFiles) {
+        val sortedFiles = sortFilesByPriority(changedFiles, visibleFiles)
+        val reviewService = CachedReviewService.getInstance(project)
+        for (filePath in sortedFiles) {
             Log.info(
                 "Triggering review for: ${pathFileName(filePath)} fullPath=$filePath",
                 "PeriodicChangeListerService",
             )
-            CachedReviewService.getInstance(project).reviewByPath(filePath)
+            reviewService.reviewByPathIfNeeded(filePath)
         }
     }
 
@@ -107,5 +144,6 @@ class PeriodicChangeListerService(
     override fun dispose() {
         Log.info("Disposing", "PeriodicChangeListerService")
         scheduler.shutdown()
+        started = false
     }
 }
