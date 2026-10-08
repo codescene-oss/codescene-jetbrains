@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.5.7] - 2026-10-08
+- **Changed**
+  - bump extension API to 1.0-9ee521e (#189)
+
 ### [0.5.6] - 2026-09-23
 - **Added**
   - add validated tagged test releases (#187)
