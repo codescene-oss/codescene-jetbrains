@@ -8,7 +8,7 @@ Use this document to assign **one package per agent**: one branch, **one commit*
 
 **Every package:**
 
-- `make format-check class-size-mine` passes (ktlint clean; changed `.kt` files ≤ 325 lines). Fix lint findings before anything else.
+- `make format-check class-size-mine` passes (ktlint clean; changed `.kt` files ≤ 325 lines). Fix lint findings before anything else. `make` hangs on Windows, so there run the equivalents directly: `.\gradlew.bat :core:ktlintCheck -PktlintFailOnError=true` (add `:ktlintCheck` when touching `src/`) and `bb -f .github/check-class-size-mine.clj`. The same applies to `make iter`: run the relevant `gradlew` test tasks instead.
 - CodeScene MCP `pre_commit_code_health_safeguard` before commit.
 - No `Co-authored` trailers; no new code comments. Cursor's agent adds `Co-authored-by: Cursor` on its own, so check `git log -1 --format=%B` after committing and amend it away.
 - Never merge, fast-forward or push the integration branch, and never commit in `C:\Git\codescene-jetbrains`. Work only in your own worktree and branch; the coordinator merges.
@@ -23,9 +23,9 @@ Use this document to assign **one package per agent**: one branch, **one commit*
 ```text
 [DONE] PKG-0 transport
    ↓
-PKG-1 launch + trust  ∥  PKG-3 typed client  ∥  PKG-7 macOS spike
+[DONE] PKG-1 launch + trust  ∥  [DONE] PKG-3 typed client  ∥  [DONE] PKG-7 macOS spike
    ↓
-PKG-2 supervisor (needs PKG-1)
+[DONE] PKG-2 supervisor (needs PKG-1)
    ↓
 PKG-4 live contract  ∥  PKG-5a platform service  ∥  PKG-6 benchmarks   (each needs PKG-1, 2, 3)
    ↓
@@ -96,7 +96,7 @@ JAVA_HOME=JDK17 for Gradle. make format-check class-size-mine, then pre_commit_c
 
 ---
 
-## PKG-2 — Process abstraction, backoff, supervisor
+## PKG-2 — Process abstraction, backoff, supervisor (DONE)
 
 | Field | Value |
 | --- | --- |
@@ -104,6 +104,7 @@ JAVA_HOME=JDK17 for Gradle. make format-check class-size-mine, then pre_commit_c
 | **Base** | Integration branch with **PKG-1** merged (or stacked on `feature/cs-12077-launch-env`) |
 | **Commit message** | `feat(cli): add cs-ide server supervisor` |
 | **Plan tasks** | Task 4 |
+| **Status** | DONE — `799bd00`. Process tree kill destroys descendants on every OS; `close()` and process exit abort a pending start immediately; exit/transport callbacks ignore stale processes; shutdown runs outside the state lock; stderr is logged at debug. |
 
 ### Scope
 
@@ -327,7 +328,7 @@ One commit: perf: benchmark the cs-ide RPC path.
 
 ---
 
-## PKG-7 — macOS watcher spike script
+## PKG-7 — macOS watcher spike script (DONE)
 
 | Field | Value |
 | --- | --- |
@@ -335,6 +336,7 @@ One commit: perf: benchmark the cs-ide RPC path.
 | **Base** | Integration branch tip; no dependencies, start any time |
 | **Commit message** | `chore: add cs-ide macOS watcher spike script` |
 | **Plan tasks** | Task 9 |
+| **Status** | DONE — `a3a0ba1`. PASS on Windows with the IDE JBR. The script waits for the first `watchInventoryChanged` before editing (the server requeues the inventory on `watchFiles`). The Mac run is still pending (PKG-8). |
 
 ### Scope
 
