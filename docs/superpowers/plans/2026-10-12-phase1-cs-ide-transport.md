@@ -18,7 +18,8 @@ Spec: `docs/superpowers/specs/2026-10-12-cs-ide-json-rpc-migration-design.md`.
 - Outbound JSON keys are kebab-case; inbound payloads are normalized from camelCase.
 - No new runtime dependencies.
 - No request on the EDT.
-- `make iter` (10-minute timeout) passes; lint findings are fixed first.
+- Every task's commit passes `make format-check class-size-mine`; lint findings are fixed first.
+- `make iter` (10-minute timeout) passes before the PR.
 - CodeScene MCP `pre_commit_code_health_safeguard` before each commit, `analyze_change_set` before the PR.
 - No `Co-authored` trailers.
 - Gradle runs on JDK 17 (`JAVA_HOME` must point to a 17 JDK; Gradle 8.14 cannot run on 25).
@@ -39,14 +40,14 @@ Spec: `docs/superpowers/specs/2026-10-12-cs-ide-json-rpc-migration-design.md`.
 | `CsIdeProcess.kt` | Process abstraction (`CsIdeProcess`, `CsIdeProcessFactory`) and the `java.lang.Process` implementation with tree kill |
 | `CsIdeServer.kt` | Supervisor: lazy start, `cs-ide/start` wait, stderr tail, backoff, respawn, close |
 | `CsIdeBackoff.kt` | Restart backoff state machine |
-| `CsIdeClient.kt` | Typed requests mirroring the old `ExtensionAPI` surface |
+| `CsIdeClient.kt` | `CsIdeTransport` and typed requests mirroring the old `ExtensionAPI` surface |
 | `CsIdeErrors.kt` | Maps JSON-RPC errors to exceptions existing helpers understand |
 
 `src/main/kotlin/com/codescene/jetbrains/platform/cli/`
 
 | File | Responsibility |
 | --- | --- |
-| `CsIdeServerService.kt` | App-level `@Service`, `Disposable`; owns `CsIdeServer` and `CsIdeClient` |
+| `CsIdeServerService.kt` | App-level `@Service`, `Disposable`; owns `CsIdeServer` and `CsIdeClient(CsIdeTransport(server::request))` |
 | `CsIdeLaunchEnvironmentProvider.kt` | Builds `CsIdeLaunchEnvironment` from `EnvironmentUtil`, `GitExecutableManager`, `ProxySettings`, `CertificateManager` |
 
 Modified: `BaseService.kt`, `DeviceIdStore.kt`, `CodeReviewService.kt`, `CodeDeltaService.kt`, `AceService.kt`, `TelemetryService.kt`, `CodeSceneApplicationServiceProvider.kt`, `AboutTab.kt`, benchmarks.
@@ -116,7 +117,7 @@ New script: `.github/cs-ide-macos-spike.clj`.
   - `class CsIdeBackoff(initialMs: Long = 1_000, maxMs: Long = 30_000) { fun remainingMs(now: Long): Long; fun recordFailure(now: Long); fun reset() }`
   - `data class CsIdeServerMetadata(val sha: String, val version: String)`
   - `class CsIdeUnavailableException(message: String, cause: Throwable? = null) : RuntimeException`
-  - `class CsIdeServer(processFactory, logger, startupTimeoutMs = 30_000, shutdownGraceMs = 3_000, backoff = CsIdeBackoff(), clock = System::currentTimeMillis) : AutoCloseable` with `fun request(method: String, params: JsonNode): CompletableFuture<JsonNode>`, `fun metadata(): CsIdeServerMetadata?`, `fun stderrTail(): String`, `override fun close()`.
+  - `class CsIdeServer(processFactory, logger, startupTimeoutMs = 30_000, shutdownGraceMs = 3_000, backoff = CsIdeBackoff(), clock = System::currentTimeMillis) : AutoCloseable` with `fun request(method: String, params: JsonNode): CompletableFuture<JsonNode>`, `fun metadata(): CsIdeServerMetadata?`, `fun stderrTail(): String`, `override fun close()`. It does not implement `CsIdeTransport` (Task 5); consumers adapt it with `CsIdeTransport(server::request)`.
 
 - [ ] Tests: backoff doubles to the cap and resets; first request starts the process and resolves after `cs-ide/start`; no `cs-ide/start` within the timeout fails with `CsIdeUnavailableException` containing the stderr tail and destroys the process; an exit fails pending requests and the next request respawns after the backoff; requests inside the cooldown fail fast without spawning; a successful response resets the backoff; `close()` closes stdin, waits for the grace period, then destroys the tree; requests after `close()` fail.
 - [ ] Run; expect failure. Implement. Run; expect PASS. Commit `feat(cli): add cs-ide server supervisor`.
@@ -128,9 +129,9 @@ New script: `.github/cs-ide-macos-spike.clj`.
 - Test: `core/src/test/kotlin/com/codescene/jetbrains/core/cli/CsIdeClientTest.kt`, `CsIdeErrorsTest.kt`, `IdeServerFixture.kt`
 
 **Interfaces:**
-- Consumes: `CsIdeServer.request`.
+- Consumes: `JsonRpcConnection` (tests only). Does not depend on Task 3 or Task 4, so it can be built in parallel with them.
 - Produces:
-  - `fun interface CsIdeTransport { fun request(method: String, params: JsonNode): CompletableFuture<JsonNode> }` (implemented by `CsIdeServer`)
+  - `fun interface CsIdeTransport { fun request(method: String, params: JsonNode): CompletableFuture<JsonNode> }` (tests use `CsIdeTransport(connection::request)`; Task 7 uses `CsIdeTransport(server::request)`)
   - `class CsIdeClient(transport: CsIdeTransport, timeoutMs: Long = 300_000)` with blocking calls:
     - `fun review(path: String, code: String?, cachePath: String?, repoPath: String?): Review?`
     - `fun delta(oldScore: String?, newScore: String?): Delta?`
@@ -143,7 +144,7 @@ New script: `.github/cs-ide-macos-spike.clj`.
     - `fun deviceId(): String`
   - `object CsIdeErrors { fun unwrap(error: Throwable): Exception }`
 
-- [ ] Tests against `IdeServerFixture` (in-process fake over pipes, ported from `c8f6b1c`, records the last params per method): each method sends kebab-case params (`file-content`, `cache-path`, `repo-path`, `old-score`, `fn-to-refactor`, `skip-cache`, `token`, `code-smells`, `delta-result`); camelCase results map to the jar models; `review(code = null)` sends nothing and returns null; `reviewDelta` sends two reviews then `delta` with their raw scores; `fnsToRefactor` sends the last preflight response once `preflight` succeeded; the `delta` null result returns null; `CsIdeErrors` maps `"java.net.ConnectException: ..."` to `ConnectException`, keeps `"Request failed [401]"` in the message, and unwraps `ExecutionException`.
+- [ ] Tests against `IdeServerFixture` (in-process fake over pipes, ported from `c8f6b1c`, records the last params per method): each method sends kebab-case params (`file-content`, `cache-path`, `repo-path`, `old-score`, `fn-to-refactor`, `skip-cache`, `token`, `code-smells`, `delta-result`); camelCase results map to the jar models; `review(code = null)` sends nothing and returns null; `reviewDelta` sends two reviews then `delta` with their raw scores; `fnsToRefactor` sends the last preflight response once `preflight` succeeded; the `delta` null result returns null; `CsIdeErrors` maps `"java.net.ConnectException: ..."` to `ConnectException`, keeps `"Request failed [401]"` in the message, and unwraps `ExecutionException`; every blocking client call rethrows through `CsIdeErrors.unwrap`, proven by a fixture RPC error `"java.net.ConnectException: ..."` surfacing from a client call as `ConnectException`; `CsIdeUnavailableException` passes through unchanged.
 - [ ] Run; expect failure. Implement. Run; expect PASS. Commit `feat(cli): add typed cs-ide client`.
 
 ### Task 6: Live contract test
@@ -153,7 +154,7 @@ New script: `.github/cs-ide-macos-spike.clj`.
 - Delete: `core/src/test/kotlin/com/codescene/jetbrains/core/review/ExtensionApiIntegrationTest.kt`, `ExtensionApiCodeHealthRulesIntegrationTest.kt`, `ExtensionApiFnToRefactorDeltaOverloadTest.kt`
 - Modify: `core/build.gradle.kts` (forward `CS_IDE_JAVA` as `csIde.java`)
 
-- [ ] Port the scenarios: Kotlin review, delta, fns-to-refactor from review smells and from delta, rules review, and rules delta through `cs-ide/delta` without `repo-path`; plus `deviceId()` non-blank and a clean `close()` with no surviving child process. One server per test class (`@BeforeClass`), Java from `csIde.java` or the test JVM.
+- [ ] Port the scenarios: Kotlin review, delta, fns-to-refactor from review smells and from delta, rules review, and rules delta through `cs-ide/delta` without `repo-path`; plus `deviceId()` non-blank and a clean `close()` with no surviving child process. One server per test class (`@BeforeClass`), Java from `csIde.java` or the test JVM, client built with `CsIdeTransport(server::request)`.
 - [ ] Run `./gradlew :core:test --tests "*.cli.CsIdeLiveContractTest"`; expect PASS. Commit `test(cli): replace ExtensionAPI integration tests with live cs-ide contract`.
 
 ### Task 7: Platform wiring
@@ -168,19 +169,24 @@ New script: `.github/cs-ide-macos-spike.clj`.
 - Consumes: `CsIdeServer`, `CsIdeClient`, `CsIdeLaunch`, `CsIdeTrustStore`.
 - Produces: `CsIdeServerService.getInstance().client(): CsIdeClient`; `BaseService.runTimed(action): TimedResult<T>`; `DeviceIdStore(logger, deviceIdProvider)`.
 
-- [ ] Update `BaseServiceTest` to `runTimed` (timing and exception logging, no classloader lines) and `DeviceIdStoreTest` (no classloader; a failed lookup is retried on the next call, a success is cached). Run; expect failure.
-- [ ] Implement `runTimed`, the `DeviceIdStore` change, delete `ClassLoaderScope`.
-- [ ] Add the two platform files. The provider: env from `EnvironmentUtil.getEnvironmentMap()`; `pathPrefix` from the parent of `GitExecutableManager.getInstance().pathToGit` when it is an absolute path; proxy from `ProxySettings.getInstance().getProxyConfiguration()` when it is a `StaticProxyConfiguration` with `ProxyProtocol.HTTP`; trust store from `CertificateManager.getInstance().trustManager.acceptedIssuers` plus `CsIdeTrustStore.jdkDefaultIssuers()`, written to `PathManager.getSystemPath()/codescene/cs-ide-truststore.p12`. Every step is `runCatching` and logged.
-- [ ] Rewire the eight call sites through `CsIdeServerService.getInstance().client()`. Telemetry: move event building, including the device id, inside `scope.launch`. About tab: load the device id on a pooled thread and update the label on the EDT.
-- [ ] Run `./gradlew test`; expect PASS. Commit `feat: route analysis through the cs-ide JSON-RPC server`.
+Two commits. Steps 1–2 add the service without wiring it in; steps 3–6 cut over.
+
+- [ ] Step 1: Add the two platform files. `CsIdeServerService` owns one `CsIdeServer` and a `CsIdeClient(CsIdeTransport(server::request))` and closes the server in `dispose()`. The provider: env from `EnvironmentUtil.getEnvironmentMap()`; `pathPrefix` from the parent of `GitExecutableManager.getInstance().pathToGit` when it is an absolute path; proxy from `ProxySettings.getInstance().getProxyConfiguration()` when it is a `StaticProxyConfiguration` with `ProxyProtocol.HTTP`; trust store from `CertificateManager.getInstance().trustManager.acceptedIssuers` plus `CsIdeTrustStore.jdkDefaultIssuers()`, written to `PathManager.getSystemPath()/codescene/cs-ide-truststore.p12`. Every step is `runCatching` and logged.
+- [ ] Step 2: Run `./gradlew test` and `make format-check class-size-mine`; expect PASS. Commit `feat: add cs-ide server service and launch environment provider`.
+- [ ] Step 3: Update `BaseServiceTest` to `runTimed` (timing and exception logging, no classloader lines) and `DeviceIdStoreTest` (no classloader; a failed lookup is retried on the next call, a success is cached). Run; expect failure.
+- [ ] Step 4: Implement `runTimed`, the `DeviceIdStore` change, delete `ClassLoaderScope`. Remove the classloader KDoc on `runWithClassLoaderChange` together with the method, since it no longer describes the code.
+- [ ] Step 5: Rewire the eight call sites through `CsIdeServerService.getInstance().client()`. Telemetry: move event building, including the device id, inside `scope.launch`. About tab: load the device id on a pooled thread and update the label on the EDT.
+- [ ] Step 6: Run `./gradlew test` and `make format-check class-size-mine`; expect PASS. Run the manual `make run-ide` smoke test: review shows annotations, code vision and monitor; ACE preflight and refactor; telemetry sent; stable device id in the About tab; exactly one `java` child; killing it recovers on the next action; closing the IDE leaves no orphan. Record the results in the hand-off. Commit `feat: route analysis through the cs-ide JSON-RPC server`.
 
 ### Task 8: Benchmarks
 
 **Files:**
-- Modify: `benchmarks/src/jmh/kotlin/com/codescene/jetbrains/benchmarks/*.kt`, `.github/workflows/benchmarks.yml` (job name only)
+- Modify: `benchmarks/src/jmh/kotlin/com/codescene/jetbrains/benchmarks/*.kt`, `benchmarks/build.gradle.kts` (pass the extension API jar path), `.github/workflows/benchmarks.yml` (job/step names and the benchmark action `name:`)
 
-- [ ] Replace `ExtensionAPI.*` with a shared `CsIdeClient` from a `@State(Scope.Benchmark)` server started in `@Setup(Level.Trial)` and closed in `@TearDown`. Keep benchmark class names so CI history stays comparable.
-- [ ] Run `./gradlew :benchmarks:jmhJar` to compile. Commit `perf: benchmark the cs-ide RPC path`.
+- [ ] Replace `ExtensionAPI.*` with a shared `CsIdeClient` from a `@State(Scope.Benchmark)` server started in `@Setup(Level.Trial)` and closed in `@TearDown`. Keep benchmark class names.
+- [ ] Under `:benchmarks:jmh`, `ExtensionAPI`'s `codeSource` is the JMH fat jar (built with `duplicateClassesStrategy = WARN`), so `CsIdeLaunch.extensionApiJar()` must not be used. Resolve the `codescene.extension:api` jar from the `jmh` configuration in `benchmarks/build.gradle.kts`, pass it to the forked JVM as a system property, and hand it to `CsIdeLaunch.spec` explicitly.
+- [ ] Change the benchmark action `name:` from `JetBrains Plugin - ExtensionAPI` to `JetBrains Plugin - cs-ide RPC`. The RPC path adds IPC and serialization overhead, and comparing it to the in-process series would trip `fail-on-alert` on the first master run.
+- [ ] Run a short real benchmark, e.g. `./gradlew :benchmarks:jmh -Pjmh.includes=ExtensionApiReviewBenchmark` with reduced iterations; compiling `:benchmarks:jmhJar` alone is not enough. Commit `perf: benchmark the cs-ide RPC path`.
 
 ### Task 9: macOS spike script
 
@@ -189,10 +195,12 @@ New script: `.github/cs-ide-macos-spike.clj`.
 
 - [ ] Babashka script: args `<java> <jar>`; creates a temp git repo with one `.kt` file and a commit; starts the server; waits for `cs-ide/start`; sends `cs-ide/watchFiles`; edits the file; waits up to 60 s for `cs-ide/fileReview`; prints `PASS` or `FAIL` plus any `LinkageError`/`UnsatisfiedLinkError` stderr lines; closes stdin. Exit code 0 on PASS.
 - [ ] Run it on Windows against the IntelliJ JBR to prove the script itself works. Commit `chore: add cs-ide macOS watcher spike script`.
+- [ ] Manual, owned by the coordinator (not an agent): run the script on a Mac against an installed IDE's JBR and record PASS/FAIL in the Phase 1 PR. This gates Phase 3, not Phase 1. The task has no code dependencies and can start immediately.
 
 ### Task 10: Verification and records
 
 - [ ] `make iter` (10-minute timeout).
 - [ ] CodeScene MCP `analyze_change_set` against `master`; fix any Code Health regressions.
-- [ ] Manual `make run-ide` smoke test: review shows annotations, code vision and monitor; ACE preflight and refactor; telemetry; stable device id; exactly one `java` child; killing it recovers on the next action; closing the IDE leaves no orphan. Dock-launched macOS PATH and proxy checks are listed for a Mac and a proxy environment.
+- [ ] Re-run the Task 7 smoke test on the integration tip. Dock-launched macOS PATH and proxy checks are listed for a Mac and a proxy environment.
+- [ ] Decide whether `docs/superpowers/` ships to master. `docs` is gitignored and these files were force-added; if they should not ship, remove them in a final commit before the PR.
 - [ ] `DECISIONLOG.md` entry and `CHANGELOG.md` Unreleased line. Commit `docs: record cs-ide JSON-RPC decision`.

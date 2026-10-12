@@ -87,7 +87,12 @@ flowchart LR
 - JSON-RPC errors are `-32603` with free text. `CsIdeErrors` turns connection failures (`ConnectException`,
   `UnknownHostException`, `HttpConnectTimeoutException`, `HttpTimeoutException`) into `java.net.ConnectException` so
   `resolveAceFailureStatus` still reports OFFLINE; other messages pass through so the `"401"` check in
-  `resolveAceErrorType` still works.
+  `resolveAceErrorType` still works. Every blocking `CsIdeClient` call rethrows through `CsIdeErrors.unwrap`.
+- `CsIdeUnavailableException` (server failed to start, crashed, or is in backoff) passes through unchanged, so ACE reports
+  ERROR, not OFFLINE: a local server failure is not a network problem.
+- `CsIdeClient` depends only on `fun interface CsIdeTransport`. `CsIdeServer` does not implement it; the platform service
+  adapts it with `CsIdeTransport(server::request)`, and tests use `CsIdeTransport(connection::request)` against an
+  in-process fake. The client can therefore be built and tested independently of launch and supervision.
 
 ### Supervision
 
@@ -119,14 +124,18 @@ All eight in-process call sites move to requests; the classloader workaround goe
 | `ExtensionAPI.sendTelemetry` | `cs-ide/telemetry` `{event}` |
 | `DevToolsAPI.deviceId` | `cs-ide/device-id` (result `deviceId`) |
 
-- `BaseService.runWithClassLoaderChange` becomes `runTimed` (timing and logging only). `withPluginClassLoader` and its
-  test are deleted. `DeviceIdStore` loses its classloader parameter and no longer caches a failed lookup, because the
+- `BaseService.runWithClassLoaderChange` becomes `runTimed` (timing and logging only), and its classloader KDoc goes with
+  it. `withPluginClassLoader` and its test are deleted. `DeviceIdStore` loses its classloader parameter and no longer caches a failed lookup, because the
   server may recover after a failed first start.
 - Review and delta keep feeding today's caches, so the monitor, annotator and code vision are unchanged.
 - The jar's live behaviour is pinned by `CsIdeLiveContractTest`, which replaces the three `ExtensionApi*` tests. That
   includes the code-health-rules review and delta test, which proves that `cs-ide/delta` without `repo-path` still honours
   rules (the rules are baked into the raw scores).
-- JMH benchmarks call `CsIdeClient`, so CI measures the RPC path.
+- JMH benchmarks call `CsIdeClient`, so CI measures the RPC path. They launch the server from the resolved
+  `codescene.extension:api` jar, not the JMH fat jar, and report to a new benchmark series (`JetBrains Plugin - cs-ide
+  RPC`) so the added IPC overhead does not trip `fail-on-alert` against the in-process history.
+- The platform cut-over is smoke-tested with `make run-ide` in the same change that rewires the call sites, and again on
+  the integration branch before the PR.
 - Open risks that the Phase 1 smoke test checks: TLS-inspecting proxies (trust store export) and Dock-launched macOS (PATH).
 
 ### Phase 2: workspace review pipeline
@@ -164,14 +173,16 @@ JNA unpacks an unsigned `libjnidispatch.jnilib` to a temp directory. Whether the
 load it depends on the IDE's entitlements. Only the file watcher (Phase 3) needs JNA. The spike script
 `.github/cs-ide-macos-spike.clj` runs the launch command from an installed IDE's JBR, sends `cs-ide/watchFiles` for a
 temporary git repo, edits a file and reports whether `cs-ide/fileReview` arrives and whether stderr shows a
-`LinkageError`. It must pass on a Mac before Phase 3 starts.
+`LinkageError`. It must pass on a Mac before Phase 3 starts. The script is written and checked on Windows in Phase 1;
+the Mac run is a manual step owned by whoever coordinates the phase, and its result is recorded in the Phase 1 PR.
 
 ## Testing
 
 - Core unit tests over in-memory pipes: framing, JSON casing, connection (correlation, notifications, errors,
   cancellation, ordering, transport failure), launch (per-OS executable, missing Java, env and PATH merging, proxy env,
   argument order), trust store export, supervisor with a fake process (start timeout, crash, backoff, respawn, dispose),
-  client against an in-process fake server.
+  client against an in-process fake server, including errors surfacing from client calls as mapped exceptions.
+- Benchmarks are verified by a short real `:benchmarks:jmh` run, not just by compiling the JMH jar.
 - `CsIdeLiveContractTest` starts the real server from the resolved jar using the test JVM's Java, or `CS_IDE_JAVA` when
   set.
 - Platform services keep their existing tests; services that called the jar statically get no new platform tests
