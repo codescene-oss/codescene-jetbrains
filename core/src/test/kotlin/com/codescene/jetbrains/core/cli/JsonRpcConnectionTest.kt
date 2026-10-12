@@ -136,7 +136,14 @@ class JsonRpcConnectionTest {
 
     @Test
     fun `server to client requests get a method not found reply`() {
-        peer.send(mapOf("jsonrpc" to "2.0", "id" to 99, "method" to "workspace/configuration", "params" to emptyMap<String, Any>()))
+        peer.send(
+            mapOf(
+                "jsonrpc" to "2.0",
+                "id" to 99,
+                "method" to "workspace/configuration",
+                "params" to emptyMap<String, Any>(),
+            ),
+        )
 
         val reply = peer.nextMessage()
         assertEquals(99, reply.path("id").asInt())

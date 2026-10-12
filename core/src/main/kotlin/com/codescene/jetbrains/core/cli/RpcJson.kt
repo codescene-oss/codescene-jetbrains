@@ -21,7 +21,9 @@ object RpcJson {
         when {
             node.isObject -> {
                 val result = mapper.createObjectNode()
-                node.fields().forEachRemaining { (key, value) -> result.set<JsonNode>(kebabKey(key), toKebabNode(value)) }
+                node.fields().forEachRemaining { (key, value) ->
+                    result.set<JsonNode>(kebabKey(key), toKebabNode(value))
+                }
                 result
             }
             node.isArray -> {
