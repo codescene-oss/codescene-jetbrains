@@ -43,11 +43,14 @@ passes on JBR 21 (Windows, macOS) and JBR 25 (Linux).
   for exit errors.
 - The child environment starts from IntelliJ's `EnvironmentUtil.getEnvironmentMap()` (the user's shell environment), not
   the IDE process environment, so a Dock-launched macOS IDE still finds Homebrew tools.
-- The directory of Git4Idea's configured git executable is prepended to `PATH`, because the server spawns `git`.
+- The directory of Git4Idea's configured git executable is moved to the front of `PATH` (any existing occurrence is
+  removed), because the server spawns `git` and must use the IDE's git. Entries are compared as trimmed, unquoted
+  strings (case-insensitive on Windows), never parsed as paths, so quoted or unusual `PATH` entries cannot break the launch.
 - Proxy: the server's HTTP client (`codescene.devtools.http-client`, `babashka.http-client` over `java.net.http`) reads
   only `https_proxy`/`HTTPS_PROXY`/`http_proxy`/`HTTP_PROXY`/`no_proxy`/`NO_PROXY`. When IntelliJ has a static HTTP proxy
-  configured and none of those variables is already set, the plugin sets `HTTPS_PROXY`, `HTTP_PROXY` and `NO_PROXY` for the
-  child. SOCKS, PAC and auto-detect are not translated.
+  configured and no `http(s)_proxy` variable is already set (any case), the plugin sets `HTTPS_PROXY` and `HTTP_PROXY`
+  for the child, plus `NO_PROXY` from the IDE's exceptions unless a `no_proxy` variable already exists. A lone
+  `NO_PROXY`, common on corporate machines, does not suppress the IDE proxy. SOCKS, PAC and auto-detect are not translated.
 - Certificates: IntelliJ's `CertificateManager` calls `SSLContext.setDefault` with its own trust manager, so today's
   in-process HTTPS calls trust whatever the IDE trusts. A child JVM would only trust its `cacerts`. The plugin therefore
   writes the IDE trust manager's accepted issuers to a PKCS12 trust store under the plugin's system directory and passes

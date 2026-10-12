@@ -53,6 +53,7 @@ PKG-3 does not depend on PKG-1 or PKG-2: `CsIdeTransport` is a `fun interface` t
 
 | Field | Value |
 | --- | --- |
+| **Status** | DONE — `cfaece3` `feat(cli): add cs-ide launch command and environment`. PATH and proxy rules as in Task 3. |
 | **Branch** | `feature/cs-12077-launch-env` |
 | **Base** | Integration branch tip (PKG-0) |
 | **Commit message** | `feat(cli): add cs-ide launch command and environment` |
