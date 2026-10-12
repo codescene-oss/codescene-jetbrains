@@ -110,13 +110,12 @@ New script: `.github/cs-ide-macos-spike.clj`.
 - Test: `core/src/test/kotlin/com/codescene/jetbrains/core/cli/CsIdeBackoffTest.kt`, `CsIdeServerTest.kt`, `FakeCsIdeProcess.kt`
 
 **Interfaces:**
-- Consumes: `JsonRpcConnection`, `CsIdeLaunchSpec`, `ILogger`.
+- Consumes: `JsonRpcConnection`, `CsIdeLaunchSpec`, `ILogger`, `CsIdeUnavailableException` (already in `CsIdeErrors.kt` from Task 5; do not redeclare it).
 - Produces:
   - `interface CsIdeProcess { val stdin: OutputStream; val stdout: InputStream; val stderr: InputStream; val pid: Long; fun isAlive(): Boolean; fun onExit(): CompletableFuture<Int>; fun destroyTree() }`
   - `fun interface CsIdeProcessFactory { fun start(): CsIdeProcess }` and `class SystemCsIdeProcessFactory(private val spec: () -> CsIdeLaunchSpec) : CsIdeProcessFactory`
   - `class CsIdeBackoff(initialMs: Long = 1_000, maxMs: Long = 30_000) { fun remainingMs(now: Long): Long; fun recordFailure(now: Long); fun reset() }`
   - `data class CsIdeServerMetadata(val sha: String, val version: String)`
-  - `class CsIdeUnavailableException(message: String, cause: Throwable? = null) : RuntimeException`
   - `class CsIdeServer(processFactory, logger, startupTimeoutMs = 30_000, shutdownGraceMs = 3_000, backoff = CsIdeBackoff(), clock = System::currentTimeMillis) : AutoCloseable` with `fun request(method: String, params: JsonNode): CompletableFuture<JsonNode>`, `fun metadata(): CsIdeServerMetadata?`, `fun stderrTail(): String`, `override fun close()`. It does not implement `CsIdeTransport` (Task 5); consumers adapt it with `CsIdeTransport(server::request)`.
 
 - [ ] Tests: backoff doubles to the cap and resets; first request starts the process and resolves after `cs-ide/start`; no `cs-ide/start` within the timeout fails with `CsIdeUnavailableException` containing the stderr tail and destroys the process; an exit fails pending requests and the next request respawns after the backoff; requests inside the cooldown fail fast without spawning; a successful response resets the backoff; `close()` closes stdin, waits for the grace period, then destroys the tree; requests after `close()` fail.
@@ -133,16 +132,17 @@ New script: `.github/cs-ide-macos-spike.clj`.
 - Produces:
   - `fun interface CsIdeTransport { fun request(method: String, params: JsonNode): CompletableFuture<JsonNode> }` (tests use `CsIdeTransport(connection::request)`; Task 7 uses `CsIdeTransport(server::request)`)
   - `class CsIdeClient(transport: CsIdeTransport, timeoutMs: Long = 300_000)` with blocking calls:
-    - `fun review(path: String, code: String?, cachePath: String?, repoPath: String?): Review?`
+    - `fun review(params: ReviewParams, cache: CacheParams): Review?` (returns null without a request when `params.code` is null, as the in-process API did)
     - `fun delta(oldScore: String?, newScore: String?): Delta?`
-    - `fun reviewDelta(old: ReviewParams, new: ReviewParams, cachePath: String?): Delta?`
+    - `fun reviewDelta(old: ReviewParams, new: ReviewParams, cache: CacheParams): Delta?`
     - `fun preflight(force: Boolean): PreflightResponse?`
-    - `fun fnsToRefactor(content: String, fileName: String, cachePath: String?, codeSmells: List<CodeSmell>): List<FnToRefactor>`
-    - `fun fnsToRefactor(content: String, fileName: String, cachePath: String?, delta: Delta): List<FnToRefactor>`
+    - `fun fnsToRefactor(code: CodeParams, cache: CacheParams, codeSmells: List<CodeSmell>): List<FnToRefactor>`
+    - `fun fnsToRefactor(code: CodeParams, cache: CacheParams, delta: Delta): List<FnToRefactor>`
+    - `ReviewParams`, `CodeParams` and `CacheParams` are the `ExtensionAPI` records the call sites already build.
     - `fun refactor(fn: FnToRefactor, options: RefactoringOptions?): RefactorResponse?`
     - `fun telemetry(event: TelemetryEvent): Int`
     - `fun deviceId(): String`
-  - `object CsIdeErrors { fun unwrap(error: Throwable): Exception }`
+  - `object CsIdeErrors { fun unwrap(error: Throwable): Exception }` and `class CsIdeUnavailableException(message: String, cause: Throwable? = null) : RuntimeException`, both in `CsIdeErrors.kt`
 
 - [ ] Tests against `IdeServerFixture` (in-process fake over pipes, ported from `c8f6b1c`, records the last params per method): each method sends kebab-case params (`file-content`, `cache-path`, `repo-path`, `old-score`, `fn-to-refactor`, `skip-cache`, `token`, `code-smells`, `delta-result`); camelCase results map to the jar models; `review(code = null)` sends nothing and returns null; `reviewDelta` sends two reviews then `delta` with their raw scores; `fnsToRefactor` sends the last preflight response once `preflight` succeeded; the `delta` null result returns null; `CsIdeErrors` maps `"java.net.ConnectException: ..."` to `ConnectException`, keeps `"Request failed [401]"` in the message, and unwraps `ExecutionException`; every blocking client call rethrows through `CsIdeErrors.unwrap`, proven by a fixture RPC error `"java.net.ConnectException: ..."` surfacing from a client call as `ConnectException`; `CsIdeUnavailableException` passes through unchanged.
 - [ ] Run; expect failure. Implement. Run; expect PASS. Commit `feat(cli): add typed cs-ide client`.

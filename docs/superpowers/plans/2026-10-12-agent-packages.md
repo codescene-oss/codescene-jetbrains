@@ -10,7 +10,9 @@ Use this document to assign **one package per agent**: one branch, **one commit*
 
 - `make format-check class-size-mine` passes (ktlint clean; changed `.kt` files ≤ 325 lines). Fix lint findings before anything else.
 - CodeScene MCP `pre_commit_code_health_safeguard` before commit.
-- No `Co-authored` trailers; no new code comments.
+- No `Co-authored` trailers; no new code comments. Cursor's agent adds `Co-authored-by: Cursor` on its own, so check `git log -1 --format=%B` after committing and amend it away.
+- Never merge, fast-forward or push the integration branch, and never commit in `C:\Git\codescene-jetbrains`. Work only in your own worktree and branch; the coordinator merges.
+- After a rebase, check for conflict markers (`git diff --check HEAD~1`) before declaring the package done.
 
 **Merging:** the coordinator rebases each package branch onto the current integration tip and fast-forwards it (`git merge --ff-only`), so the integration branch keeps one commit per package. A package whose base is not merged yet may stack on the base package's branch and is rebased once that merges.
 
@@ -109,7 +111,7 @@ JAVA_HOME=JDK17 for Gradle. make format-check class-size-mine, then pre_commit_c
 
 ### Out of scope
 
-`CsIdeClient`, `CsIdeTransport`, live jar tests, platform wiring.
+`CsIdeClient`, `CsIdeTransport`, live jar tests, platform wiring. `CsIdeUnavailableException` already exists in `CsIdeErrors.kt` (PKG-3); use it, do not redeclare it.
 
 ### Definition of done
 
@@ -125,6 +127,8 @@ JAVA_HOME=JDK17 for Gradle. make format-check class-size-mine, then pre_commit_c
 Implement PKG-2 for CS-12077 on feature/cs-12077-supervisor after PKG-1 is merged (or stacked on feature/cs-12077-launch-env).
 Follow 2026-10-12-phase1-cs-ide-transport.md Task 4 and 2026-10-12-agent-packages.md PKG-2.
 Use fake processes only in tests; no live server in this package. CsIdeServer does not implement CsIdeTransport.
+CsIdeUnavailableException already exists in CsIdeErrors.kt; use it, do not redeclare it.
+Do not merge or push the integration branch; check git log -1 for a Co-authored-by trailer and amend it away.
 make format-check class-size-mine, then pre_commit_code_health_safeguard.
 One commit: feat(cli): add cs-ide server supervisor.
 ```
@@ -135,6 +139,7 @@ One commit: feat(cli): add cs-ide server supervisor.
 
 | Field | Value |
 | --- | --- |
+| **Status** | DONE — `2b5bbe2` `feat(cli): add typed cs-ide client`. Client takes `ReviewParams`/`CodeParams`/`CacheParams` (see Task 5); `CsIdeUnavailableException` lives in `CsIdeErrors.kt`. |
 | **Branch** | `feature/cs-12077-client` |
 | **Base** | Integration branch tip (PKG-0); parallel with PKG-1 and PKG-2 |
 | **Commit message** | `feat(cli): add typed cs-ide client` |
