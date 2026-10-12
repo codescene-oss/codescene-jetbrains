@@ -91,6 +91,21 @@ class CachedReviewService(
     }
 
     fun reviewByPath(filePath: String) {
+        schedulePathReview(filePath) { path, fileName ->
+            pathBasedReviewHandler.performCachedReviewByPath(path, fileName)
+        }
+    }
+
+    fun reviewByPathIfNeeded(filePath: String) {
+        schedulePathReview(filePath) { path, fileName ->
+            pathBasedReviewHandler.reviewByPathIfNeeded(path, fileName)
+        }
+    }
+
+    private fun schedulePathReview(
+        filePath: String,
+        performAction: suspend (String, String) -> Unit,
+    ) {
         if (!isPathSupportedForReview(project, filePath)) {
             return
         }
@@ -104,10 +119,10 @@ class CachedReviewService(
             timeout = 300_000,
             debounceDelayMs = null,
             showProgress = false,
-            performAction = { pathBasedReviewHandler.performCachedReviewByPath(filePath, fileName) },
+            performAction = { performAction(filePath, fileName) },
             onScheduled = null,
             onFinished = { onReviewFinished(filePath) },
-            onQueuedCallback = { reviewByPath(filePath) },
+            onQueuedCallback = { schedulePathReview(filePath, performAction) },
         )
     }
 

@@ -88,4 +88,9 @@ class PlatformDeltaCacheService(
         super.setIncludeInCodeHealthMonitor(filePath, include)
         updateMonitor(project)
     }
+
+    override fun isCachedForCurrentContent(
+        filePath: String,
+        currentFileContent: String,
+    ): Boolean = super.isCachedForCurrentContent(filePath, currentFileContent)
 }

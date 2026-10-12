@@ -44,10 +44,10 @@ class GitChangeObserverAdapter(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    fun start() {
+    fun start(onReviewVisibleFile: suspend (String) -> Unit = {}) {
         Log.info("Starting async initialization", "GitChangeObserverAdapter")
         scope.launch {
-            observer.populateTrackerFromRepoState()
+            observer.populateTrackerFromRepoState(onReviewVisibleFile)
             Log.info("Tracker populated, starting scheduler", "GitChangeObserverAdapter")
             observer.start()
         }
@@ -65,7 +65,8 @@ class GitChangeObserverAdapter(
 
     fun getQueuedEventCount(): Int = observer.getQueuedEventCount()
 
-    suspend fun repopulateFromRepoState() = observer.populateTrackerFromRepoState()
+    suspend fun repopulateFromRepoState(onReviewVisibleFile: suspend (String) -> Unit = {}) =
+        observer.populateTrackerFromRepoState(onReviewVisibleFile)
 
     override fun dispose() {
         Log.info("Disposing, cancelling scope", "GitChangeObserverAdapter")

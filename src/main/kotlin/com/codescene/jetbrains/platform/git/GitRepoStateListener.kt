@@ -25,6 +25,7 @@ class GitRepoStateListener(
     private val observer: GitChangeObserverAdapter,
     private val workspacePath: String,
     private val gitRootPath: String,
+    private val periodicChangeLister: PeriodicChangeListerService,
     dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : Disposable {
     private var connection: MessageBusConnection? = null
@@ -40,6 +41,8 @@ class GitRepoStateListener(
                 override fun stagingAreaChanged(repository: GitRepository) {
                     if (pathComparisonKey(repository.root.path) == pathComparisonKey(gitRootPath)) {
                         Log.info("Staging area changed, scheduling reconciliation", "GitRepoStateListener")
+                        periodicChangeLister.markDirty()
+                        periodicChangeLister.markWorkspaceFileActivity()
                         scheduleReconciliation()
                     }
                 }

@@ -31,7 +31,7 @@ class GitChangeObserver(
     private val eventQueue = mutableListOf<FileEvent>()
     private var scheduler: ScheduledExecutorService? = null
 
-    suspend fun populateTrackerFromRepoState() {
+    suspend fun populateTrackerFromRepoState(onReviewVisibleFile: suspend (String) -> Unit = {}) {
         logger.info("Populating tracker from repo state", "GitChangeObserver")
         synchronized(tracker) {
             tracker.clear()
@@ -39,13 +39,24 @@ class GitChangeObserver(
         val changedFiles = gitChangeLister.getAllChangedFiles(gitRootPath, workspacePath, emptySet())
         logger.info("getAllChangedFiles returned ${changedFiles.size} files", "GitChangeObserver")
         for (absolutePath in changedFiles) {
-            logger.info("Processing file: '$absolutePath'", "GitChangeObserver")
             synchronized(tracker) {
                 tracker.add(absolutePath)
             }
-            queueEvent(FileEvent(FileEventType.CHANGE, absolutePath))
         }
-        logger.info("Populated tracker with ${changedFiles.size} files", "GitChangeObserver")
+        val visibleFiles = openFilesObserver.getAllVisibleFileNames()
+        val visibleChanged =
+            changedFiles.filter { changedPath ->
+                val key = comparisonKey(changedPath)
+                visibleFiles.any { comparisonKey(it) == key }
+            }
+        for (absolutePath in sortFilesByPriority(visibleChanged.toSet(), visibleFiles)) {
+            logger.info("Scheduling startup review for visible file: '$absolutePath'", "GitChangeObserver")
+            onReviewVisibleFile(absolutePath)
+        }
+        logger.info(
+            "Populated tracker with ${changedFiles.size} files, scheduled ${visibleChanged.size} visible reviews",
+            "GitChangeObserver",
+        )
     }
 
     fun start() {
