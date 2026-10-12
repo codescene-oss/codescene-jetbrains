@@ -1,8 +1,9 @@
 BB := bb
-NULL := /dev/null
 ifeq ($(OS),Windows_NT)
+NULL := NUL
 IDEA_LOG := build\idea-sandbox\*\log\idea.log
 else
+NULL := /dev/null
 IDEA_LOG := build/idea-sandbox/*/log/idea.log
 endif
 
