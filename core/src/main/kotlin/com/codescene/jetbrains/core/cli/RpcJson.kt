@@ -43,4 +43,20 @@ object RpcJson {
         node: JsonNode,
         type: TypeReference<T>,
     ): T = mapper.convertValue(toKebabNode(node), type)
+
+    fun field(
+        node: JsonNode,
+        camelCase: String,
+        kebabCase: String = kebabKey(camelCase),
+    ): JsonNode? {
+        if (node.has(kebabCase) && !node.get(kebabCase).isNull) return node.get(kebabCase)
+        if (node.has(camelCase) && !node.get(camelCase).isNull) return node.get(camelCase)
+        return null
+    }
+
+    fun text(
+        node: JsonNode,
+        camelCase: String,
+        kebabCase: String = kebabKey(camelCase),
+    ): String? = field(node, camelCase, kebabCase)?.asText()
 }
