@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.platform.di
 
-import codescene.devtools.ide.DevToolsAPI
 import com.codescene.jetbrains.core.contracts.IAceService
 import com.codescene.jetbrains.core.contracts.IBrowserService
 import com.codescene.jetbrains.core.contracts.IClipboardService
@@ -12,6 +11,7 @@ import com.codescene.jetbrains.core.contracts.ITelemetryService
 import com.codescene.jetbrains.core.util.DeviceIdStore
 import com.codescene.jetbrains.platform.api.AceService
 import com.codescene.jetbrains.platform.browser.IntelliJBrowserService
+import com.codescene.jetbrains.platform.cli.CsIdeServerService
 import com.codescene.jetbrains.platform.clipboard.IntelliJClipboardService
 import com.codescene.jetbrains.platform.fs.VfsFileSystem
 import com.codescene.jetbrains.platform.listeners.VfsFileWatcher
@@ -35,8 +35,7 @@ class CodeSceneApplicationServiceProvider {
     val deviceIdStore: DeviceIdStore by lazy {
         DeviceIdStore(
             logger = Log,
-            classLoader = this::class.java.classLoader,
-            deviceIdProvider = { DevToolsAPI.deviceId() },
+            deviceIdProvider = { CsIdeServerService.getInstance().client().deviceId() },
         )
     }
 

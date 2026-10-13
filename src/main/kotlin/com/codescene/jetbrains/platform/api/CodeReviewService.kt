@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.platform.api
 
-import com.codescene.ExtensionAPI
 import com.codescene.ExtensionAPI.CacheParams
 import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.data.review.Review
@@ -11,6 +10,7 @@ import com.codescene.jetbrains.core.util.Constants.REVIEW
 import com.codescene.jetbrains.core.util.TelemetryEvents
 import com.codescene.jetbrains.core.util.resolveBaselineCliCacheFileName
 import com.codescene.jetbrains.core.util.resolveCliCacheFileName
+import com.codescene.jetbrains.platform.cli.CsIdeServerService
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.telemetry.StatsCollectorService
 import com.codescene.jetbrains.platform.util.Log
@@ -96,7 +96,8 @@ class CodeReviewService(private val project: Project) : com.codescene.jetbrains.
             "CodeReviewService",
         )
         val cacheParams = CacheParams(cachePath)
-        val (result, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.review(params, cacheParams) }
+        val (result, elapsedMs) =
+            runTimed { CsIdeServerService.getInstance().client().review(params, cacheParams) }
         result ?: return null
 
         val serviceName = "${this::class.java.simpleName} - ${project.name}"

@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.platform.api
 
-import com.codescene.ExtensionAPI
 import com.codescene.ExtensionAPI.CacheParams
 import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.jetbrains.core.delta.DeltaAnalysisResult
@@ -11,6 +10,7 @@ import com.codescene.jetbrains.core.util.extractExtension
 import com.codescene.jetbrains.core.util.normalizeAbsolutePath
 import com.codescene.jetbrains.core.util.resolveBaselineCliCacheFileName
 import com.codescene.jetbrains.core.util.resolveCliCacheFileName
+import com.codescene.jetbrains.platform.cli.CsIdeServerService
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.telemetry.StatsCollectorService
 import com.codescene.jetbrains.platform.util.Log
@@ -82,7 +82,10 @@ class CodeDeltaService(private val project: Project) : com.codescene.jetbrains.c
             "CodeDeltaService",
         )
         val cacheParams = CacheParams(cachePath)
-        val (rawResult, elapsedMs) = runWithClassLoaderChange { ExtensionAPI.delta(oldReview, newReview, cacheParams) }
+        val (rawResult, elapsedMs) =
+            runTimed {
+                CsIdeServerService.getInstance().client().reviewDelta(oldReview, newReview, cacheParams)
+            }
         val delta = adaptDeltaResult(rawResult)
         StatsCollectorService.getInstance().recordAnalysis(fileName, elapsedMs.toDouble())
 

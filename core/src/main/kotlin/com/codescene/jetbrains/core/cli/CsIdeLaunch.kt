@@ -1,6 +1,8 @@
 package com.codescene.jetbrains.core.cli
 
 import com.codescene.ExtensionAPI
+import java.net.URI
+import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.math.max
@@ -41,15 +43,26 @@ object CsIdeLaunch {
     }
 
     fun extensionApiJar(): Path {
-        val location =
+        val fromCodeSource =
             ExtensionAPI::class.java.protectionDomain?.codeSource?.location
+                ?.let { runCatching { Path.of(it.toURI()) }.getOrNull() }
+        val jar =
+            fromCodeSource?.takeIf { Files.isRegularFile(it) }
+                ?: ExtensionAPI::class.java.getResource("/${ExtensionAPI::class.java.name.replace('.', '/')}.class")
+                    ?.let(::jarFromResourceUrl)
                 ?: throw IllegalStateException("Extension API jar location unavailable")
-        val jar = Path.of(location.toURI())
         if (!Files.isRegularFile(jar)) {
             throw IllegalStateException("Extension API jar not found: $jar")
         }
         return jar
     }
+
+    internal fun jarFromResourceUrl(url: URL): Path? =
+        runCatching {
+            val uri = url.toURI()
+            if (uri.scheme != "jar") return null
+            Path.of(URI(uri.rawSchemeSpecificPart.substringBefore('!')))
+        }.getOrNull()
 
     fun defaultThreads(cpus: Int): Int = max(1, cpus / 2)
 

@@ -1,14 +1,31 @@
 package com.codescene.jetbrains.core.cli
 
 import com.codescene.ExtensionAPI
+import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CsIdeLaunchTest {
+    @Test
+    fun `jarFromResourceUrl resolves jar paths containing spaces`() {
+        val jar = Path.of(System.getProperty("java.io.tmpdir"), "dir with space", "api-1.0.jar").toAbsolutePath()
+        val url = URL("jar:${jar.toUri()}!/com/codescene/ExtensionAPI.class")
+
+        assertEquals(jar, CsIdeLaunch.jarFromResourceUrl(url))
+    }
+
+    @Test
+    fun `jarFromResourceUrl ignores non-jar urls`() {
+        val url = Path.of(System.getProperty("java.io.tmpdir"), "ExtensionAPI.class").toUri().toURL()
+
+        assertNull(CsIdeLaunch.jarFromResourceUrl(url))
+    }
+
     @Test
     fun `javaExecutable uses java exe on Windows`() {
         val home = Files.createTempDirectory("cs-ide-win-java").also { it.toFile().deleteOnExit() }
