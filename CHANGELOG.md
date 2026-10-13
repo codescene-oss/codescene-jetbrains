@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Changed**
+  - run code analysis in a `cs-ide` JSON-RPC server child process instead of in-process `ExtensionAPI` (CS-12077)
+
 ### [0.5.8] - 2026-10-09
 - **Changed**
   - bump extension API to 1.0-fdef705 (#192)

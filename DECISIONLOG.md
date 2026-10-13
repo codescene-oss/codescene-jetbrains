@@ -15,6 +15,7 @@ members, ensuring transparency and consistency throughout the project lifecycle.
 4. [DEC-2024-09-18-001: Update Supported Product Versions for the Plugin](#dec-2024-09-18-001-update-supported-product-versions-for-the-plugin)
 5. [DEC-2024-10-04-001: Multiple CodeVision Providers for Distinct Code Smells](#dec-2024-10-04-001-multiple-codevision-providers-for-distinct-code-smells)
 6. [DEC-2025-01-03-001: Code Smell Documentation Location Update](#dec-2025-01-03-001-code-smell-documentation-location-update)
+7. [DEC-2026-10-13-001: Run analysis through cs-ide JSON-RPC child process](#dec-2026-10-13-001-run-analysis-through-cs-ide-json-rpc-child-process)
 
 ---
 
@@ -279,4 +280,49 @@ Previously, there was only the Visual Studio Code extension, so the documentatio
 To run the extension locally, users will need to ensure the documentation is populated by executing the `./gradlew fetchDocs` command. This process requires appropriate permissions to access the IDE Protocol repository.
 
 **Alternatives Considered**:
+None
+
+---
+
+## DEC-2026-10-13-001: Run analysis through cs-ide JSON-RPC child process
+
+[Back to Top](#table-of-contents)
+
+**Date**: 2026-10-13
+
+**Decision Maker(s)**: Martin Säfsten
+
+**Status**: Accepted
+
+**Decision**:
+The plugin runs all extension API calls (review, delta, ACE preflight, functions to refactor, refactor, telemetry and
+device id) in one long-lived `cs-ide server` child process per IDE, started from the bundled `codescene.extension:api`
+jar on the IDE's own JBR with `-Xmx2g`, and talks to it with JSON-RPC 2.0 over stdio. There is no in-process fallback.
+
+**Context**:
+Calling `ExtensionAPI` in-process required switching the thread context classloader around every call to avoid ANTLR
+version clashes and Clojure failing on IntelliJ's jar URL handling. Analysis also shared the IDE's heap, so a heavy or
+failing analysis could affect the IDE itself. The VS Code extension already talks to the same `cs-ide` server, and later
+phases move file watching and the review queue to the server.
+
+**Rationale**:
+A supervised child process removes the classloader workaround, isolates analysis memory and crashes from the IDE, and
+uses the same protocol as the other IDE integrations. The supervisor starts the server lazily, restarts it with backoff
+after a crash, and kills the process tree on shutdown. Protocol and process code lives in `core`; the platform module
+only provides the launch environment and an application service.
+
+**Consequences**:
+- Each IDE runs one extra JVM. Calls pay IPC and serialization overhead, so benchmarks start a new
+  `JetBrains Plugin - cs-ide RPC` series.
+- The child gets the user's shell environment over the IDE environment, Git4Idea's git directory first on `PATH`, the
+  IDE's static HTTP proxy as `HTTP(S)_PROXY`, and a trust store with the IDE's and the JDK's certificates.
+- When the server cannot start, calls fail with `CsIdeUnavailableException`; ACE shows its error state.
+
+**Alternatives Considered**:
+
+- **Keep in-process `ExtensionAPI`**: Rejected; the classloader workaround is fragile and analysis shares the IDE heap.
+- **Download a separate runtime or CLI binary**: Rejected; the IDE's JBR and the bundled jar are enough.
+- **Feature flag with in-process fallback**: Rejected; two code paths to maintain for little benefit.
+
+**Related Decisions**:
 None
