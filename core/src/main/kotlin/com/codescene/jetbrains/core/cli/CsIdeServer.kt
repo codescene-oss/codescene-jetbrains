@@ -13,6 +13,8 @@ data class CsIdeServerMetadata(
     val version: String,
 )
 
+private data class LiveConnection(val rpc: JsonRpcConnection, val session: Long)
+
 private data class RunningServer(
     val connection: JsonRpcConnection?,
     val process: CsIdeProcess?,
@@ -31,6 +33,8 @@ class CsIdeServer(
     private val closed = AtomicBoolean(false)
     private var process: CsIdeProcess? = null
     private var connection: JsonRpcConnection? = null
+    private var liveSessionId: Long = 0
+    private var nextSessionId: Long = 1
 
     @Volatile
     private var pendingStart: CompletableFuture<Unit>? = null
@@ -46,7 +50,7 @@ class CsIdeServer(
     ): CompletableFuture<JsonNode> =
         try {
             ensureAvailable()
-            val future = ensureStarted().request(method, params)
+            val future = ensureStarted().rpc.request(method, params)
             future.whenComplete { _, error ->
                 if (error == null) backoff.reset()
             }
@@ -59,19 +63,48 @@ class CsIdeServer(
         method: String,
         params: JsonNode,
     ) {
+        notifyInSession(method, params)
+    }
+
+    fun notifyInSession(
+        method: String,
+        params: JsonNode,
+    ): Long {
         ensureAvailable()
-        val rpc = ensureStarted()
+        val live = ensureStarted()
         try {
-            rpc.notify(method, params)
+            live.rpc.notify(method, params)
         } catch (e: Exception) {
             throw CsIdeUnavailableException("cs-ide server failed to send $method: ${e.message}", e)
         }
         backoff.reset()
+        return live.session
     }
+
+    fun notifyIfRunning(
+        method: String,
+        params: JsonNode,
+    ): Boolean {
+        val rpc =
+            synchronized(lock) {
+                if (closed.get() || process?.isAlive() != true) return false
+                connection ?: return false
+            }
+        return runCatching { rpc.notify(method, params) }.isSuccess
+    }
+
+    fun liveSession(): Long =
+        synchronized(lock) {
+            if (connection != null && process?.isAlive() == true) liveSessionId else 0
+        }
+
+    fun cooldownRemainingMs(): Long = backoff.remainingMs(clock())
 
     fun addNotificationHandler(handler: (String, JsonNode) -> Unit): AutoCloseable = hub.addHandler(handler)
 
     fun addSessionListener(listener: () -> Unit): AutoCloseable = hub.addSessionListener(listener)
+
+    fun addSessionStartListener(listener: (Long) -> Unit): AutoCloseable = hub.addSessionStartListener(listener)
 
     fun metadata(): CsIdeServerMetadata? = metadata
 
@@ -90,13 +123,13 @@ class CsIdeServer(
         if (cooldown > 0) throw CsIdeUnavailableException("cs-ide server is unavailable (retry in ${cooldown}ms)")
     }
 
-    private fun ensureStarted(): JsonRpcConnection =
+    private fun ensureStarted(): LiveConnection =
         synchronized(startLock) {
             val stale =
                 synchronized(lock) {
                     if (closed.get()) throw CsIdeUnavailableException("cs-ide server is closed")
                     val existing = connection
-                    if (existing != null && process?.isAlive() == true) return existing
+                    if (existing != null && process?.isAlive() == true) return LiveConnection(existing, liveSessionId)
                     detach()
                 }
             shutDown(stale, graceful = false)
@@ -104,7 +137,8 @@ class CsIdeServer(
             startProcess()
         }
 
-    private fun startProcess(): JsonRpcConnection {
+    private fun startProcess(): LiveConnection {
+        val sessionId = synchronized(lock) { nextSessionId++ }
         val started = processFactory.start()
         synchronized(lock) { stderrTail.clear() }
         startStderrReader(started)
@@ -114,7 +148,7 @@ class CsIdeServer(
             JsonRpcConnection(
                 input = started.stdout,
                 output = started.stdin,
-                onNotification = { method, params -> onNotification(method, params, startSignal) },
+                onNotification = { method, params -> onNotification(method, params, startSignal, sessionId) },
                 onClosed = { error -> onTransportClosed(started, error) },
             )
         started.onExit().thenAccept { code ->
@@ -127,8 +161,9 @@ class CsIdeServer(
                 if (closed.get()) throw CsIdeUnavailableException("cs-ide server is closed")
                 process = started
                 connection = rpc
+                liveSessionId = sessionId
             }
-            return rpc
+            return LiveConnection(rpc, sessionId)
         } catch (e: CsIdeUnavailableException) {
             shutDown(RunningServer(rpc, started), graceful = false)
             throw e
@@ -164,9 +199,11 @@ class CsIdeServer(
         method: String,
         params: JsonNode,
         startSignal: CompletableFuture<Unit>,
+        sessionId: Long,
     ) {
         val isStart = method == START_METHOD
         if (isStart) recordMetadata(params)
+        if (isStart) hub.sessionStarted(sessionId)
         hub.dispatch(method, params)
         if (isStart) startSignal.complete(Unit)
     }
@@ -216,6 +253,7 @@ class CsIdeServer(
         connection = null
         process = null
         metadata = null
+        liveSessionId = 0
         return detached
     }
 

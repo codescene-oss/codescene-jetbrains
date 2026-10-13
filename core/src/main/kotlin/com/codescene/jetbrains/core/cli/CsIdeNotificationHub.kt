@@ -9,10 +9,19 @@ class CsIdeNotificationHub(
 ) {
     private val handlers = CopyOnWriteArrayList<Registration<(String, JsonNode) -> Unit>>()
     private val sessionListeners = CopyOnWriteArrayList<Registration<() -> Unit>>()
+    private val sessionStartListeners = CopyOnWriteArrayList<Registration<(Long) -> Unit>>()
 
     fun addHandler(handler: (String, JsonNode) -> Unit): AutoCloseable = register(handlers, handler)
 
     fun addSessionListener(listener: () -> Unit): AutoCloseable = register(sessionListeners, listener)
+
+    fun addSessionStartListener(listener: (Long) -> Unit): AutoCloseable = register(sessionStartListeners, listener)
+
+    fun sessionStarted(session: Long) {
+        sessionStartListeners.forEach { registration ->
+            guarded("session start listener") { registration.callback(session) }
+        }
+    }
 
     fun dispatch(
         method: String,
