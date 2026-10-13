@@ -376,8 +376,8 @@ One commit: chore: add cs-ide macOS watcher spike script.
 
 **Remaining coordinator steps before the PR:**
 
-1. Run `.github/cs-ide-macos-handoff.sh` on a Mac (agent prompt in `.github/cs-ide-macos-handoff.md`). It runs the spike against an installed IDE's JBR with JNA's default unpack and with the IDE's bundled `libjnidispatch`, and writes `cs-ide-macos-spike-report.md` for the PR.
-2. Remove `.github/cs-ide-macos-spike.clj`, `.github/cs-ide-macos-handoff.sh` and `.github/cs-ide-macos-handoff.md` in a final commit, so the branch passes the CodeScene gate and they stay out of master.
+1. DONE — Mac spike: PASS with the default JNA unpack and with the IDE's bundled `libjnidispatch` (macOS 26.4 arm64, IntelliJ IDEA 2026.2.3, JBR 25.0.4, `disable-library-validation` entitlement). Phase 3 keeps the default unpack. Report in `.github/cs-ide-macos-spike-report.md`; summary in the spec's "macOS go/no-go".
+2. DONE — Spike script, handoff script and handoff prompt removed from the branch; the report stays as the record.
 3. Proxy check in a proxy environment (pending).
 4. Decide whether `docs/superpowers/` ships to master.
 

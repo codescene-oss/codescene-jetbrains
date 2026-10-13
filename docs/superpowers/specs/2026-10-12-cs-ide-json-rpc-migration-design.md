@@ -159,8 +159,7 @@ All eight in-process call sites move to requests; the classloader workaround goe
 - Accept id-less results (watch path) after a SHA check; detect a lost watch via `getWatchInventory`.
 - Keep `PeriodicChangeListerService` until the server inventory matches `Git4IdeaChangeLister` on the existing
   feature-branch tests.
-- Apply the macOS JNA result from the Phase 1 spike: the default JNA unpack, or `-Djna.boot.library.path=<ide>/lib/jna/<arch>
-  -Djna.nounpack=true` if the JNA native versions match.
+- macOS JNA: keep the default JNA unpack (the Phase 1 spike passed with it; see "macOS go/no-go").
 
 ### Phase 4: legacy deletion
 
@@ -179,6 +178,12 @@ load it depends on the IDE's entitlements. Only the file watcher (Phase 3) needs
 temporary git repo, edits a file and reports whether `cs-ide/fileReview` arrives and whether stderr shows a
 `LinkageError`. It must pass on a Mac before Phase 3 starts. The script is written and checked on Windows in Phase 1;
 the Mac run is a manual step owned by whoever coordinates the phase, and its result is recorded in the Phase 1 PR.
+
+Result (2026-10-13): **go**. On macOS 26.4 (arm64) with IntelliJ IDEA 2026.2.3 and JBR 25.0.4, the spike passed both with
+the default JNA unpack and with the IDE's bundled `lib/jna/aarch64/libjnidispatch.jnilib`, with no `LinkageError` and no
+leftover process. The JBR is signed with `com.apple.security.cs.disable-library-validation`, which is why it may load
+JNA's unsigned unpacked library. Phase 3 uses the default unpack and needs no extra JVM options. The spike scripts were
+removed from the branch after the run.
 
 ## Testing
 
