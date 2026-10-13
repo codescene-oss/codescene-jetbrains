@@ -131,7 +131,6 @@ abstract class CodeSceneCodeVisionProvider : CodeVisionProvider<Unit> {
             getCachedDelta(
                 filePath = editor.virtualFile.path,
                 fileContent = document.text,
-                gitService = serviceProvider.gitService,
                 deltaCacheService = serviceProvider.deltaCacheService,
             )
 
