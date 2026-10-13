@@ -82,6 +82,9 @@ flowchart LR
   Conn <-->|"stdio Content-Length"| Proc
 ```
 
+The diagram is the request path used by ACE, telemetry and device id. Phase 2 deletes `CodeReviewService` and
+`CodeDeltaService`. Workspace reviews are `cs-ide/reviewFiles` notifications, handled beside `CsIdeClient`.
+
 ### Wire rules
 
 - Outbound keys are kebab-case. Inbound payloads are camelCase and are recursively kebab-cased (`([a-z0-9])([A-Z])` to
@@ -144,19 +147,65 @@ All eight in-process call sites move to requests; the classloader workaround goe
 
 ### Phase 2: workspace review pipeline
 
-- Editor buffers go through `cs-ide/reviewFiles` with a UUID `id` and `content`; disk files go without content.
-- Handle `fileReview`, `deltaReview`, `reviewFailed` and `reviewProgress`. Match by `id`, drop stale results by
-  git-blob SHA (`sha1("blob " + byteLength + "\0" + bytes)`).
-- The monitor is fed from `deltaReview`. The review and delta parts of `CachedReviewService` and `PathBasedReviewHandler`
-  are replaced; no client-side baseline review.
-- Progress UI follows `reviewProgress` (`count: 0` clears it).
+The plugin stops calling `cs-ide/review` and `cs-ide/delta` for editor and path reviews. It sends `cs-ide/reviewFiles`
+notifications and applies the server's notifications. `reviewFiles` has no JSON-RPC response; a client that waits for
+one hangs. Do not send `baseline-revision`. The server resolves the merge-base itself (`.codescene/config.json`
+`baseline_branch`, then `origin/HEAD`, `origin/main`, `origin/master`, local `main`, local `master`, else HEAD). The
+plugin's reflog fallback is not consulted. This phase does not send `watchFiles`. Explicit `reviewFiles` still runs
+for a repository that is not watched, because `enqueue-batch` computes analysis settings when no watch exists. Phase 3
+adds the watch on the same result path.
+
+Wire, checked against `ide_server.clj`, `workspace.clj`, `workspace/files.clj` and `e2e/wire_contract_test.clj`:
+
+- Outbound keys are kebab-case: `{repo-root, files: [{rel-path, id?, content?}]}`. Omit `id` and `content` when they are
+  absent. Do not send JSON null for either key.
+- Inbound keys are camelCase (`repoRoot`, `gitBlobSha`, `oldGitBlobSha`, `newGitBlobSha`). Kebab-case them before
+  mapping, as in Phase 1. The jar `Review` and `Delta` types have no blob-SHA properties. Unknown properties are
+  ignored, so read the SHAs off the JSON before mapping those types.
+- A live `Document` is a buffer, even when it is unmodified: `{id: <uuid>, rel-path, content: document.text}`. The hash
+  is the UTF-8 git blob SHA of that string, which is the text the annotator and Code Vision display.
+- A path with no `Document` is a disk file: `{rel-path}` only. The server then omits `id` on `fileReview` and
+  `deltaReview`. `reviewFailed` always includes the `id` key, and it is null when the request had none.
+- Buffer results match on `id`. The git-blob SHA must then equal the SHA of the buffer that is still current. A newer
+  submit for that path, a closed editor, or an edited document drops the old id.
+- Id-less results are the disk `reviewFiles` replies and, in Phase 3, the watch replies. Accept one only when its
+  git-blob SHA equals the current bytes: raw file bytes when no dirty document is showing that file, UTF-8 document
+  text when a dirty document is. Drop an id-less result with no SHA. A missing SHA does not by itself reject an id
+  match.
+- The git blob SHA is `sha1("blob " + byteLength + "\0" + bytes)` over the bytes the server hashed. Buffer content is
+  UTF-8. Disk content is the raw file bytes.
+- An unsupported extension produces neither a review nor `reviewFailed`. Keep filtering with `isFileSupported` /
+  `isPathSupportedForReview`, and do not wait for a result per file.
+- `reviewFailed` with an id completes that buffer submission and does not clear a newer submission for the path.
+  `id: null` is logged and clears only the in-flight disk submit for that path.
+- A `deltaReview` whose `result` is null is stored as a cache hit with a null delta, so Code Vision does not send the
+  file again. `DeltaCacheService.getAll()` already hides null deltas, so the monitor does not list them.
+- The monitor is fed from accepted `deltaReview`s written into the existing delta cache. `getCachedDelta` stops calling
+  `getBranchCreationCommitCode`. There is no client-side baseline review and no `reviewBaseline`.
+- `CsIdeClient.review`, `delta` and `reviewDelta` stay for the benchmarks and the Phase 1 live contract. The review
+  path does not call them. ACE `fns-to-refactor` and `refactor` stay on requests and are refreshed from the presented
+  review and delta.
+- Every server notification, including those after `cs-ide/start`, is delivered to registered handlers. `cs-ide/start`
+  still completes startup. Handlers run off the JSON-RPC reader thread and must not call `request` or `notify` on it.
+  A dead session clears in-flight submits so the same content can be sent again after respawn.
+- Progress UI follows `reviewProgress` (`{count, done, files}`, no repository). `count: 0` clears it. Remove the
+  per-file `withBackgroundProgress` indicators from the review path. The title while work remains is
+  `CodeScene analysis (N remaining)`.
+- `PeriodicChangeListerService` keeps its 9s poll until Phase 3. It does not send `reviewFiles` again for a file whose
+  current git-blob SHA was already accepted, so an unchanged poll does not raise `reviewProgress`. That is the fix for
+  the progress indicator that Phase 1 saw every 6–9s. Phase 3 replaces the poller; it does not have to redesign the
+  indicator.
+
+`CachedReviewService` and `PathBasedReviewHandler` keep their entry points. Their review and delta bodies are replaced
+by this pipeline. Phase 4 still deletes the baseline-resolution code; Phase 2 only stops calling it.
 
 ### Phase 3: watch and inventory
 
 - One `watchFiles` per git root with `relative-paths` from the project's content roots inside it (`.` when a content root
   is the repo root). Re-send the full list on root changes; `stopWatchFiles` on project close.
 - `watchInventoryChanged` replaces the cached file set wholesale; `getWatchInventory` after a restart and after HEAD moves.
-- Accept id-less results (watch path) after a SHA check; detect a lost watch via `getWatchInventory`.
+- Watch results are id-less. Phase 2 already accepts id-less `fileReview` and `deltaReview` after the git-blob SHA
+  check; Phase 3 uses that matcher and does not add a second one. Detect a lost watch via `getWatchInventory`.
 - Keep `PeriodicChangeListerService` until the server inventory matches `Git4IdeaChangeLister` on the existing
   feature-branch tests.
 - macOS JNA: keep the default JNA unpack (the Phase 1 spike passed with it; see "macOS go/no-go").
@@ -196,6 +245,9 @@ removed from the branch after the run.
   set.
 - Platform services keep their existing tests; services that called the jar statically get no new platform tests
   because their logic moves into core.
+- Phase 2 adds unit tests for the git blob SHA, notification parsing, pipeline correlation, `reviewFiles` JSON and the
+  delta-cache lookup, plus one live `reviewFiles` test against the jar. The platform cut-over is smoke-tested with
+  `runIde`.
 
 ## Non-goals
 
