@@ -6,6 +6,7 @@ import com.codescene.jetbrains.core.cli.CsIdeServer
 import com.codescene.jetbrains.core.cli.CsIdeTransport
 import com.codescene.jetbrains.core.cli.SystemCsIdeProcessFactory
 import com.codescene.jetbrains.platform.util.Log
+import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -22,6 +23,18 @@ class CsIdeServerService : Disposable {
     private val csIdeClient = CsIdeClient(CsIdeTransport(server::request))
 
     fun client(): CsIdeClient = csIdeClient
+
+    fun notify(
+        method: String,
+        params: JsonNode,
+    ) {
+        server.notify(method, params)
+    }
+
+    fun addNotificationHandler(handler: (String, JsonNode) -> Unit): AutoCloseable =
+        server.addNotificationHandler(handler)
+
+    fun addSessionListener(listener: () -> Unit): AutoCloseable = server.addSessionListener(listener)
 
     override fun dispose() {
         server.close()
