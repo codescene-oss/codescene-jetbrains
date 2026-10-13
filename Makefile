@@ -1,3 +1,4 @@
+# Gradle and make recipes need JDK 17 on JAVA_HOME; newer JDKs can fail Kotlin DSL parsing before jvmToolchain applies.
 BB := bb
 ifeq ($(OS),Windows_NT)
 NULL := NUL
@@ -107,4 +108,8 @@ else
 endif
 
 rm-nul:
+ifeq ($(OS),Windows_NT)
+	@powershell -NoProfile -ExecutionPolicy Bypass -File .github/rm-nul.ps1 > $(NULL) 2>&1
+else
 	@rm -f NUL
+endif

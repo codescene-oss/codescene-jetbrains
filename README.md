@@ -111,6 +111,9 @@ git clone git@github.com:empear-analytics/codescene-jetbrains.git
 After opening your project in *IntelliJ IDEA Community Edition* or *IntelliJ IDEA Ultimate*, the next step is to set the
 proper SDK to Java in version `17` within the [Project Structure settings](https://www.jetbrains.com/help/idea/project-settings-and-structure.html).
 
+For `make` and `./gradlew` from a terminal (Windows, macOS, or Linux), set `JAVA_HOME` to a JDK 17 install as well.
+Gradle runs on that JVM before the build’s `jvmToolchain(17)` applies, and newer JDK versions can prevent the build from starting.
+
 Project Structure — SDK
 
 ### Build the project
