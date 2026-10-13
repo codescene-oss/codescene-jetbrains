@@ -128,7 +128,7 @@ You can also run the build task from the Gradle menu in your IDE.
 
 ### Make targets (requires Babashka)
 
-The Makefile provides development targets for build, test, format, and CodeScene delta analysis. [Babashka](https://babashka.org) must be installed first.
+The Makefile provides development targets for build, test, and format. [Babashka](https://babashka.org) must be installed first.
 
 
 | Target                                  | Description                                        |
@@ -137,9 +137,8 @@ The Makefile provides development targets for build, test, format, and CodeScene
 | `make test`                             | Run all tests                                      |
 | `make format`                           | Format all Kotlin files with ktlint (both modules) |
 | `make format-check`                     | Check format of all Kotlin files                   |
-| `make delta`                            | Run CodeScene delta analysis (requires `cs` CLI)   |
 | `make install-cli`                      | Install CodeScene CLI (`cs`)                       |
-| `make iter`                             | Run formatting, analysis, build, and tests         |
+| `make iter`                             | Run formatting, checks, build, and tests             |
 | `make release BUMP=patch|minor|major`   | Prepare a stable release commit and tag            |
 | `make test-release [BUMP=minor|major]`  | Create a GitHub-only tagged test release            |
 | `make test-release-script`              | Test the release tooling and tag validation        |

@@ -8,7 +8,7 @@ NULL := /dev/null
 IDEA_LOG := build/idea-sandbox/*/log/idea.log
 endif
 
-.PHONY: install-cli check-bb build test benchmarks format format-check delta iter coverage-summary release test-release test-release-script class-size-mine run-ide kill-ide logs rm-nul
+.PHONY: install-cli check-bb build test benchmarks format format-check iter coverage-summary release test-release test-release-script class-size-mine run-ide kill-ide logs rm-nul
 
 install-cli: check-bb
 	@$(BB) -f .github/install-cli.clj
@@ -63,9 +63,6 @@ else
 	@$(BB) -f .github/run-quiet.clj format-check.log "gradle ktlintCheck" ./gradlew --console=plain -PktlintFailOnError=true ktlintCheck
 endif
 
-delta: check-bb install-cli
-	@$(BB) -f .github/run-quiet.clj delta.log "cs delta" cs delta master --error-on-warnings
-
 coverage-summary: check-bb
 	@$(BB) -f .github/coverage-summary.clj
 
@@ -98,7 +95,7 @@ else
 	./gradlew runIde
 endif
 
-iter: format format-check class-size-mine delta test-release-script test
+iter: format format-check class-size-mine test-release-script test
 
 logs:
 ifeq ($(OS),Windows_NT)
