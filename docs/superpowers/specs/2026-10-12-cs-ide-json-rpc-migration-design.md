@@ -169,9 +169,10 @@ Wire, checked against `ide_server.clj`, `workspace.clj`, `workspace/files.clj` a
 - Buffer results match on `id`. The git-blob SHA must then equal the SHA of the buffer that is still current. A newer
   submit for that path, a closed editor, or an edited document drops the old id.
 - Id-less results are the disk `reviewFiles` replies and, in Phase 3, the watch replies. Accept one only when its
-  git-blob SHA equals the current bytes: raw file bytes when no dirty document is showing that file, UTF-8 document
-  text when a dirty document is. Drop an id-less result with no SHA. A missing SHA does not by itself reject an id
-  match.
+  git-blob SHA equals the current bytes: the UTF-8 text of the loaded `Document` when one is loaded for that file,
+  otherwise the raw file bytes. (A loaded `Document` is always a buffer, see above; an earlier draft said "dirty
+  document", which contradicted that rule.) Drop an id-less result with no SHA, except the null-result `deltaReview`
+  that Phase 3 pairs with its review. A missing SHA does not by itself reject an id match.
 - The git blob SHA is `sha1("blob " + byteLength + "\0" + bytes)` over the bytes the server hashed. Buffer content is
   UTF-8. Disk content is the raw file bytes.
 - An unsupported extension produces neither a review nor `reviewFailed`. Keep filtering with `isFileSupported` /
@@ -193,27 +194,59 @@ Wire, checked against `ide_server.clj`, `workspace.clj`, `workspace/files.clj` a
   `CodeScene analysis (N remaining)`.
 - `PeriodicChangeListerService` keeps its 9s poll until Phase 3. It does not send `reviewFiles` again for a file whose
   current git-blob SHA was already accepted, so an unchanged poll does not raise `reviewProgress`. That is the fix for
-  the progress indicator that Phase 1 saw every 6–9s. Phase 3 replaces the poller; it does not have to redesign the
-  indicator.
+  the progress indicator that Phase 1 saw every 6–9s. Phase 3 adds the watch beside the poller and Phase 4 deletes
+  the poller; neither has to redesign the indicator.
 
 `CachedReviewService` and `PathBasedReviewHandler` keep their entry points. Their review and delta bodies are replaced
 by this pipeline. Phase 4 still deletes the baseline-resolution code; Phase 2 only stops calling it.
 
 ### Phase 3: watch and inventory
 
+Plan: `docs/superpowers/plans/2026-10-13-phase3-watch-inventory.md`. Server behaviour below was checked against
+`ide_server.clj`, `workspace.clj`, the `workspace/watch*` namespaces and the real server from the jar.
+
 - One `watchFiles` per git root with `relative-paths` from the project's content roots inside it (`.` when a content root
-  is the repo root). Re-send the full list on root changes; `stopWatchFiles` on project close.
-- `watchInventoryChanged` replaces the cached file set wholesale; `getWatchInventory` after a restart and after HEAD moves.
-- Watch results are id-less. Phase 2 already accepts id-less `fileReview` and `deltaReview` after the git-blob SHA
-  check; Phase 3 uses that matcher and does not add a second one. Detect a lost watch via `getWatchInventory`.
-- Keep `PeriodicChangeListerService` until the server inventory matches `Git4IdeaChangeLister` on the existing
-  feature-branch tests.
+  is the repo root, or contains it). Params are `{repo-root, relative-paths}`; never `baseline-revision`. A second
+  `watchFiles` for a root replaces its roots, so the IDE sends one union per git root across all open projects and
+  re-sends that full list whenever it changes. `stopWatchFiles` (`{repo-root}`) goes out when the last project using the
+  root closes or is disposed; it never starts a server.
+- `watchInventoryChanged` replaces the project's file set for that root wholesale; each project keeps only paths inside
+  its own scope. A new watch always pushes an inventory (even an empty one) before its reviews, so after a restart the
+  re-sent `watchFiles` brings a fresh push. `getWatchInventory` confirms: it is called when no push arrived within 10 s
+  of a `watchFiles`, a scope change or a HEAD move, and after an empty push. It is not sent right after `watchFiles`,
+  because the server handles both concurrently and can answer "not watched". A fetch result is dropped when a push for
+  the root arrived after the fetch was issued.
+- Watch results are id-less and go through the Phase 2 matcher; there is no second one. A result for a path the plugin
+  never submitted is checked against the file's current bytes (loaded document text, else the raw bytes read from
+  disk, not the VFS). An id-less result is dropped while a buffer for that path is in flight.
+- A file restored to its baseline gets a `deltaReview` with `result: null` and no SHAs. It is accepted when the path's
+  last accepted id-less `fileReview` is still waiting for its delta and the current bytes still hash to that review's
+  SHA. The null delta then hides the file in the monitor.
+- Detect a lost watch via `getWatchInventory` (`Repository is not watched`), including after the server stops a watch
+  on its own (empty push). A lost root is re-watched at most once a minute.
+- Session loss: re-send `watchFiles` for every wanted root when the next session starts, or retry 2 s after the loss
+  and then after the server's remaining backoff (2–30 s) until it succeeds or no project wants a watch. No
+  acknowledgement.
+- HEAD moves (branch or revision of a git root): clear accepted pipeline state for that root and resubmit unsaved
+  documents as buffers, then confirm the inventory. The server rebuilds its own merge-base and inventory.
+- Inventory consumers: the monitor hides entries under a watched root that are neither in the inventory nor open, and
+  re-includes inventory paths. While a project watches the poller's git root, the poller skips `StaleItemCleanup`.
+- The server lists every untracked supported file; `Git4IdeaChangeLister` lists at most five per directory. That
+  superset is accepted.
+- Threads: notifications, session events, request completions, message-bus listeners and timers only enqueue. One
+  coroutine per project and one for the application drain those queues on `Dispatchers.IO`; nothing runs on the
+  reader thread or the EDT.
+- Progress: the Phase 2 indicator stays the only one. An idle watch sends no `reviewProgress`.
+- Keep `PeriodicChangeListerService` (its 9 s `submitPaths`) until the server inventory matches `Git4IdeaChangeLister`
+  on the existing feature-branch scenarios. `WatchInventoryParityLiveTest` pins those scenarios against the real
+  server; Phase 4 deletes the poller once it passes in CI.
 - macOS JNA: keep the default JNA unpack (the Phase 1 spike passed with it; see "macOS go/no-go").
 
 ### Phase 4: legacy deletion
 
 - Git and file observation: `PeriodicChangeListerService`, `GitChangeObserver*`, `Git4IdeaChangeLister`, `VfsEventBridge`,
   `GitRepoStateListener`, `SavedFilesTrackerAdapter`, `CodesceneRepoFilesListener`, `GitIgnoreFilesListener`, `StaleItemCleanup`.
+  The poller and `StaleItemCleanup` go once `WatchInventoryParityLiveTest` passes in CI.
 - Baseline: `MainLineBranchResolver`, `ClosestMainLineMergeBase`, `CodesceneRepoConfig` baseline parsing, and the baseline
   parts of `Git4IdeaGitService`.
 - Caches keyed by baseline: `BaselineReviewCacheService`, `CliCacheUtils`.
@@ -248,6 +281,11 @@ removed from the branch after the run.
 - Phase 2 adds unit tests for the git blob SHA, notification parsing, pipeline correlation, `reviewFiles` JSON and the
   delta-cache lookup, plus one live `reviewFiles` test against the jar. The platform cut-over is smoke-tested with
   `runIde`.
+- Phase 3 adds unit tests for server session ids, the watch JSON, scopes, the IDE-wide watch registry, the per-project
+  inventory state, watch-result acceptance and monitor sync, plus two live tests against the jar: `WatchLiveTest`
+  (push before results, disk-byte SHA, idle without progress, null delta on restore, stop) and
+  `WatchInventoryParityLiveTest`. The platform wiring is smoke-tested with `runIde`, split into checks the user makes in
+  the IDE and checks the coordinator makes from the shell and `idea.log`.
 
 ## Non-goals
 
