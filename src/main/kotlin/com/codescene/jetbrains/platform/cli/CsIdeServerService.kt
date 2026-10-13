@@ -5,6 +5,7 @@ import com.codescene.jetbrains.core.cli.CsIdeLaunch
 import com.codescene.jetbrains.core.cli.CsIdeServer
 import com.codescene.jetbrains.core.cli.CsIdeTransport
 import com.codescene.jetbrains.core.cli.SystemCsIdeProcessFactory
+import com.codescene.jetbrains.core.cli.WatchClient
 import com.codescene.jetbrains.platform.util.Log
 import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.Disposable
@@ -21,8 +22,22 @@ class CsIdeServerService : Disposable {
             logger = Log,
         )
     private val csIdeClient = CsIdeClient(CsIdeTransport(server::request))
+    private val watchClient =
+        WatchClient(
+            server::notifyInSession,
+            server::notifyIfRunning,
+            CsIdeTransport(server::request),
+        )
 
     fun client(): CsIdeClient = csIdeClient
+
+    fun watchClient(): WatchClient = watchClient
+
+    fun addSessionStartListener(listener: (Long) -> Unit): AutoCloseable = server.addSessionStartListener(listener)
+
+    fun liveSession(): Long = server.liveSession()
+
+    fun cooldownRemainingMs(): Long = server.cooldownRemainingMs()
 
     fun notify(
         method: String,

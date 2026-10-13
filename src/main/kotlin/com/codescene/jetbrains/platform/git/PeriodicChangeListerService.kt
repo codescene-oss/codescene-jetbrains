@@ -81,9 +81,12 @@ class PeriodicChangeListerService(
         val changedFiles = runBlocking { changeLister.getAllChangedFiles(gitRoot, wsPath, emptySet()) }
         val visibleFiles = openFilesObserver.getAllVisibleFileNames()
 
-        val removed = staleItemCleanup.cleanupStaleItems(changedFiles, visibleFiles)
-        if (removed.isNotEmpty()) {
-            Log.info("Cleaned up ${removed.size} stale items", "PeriodicChangeListerService")
+        val reviewService = WorkspaceReviewService.getInstance(project)
+        if (!reviewService.isWatched(gitRoot)) {
+            val removed = staleItemCleanup.cleanupStaleItems(changedFiles, visibleFiles)
+            if (removed.isNotEmpty()) {
+                Log.info("Cleaned up ${removed.size} stale items", "PeriodicChangeListerService")
+            }
         }
 
         Log.info("Poll found ${changedFiles.size} changed files", "PeriodicChangeListerService")

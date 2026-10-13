@@ -9,6 +9,7 @@ import com.codescene.jetbrains.platform.editor.UIRefreshService
 import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionProvider
 import com.codescene.jetbrains.platform.git.GitChangeObserverService
 import com.codescene.jetbrains.platform.git.PeriodicChangeListerService
+import com.codescene.jetbrains.platform.review.WorkspaceReviewService
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.platform.statusbar.AceStatusBarWidgetFactory
 import com.codescene.jetbrains.platform.telemetry.TelemetryService
@@ -66,6 +67,8 @@ class ProjectStartupActivity : ProjectActivity {
 
         val gitChangeObserverService = project.service<GitChangeObserverService>()
         gitChangeObserverService.start()
+
+        WorkspaceReviewService.getInstance(project).startWatching()
 
         val periodicChangeListerService = project.service<PeriodicChangeListerService>()
         periodicChangeListerService.start()

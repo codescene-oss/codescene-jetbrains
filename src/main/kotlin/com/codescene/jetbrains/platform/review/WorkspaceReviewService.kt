@@ -5,9 +5,11 @@ import com.codescene.jetbrains.core.cli.WorkspacePaths
 import com.codescene.jetbrains.core.cli.WorkspaceReviewClient
 import com.codescene.jetbrains.core.cli.WorkspaceReviewPipeline
 import com.codescene.jetbrains.core.cli.WorkspaceReviewSubmitter
+import com.codescene.jetbrains.core.git.pathCacheKey
 import com.codescene.jetbrains.platform.cli.CsIdeServerService
 import com.codescene.jetbrains.platform.git.Git4IdeaGitService
 import com.codescene.jetbrains.platform.progress.ReviewProgressIndicator
+import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.isPathSupportedForReview
 import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.Disposable
@@ -18,6 +20,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.vfs.LocalFileSystem
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -34,11 +37,19 @@ class WorkspaceReviewService(
     private val gitService = Git4IdeaGitService.getInstance(project)
     private val progressIndicator = ReviewProgressIndicator(project, scope)
     private val presenter = WorkspaceReviewPresenter(project, scope, progressIndicator)
+    private val coordinator =
+        WorkspaceWatchCoordinator(
+            project = project,
+            scope = scope,
+            enqueue = { incomingEvents.trySend(IncomingReviewEvent.Watch(it)) },
+            reseed = ::reseed,
+        )
     private val pipeline =
         WorkspaceReviewPipeline(
             WorkspaceReviewClient(csIdeServer::notify),
             presenter,
             windows = SystemInfo.isWindows,
+            observe = coordinator::observe,
         )
     private val submitter =
         WorkspaceReviewSubmitter(
@@ -69,14 +80,18 @@ class WorkspaceReviewService(
             isSupported = { isPathSupportedForReview(project, it) },
         )
     private val incomingEvents = Channel<IncomingReviewEvent>(Channel.UNLIMITED)
+    private val watchingStarted = AtomicBoolean()
 
     init {
         scope.launch {
             for (event in incomingEvents) {
                 when (event) {
-                    is IncomingReviewEvent.Notification ->
+                    is IncomingReviewEvent.Notification -> {
                         pipeline.onNotification(event.method, event.params)
+                        coordinator.onNotification(event.method, event.params)
+                    }
                     IncomingReviewEvent.SessionLost -> pipeline.sessionLost()
+                    is IncomingReviewEvent.Watch -> coordinator.handle(event.event)
                 }
             }
         }
@@ -90,6 +105,13 @@ class WorkspaceReviewService(
         csIdeServer.addSessionListener {
             incomingEvents.trySend(IncomingReviewEvent.SessionLost)
         }
+
+    fun startWatching() {
+        if (!watchingStarted.compareAndSet(false, true)) return
+        coordinator.start(this)
+    }
+
+    fun isWatched(repoRoot: String): Boolean = coordinator.isWatched(repoRoot)
 
     fun submitEditor(
         absolutePath: String,
@@ -108,7 +130,25 @@ class WorkspaceReviewService(
 
     fun activePaths(): Set<String> = pipeline.activePaths()
 
+    private fun reseed(repoRoot: String) {
+        pipeline.forgetAccepted(repoRoot)
+        val prefix = pathCacheKey(repoRoot).trimEnd('/') + "/"
+        val documents =
+            ReadAction.compute<List<Pair<String, String>>, Exception> {
+                FileDocumentManager.getInstance().unsavedDocuments.mapNotNull { document ->
+                    val file = FileDocumentManager.getInstance().getFile(document) ?: return@mapNotNull null
+                    val path = file.path
+                    if (!pathCacheKey(path).startsWith(prefix)) return@mapNotNull null
+                    if (!isPathSupportedForReview(project, path)) return@mapNotNull null
+                    path to document.text
+                }
+            }
+        documents.forEach { (path, text) -> submitter.submitEditor(path, text) }
+        Log.info("HEAD moved in $repoRoot; reseeding ${documents.size} unsaved documents")
+    }
+
     override fun dispose() {
+        coordinator.dispose()
         notificationRegistration.close()
         sessionRegistration.close()
         incomingEvents.close()
@@ -126,5 +166,9 @@ class WorkspaceReviewService(
         ) : IncomingReviewEvent
 
         data object SessionLost : IncomingReviewEvent
+
+        data class Watch(
+            val event: WorkspaceWatchCoordinator.WatchEvent,
+        ) : IncomingReviewEvent
     }
 }

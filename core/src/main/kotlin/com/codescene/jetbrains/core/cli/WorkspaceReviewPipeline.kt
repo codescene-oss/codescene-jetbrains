@@ -82,7 +82,7 @@ class WorkspaceReviewPipeline(
     }
 
     fun cancel(absolutePath: String) {
-        synchronized(lock) { states.remove(absolutePath) }
+        synchronized(lock) { states.remove(pathKey(absolutePath)) }
     }
 
     fun sessionLost() {
@@ -93,16 +93,14 @@ class WorkspaceReviewPipeline(
     fun forgetAccepted(repoRoot: String) {
         synchronized(lock) {
             states.replaceAll { _, state ->
-                if (WorkspacePaths.sameRoot(state.current.repoRoot, repoRoot, windows)) {
-                    state.copy(accepted = false, deltaAccepted = false)
-                } else {
-                    state
-                }
+                val sameRoot = WorkspacePaths.sameRoot(state.current.repoRoot, repoRoot, windows)
+                if (sameRoot) state.copy(accepted = false, deltaAccepted = false) else state
             }
         }
     }
 
-    fun activePaths(): Set<String> = synchronized(lock) { states.filterValues { it.inFlight }.keys.toSet() }
+    fun activePaths(): Set<String> =
+        synchronized(lock) { states.values.filter { it.inFlight }.map { it.current.absolutePath }.toSet() }
 
     fun onNotification(
         method: String,
@@ -122,7 +120,7 @@ class WorkspaceReviewPipeline(
         now: Long,
     ): Submission? {
         val sha = GitBlobSha.ofString(buffer.content)
-        if (!WorkspaceReviewMatching.shouldSend(states[buffer.absolutePath], sha, buffer = true)) return null
+        if (!WorkspaceReviewMatching.shouldSend(states[pathKey(buffer.absolutePath)], sha, buffer = true)) return null
         val relPath = WorkspacePaths.normalizeRel(buffer.relPath)
         return track(SubmittedBuffer(buffer.absolutePath, repoRoot, relPath, sha, now, newId(), buffer.content))
     }
@@ -132,13 +130,14 @@ class WorkspaceReviewPipeline(
         disk: DiskSubmission,
         now: Long,
     ): Submission? {
-        if (!WorkspaceReviewMatching.shouldSend(states[disk.absolutePath], disk.gitBlobSha, buffer = false)) return null
+        val state = states[pathKey(disk.absolutePath)]
+        if (!WorkspaceReviewMatching.shouldSend(state, disk.gitBlobSha, buffer = false)) return null
         val relPath = WorkspacePaths.normalizeRel(disk.relPath)
         return track(SubmittedDisk(disk.absolutePath, repoRoot, relPath, disk.gitBlobSha, now))
     }
 
     private fun track(submission: Submission): Submission {
-        states[submission.absolutePath] = PathState(submission, inFlight = true, accepted = false)
+        states[pathKey(submission.absolutePath)] = PathState(submission, inFlight = true, accepted = false)
         return submission
     }
 
@@ -146,9 +145,12 @@ class WorkspaceReviewPipeline(
         submission: Submission,
         change: (PathState) -> PathState,
     ) {
-        val state = states[submission.absolutePath] ?: return
-        if (state.current === submission) states[submission.absolutePath] = change(state)
+        val key = pathKey(submission.absolutePath)
+        val state = states[key] ?: return
+        if (state.current === submission) states[key] = change(state)
     }
+
+    private fun pathKey(absolutePath: String) = WorkspacePaths.rootKey(absolutePath, windows)
 
     private fun find(key: NoticeKey): PathState? =
         states.values.firstOrNull { WorkspaceReviewMatching.targets(it.current, key, windows) }
@@ -182,8 +184,8 @@ class WorkspaceReviewPipeline(
                     WorkspaceReviewMatching.observedState(state, observed, key.relPath, clock())
                 }
             if (!WorkspaceReviewMatching.acceptsResult(target.current, key, sha)) return null
-            state?.let { states.remove(it.current.absolutePath) }
-            states[target.current.absolutePath] = change(target)
+            state?.let { states.remove(pathKey(it.current.absolutePath)) }
+            states[pathKey(target.current.absolutePath)] = change(target)
             target.current
         }
 
