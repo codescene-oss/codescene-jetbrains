@@ -202,5 +202,5 @@ Two commits. Steps 1–2 add the service without wiring it in; steps 3–6 cut o
 - [ ] `make iter` (10-minute timeout).
 - [ ] CodeScene MCP `analyze_change_set` against `master`; fix any Code Health regressions.
 - [ ] Re-run the Task 7 smoke test on the integration tip. Dock-launched macOS PATH and proxy checks are listed for a Mac and a proxy environment.
-- [ ] Decide whether `docs/superpowers/` ships to master. `docs` is gitignored and these files were force-added; if they should not ship, remove them in a final commit before the PR.
+- [x] `docs/superpowers/` does not ship to master. The branch is the feature branch for all phases; the docs are removed in a final commit before the whole project merges.
 - [ ] `DECISIONLOG.md` entry and `CHANGELOG.md` Unreleased line. Commit `docs: record cs-ide JSON-RPC decision`.

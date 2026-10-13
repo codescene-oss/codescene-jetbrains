@@ -4,6 +4,10 @@ Use this document to assign **one package per agent**: one branch, **one commit*
 
 **Integration branch:** `feature/cs-12077-cs-ide-json-rpc`
 
+**Branch strategy:** this is the feature branch for the whole CS-12077 project (all phases). Nothing merges to master until every planned phase is done. Later phases add their packages to this branch the same way. Bring master changes in with `git merge origin/master` (never rebase or force-push the shared branch). `docs/superpowers/` stays on this branch and is removed in a final commit just before the project merges to master.
+
+**Test releases:** from a clean checkout of this branch, `make test-release BUMP=minor` (or `bb --classpath .github -m release test minor`) creates an annotated tag `v0.6.0-test.<sha>` on HEAD; `git push origin <tag>` runs the Release workflow, which builds the plugin and creates a GitHub pre-release with the zip without publishing to the marketplace. It requires `pluginVersion` to equal the latest stable tag reachable from HEAD (currently `v0.5.8`).
+
 **Gradle:** set `JAVA_HOME` to JDK 17 before any `./gradlew` (Gradle 8.14 does not run on JDK 25).
 
 **Every package:**
@@ -379,7 +383,8 @@ One commit: chore: add cs-ide macOS watcher spike script.
 1. DONE — Mac spike: PASS with the default JNA unpack and with the IDE's bundled `libjnidispatch` (macOS 26.4 arm64, IntelliJ IDEA 2026.2.3, JBR 25.0.4, `disable-library-validation` entitlement). Phase 3 keeps the default unpack. Report in `.github/cs-ide-macos-spike-report.md`; summary in the spec's "macOS go/no-go".
 2. DONE — Spike script, handoff script and handoff prompt removed from the branch; the report stays as the record.
 3. DONE — Proxy check on Windows with mitmproxy as the IDE's manual HTTP proxy: without trusting its CA, preflight failed with PKIX (traffic went through the proxy); after adding the CA under Server Certificates and restarting the child, preflight, refactor and telemetry succeeded through the proxy (200/202). SOCKS, PAC, auto-detect and proxy authentication are not translated (known limitation).
-4. Decide whether `docs/superpowers/` ships to master.
+4. DONE — `docs/superpowers/` does not ship to master; it is removed just before the whole project merges (see "Branch strategy").
+5. Dock-launched macOS IDE with a test release installed: reviews work and the server finds git through the shell PATH (owner: Martin).
 
 ### Scope
 
@@ -392,7 +397,7 @@ One commit: chore: add cs-ide macOS watcher spike script.
 - [ ] `analyze_change_set` — no unaddressed Code Health regressions.
 - [ ] Re-run the PKG-5b smoke checklist on the integration tip; PR description lists the results plus the Mac and proxy checks still pending.
 - [ ] Coordinator has run `.github/cs-ide-macos-spike.clj` on a Mac and recorded PASS/FAIL in the PR (gates Phase 3, not this PR).
-- [ ] Coordinator decides whether `docs/superpowers/` ships to master. `docs` is gitignored and these files were force-added; if they should not ship, remove them in a final commit before opening the PR.
+- [x] `docs/superpowers/` does not ship to master. `docs` is gitignored and these files were force-added; they are removed in a final commit before the whole project merges.
 - [ ] Single commit for docs/decision log unless iter fixes require a separate fix commit (prefer one docs commit + fix commits only if necessary).
 
 ### Agent prompt
