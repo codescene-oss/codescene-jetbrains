@@ -8,6 +8,11 @@ import com.codescene.jetbrains.core.delta.DeltaCacheQuery
 interface IDeltaCacheService {
     fun get(query: DeltaCacheQuery): Pair<Boolean, Delta?>
 
+    fun getByCurrentContent(
+        filePath: String,
+        currentContent: String,
+    ): Pair<Boolean, Delta?>
+
     fun put(entry: DeltaCacheEntry)
 
     fun setIncludeInCodeHealthMonitor(
