@@ -27,7 +27,7 @@ Use this document to assign **one package per agent**: one branch, **one commit*
    ↓
 [DONE] PKG-2 supervisor (needs PKG-1)
    ↓
-[DONE] PKG-4 live contract  ∥  [DONE] PKG-5a platform service  ∥  PKG-6 benchmarks   (each needs PKG-1, 2, 3)
+[DONE] PKG-4 live contract  ∥  [DONE] PKG-5a platform service  ∥  [DONE] PKG-6 benchmarks   (each needs PKG-1, 2, 3)
    ↓
 PKG-5b platform cut-over (needs PKG-5a; PKG-4 recommended first)
    ↓
@@ -293,7 +293,7 @@ One commit: feat: route analysis through the cs-ide JSON-RPC server.
 
 ---
 
-## PKG-6 — Benchmarks
+## PKG-6 — Benchmarks (DONE)
 
 | Field | Value |
 | --- | --- |
@@ -301,6 +301,7 @@ One commit: feat: route analysis through the cs-ide JSON-RPC server.
 | **Base** | **PKG-1, PKG-2, PKG-3** merged (parallel with PKG-4/5a) |
 | **Commit message** | `perf: benchmark the cs-ide RPC path` |
 | **Plan tasks** | Task 8 |
+| **Status** | DONE — `ee8ffc6`. The jar path reaches the forked JVM through a lazy `jmh.jvmArgs` provider; `ReviewDeltaFlowBenchmark` keeps the review-params delta the plugin uses. The build has no `-Pjmh.includes`; narrow a local run with an init script that sets `jmh { includes = [".*Name.*"] }`. |
 
 ### Scope
 
