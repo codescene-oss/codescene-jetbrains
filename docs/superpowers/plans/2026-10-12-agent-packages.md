@@ -27,7 +27,7 @@ Use this document to assign **one package per agent**: one branch, **one commit*
    ↓
 [DONE] PKG-2 supervisor (needs PKG-1)
    ↓
-[DONE] PKG-4 live contract  ∥  PKG-5a platform service  ∥  PKG-6 benchmarks   (each needs PKG-1, 2, 3)
+[DONE] PKG-4 live contract  ∥  [DONE] PKG-5a platform service  ∥  PKG-6 benchmarks   (each needs PKG-1, 2, 3)
    ↓
 PKG-5b platform cut-over (needs PKG-5a; PKG-4 recommended first)
    ↓
@@ -214,7 +214,7 @@ One commit: test(cli): replace ExtensionAPI integration tests with live cs-ide c
 
 ---
 
-## PKG-5a — Platform server service (not wired)
+## PKG-5a — Platform server service (not wired) (DONE)
 
 | Field | Value |
 | --- | --- |
@@ -222,6 +222,7 @@ One commit: test(cli): replace ExtensionAPI integration tests with live cs-ide c
 | **Base** | Integration branch with **PKG-1, PKG-2, PKG-3** merged |
 | **Commit message** | `feat: add cs-ide server service and launch environment provider` |
 | **Plan tasks** | Task 7, steps 1–2 |
+| **Status** | DONE — `3eae3d7`. `CsIdeServerService.getInstance().client()` is ready for PKG-5b. The launch spec passes `System.getenv()` as the process environment so the shell environment layers over it. |
 
 ### Scope (create only)
 

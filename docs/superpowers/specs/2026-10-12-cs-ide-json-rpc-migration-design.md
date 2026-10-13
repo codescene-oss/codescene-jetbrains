@@ -41,8 +41,9 @@ passes on JBR 21 (Windows, macOS) and JBR 25 (Linux).
 - A missing Java executable fails with an error naming the path.
 - stdin carries only JSON-RPC frames; stdout is read only as JSON-RPC; stderr is logged and its last 4000 chars are kept
   for exit errors.
-- The child environment starts from IntelliJ's `EnvironmentUtil.getEnvironmentMap()` (the user's shell environment), not
-  the IDE process environment, so a Dock-launched macOS IDE still finds Homebrew tools.
+- The child environment is IntelliJ's `EnvironmentUtil.getEnvironmentMap()` (the user's shell environment) layered over
+  the IDE process environment, so a Dock-launched macOS IDE still finds Homebrew tools, and a failed shell-environment
+  read still leaves a usable `PATH`.
 - The directory of Git4Idea's configured git executable is moved to the front of `PATH` (any existing occurrence is
   removed), because the server spawns `git` and must use the IDE's git. Entries are compared as trimmed, unquoted
   strings (case-insensitive on Windows), never parsed as paths, so quoted or unusual `PATH` entries cannot break the launch.
