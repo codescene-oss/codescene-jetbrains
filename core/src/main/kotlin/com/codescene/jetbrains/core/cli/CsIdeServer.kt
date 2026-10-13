@@ -38,19 +38,14 @@ class CsIdeServer(
     @Volatile
     private var metadata: CsIdeServerMetadata? = null
     private val stderrTail = StringBuilder()
+    private val hub = CsIdeNotificationHub(logger)
 
     fun request(
         method: String,
         params: JsonNode,
-    ): CompletableFuture<JsonNode> {
-        if (closed.get()) {
-            return failed(CsIdeUnavailableException("cs-ide server is closed"))
-        }
-        val cooldown = backoff.remainingMs(clock())
-        if (cooldown > 0) {
-            return failed(CsIdeUnavailableException("cs-ide server is unavailable (retry in ${cooldown}ms)"))
-        }
-        return try {
+    ): CompletableFuture<JsonNode> =
+        try {
+            ensureAvailable()
             val future = ensureStarted().request(method, params)
             future.whenComplete { _, error ->
                 if (error == null) backoff.reset()
@@ -59,7 +54,24 @@ class CsIdeServer(
         } catch (e: CsIdeUnavailableException) {
             failed(e)
         }
+
+    fun notify(
+        method: String,
+        params: JsonNode,
+    ) {
+        ensureAvailable()
+        val rpc = ensureStarted()
+        try {
+            rpc.notify(method, params)
+        } catch (e: Exception) {
+            throw CsIdeUnavailableException("cs-ide server failed to send $method: ${e.message}", e)
+        }
+        backoff.reset()
     }
+
+    fun addNotificationHandler(handler: (String, JsonNode) -> Unit): AutoCloseable = hub.addHandler(handler)
+
+    fun addSessionListener(listener: () -> Unit): AutoCloseable = hub.addSessionListener(listener)
 
     fun metadata(): CsIdeServerMetadata? = metadata
 
@@ -69,6 +81,13 @@ class CsIdeServer(
         if (!closed.compareAndSet(false, true)) return
         pendingStart?.completeExceptionally(CsIdeUnavailableException("cs-ide server is closed"))
         shutDown(synchronized(lock) { detach() }, graceful = true)
+        hub.sessionLost()
+    }
+
+    private fun ensureAvailable() {
+        if (closed.get()) throw CsIdeUnavailableException("cs-ide server is closed")
+        val cooldown = backoff.remainingMs(clock())
+        if (cooldown > 0) throw CsIdeUnavailableException("cs-ide server is unavailable (retry in ${cooldown}ms)")
     }
 
     private fun ensureStarted(): JsonRpcConnection =
@@ -81,6 +100,7 @@ class CsIdeServer(
                     detach()
                 }
             shutDown(stale, graceful = false)
+            if (stale.process != null) hub.sessionLost()
             startProcess()
         }
 
@@ -145,14 +165,19 @@ class CsIdeServer(
         params: JsonNode,
         startSignal: CompletableFuture<Unit>,
     ) {
-        if (method != "cs-ide/start") return
+        val isStart = method == START_METHOD
+        if (isStart) recordMetadata(params)
+        hub.dispatch(method, params)
+        if (isStart) startSignal.complete(Unit)
+    }
+
+    private fun recordMetadata(params: JsonNode) {
         metadata =
             CsIdeServerMetadata(
                 sha = RpcJson.text(params, "sha").orEmpty(),
                 version = RpcJson.text(params, "version").orEmpty(),
             )
         logger.info("cs-ide server started: ${metadata?.version} (${metadata?.sha})", SERVICE)
-        startSignal.complete(Unit)
     }
 
     private fun onTransportClosed(
@@ -167,6 +192,7 @@ class CsIdeServer(
                 detach()
             }
         shutDown(detached, graceful = false)
+        hub.sessionLost()
     }
 
     private fun onProcessExit(
@@ -182,6 +208,7 @@ class CsIdeServer(
                 detach()
             }
         shutDown(detached, graceful = false)
+        hub.sessionLost()
     }
 
     private fun detach(): RunningServer {
@@ -240,6 +267,7 @@ class CsIdeServer(
 
     private companion object {
         private const val SERVICE = "CsIdeServer"
+        private const val START_METHOD = "cs-ide/start"
         private const val STDERR_TAIL_LIMIT = 4_000
     }
 }
