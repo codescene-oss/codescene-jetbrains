@@ -27,7 +27,7 @@ Use this document to assign **one package per agent**: one branch, **one commit*
    ↓
 [DONE] PKG-2 supervisor (needs PKG-1)
    ↓
-PKG-4 live contract  ∥  PKG-5a platform service  ∥  PKG-6 benchmarks   (each needs PKG-1, 2, 3)
+[DONE] PKG-4 live contract  ∥  PKG-5a platform service  ∥  PKG-6 benchmarks   (each needs PKG-1, 2, 3)
    ↓
 PKG-5b platform cut-over (needs PKG-5a; PKG-4 recommended first)
    ↓
@@ -178,7 +178,7 @@ One commit: feat(cli): add typed cs-ide client.
 
 ---
 
-## PKG-4 — Live contract test
+## PKG-4 — Live contract test (DONE)
 
 | Field | Value |
 | --- | --- |
@@ -186,6 +186,7 @@ One commit: feat(cli): add typed cs-ide client.
 | **Base** | Integration branch with **PKG-1, PKG-2, PKG-3** merged |
 | **Commit message** | `test(cli): replace ExtensionAPI integration tests with live cs-ide contract` |
 | **Plan tasks** | Task 6 |
+| **Status** | DONE — `1a3077e`. Seven live tests in `CsIdeLiveContractTest` (fixtures in `CsIdeLiveContractFixtures`); a null rules delta counts as no degradation instead of skipping the test. |
 
 ### Scope
 
