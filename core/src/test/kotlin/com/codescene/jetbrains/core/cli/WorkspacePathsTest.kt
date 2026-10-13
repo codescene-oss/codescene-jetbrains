@@ -2,6 +2,7 @@ package com.codescene.jetbrains.core.cli
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -45,5 +46,35 @@ class WorkspacePathsTest {
     @Test
     fun `sameRoot distinguishes different repositories`() {
         assertFalse(WorkspacePaths.sameRoot("C:\\repo", "C:\\other", windows = true))
+    }
+
+    @Test
+    fun `rootKey normalizes slashes and trailing slash on Windows`() {
+        assertEquals("c:/repo", WorkspacePaths.rootKey("C:\\Repo\\", windows = true))
+    }
+
+    @Test
+    fun `rootKey keeps case elsewhere`() {
+        assertEquals("/Repo", WorkspacePaths.rootKey("/Repo/", windows = false))
+    }
+
+    @Test
+    fun `relativeTo returns dot for the root itself`() {
+        assertEquals(".", WorkspacePaths.relativeTo("/repo", "/repo", windows = false))
+    }
+
+    @Test
+    fun `relativeTo returns the path under the root`() {
+        assertEquals("src/A.kt", WorkspacePaths.relativeTo("/repo", "/repo/src/A.kt", windows = false))
+    }
+
+    @Test
+    fun `relativeTo rejects sibling prefixes`() {
+        assertNull(WorkspacePaths.relativeTo("/repo", "/repo2/A.kt", windows = false))
+    }
+
+    @Test
+    fun `relativeTo ignores case on Windows`() {
+        assertEquals("Src", WorkspacePaths.relativeTo("C:\\Repo", "c:/repo/Src", windows = true))
     }
 }
