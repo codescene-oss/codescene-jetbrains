@@ -29,7 +29,7 @@ Use this document to assign **one package per agent**: one branch, **one commit*
    ↓
 [DONE] PKG-4 live contract  ∥  [DONE] PKG-5a platform service  ∥  [DONE] PKG-6 benchmarks   (each needs PKG-1, 2, 3)
    ↓
-PKG-5b platform cut-over (needs PKG-5a; PKG-4 recommended first)
+[DONE] PKG-5b platform cut-over (needs PKG-5a; PKG-4 recommended first)
    ↓
 PKG-8 verification + changelog
 ```
@@ -251,7 +251,7 @@ One commit: feat: add cs-ide server service and launch environment provider.
 
 ---
 
-## PKG-5b — Platform cut-over
+## PKG-5b — Platform cut-over (DONE)
 
 | Field | Value |
 | --- | --- |
@@ -259,6 +259,7 @@ One commit: feat: add cs-ide server service and launch environment provider.
 | **Base** | **PKG-5a** required; **PKG-4** recommended merged first |
 | **Commit message** | `feat: route analysis through the cs-ide JSON-RPC server` |
 | **Plan tasks** | Task 7, steps 3–6 |
+| **Status** | DONE — `c46c4e2`. Smoke test on Windows passed: monitor, Code Vision, docs, delta on edit, ACE on supported extensions, telemetry in monitoring, one child, kill and recover, no orphan on exit. `CsIdeLaunch.extensionApiJar()` falls back to the class resource URL because the plugin classloader leaves `codeSource` null under `runIde`. Open question for PKG-8: a progress bar for ~30 files appears every 6–9 s (`PeriodicChangeListerService` polling); compare with master to confirm it is not a regression. |
 
 ### Scope
 
