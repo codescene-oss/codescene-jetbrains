@@ -31,7 +31,7 @@ Use this document to assign **one package per agent**: one branch, **one commit*
    ↓
 [DONE] PKG-5b platform cut-over (needs PKG-5a; PKG-4 recommended first)
    ↓
-PKG-8 verification + changelog
+[DONE] PKG-8 verification + changelog
 ```
 
 PKG-3 does not depend on PKG-1 or PKG-2: `CsIdeTransport` is a `fun interface` that PKG-3 owns, and PKG-5a adapts the supervisor to it with `CsIdeTransport(server::request)`. `CsIdeServer` does not implement it.
@@ -364,7 +364,7 @@ One commit: chore: add cs-ide macOS watcher spike script.
 
 ---
 
-## PKG-8 — Verification and project records
+## PKG-8 — Verification and project records (DONE)
 
 | Field | Value |
 | --- | --- |
@@ -372,6 +372,14 @@ One commit: chore: add cs-ide macOS watcher spike script.
 | **Base** | All of PKG-1 to PKG-7 merged |
 | **Commit message** | `docs: record cs-ide JSON-RPC decision` |
 | **Plan tasks** | Task 10 |
+| **Status** | DONE — `328f5ba`. Tests, ktlint and size check pass; smoke test re-run passed on the integration tip; no in-process leftovers. CodeScene vs `origin/master` fails only on `.github/cs-ide-macos-spike.clj`, which is removed after the Mac run (below). The ~30-file progress bar is deferred to a later phase. |
+
+**Remaining coordinator steps before the PR:**
+
+1. Run `.github/cs-ide-macos-spike.clj` on a Mac with the Dock-launched IDE's JBR and record PASS/FAIL for the PR.
+2. Remove `.github/cs-ide-macos-spike.clj` in a final commit, so the branch passes the CodeScene gate and the script stays out of master.
+3. Proxy check in a proxy environment (pending).
+4. Decide whether `docs/superpowers/` ships to master.
 
 ### Scope
 
