@@ -378,7 +378,7 @@ One commit: chore: add cs-ide macOS watcher spike script.
 
 1. DONE — Mac spike: PASS with the default JNA unpack and with the IDE's bundled `libjnidispatch` (macOS 26.4 arm64, IntelliJ IDEA 2026.2.3, JBR 25.0.4, `disable-library-validation` entitlement). Phase 3 keeps the default unpack. Report in `.github/cs-ide-macos-spike-report.md`; summary in the spec's "macOS go/no-go".
 2. DONE — Spike script, handoff script and handoff prompt removed from the branch; the report stays as the record.
-3. Proxy check in a proxy environment (pending).
+3. DONE — Proxy check on Windows with mitmproxy as the IDE's manual HTTP proxy: without trusting its CA, preflight failed with PKIX (traffic went through the proxy); after adding the CA under Server Certificates and restarting the child, preflight, refactor and telemetry succeeded through the proxy (200/202). SOCKS, PAC, auto-detect and proxy authentication are not translated (known limitation).
 4. Decide whether `docs/superpowers/` ships to master.
 
 ### Scope
