@@ -28,11 +28,17 @@ internal data class SubmittedDisk(
     override val relPath: String,
     override val gitBlobSha: String,
     override val submittedAt: Long,
+    val documentText: String? = null,
 ) : Submission {
     override fun wire() = ReviewFileWire(relPath)
 }
 
-private val Submission.text: String? get() = (this as? SubmittedBuffer)?.content
+private val Submission.text: String?
+    get() =
+        when (this) {
+            is SubmittedBuffer -> content
+            is SubmittedDisk -> documentText
+        }
 
 internal fun FileReviewNotice.presentFor(
     s: Submission,
@@ -103,4 +109,32 @@ internal object WorkspaceReviewMatching {
     fun afterSessionLost(state: PathState): PathState = state.copy(inFlight = false, accepted = state.deltaAccepted)
 
     fun releasedByIdleProgress(state: PathState): Boolean = state.inFlight && state.current is SubmittedDisk
+
+    fun awaitingDelta(state: PathState?): String? {
+        if (state == null) return null
+        if (state.current !is SubmittedDisk) return null
+        if (!state.accepted || state.deltaAccepted) return null
+        return state.current.gitBlobSha
+    }
+
+    fun observedState(
+        previous: PathState?,
+        observed: ObservedFile,
+        relPath: String,
+        now: Long,
+    ): PathState {
+        val normalized = WorkspacePaths.normalizeRel(relPath)
+        val same = previous?.takeIf { it.current.gitBlobSha == observed.current.gitBlobSha }
+        val submittedAt = same?.current?.submittedAt ?: now
+        val submission =
+            SubmittedDisk(
+                observed.absolutePath,
+                observed.repoRoot,
+                normalized,
+                observed.current.gitBlobSha,
+                submittedAt,
+                documentText = observed.current.text,
+            )
+        return same?.copy(current = submission) ?: PathState(submission, inFlight = false, accepted = false)
+    }
 }

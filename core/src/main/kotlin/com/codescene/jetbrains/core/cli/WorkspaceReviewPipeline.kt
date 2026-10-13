@@ -56,6 +56,7 @@ class WorkspaceReviewPipeline(
     private val newId: () -> String = { UUID.randomUUID().toString() },
     private val windows: Boolean = false,
     private val clock: () -> Long = System::currentTimeMillis,
+    private val observe: (repoRoot: String, relPath: String) -> ObservedFile? = { _, _ -> null },
 ) {
     private val lock = Any()
     private val states = mutableMapOf<String, PathState>()
@@ -87,6 +88,18 @@ class WorkspaceReviewPipeline(
     fun sessionLost() {
         synchronized(lock) { states.replaceAll { _, state -> WorkspaceReviewMatching.afterSessionLost(state) } }
         sink.sessionLost()
+    }
+
+    fun forgetAccepted(repoRoot: String) {
+        synchronized(lock) {
+            states.replaceAll { _, state ->
+                if (WorkspacePaths.sameRoot(state.current.repoRoot, repoRoot, windows)) {
+                    state.copy(accepted = false, deltaAccepted = false)
+                } else {
+                    state
+                }
+            }
+        }
     }
 
     fun activePaths(): Set<String> = synchronized(lock) { states.filterValues { it.inFlight }.keys.toSet() }
@@ -152,15 +165,54 @@ class WorkspaceReviewPipeline(
             state.current
         }
 
+    private fun acceptIdLess(
+        key: NoticeKey,
+        expectedSha: (PathState?) -> String?,
+        change: (PathState) -> PathState,
+    ): Submission? =
+        synchronized(lock) {
+            val state = find(key)
+            if (state != null && state.inFlight && state.current is SubmittedBuffer) return null
+            val sha = expectedSha(state) ?: return null
+            val observed = observe(key.repoRoot, key.relPath)
+            val target =
+                if (observed == null) {
+                    state ?: return null
+                } else {
+                    WorkspaceReviewMatching.observedState(state, observed, key.relPath, clock())
+                }
+            if (!WorkspaceReviewMatching.acceptsResult(target.current, key, sha)) return null
+            state?.let { states.remove(it.current.absolutePath) }
+            states[target.current.absolutePath] = change(target)
+            target.current
+        }
+
     private fun onFileReview(notice: FileReviewNotice) {
         val key = NoticeKey(notice.id, notice.repoRoot, notice.relPath)
-        val submission = accept(key, notice.gitBlobSha, WorkspaceReviewMatching::afterReview) ?: return
+        val submission =
+            if (notice.id == null) {
+                acceptIdLess(key, { notice.gitBlobSha }, WorkspaceReviewMatching::afterReview)
+            } else {
+                accept(key, notice.gitBlobSha, WorkspaceReviewMatching::afterReview)
+            } ?: return
         sink.presentReview(notice.presentFor(submission, elapsed(submission)))
     }
 
     private fun onDeltaReview(notice: DeltaReviewNotice) {
         val key = NoticeKey(notice.id, notice.repoRoot, notice.relPath)
-        val submission = accept(key, notice.newGitBlobSha, WorkspaceReviewMatching::afterDelta) ?: return
+        val submission =
+            if (notice.id == null) {
+                acceptIdLess(
+                    key,
+                    { s ->
+                        notice.newGitBlobSha
+                            ?: if (notice.delta == null) WorkspaceReviewMatching.awaitingDelta(s) else null
+                    },
+                    WorkspaceReviewMatching::afterDelta,
+                )
+            } else {
+                accept(key, notice.newGitBlobSha, WorkspaceReviewMatching::afterDelta)
+            } ?: return
         sink.presentDelta(notice.presentFor(submission, elapsed(submission)))
     }
 
