@@ -3,11 +3,13 @@ package com.codescene.jetbrains.platform.watch
 import com.codescene.jetbrains.core.cli.WatchClient
 import com.codescene.jetbrains.core.cli.WatchCommand
 import com.codescene.jetbrains.core.cli.WatchRegistry
+import com.codescene.jetbrains.core.util.ConsumerGuard
 import com.codescene.jetbrains.platform.cli.CsIdeServerService
 import com.codescene.jetbrains.platform.util.Log
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.util.SystemInfo
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.CoroutineScope
@@ -36,30 +38,35 @@ class CsIdeWatchService : Disposable {
         server.addSessionListener {
             events.trySend(WatchServiceEvent.SessionLost)
         }
+    private val guard = ConsumerGuard(Log, "CsIdeWatchService") { it is ControlFlowException }
 
     init {
         scope.launch {
             for (event in events) {
-                when (event) {
-                    is WatchServiceEvent.SetProject -> executeCommands(registry.setProject(event.project, event.scopes))
-                    is WatchServiceEvent.RemoveProject -> executeCommands(registry.removeProject(event.project))
-                    is WatchServiceEvent.SessionStarted ->
-                        executeCommands(registry.sessionStarted(event.session))
-                    WatchServiceEvent.SessionLost -> {
-                        if (registry.hasDesired()) scheduleTick(WatchRegistry.FIRST_RETRY_MS)
-                    }
-                    WatchServiceEvent.Tick -> {
-                        tickScheduled = false
-                        executeCommands(registry.pending(server.liveSession()))
-                    }
-                    is WatchServiceEvent.Lost -> {
-                        val commands = registry.lost(event.repoRoot)
-                        if (commands.isNotEmpty()) {
-                            Log.warn("cs-ide watch lost for ${event.repoRoot}; re-watching")
-                        }
-                        executeCommands(commands)
-                    }
+                guard.handle(event, ::handleEvent)
+            }
+        }
+    }
+
+    private fun handleEvent(event: WatchServiceEvent) {
+        when (event) {
+            is WatchServiceEvent.SetProject -> executeCommands(registry.setProject(event.project, event.scopes))
+            is WatchServiceEvent.RemoveProject -> executeCommands(registry.removeProject(event.project))
+            is WatchServiceEvent.SessionStarted ->
+                executeCommands(registry.sessionStarted(event.session))
+            WatchServiceEvent.SessionLost -> {
+                if (registry.hasDesired()) scheduleTick(WatchRegistry.FIRST_RETRY_MS)
+            }
+            WatchServiceEvent.Tick -> {
+                tickScheduled = false
+                executeCommands(registry.pending(server.liveSession()))
+            }
+            is WatchServiceEvent.Lost -> {
+                val commands = registry.lost(event.repoRoot)
+                if (commands.isNotEmpty()) {
+                    Log.warn("cs-ide watch lost for ${event.repoRoot}; re-watching")
                 }
+                executeCommands(commands)
             }
         }
     }

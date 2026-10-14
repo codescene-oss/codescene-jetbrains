@@ -6,6 +6,7 @@ import com.codescene.jetbrains.core.cli.WorkspaceReviewClient
 import com.codescene.jetbrains.core.cli.WorkspaceReviewPipeline
 import com.codescene.jetbrains.core.cli.WorkspaceReviewSubmitter
 import com.codescene.jetbrains.core.git.pathCacheKey
+import com.codescene.jetbrains.core.util.ConsumerGuard
 import com.codescene.jetbrains.platform.cli.CsIdeServerService
 import com.codescene.jetbrains.platform.git.Git4IdeaGitService
 import com.codescene.jetbrains.platform.progress.ReviewProgressIndicator
@@ -16,6 +17,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
@@ -81,19 +83,24 @@ class WorkspaceReviewService(
         )
     private val incomingEvents = Channel<IncomingReviewEvent>(Channel.UNLIMITED)
     private val watchingStarted = AtomicBoolean()
+    private val guard = ConsumerGuard(Log, "WorkspaceReviewService") { it is ControlFlowException }
 
     init {
         scope.launch {
             for (event in incomingEvents) {
-                when (event) {
-                    is IncomingReviewEvent.Notification -> {
-                        pipeline.onNotification(event.method, event.params)
-                        coordinator.onNotification(event.method, event.params)
-                    }
-                    IncomingReviewEvent.SessionLost -> pipeline.sessionLost()
-                    is IncomingReviewEvent.Watch -> coordinator.handle(event.event)
-                }
+                guard.handle(event, ::handleIncoming)
             }
+        }
+    }
+
+    private fun handleIncoming(event: IncomingReviewEvent) {
+        when (event) {
+            is IncomingReviewEvent.Notification -> {
+                pipeline.onNotification(event.method, event.params)
+                coordinator.onNotification(event.method, event.params)
+            }
+            IncomingReviewEvent.SessionLost -> pipeline.sessionLost()
+            is IncomingReviewEvent.Watch -> coordinator.handle(event.event)
         }
     }
 
