@@ -7,7 +7,6 @@ import com.codescene.jetbrains.core.util.resolveSettingsChangeActions
 import com.codescene.jetbrains.platform.api.AceService
 import com.codescene.jetbrains.platform.editor.UIRefreshService
 import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionProvider
-import com.codescene.jetbrains.platform.git.GitChangeObserverService
 import com.codescene.jetbrains.platform.git.PeriodicChangeListerService
 import com.codescene.jetbrains.platform.review.WorkspaceReviewService
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
@@ -64,9 +63,6 @@ class ProjectStartupActivity : ProjectActivity {
 
         addStateListener()
         VirtualFileManager.getInstance().addAsyncFileListener(FileChangeListener(project), disposable)
-
-        val gitChangeObserverService = project.service<GitChangeObserverService>()
-        gitChangeObserverService.start()
 
         WorkspaceReviewService.getInstance(project).startWatching()
 

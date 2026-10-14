@@ -10,20 +10,6 @@ fun pathComparisonKey(path: String): String {
     return if (hasWindowsDriveLetter(normalized)) normalized.lowercase() else normalized
 }
 
-fun gitRelativeComparisonKey(
-    gitRootPath: String,
-    filePath: String,
-): String {
-    val root = pathComparisonKey(gitRootPath).trimEnd('/')
-    val file = pathComparisonKey(filePath)
-    val prefix = "$root/"
-    return when {
-        file == root -> ""
-        file.startsWith(prefix) -> file.removePrefix(prefix)
-        else -> file
-    }
-}
-
 fun pathCacheKey(path: String): String = pathComparisonKey(path)
 
 fun pathFileName(path: String): String = path.replace('\\', '/').substringAfterLast('/')
