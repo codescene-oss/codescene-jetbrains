@@ -273,7 +273,30 @@ None. Uses `C:\Temp\cs12077-smoke` (`repo-a`, `repo-b`) as described in the plan
 
 ### Results
 
-_To be filled in by PKG-33._
+Run 2026-10-14 13:26–13:59 on `feature/cs-12077-phase4` at `1706ee4` (PKG-30 `8d67260`, PKG-31 `f1f316a`, PKG-32 `1706ee4`), sandbox IC-2024.3.7, `cs-ide` 1.0.74-SNAPSHOT (`efcaeed`). First push: `repo-a` 6 files.
+
+- [x] U1. Pass. Edits update annotations, Code Vision and the monitor; ACE refactors in `src/AceProbe.java`.
+- [x] U2. Pass. `Ctrl+S` keeps annotations; no second indicator.
+- [x] U3. Pass. The appended `src/App.kt` appeared in the monitor; `git checkout -- src/App.kt` removed it. `App.kt` was open in an editor during the check (`Replaying queued review with editor file=App.kt`), so this did not exercise the unopened path; PKG-36 U11 covers it.
+- [x] U4. Pass. Untracked `src/Smoke.kt` appeared; deleting it removed it.
+- [x] U5. Pass. Ignoring `src/Untracked.kt` removed it; removing the line brought it back.
+- [x] U6. Pass. Branch widget `feature` → `other` → `feature`: annotations stay, monitor follows.
+- [x] U7. Pass. Built-in terminal checkouts kept the editor's annotations. Checkouts run from the coordinator's shell with focus kept in the IDE also kept them.
+- [x] U8. Pass. Rename and delete of an open modified file (`src/Util.kt`) in the project view: entry followed, then went.
+- [x] U9. Pass. `repo-b` in a second window: both update; after File | Close Project, `repo-a` keeps updating.
+
+- [x] C1. Pass. One `cs-ide` child (pid 13624) of the sandbox IDE (pid 25740); still one with both projects open.
+- [x] C2. Pass. No lines from deleted classes.
+- [x] C3. Partial, expected. The append gave `7 files (push)` (13:32:43). The restore gave no push back to 6: the server keeps a touched file in the inventory until a rescan, and reviews it again (workspace README, "Inventory"). The rescore returned a null delta, which removed the entry. The next rescan (U5's `.gitignore` change) dropped `App.kt` from the inventory. The plan's expectation is wrong; the behaviour is the server's documented one.
+- [x] C4. Pass. Ignore: `5 files (push)` with `hidden=1` (the rescan also dropped the stale `App.kt`, 7 → 5); removing the line: `6 files (push)`.
+- [x] C5. Pass. U6 logged `reseeding 0 unsaved documents` twice. The built-in terminal (U7) also logged `reseeding 0`: IntelliJ saves documents when its terminal takes focus ("Save files when switching to a different application or a built-in terminal", on by default), so the plan's U7 premise does not hold. With the edit kept unsaved and both checkouts run from the coordinator's shell while focus stayed in the IDE, both HEAD moves logged `reseeding 1 unsaved documents` (13:50:28, 13:50:38).
+- [x] C6. Pass. `Stop-Process` on pid 13624 at 13:56:38: `cs-ide JSON-RPC closed: JSON-RPC stream ended`, `cs-ide server started` at 13:56:45, `watch started for repo-a … session=2`, `5 files (push)` at 13:56:46. One child again (pid 5916). U1 still works.
+- [x] C7. Pass. `cs-ide watch stopped for C:/temp/cs12077-smoke/repo-b (sent=true)` (13:56:10).
+- [x] C8. Pass. No exceptions mentioning the five classes, no ` failed: ` lines, no `ERROR` lines. The only recurring WARN is IntelliJ's `RegionUrlMapper` `SecurityException: setContextClassLoader` (sandbox, unrelated).
+- [x] C9. Pass. `Poll found` every ~9 s through the end (13:58:40).
+- [x] C10. Pass. No `cs-ide` and no sandbox process after exit.
+
+Plan corrections found during Wave 1–3 (for PKG-34 onward): `Format-Hex` has no `-Count` on Windows PowerShell 5.1 (read the first bytes with `[IO.File]::ReadAllBytes`); the sandbox-kill filter `*idea-sandbox*` also matches Gradle test workers of other worktrees and killed one `:test` run, so exclude `*GradleWorkerMain*` and `*GradleDaemon*`; the Task 3 `rg` still matches `injectedMainLineBranchResolver` in `Git4IdeaChangeLister.kt` until Task 5.
 
 ### Definition of done
 
