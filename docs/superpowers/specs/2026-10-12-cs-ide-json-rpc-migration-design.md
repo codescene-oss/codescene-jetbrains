@@ -169,9 +169,8 @@ Wire, checked against `ide_server.clj`, `workspace.clj`, `workspace/files.clj` a
 - Buffer results match on `id`. The git-blob SHA must then equal the SHA of the buffer that is still current. A newer
   submit for that path, a closed editor, or an edited document drops the old id.
 - Id-less results are the disk `reviewFiles` replies and, in Phase 3, the watch replies. Accept one only when its
-  git-blob SHA equals the current bytes: the UTF-8 text of the loaded `Document` when one is loaded for that file,
-  otherwise the raw file bytes. (A loaded `Document` is always a buffer, see above; an earlier draft said "dirty
-  document", which contradicted that rule.) Drop an id-less result with no SHA, except the null-result `deltaReview`
+  git-blob SHA equals the current bytes: the UTF-8 text of the loaded `Document` only when that document is unsaved,
+  otherwise the raw file bytes on disk. Drop an id-less result with no SHA, except the null-result `deltaReview`
   that Phase 3 pairs with its review. A missing SHA does not by itself reject an id match.
 - The git blob SHA is `sha1("blob " + byteLength + "\0" + bytes)` over the bytes the server hashed. Buffer content is
   UTF-8. Disk content is the raw file bytes.
@@ -217,8 +216,8 @@ Plan: `docs/superpowers/plans/2026-10-13-phase3-watch-inventory.md`. Server beha
   because the server handles both concurrently and can answer "not watched". A fetch result is dropped when a push for
   the root arrived after the fetch was issued.
 - Watch results are id-less and go through the Phase 2 matcher; there is no second one. A result for a path the plugin
-  never submitted is checked against the file's current bytes (loaded document text, else the raw bytes read from
-  disk, not the VFS). An id-less result is dropped while a buffer for that path is in flight.
+  never submitted is checked against the file's current bytes (unsaved document text when the editor buffer is dirty,
+  else the raw bytes read from disk, not the VFS). An id-less result is dropped while a buffer for that path is in flight.
 - A file restored to its baseline gets a `deltaReview` with `result: null` and no SHAs. It is accepted when the path's
   last accepted id-less `fileReview` is still waiting for its delta and the current bytes still hash to that review's
   SHA. The null delta then hides the file in the monitor.

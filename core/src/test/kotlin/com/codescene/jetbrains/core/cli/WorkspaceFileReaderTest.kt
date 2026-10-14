@@ -7,11 +7,30 @@ import org.junit.Test
 
 class WorkspaceFileReaderTest {
     @Test
+    fun `saved loaded text uses bytes`() {
+        val bytes = "a\r\n".toByteArray()
+        var readBytesCalled = false
+        val reader =
+            WorkspaceFileReader(
+                openText = { LoadedText("a\n", unsaved = false) },
+                readBytes = {
+                    readBytesCalled = true
+                    bytes
+                },
+            )
+
+        val current = reader.current("/path")
+
+        assertEquals(CurrentFile(GitBlobSha.ofBytes(bytes), null), current)
+        assertTrue(readBytesCalled)
+    }
+
+    @Test
     fun `loaded text wins over bytes`() {
         var readBytesCalled = false
         val reader =
             WorkspaceFileReader(
-                openText = { "a\r\n" },
+                openText = { LoadedText("a\r\n", unsaved = true) },
                 readBytes = {
                     readBytesCalled = true
                     "a\n".toByteArray()
@@ -38,7 +57,11 @@ class WorkspaceFileReaderTest {
 
     @Test
     fun `empty text is hashed`() {
-        val reader = WorkspaceFileReader(openText = { "" }, readBytes = { byteArrayOf(1) })
+        val reader =
+            WorkspaceFileReader(
+                openText = { LoadedText("", unsaved = true) },
+                readBytes = { byteArrayOf(1) },
+            )
 
         assertEquals(CurrentFile("e69de29bb2d1d6434b8b29ae775ad8c2e48c5391", ""), reader.current("/path"))
     }

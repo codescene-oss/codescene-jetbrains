@@ -17,6 +17,7 @@ members, ensuring transparency and consistency throughout the project lifecycle.
 6. [DEC-2025-01-03-001: Code Smell Documentation Location Update](#dec-2025-01-03-001-code-smell-documentation-location-update)
 7. [DEC-2026-10-13-001: Run analysis through cs-ide JSON-RPC child process](#dec-2026-10-13-001-run-analysis-through-cs-ide-json-rpc-child-process)
 8. [DEC-2026-10-14-001: Let cs-ide own git watching and baselines](#dec-2026-10-14-001-let-cs-ide-own-git-watching-and-baselines)
+9. [DEC-2026-10-14-002: Hash saved open files from disk for watch matching](#dec-2026-10-14-002-hash-saved-open-files-from-disk-for-watch-matching)
 
 ---
 
@@ -368,3 +369,41 @@ their next edit. Files without an editor are reviewed only by the watch.
 
 **Related Decisions**:
 `DEC-2026-10-13-001`.
+
+---
+
+## DEC-2026-10-14-002: Hash saved open files from disk for watch matching
+
+[Back to Top](#table-of-contents)
+
+**Date**: 2026-10-14
+
+**Decision Maker(s)**: Martin Säfsten
+
+**Status**: Accepted
+
+**Decision**:
+When matching id-less watch results, use loaded `Document` UTF-8 text only if `FileDocumentManager.isDocumentUnsaved`
+is true; otherwise hash the raw bytes read from disk.
+
+**Context**:
+`cs-ide` watch results carry git blob SHAs over disk bytes. Final smoke U3 showed valid results dropped for open files.
+`WorkspaceWatchCoordinator` preferred any cached `Document` text. A saved buffer can lag an external write, and IntelliJ
+normalizes line endings to LF while Windows files on disk often stay CRLF, so the cached text SHA disagrees with the
+server.
+
+**Rationale**:
+Unsaved editor content is what the user is editing and must stay authoritative for buffer submissions. Saved buffers are
+not a trustworthy view of disk; only unsaved state makes the in-memory text current for matching.
+
+**Consequences**:
+Open but saved files match watch results against disk like closed files. Unsaved buffers still win over bytes. External
+edits to a file that stays open without dirty state are visible to matching as soon as disk bytes are read.
+
+**Alternatives Considered**:
+
+- **Always prefer loaded document text**: Rejected; stale LF text rejects valid disk hashes.
+- **Refresh the document from VFS before hashing**: Rejected; extra platform I/O and still not the server's disk view.
+
+**Related Decisions**:
+`DEC-2026-10-13-001`, `DEC-2026-10-14-001`.

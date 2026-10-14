@@ -5,13 +5,18 @@ data class CurrentFile(
     val text: String?,
 )
 
+data class LoadedText(
+    val text: String,
+    val unsaved: Boolean,
+)
+
 class WorkspaceFileReader(
-    private val openText: (String) -> String?,
+    private val openText: (String) -> LoadedText?,
     private val readBytes: (String) -> ByteArray?,
 ) {
     fun current(absolutePath: String): CurrentFile? {
-        val text = openText(absolutePath)
-        if (text != null) return CurrentFile(GitBlobSha.ofString(text), text)
+        val loaded = openText(absolutePath)
+        if (loaded != null && loaded.unsaved) return CurrentFile(GitBlobSha.ofString(loaded.text), loaded.text)
         val bytes = readBytes(absolutePath) ?: return null
         return CurrentFile(GitBlobSha.ofBytes(bytes), null)
     }

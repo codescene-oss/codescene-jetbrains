@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.review
 
 import com.codescene.jetbrains.core.cleanup.InventoryMonitorSync
+import com.codescene.jetbrains.core.cli.LoadedText
 import com.codescene.jetbrains.core.cli.ObservedFile
 import com.codescene.jetbrains.core.cli.WatchClient
 import com.codescene.jetbrains.core.cli.WatchEffect
@@ -50,9 +51,12 @@ class WorkspaceWatchCoordinator(
     private val reader =
         WorkspaceFileReader(
             openText = { path ->
-                ReadAction.compute<String?, Exception> {
+                ReadAction.compute<LoadedText?, Exception> {
                     LocalFileSystem.getInstance().findFileByPath(path)?.let { file ->
-                        FileDocumentManager.getInstance().getCachedDocument(file)?.text
+                        FileDocumentManager.getInstance().getCachedDocument(file)?.let { document ->
+                            val manager = FileDocumentManager.getInstance()
+                            LoadedText(document.text, manager.isDocumentUnsaved(document))
+                        }
                     }
                 }
             },
