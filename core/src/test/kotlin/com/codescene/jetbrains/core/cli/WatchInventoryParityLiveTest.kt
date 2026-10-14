@@ -129,7 +129,7 @@ class WatchInventoryParityLiveTest {
     }
 
     private fun freshFixture(): WatchGitFixture {
-        val root = Files.createTempDirectory("codescene-watch-parity")
+        val root = Files.createTempDirectory("codescene-watch-parity").toRealPath()
         tempRoots.add(root)
         return WatchGitFixture(root).also { it.init() }
     }

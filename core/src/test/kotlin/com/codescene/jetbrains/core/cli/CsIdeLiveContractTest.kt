@@ -137,7 +137,8 @@ class CsIdeLiveContractTest {
         assertEquals(10.0, rulesNewScore, 0.01)
     }
 
-    private fun tempDir(prefix: String): Path = Files.createTempDirectory(prefix).also { tempRoots.add(it) }
+    private fun tempDir(prefix: String): Path =
+        Files.createTempDirectory(prefix).toRealPath().also { tempRoots.add(it) }
 
     private inline fun withIsolatedWorkspace(block: (cacheDir: Path, repoRoot: Path) -> Unit) {
         block(tempDir("codescene-cs-ide-cache"), tempDir("codescene-cs-ide-repo"))

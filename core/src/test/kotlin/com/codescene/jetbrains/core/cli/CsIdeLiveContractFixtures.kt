@@ -128,7 +128,7 @@ object CsIdeLiveContractFixtures {
         sourceRelativePath: String,
         sourceContent: String,
     ): Path {
-        val repoRoot = Files.createTempDirectory("codescene-cs-ide-rules")
+        val repoRoot = Files.createTempDirectory("codescene-cs-ide-rules").toRealPath()
         tempRoots.add(repoRoot)
         runGit(repoRoot, "init")
         runGit(repoRoot, "config", "user.email", "test@example.com")

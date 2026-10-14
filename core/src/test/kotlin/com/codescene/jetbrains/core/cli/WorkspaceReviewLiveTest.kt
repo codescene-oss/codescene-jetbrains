@@ -42,7 +42,10 @@ class WorkspaceReviewLiveTest {
             awaitNotice(deadline, "cs-ide/fileReview", WorkspaceReviewNotices::fileReview) { it.id == BUFFER_ID }
         assertEquals(GitBlobSha.ofString(content), fileReview.gitBlobSha)
         assertEquals(SUBJECT, fileReview.relPath)
-        assertTrue(WorkspacePaths.sameRoot(repoRoot.toString(), fileReview.repoRoot, isWindows()))
+        assertTrue(
+            "expected $repoRoot got ${fileReview.repoRoot}",
+            WorkspacePaths.sameRoot(repoRoot.toString(), fileReview.repoRoot, isWindows()),
+        )
         assertNotNull(fileReview.review.rawScore)
 
         awaitNotice(deadline, "cs-ide/deltaReview", WorkspaceReviewNotices::deltaReview) { it.id == BUFFER_ID }
@@ -54,16 +57,7 @@ class WorkspaceReviewLiveTest {
         expectedMethod: String,
         parse: (JsonNode) -> T?,
         accept: (T) -> Boolean,
-    ): T {
-        while (true) {
-            val remaining = deadline - System.nanoTime()
-            val (method, params) =
-                received.poll(remaining.coerceAtLeast(0), TimeUnit.NANOSECONDS)
-                    ?: throw AssertionError("No matching $expectedMethod within 60s; stderr: ${server.stderrTail()}")
-            if (method != expectedMethod) continue
-            parse(params)?.takeIf(accept)?.let { return it }
-        }
-    }
+    ): T = CsIdeLiveServer.awaitNotice(received, deadline, expectedMethod, server::stderrTail, parse, accept)
 
     private fun isWindows(): Boolean = System.getProperty("os.name").startsWith("Windows", ignoreCase = true)
 

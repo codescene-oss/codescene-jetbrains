@@ -183,7 +183,7 @@ class WatchLiveTest {
     }
 
     private fun prepareSubjectRepo(): Path {
-        val root = Files.createTempDirectory("codescene-watch-live")
+        val root = Files.createTempDirectory("codescene-watch-live").toRealPath()
         tempRoots.add(root)
         WatchGitFixture(root).also {
             it.init()

@@ -48,15 +48,16 @@ object CsIdeLiveServer {
         parse: (JsonNode) -> T?,
         accept: (T) -> Boolean,
     ): T {
+        val tracker = NoticeAcceptTracker(accept)
         while (true) {
             val remaining = deadline - System.nanoTime()
             val (method, params) =
                 received.poll(remaining.coerceAtLeast(0), TimeUnit.NANOSECONDS)
                     ?: throw AssertionError(
-                        "No matching $expectedMethod within timeout; stderr: ${stderr()}",
+                        awaitNoticeTimeoutMessage(expectedMethod, tracker.lastRejected, stderr),
                     )
             if (method != expectedMethod) continue
-            parse(params)?.takeIf(accept)?.let { return it }
+            parse(params)?.takeIf(tracker::accept)?.let { return it }
         }
     }
 
@@ -68,6 +69,27 @@ object CsIdeLiveServer {
     ): WatchInventory =
         awaitNotice(received, deadline, WatchNotices.INVENTORY_CHANGED, stderr, WatchNotices::inventory) {
             WorkspacePaths.sameRoot(repoRoot, it.repoRoot, windows())
+        }
+
+    private class NoticeAcceptTracker<T : Any>(private val predicate: (T) -> Boolean) {
+        var lastRejected: T? = null
+
+        fun accept(candidate: T): Boolean {
+            if (predicate(candidate)) return true
+            lastRejected = candidate
+            return false
+        }
+    }
+
+    private fun awaitNoticeTimeoutMessage(
+        expectedMethod: String,
+        lastRejected: Any?,
+        stderr: () -> String,
+    ): String =
+        buildString {
+            append("No matching $expectedMethod within timeout")
+            lastRejected?.let { append("; last rejected: $it") }
+            append("; stderr: ${stderr()}")
         }
 
     private fun javaHomeForServer(): Path {
