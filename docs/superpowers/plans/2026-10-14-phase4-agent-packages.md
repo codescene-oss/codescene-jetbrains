@@ -8,7 +8,7 @@ Use this document to assign **one package per agent**: one branch, **one commit*
 
 **Gradle:** set `JAVA_HOME` to JDK 17 before any `./gradlew` (Gradle 8.14 does not run on JDK 25). On this machine that JDK is `C:\Users\marti\.jdks\graalvm-jdk-17.0.12`. Use a 10-minute timeout.
 
-**Agents:** composer-2.5 only; never substitute another model. PKG-33 and PKG-36 are run by the coordinator with the user, not by an agent.
+**Agents:** composer-2.5 only; never substitute another model. PKG-33 and PKG-36 are run by the coordinator with the user, not by an agent. PKG-36A and PKG-36B are smoke-failure fixes run by agents before PKG-36 resumes.
 
 **Every package:**
 
@@ -46,10 +46,17 @@ Wave 4:  PKG-34 poller and git listing deletion     (needs 33 and the gate)
               |
 Wave 5:  PKG-35 disk submission deletion            (needs 34; may stack on its branch)
               |
-Wave 6:  PKG-36 final runIde smoke                  (needs 35; coordinator + user)
+Wave 6:  PKG-36 final runIde smoke starts           (needs 35; coordinator + user)
+              |
+         U3 exposes two independent fixes
+              |
+Wave 7:  PKG-36A dirty-document matching  ∥  PKG-36B native monitor paths
+              \                                  /
+Wave 8:        PKG-36 final runIde smoke resumes
 ```
 
 PKG-30 and PKG-31 start together on the integration tip. PKG-32 starts once PKG-30 is merged. PKG-33 runs once 30–32 are merged; it can run while CI is still pending. PKG-34 is the only package that waits for the CI gate itself. PKG-35 is gated by dependency: until PKG-34 deletes the poller, the poller still calls `submitPaths`. PKG-35 can stack on PKG-34's branch and start once PKG-34 has its commit.
+PKG-36A and PKG-36B branch from PKG-35 and run in parallel. Both must merge before the final smoke resumes.
 
 ---
 
@@ -422,12 +429,89 @@ Check git log -1 --format=%B and amend away any Co-authored-by trailer.
 
 ---
 
+## PKG-36A — Match watch results against dirty documents only
+
+| Field | Value |
+| --- | --- |
+| **Branch** | `feature/cs-12077-watch-dirty-documents` |
+| **Base** | **PKG-35** merged |
+| **Commit message** | `fix: match watch results against unsaved buffers` |
+| **Parallel with** | PKG-36B |
+
+### Scope and design
+
+The server hashes disk bytes for watch results. A loaded but saved IntelliJ `Document` can be stale after an external write and always has LF line endings, so its hash can reject a valid disk result. `WorkspaceFileReader` must use loaded text only when the document is unsaved; otherwise it hashes raw disk bytes. Unsaved editor reviews remain authoritative.
+
+**Modify**
+
+- `core/src/main/kotlin/com/codescene/jetbrains/core/cli/WorkspaceFileReader.kt`
+- `core/src/test/kotlin/com/codescene/jetbrains/core/cli/WorkspaceFileReaderTest.kt`
+- `src/main/kotlin/com/codescene/jetbrains/platform/review/WorkspaceWatchCoordinator.kt`
+- `docs/superpowers/specs/2026-10-12-cs-ide-json-rpc-migration-design.md`
+- `DECISIONLOG.md`
+
+### Required test-first cycle
+
+1. Introduce an explicit loaded-text value carrying `text` and `unsaved`; update `WorkspaceFileReader.openText` to return it.
+2. Add `saved loaded text uses bytes` first. Supply CRLF bytes and LF loaded text with `unsaved = false`; expect the raw-byte SHA, `text = null`, and prove `readBytes` was called. Run that single test and capture the expected failure before production changes.
+3. Update the existing loaded-text and empty-text tests to mark those documents unsaved. They continue to prove unsaved text wins and is hashed.
+4. Implement the minimum reader logic: loaded text wins only when `unsaved`; otherwise read disk bytes.
+5. In `WorkspaceWatchCoordinator`, obtain the cached document and pair its text with `FileDocumentManager.isDocumentUnsaved(document)`.
+6. Correct the JSON-RPC migration spec's loaded-document rule and add a decision recording why saved loaded documents use disk bytes.
+
+### Definition of done
+
+- [ ] Red/green evidence for `saved loaded text uses bytes`.
+- [ ] `.\gradlew.bat :core:test :test` passes; ktlint for core and `src/`, class-size pass.
+- [ ] No `DIAG` logging, no `plugin.xml` change, no UTF-8 BOM.
+- [ ] Single commit, MCP safeguard clean.
+
+---
+
+## PKG-36B — Native monitor path separators
+
+| Field | Value |
+| --- | --- |
+| **Branch** | `feature/cs-12077-native-monitor-paths` |
+| **Base** | **PKG-35** merged |
+| **Commit message** | `fix: use native monitor path separators` |
+| **Parallel with** | PKG-36A |
+
+### Scope and design
+
+Keep cache keys, watch paths and resolver inputs unchanged. Normalize only the absolute file path sent to the Code Health Monitor: backslashes on Windows and forward slashes on macOS/Linux. The platform supplies its separator to core mapping; the original path remains the input to the ACE resolver.
+
+**Modify**
+
+- `core/src/main/kotlin/com/codescene/jetbrains/core/mapper/CodeHealthMonitorMapper.kt`
+- `core/src/test/kotlin/com/codescene/jetbrains/core/mapper/CodeHealthMonitorMapperTest.kt`
+- `src/main/kotlin/com/codescene/jetbrains/platform/webview/util/UpdateMonitor.kt`
+
+### Required test-first cycle
+
+1. Add mapper tests first for a mixed-separator absolute path:
+   - separator `'\\'` produces `C:\repo\src\File.kt`;
+   - separator `'/'` produces `/repo/src/File.kt`;
+   - the function-to-refactor resolver receives the original unmodified path.
+2. Run the focused mapper tests and capture the expected failure before production changes.
+3. Give `CodeHealthMonitorMapper` an injected path separator and normalize only `File(fileName = ...)` in `getFileDeltaData`.
+4. Construct the shared mapper in `UpdateMonitor` with `java.io.File.separatorChar`.
+
+### Definition of done
+
+- [ ] Red/green evidence for both platform separators and unchanged resolver input.
+- [ ] `.\gradlew.bat :core:test :test` passes; ktlint for core and `src/`, class-size pass.
+- [ ] Cache paths and `deltaResults` are not mutated; no `plugin.xml` change, no UTF-8 BOM.
+- [ ] Single commit, MCP safeguard clean.
+
+---
+
 ## PKG-36 — Final runIde smoke
 
 | Field | Value |
 | --- | --- |
 | **Branch** | `feature/cs-12077-phase4-final-smoke` |
-| **Base** | **PKG-35** merged |
+| **Base** | **PKG-36A** and **PKG-36B** merged |
 | **Commit message** | `docs: record CS-12077 phase 4 final smoke` |
 | **Plan tasks** | Task 7 |
 | **Parallel with** | None |
@@ -477,6 +561,9 @@ _To be filled in by PKG-36._
 | PKG-34 + PKG-31 | No (sequential) | `WorkspaceReviewService` |
 | PKG-35 + PKG-34 | No | the poller calls `submitPaths` until 34; both edit `WorkspaceReviewService`. Stack 35 on 34 |
 | PKG-35 + PKG-31 | No (sequential) | `WorkspaceReviewService` |
+| PKG-36A + PKG-36B | Yes | none. 36A edits the watch reader and coordinator; 36B edits monitor mapping |
+| PKG-36A + PKG-36 | No | final smoke must verify the saved-document fix |
+| PKG-36B + PKG-36 | No | final smoke must verify native monitor paths |
 
 ---
 
