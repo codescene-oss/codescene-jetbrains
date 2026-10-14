@@ -1,7 +1,6 @@
 package com.codescene.jetbrains.platform.di
 
 import com.codescene.jetbrains.core.contracts.IAceRefactorableFunctionsCache
-import com.codescene.jetbrains.core.contracts.IBaselineReviewCacheService
 import com.codescene.jetbrains.core.contracts.IDeltaCacheService
 import com.codescene.jetbrains.core.contracts.IEditorService
 import com.codescene.jetbrains.core.contracts.IFileSystem
@@ -20,7 +19,6 @@ import com.codescene.jetbrains.platform.git.Git4IdeaGitService
 import com.codescene.jetbrains.platform.notifications.IntelliJNotificationService
 import com.codescene.jetbrains.platform.progress.IntelliJProgressService
 import com.codescene.jetbrains.platform.review.PlatformAceRefactorableFunctionsCacheService
-import com.codescene.jetbrains.platform.review.PlatformBaselineReviewCacheService
 import com.codescene.jetbrains.platform.review.PlatformCliCacheService
 import com.codescene.jetbrains.platform.review.PlatformReviewCacheService
 import com.intellij.openapi.components.Service
@@ -44,9 +42,6 @@ class CodeSceneProjectServiceProvider(
     }
     val notificationService: INotificationService by lazy { project.service<IntelliJNotificationService>() }
     val reviewCacheService: IReviewCacheService by lazy { project.service<PlatformReviewCacheService>() }
-    val baselineReviewCacheService: IBaselineReviewCacheService by lazy {
-        project.service<PlatformBaselineReviewCacheService>()
-    }
     val cliCacheService: PlatformCliCacheService by lazy { project.service<PlatformCliCacheService>() }
     val deltaCacheService: IDeltaCacheService by lazy { project.service<PlatformDeltaCacheService>() }
     val aceRefactorableFunctionsCache: IAceRefactorableFunctionsCache by lazy {

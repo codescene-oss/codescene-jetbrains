@@ -17,7 +17,6 @@ import com.codescene.jetbrains.core.review.resolveAceErrorViewParams
 import com.codescene.jetbrains.core.review.resolveAceStatusChange
 import com.codescene.jetbrains.core.util.AceEntryPoint
 import com.codescene.jetbrains.core.util.resolveAceCandidatesForMonitor
-import com.codescene.jetbrains.core.util.resolveCliCacheFileName
 import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.api.AceService
 import com.codescene.jetbrains.platform.api.RefactorableFunctionsSource
@@ -170,8 +169,7 @@ class AceEntryOrchestrator(private val project: Project) {
         }
 
         val filePath = editor.virtualFile.path
-        val fileName = resolveCliCacheFileName(filePath, services.gitService.getRepoRelativePath(filePath))
-        val aceParams = CodeParams(editor.document.text, fileName)
+        val aceParams = CodeParams(editor.document.text, filePath)
         val cachePath = services.cliCacheService.getCachePath()
         Log.info(
             "ACE refactorable functions cachePath=$cachePath userDir=${System.getProperty("user.dir")}",

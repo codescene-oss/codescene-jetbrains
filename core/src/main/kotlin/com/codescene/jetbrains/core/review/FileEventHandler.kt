@@ -1,13 +1,11 @@
 package com.codescene.jetbrains.core.review
 
-import com.codescene.jetbrains.core.contracts.IBaselineReviewCacheService
 import com.codescene.jetbrains.core.contracts.IDeltaCacheService
 import com.codescene.jetbrains.core.contracts.IReviewCacheService
 
 class FileEventHandler(
     private val deltaCache: IDeltaCacheService,
     private val reviewCache: IReviewCacheService,
-    private val baselineReviewCache: IBaselineReviewCacheService,
 ) {
     fun handleRename(
         oldPath: String,
@@ -15,11 +13,10 @@ class FileEventHandler(
     ) {
         deltaCache.updateKey(oldPath, newPath)
         reviewCache.updateKey(oldPath, newPath)
-        baselineReviewCache.updateKey(oldPath, newPath)
     }
 
     fun handleDelete(path: String) {
-        // All three caches are content-based: they use file paths as keys but validate content
+        // Both caches are content-based: they use file paths as keys but validate content
         // hashes on lookup. This means cache hits require BOTH path match AND content match.
         //
         // When files are temporarily deleted (e.g., git stash) then restored (git stash apply)
@@ -40,7 +37,6 @@ class FileEventHandler(
     ) {
         deltaCache.updateKey(oldPath, newPath)
         reviewCache.updateKey(oldPath, newPath)
-        baselineReviewCache.updateKey(oldPath, newPath)
     }
 
     fun handleFileCacheUpdate(update: FileCacheUpdate) {
