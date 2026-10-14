@@ -40,11 +40,8 @@ class WorkspaceReviewPipelineTest {
     ) = WorkspaceReviewPipeline(sender, sink, newId = { "id${++ids}" }, windows = windows, clock = { now })
 
     private val app = "src/App.kt"
-    private val disk = "src/Disk.kt"
 
     private fun buffer(content: String) = BufferSubmission("/repo/$app", app, content)
-
-    private fun disk(sha: String) = DiskSubmission("/repo/$disk", disk, sha)
 
     private fun sha(content: String) = GitBlobSha.ofString(content)
 
@@ -98,36 +95,36 @@ class WorkspaceReviewPipelineTest {
 
     @Test
     fun `buffer submit sends one wire with a new id, normalized path and content`() {
-        pipeline().submit("/repo", listOf(BufferSubmission("/repo/$app", "src\\App.kt", "a")), emptyList())
+        pipeline().submit("/repo", listOf(BufferSubmission("/repo/$app", "src\\App.kt", "a")))
 
         assertEquals(listOf("/repo" to listOf(ReviewFileWire(app, "id1", "a"))), sent)
     }
 
     @Test
-    fun `buffer and disk go in one call and resubmitting in-flight content does not send`() {
+    fun `resubmitting in-flight buffer content does not send`() {
         val pipeline = pipeline()
-        pipeline.submit("/repo", listOf(buffer("a")), listOf(disk("d1")))
-        pipeline.submit("/repo", listOf(buffer("a")), listOf(disk("d1")))
+        pipeline.submit("/repo", listOf(buffer("a")))
+        pipeline.submit("/repo", listOf(buffer("a")))
 
-        assertEquals(listOf(listOf(ReviewFileWire(app, "id1", "a"), ReviewFileWire(disk))), sent.map { it.second })
+        assertEquals(listOf(listOf(ReviewFileWire(app, "id1", "a"))), sent.map { it.second })
     }
 
     @Test
-    fun `accepted content is left out of a later batch`() {
+    fun `accepted buffer content is not sent again`() {
         val pipeline = pipeline()
-        pipeline.submit("/repo", listOf(buffer("a")), emptyList())
+        pipeline.submit("/repo", listOf(buffer("a")))
         pipeline.notify("fileReview", fileReview("id1", sha("a")))
         pipeline.notify("deltaReview", deltaReview("id1", sha("a")))
-        pipeline.submit("/repo", listOf(buffer("a")), listOf(disk("d1")))
+        pipeline.submit("/repo", listOf(buffer("a")))
 
-        assertEquals(listOf(ReviewFileWire(disk)), sent[1].second)
-        assertTrue(pipeline.activePaths() == setOf("/repo/$disk"))
+        assertEquals(1, sent.size)
+        assertTrue(pipeline.activePaths().isEmpty())
     }
 
     @Test
     fun `fileReview with the current id and SHA presents once`() {
         val pipeline = pipeline()
-        pipeline.submit("/repo", listOf(buffer("a")), emptyList())
+        pipeline.submit("/repo", listOf(buffer("a")))
         now = 1_250L
         pipeline.notify("fileReview", fileReview("id1", sha("a")))
         pipeline.notify("fileReview", fileReview("id1", "other"))
@@ -143,9 +140,9 @@ class WorkspaceReviewPipelineTest {
     @Test
     fun `fileReview with a different SHA does not present and new content sends again`() {
         val pipeline = pipeline()
-        pipeline.submit("/repo", listOf(buffer("a")), emptyList())
+        pipeline.submit("/repo", listOf(buffer("a")))
         pipeline.notify("fileReview", fileReview("id1", sha("b")))
-        pipeline.submit("/repo", listOf(buffer("b")), emptyList())
+        pipeline.submit("/repo", listOf(buffer("b")))
 
         assertTrue(reviews.isEmpty())
         assertEquals(ReviewFileWire(app, "id2", "b"), sent[1].second.single())
@@ -154,8 +151,8 @@ class WorkspaceReviewPipelineTest {
     @Test
     fun `a superseded id neither presents nor clears the newer submission`() {
         val pipeline = pipeline()
-        pipeline.submit("/repo", listOf(buffer("a")), emptyList())
-        pipeline.submit("/repo", listOf(buffer("b")), emptyList())
+        pipeline.submit("/repo", listOf(buffer("a")))
+        pipeline.submit("/repo", listOf(buffer("b")))
         pipeline.notify("fileReview", fileReview("id1", sha("a")))
         pipeline.notify("deltaReview", deltaReview("id1", sha("a")))
 
@@ -168,9 +165,9 @@ class WorkspaceReviewPipelineTest {
     @Test
     fun `deltaReview with the current id presents and a null result presents a null delta`() {
         val pipeline = pipeline()
-        pipeline.submit("/repo", listOf(buffer("a")), emptyList())
+        pipeline.submit("/repo", listOf(buffer("a")))
         pipeline.notify("deltaReview", deltaReview("id1", sha("a")))
-        pipeline.submit("/repo", listOf(buffer("b")), emptyList())
+        pipeline.submit("/repo", listOf(buffer("b")))
         pipeline.notify("deltaReview", deltaReview("id2", null, nullResult = true))
 
         assertEquals(listOf("a", "b"), deltas.map { it.scoredContent })
@@ -182,7 +179,7 @@ class WorkspaceReviewPipelineTest {
     @Test
     fun `a buffer stays active until its delta, not its fileReview without a SHA`() {
         val pipeline = pipeline()
-        pipeline.submit("/repo", listOf(buffer("a")), emptyList())
+        pipeline.submit("/repo", listOf(buffer("a")))
         pipeline.notify("fileReview", fileReview("id1", null))
         pipeline.notify("reviewProgress", reviewProgress(0))
 
@@ -195,8 +192,8 @@ class WorkspaceReviewPipelineTest {
     @Test
     fun `reviewFailed for the current id clears the path and an older id does not`() {
         val pipeline = pipeline()
-        pipeline.submit("/repo", listOf(buffer("a")), emptyList())
-        pipeline.submit("/repo", listOf(buffer("b")), emptyList())
+        pipeline.submit("/repo", listOf(buffer("a")))
+        pipeline.submit("/repo", listOf(buffer("b")))
         pipeline.notify("reviewFailed", reviewFailed("id1"))
 
         assertEquals(setOf("/repo/$app"), pipeline.activePaths())
@@ -207,64 +204,30 @@ class WorkspaceReviewPipelineTest {
     }
 
     @Test
-    fun `reviewFailed without an id clears only the in-flight disk submit`() {
+    fun `reviewFailed without an id is ignored`() {
         val pipeline = pipeline()
-        pipeline.submit("/repo", listOf(buffer("a")), listOf(disk("d1")))
+        pipeline.submit("/repo", listOf(buffer("a")))
         pipeline.notify("reviewFailed", reviewFailed(null, app))
-        pipeline.notify("reviewFailed", reviewFailed(null, disk))
 
         assertEquals(setOf("/repo/$app"), pipeline.activePaths())
-        assertEquals(listOf(disk), failures.map { it.relPath })
+        assertTrue(failures.isEmpty())
     }
 
     @Test
-    fun `id-less results are accepted only for the disk SHA`() {
+    fun `progress is forwarded and count 0 does not release a buffer`() {
         val pipeline = pipeline()
-        pipeline.submit("/repo", listOf(buffer("a")), listOf(disk("d1")))
-        pipeline.notify("fileReview", fileReview(null, sha("a")))
-        pipeline.notify("fileReview", fileReview(null, "d2", disk))
-        pipeline.notify("fileReview", fileReview(null, null, disk))
-        pipeline.notify("deltaReview", deltaReview(null, null, disk, nullResult = true))
-
-        assertTrue(reviews.isEmpty() && deltas.isEmpty())
-        assertEquals(setOf("/repo/$app", "/repo/$disk"), pipeline.activePaths())
-        pipeline.notify("fileReview", fileReview(null, "d1", disk))
-        pipeline.notify("deltaReview", deltaReview(null, "d1", disk))
-
-        assertNull(reviews.single().content)
-        assertNull(deltas.single().scoredContent)
-        assertEquals(setOf("/repo/$app"), pipeline.activePaths())
-    }
-
-    @Test
-    fun `progress count 0 releases disk paths so the same SHA sends again`() {
-        val pipeline = pipeline()
-        pipeline.submit("/repo", emptyList(), listOf(disk("d1")))
+        pipeline.submit("/repo", listOf(buffer("a")))
         pipeline.notify("reviewProgress", reviewProgress(1))
-
-        assertEquals(setOf("/repo/$disk"), pipeline.activePaths())
         pipeline.notify("reviewProgress", reviewProgress(0))
-        assertTrue(pipeline.activePaths().isEmpty())
+
         assertEquals(listOf(1, 0), progress.map { it.count })
-        pipeline.submit("/repo", emptyList(), listOf(disk("d1")))
-        assertEquals(2, sent.size)
-    }
-
-    @Test
-    fun `an accepted disk SHA is not sent again but a buffer with that SHA is`() {
-        val pipeline = pipeline()
-        pipeline.submit("/repo", emptyList(), listOf(DiskSubmission("/repo/$app", app, sha("a"))))
-        pipeline.notify("fileReview", fileReview(null, sha("a")))
-        pipeline.submit("/repo", emptyList(), listOf(DiskSubmission("/repo/$app", app, sha("a"))))
-        pipeline.submit("/repo", listOf(buffer("a")), emptyList())
-
-        assertEquals(listOf(ReviewFileWire(app, "id1", "a")), sent[1].second)
+        assertEquals(setOf("/repo/$app"), pipeline.activePaths())
     }
 
     @Test
     fun `cancel drops later results for that id`() {
         val pipeline = pipeline()
-        pipeline.submit("/repo", listOf(buffer("a")), emptyList())
+        pipeline.submit("/repo", listOf(buffer("a")))
         pipeline.cancel("/repo/$app")
         pipeline.notify("fileReview", fileReview("id1", sha("a")))
         pipeline.notify("deltaReview", deltaReview("id1", sha("a")))
@@ -276,22 +239,30 @@ class WorkspaceReviewPipelineTest {
     @Test
     fun `sessionLost resends content whose delta was not accepted and keeps accepted deltas`() {
         val pipeline = pipeline()
-        pipeline.submit("/repo", listOf(buffer("a")), listOf(disk("d1")))
+        val otherApp = "src/Other.kt"
+        pipeline.submit(
+            "/repo",
+            listOf(buffer("a"), BufferSubmission("/repo/$otherApp", otherApp, "b")),
+        )
         pipeline.notify("fileReview", fileReview("id1", sha("a")))
-        pipeline.notify("deltaReview", deltaReview(null, "d1", disk))
+        pipeline.notify("fileReview", fileReview("id2", sha("b"), path = otherApp))
+        pipeline.notify("deltaReview", deltaReview("id2", sha("b"), path = otherApp))
         pipeline.sessionLost()
 
         assertEquals(SESSION_LOST, events.last())
         assertTrue(pipeline.activePaths().isEmpty())
-        pipeline.submit("/repo", listOf(buffer("a")), listOf(disk("d1")))
-        assertEquals(listOf(ReviewFileWire(app, "id2", "a")), sent[1].second)
+        pipeline.submit(
+            "/repo",
+            listOf(buffer("a"), BufferSubmission("/repo/$otherApp", otherApp, "b")),
+        )
+        assertEquals(listOf(ReviewFileWire(app, "id3", "a")), sent[1].second)
     }
 
     @Test
     fun `a failed send releases the paths`() {
         val pipeline = pipeline(sender = { _, _ -> throw CsIdeUnavailableException("down") })
 
-        val thrown = runCatching { pipeline.submit("/repo", listOf(buffer("a")), emptyList()) }.exceptionOrNull()
+        val thrown = runCatching { pipeline.submit("/repo", listOf(buffer("a"))) }.exceptionOrNull()
 
         assertTrue(thrown is CsIdeUnavailableException)
         assertTrue(pipeline.activePaths().isEmpty())
@@ -300,7 +271,7 @@ class WorkspaceReviewPipelineTest {
     @Test
     fun `another repository root is dropped and on Windows the root ignores case and slashes`() {
         val pipeline = pipeline(windows = true)
-        pipeline.submit("C:\\repo", listOf(BufferSubmission("C:\\repo\\src\\App.kt", app, "a")), emptyList())
+        pipeline.submit("C:\\repo", listOf(BufferSubmission("C:\\repo\\src\\App.kt", app, "a")))
         pipeline.notify("fileReview", fileReview("id1", sha("a"), root = "d:/repo"))
         pipeline.notify("fileReview", fileReview("id1", sha("a"), root = "c:/repo"))
 
@@ -310,7 +281,7 @@ class WorkspaceReviewPipelineTest {
     @Test
     fun `unknown methods are ignored`() {
         val pipeline = pipeline()
-        pipeline.submit("/repo", listOf(buffer("a")), emptyList())
+        pipeline.submit("/repo", listOf(buffer("a")))
         pipeline.notify("watchInventoryChanged", fileReview("id1", sha("a")))
 
         assertTrue(events.isEmpty())

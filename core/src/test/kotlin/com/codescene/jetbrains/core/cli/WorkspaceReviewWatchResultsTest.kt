@@ -73,24 +73,26 @@ class WorkspaceReviewWatchResultsTest {
     }
 
     @Test
-    fun `a disk SHA that is no longer current is dropped and the current one is accepted`() {
+    fun `a result for bytes that changed after an accepted watch result is dropped and the current one is accepted`() {
         val pipeline = fixture.pipeline(observe = ::observe)
-        pipeline.submit("/repo", emptyList(), listOf(fixture.disk("d1")))
-        current = CurrentFile("d2", null)
+        current = CurrentFile("d1", null)
 
         fixture.notify(pipeline, "fileReview", fixture.fileReview(null, "d1"))
-        assertTrue(fixture.reviews.isEmpty())
+        assertEquals(1, fixture.reviews.size)
 
         current = CurrentFile("d2", null)
-        fixture.notify(pipeline, "fileReview", fixture.fileReview(null, "d2"))
+        fixture.notify(pipeline, "fileReview", fixture.fileReview(null, "d1"))
         assertEquals(1, fixture.reviews.size)
+
+        fixture.notify(pipeline, "fileReview", fixture.fileReview(null, "d2"))
+        assertEquals(2, fixture.reviews.size)
     }
 
     @Test
     fun `an id-less result is dropped while a buffer is in flight`() {
         current = CurrentFile(fixture.sha("a"), "a")
         val pipeline = fixture.pipeline(observe = ::observe)
-        pipeline.submit("/repo", listOf(fixture.buffer("a")), emptyList())
+        pipeline.submit("/repo", listOf(fixture.buffer("a")))
 
         fixture.notify(pipeline, "fileReview", fixture.fileReview(null, fixture.sha("a")))
         assertTrue(fixture.reviews.isEmpty())
@@ -113,7 +115,7 @@ class WorkspaceReviewWatchResultsTest {
     @Test
     fun `observe is not called for results with an id`() {
         val pipeline = fixture.pipeline(observe = ::observe)
-        pipeline.submit("/repo", listOf(fixture.buffer("a")), emptyList())
+        pipeline.submit("/repo", listOf(fixture.buffer("a")))
 
         fixture.notify(pipeline, "fileReview", fixture.fileReview("id1", fixture.sha("a")))
         fixture.notify(pipeline, "deltaReview", fixture.deltaReview("id1", fixture.sha("a")))

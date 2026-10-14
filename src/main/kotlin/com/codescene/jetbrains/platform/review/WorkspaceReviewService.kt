@@ -21,7 +21,6 @@ import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
-import com.intellij.openapi.vfs.LocalFileSystem
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -60,24 +59,6 @@ class WorkspaceReviewService(
                 val repoRoot = gitService.getRepoRoot(path) ?: return@locate null
                 val rel = gitService.getRepoRelativePath(path) ?: return@locate null
                 RepoLocation(repoRoot, WorkspacePaths.normalizeRel(rel))
-            },
-            openText = { path ->
-                ReadAction.compute<String?, Exception> {
-                    val file = LocalFileSystem.getInstance().findFileByPath(path)
-                    if (file == null || !file.isValid) {
-                        return@compute null
-                    }
-                    FileDocumentManager.getInstance().getCachedDocument(file)?.text
-                }
-            },
-            readBytes = { path ->
-                ReadAction.compute<ByteArray?, Exception> {
-                    val file = LocalFileSystem.getInstance().findFileByPath(path)
-                    if (file == null || !file.isValid) {
-                        return@compute null
-                    }
-                    file.contentsToByteArray()
-                }
             },
             isSupported = { isPathSupportedForReview(project, it) },
         )
@@ -123,10 +104,6 @@ class WorkspaceReviewService(
         content: String,
     ) {
         submitter.submitEditor(absolutePath, content)
-    }
-
-    fun submitPaths(paths: List<String>) {
-        submitter.submitPaths(paths)
     }
 
     fun cancel(absolutePath: String) {

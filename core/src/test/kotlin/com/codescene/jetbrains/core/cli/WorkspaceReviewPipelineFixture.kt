@@ -41,8 +41,6 @@ class WorkspaceReviewPipelineFixture {
 
     fun buffer(content: String) = BufferSubmission(appPath, app, content)
 
-    fun disk(sha: String) = DiskSubmission(appPath, app, sha)
-
     fun sha(content: String) = GitBlobSha.ofString(content)
 
     fun params(

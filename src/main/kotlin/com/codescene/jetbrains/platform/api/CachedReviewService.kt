@@ -8,7 +8,6 @@ import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.review.WorkspaceReviewService
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.isFileSupported
-import com.codescene.jetbrains.platform.util.isPathSupportedForReview
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -79,14 +78,6 @@ class CachedReviewService(
         }
     }
 
-    fun reviewByPath(filePath: String) {
-        if (!isPathSupportedForReview(project, filePath)) {
-            return
-        }
-        Log.info("reviewByPath entryPath=$filePath", "CachedReviewService")
-        workspaceReviewService.submitPaths(listOf(filePath))
-    }
-
     override fun cancelFileReview(filePath: String) {
         super.cancelFileReview(filePath)
         workspaceReviewService.cancel(normalizeAbsolutePath(filePath))
@@ -114,8 +105,7 @@ class CachedReviewService(
             Log.info("Replaying queued review with editor file=$fileName", "CodeSceneCachedReview")
             review(editor)
         } else {
-            Log.info("Replaying queued review by path (no editor) file=$fileName", "CodeSceneCachedReview")
-            reviewByPath(filePath)
+            Log.info("Dropping queued review without editor file=$fileName", "CodeSceneCachedReview")
         }
     }
 

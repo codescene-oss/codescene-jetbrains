@@ -67,10 +67,9 @@ internal object WorkspaceReviewMatching {
     fun shouldSend(
         state: PathState?,
         gitBlobSha: String,
-        buffer: Boolean,
     ): Boolean {
         if (state == null || state.current.gitBlobSha != gitBlobSha) return true
-        if (buffer && state.current !is SubmittedBuffer) return true
+        if (state.current !is SubmittedBuffer) return true
         return !state.inFlight && !state.accepted
     }
 
@@ -95,20 +94,13 @@ internal object WorkspaceReviewMatching {
     fun failureMatches(
         state: PathState,
         key: NoticeKey,
-    ): Boolean =
-        when (val submission = state.current) {
-            is SubmittedBuffer -> key.id == submission.id
-            is SubmittedDisk -> key.id == null && state.inFlight
-        }
+    ): Boolean = state.current.let { it is SubmittedBuffer && it.id == key.id }
 
-    fun afterReview(state: PathState): PathState =
-        state.copy(accepted = true, inFlight = state.inFlight && state.current is SubmittedBuffer)
+    fun afterReview(state: PathState): PathState = state.copy(accepted = true)
 
     fun afterDelta(state: PathState): PathState = state.copy(accepted = true, deltaAccepted = true, inFlight = false)
 
     fun afterSessionLost(state: PathState): PathState = state.copy(inFlight = false, accepted = state.deltaAccepted)
-
-    fun releasedByIdleProgress(state: PathState): Boolean = state.inFlight && state.current is SubmittedDisk
 
     fun awaitingDelta(state: PathState?): String? {
         if (state == null) return null

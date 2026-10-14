@@ -11,12 +11,6 @@ data class BufferSubmission(
     val content: String,
 )
 
-data class DiskSubmission(
-    val absolutePath: String,
-    val relPath: String,
-    val gitBlobSha: String,
-)
-
 data class PresentedReview(
     val absolutePath: String,
     val relPath: String,
@@ -64,13 +58,11 @@ class WorkspaceReviewPipeline(
     fun submit(
         repoRoot: String,
         buffers: List<BufferSubmission>,
-        disks: List<DiskSubmission>,
     ) {
         val batch =
             synchronized(lock) {
                 val now = clock()
-                val queuedBuffers = buffers.mapNotNull { queueBuffer(repoRoot, it, now) }
-                queuedBuffers + disks.mapNotNull { queueDisk(repoRoot, it, now) }
+                buffers.mapNotNull { queueBuffer(repoRoot, it, now) }
             }
         if (batch.isEmpty()) return
         try {
@@ -120,20 +112,9 @@ class WorkspaceReviewPipeline(
         now: Long,
     ): Submission? {
         val sha = GitBlobSha.ofString(buffer.content)
-        if (!WorkspaceReviewMatching.shouldSend(states[pathKey(buffer.absolutePath)], sha, buffer = true)) return null
+        if (!WorkspaceReviewMatching.shouldSend(states[pathKey(buffer.absolutePath)], sha)) return null
         val relPath = WorkspacePaths.normalizeRel(buffer.relPath)
         return track(SubmittedBuffer(buffer.absolutePath, repoRoot, relPath, sha, now, newId(), buffer.content))
-    }
-
-    private fun queueDisk(
-        repoRoot: String,
-        disk: DiskSubmission,
-        now: Long,
-    ): Submission? {
-        val state = states[pathKey(disk.absolutePath)]
-        if (!WorkspaceReviewMatching.shouldSend(state, disk.gitBlobSha, buffer = false)) return null
-        val relPath = WorkspacePaths.normalizeRel(disk.relPath)
-        return track(SubmittedDisk(disk.absolutePath, repoRoot, relPath, disk.gitBlobSha, now))
     }
 
     private fun track(submission: Submission): Submission {
@@ -229,13 +210,6 @@ class WorkspaceReviewPipeline(
     }
 
     private fun onProgress(notice: ReviewProgressNotice) {
-        if (notice.count == 0) {
-            synchronized(lock) {
-                states.replaceAll { _, state ->
-                    if (WorkspaceReviewMatching.releasedByIdleProgress(state)) state.copy(inFlight = false) else state
-                }
-            }
-        }
         sink.progress(notice)
     }
 
