@@ -244,13 +244,24 @@ Plan: `docs/superpowers/plans/2026-10-13-phase3-watch-inventory.md`. Server beha
 
 ### Phase 4: legacy deletion
 
+Plan: `docs/superpowers/plans/2026-10-14-phase4-legacy-deletion.md`.
+
 - Git and file observation: `PeriodicChangeListerService`, `GitChangeObserver*`, `Git4IdeaChangeLister`, `VfsEventBridge`,
-  `GitRepoStateListener`, `SavedFilesTrackerAdapter`, `CodesceneRepoFilesListener`, `GitIgnoreFilesListener`, `StaleItemCleanup`.
-  The poller and `StaleItemCleanup` go once `WatchInventoryParityLiveTest` passes in CI.
-- Baseline: `MainLineBranchResolver`, `ClosestMainLineMergeBase`, `CodesceneRepoConfig` baseline parsing, and the baseline
-  parts of `Git4IdeaGitService`.
-- Caches keyed by baseline: `BaselineReviewCacheService`, `CliCacheUtils`.
-- Keep editor-specific listeners (`FileEditorLifecycleListener`, dirty-buffer seeding) and project-content filters.
+  `GitRepoStateListener`, `SavedFilesTracker*`, `CodesceneRepoFilesListener`, `GitIgnoreFilesListener`, `StaleItemCleanup`.
+  The poller, `StaleItemCleanup` and the git listing go once `WatchLiveTest` and `WatchInventoryParityLiveTest` pass in
+  #194 CI on Linux, Windows and macOS. The server handles `.gitignore`, `.codescene/*.json`, HEAD and ref changes; an
+  unsaved buffer keeps its score until its next edit after a rules or ignore change.
+- Monitor pruning stays with `InventoryMonitorSync`. A root that leaves the project's scopes syncs to its open files.
+- Baseline: `MainLineBranchResolver`, `ClosestMainLineMergeBase`, `MainLineBranchContext`, `CodesceneRepoConfig`, the
+  reflog helper, and the baseline parts of `Git4IdeaGitService` and `IGitService`. The server's merge-base candidates
+  replace the plugin's, which also probed `develop`, `trunk`, `dev` and `development` and fell back to the reflog.
+- Caches keyed by baseline: `BaselineReviewCacheService` and the CLI cache-name helpers. `isExpiredCliCacheEntry` stays;
+  it prunes the ACE `.review-caches` directory.
+- Disk submissions: `submitPaths`, `DiskSubmission` and `CachedReviewService.reviewByPath`. Files without an editor are
+  reviewed only by the watch; a queued review whose editor closed is dropped.
+- The consumer coroutines of `WorkspaceReviewService` and `CsIdeWatchService` survive a failing event.
+- Keep editor-specific listeners (`FileEditorLifecycleListener`, dirty-buffer seeding), `FileChangeListener` (rename,
+  move, delete) and project-content filters (`Git4IdeaGitService.isIgnored`, `getRepoRoot`, `getRepoRelativePath`).
 
 ## macOS go/no-go
 
@@ -286,6 +297,9 @@ removed from the branch after the run.
   (push before results, disk-byte SHA, idle without progress, null delta on restore, stop) and
   `WatchInventoryParityLiveTest`. The platform wiring is smoke-tested with `runIde`, split into checks the user makes in
   the IDE and checks the coordinator makes from the shell and `idea.log`.
+- Phase 4 deletes tests with their classes, adds `ConsumerGuardTest` and the removed-root sync cases, and rewrites the
+  pipeline tests that used disk submissions against watch results. It is smoke-tested with `runIde` twice: after the
+  ungated deletions and after the gated ones.
 
 ## Non-goals
 
