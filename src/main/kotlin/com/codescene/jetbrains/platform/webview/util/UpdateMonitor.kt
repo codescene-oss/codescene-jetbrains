@@ -31,7 +31,7 @@ import com.intellij.openapi.project.Project
  * The JSON message is created using [parseMessage], which ensures the
  * correct serializer is used.
  */
-private val codeHealthMonitorMapper = CodeHealthMonitorMapper()
+private val codeHealthMonitorMapper = CodeHealthMonitorMapper(java.io.File.separatorChar)
 
 fun updateMonitor(project: Project) {
     val queueTime = System.currentTimeMillis()

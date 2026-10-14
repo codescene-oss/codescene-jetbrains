@@ -25,7 +25,9 @@ data class CodeHealthMonitorUpdate(
     val hasNotification: Boolean,
 )
 
-class CodeHealthMonitorMapper {
+class CodeHealthMonitorMapper(
+    private val pathSeparator: Char = '/',
+) {
     fun toCwfData(
         deltaResults: List<Pair<String, DeltaCacheItem>>,
         activeJobs: List<String>,
@@ -130,8 +132,10 @@ class CodeHealthMonitorMapper {
                 oldScore = deltaResponse.oldScore.orElse(null),
             )
 
-        FileDeltaData(file = File(fileName = result.first), delta = deltaForFile)
+        FileDeltaData(file = File(fileName = monitorFilePath(result.first)), delta = deltaForFile)
     }
+
+    private fun monitorFilePath(path: String): String = path.replace('/', pathSeparator).replace('\\', pathSeparator)
 
     private fun getChangeDetails(changeDetails: List<com.codescene.data.delta.ChangeDetail>?) =
         changeDetails?.map { finding ->
