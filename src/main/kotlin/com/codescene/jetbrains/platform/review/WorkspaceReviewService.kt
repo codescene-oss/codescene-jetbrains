@@ -118,8 +118,6 @@ class WorkspaceReviewService(
         coordinator.start(this)
     }
 
-    fun isWatched(repoRoot: String): Boolean = coordinator.isWatched(repoRoot)
-
     fun submitEditor(
         absolutePath: String,
         content: String,

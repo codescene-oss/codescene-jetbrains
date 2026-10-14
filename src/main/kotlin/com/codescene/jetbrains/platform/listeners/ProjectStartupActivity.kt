@@ -7,7 +7,6 @@ import com.codescene.jetbrains.core.util.resolveSettingsChangeActions
 import com.codescene.jetbrains.platform.api.AceService
 import com.codescene.jetbrains.platform.editor.UIRefreshService
 import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionProvider
-import com.codescene.jetbrains.platform.git.PeriodicChangeListerService
 import com.codescene.jetbrains.platform.review.WorkspaceReviewService
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.platform.statusbar.AceStatusBarWidgetFactory
@@ -65,9 +64,6 @@ class ProjectStartupActivity : ProjectActivity {
         VirtualFileManager.getInstance().addAsyncFileListener(FileChangeListener(project), disposable)
 
         WorkspaceReviewService.getInstance(project).startWatching()
-
-        val periodicChangeListerService = project.service<PeriodicChangeListerService>()
-        periodicChangeListerService.start()
 
         registerCodeSceneToolWindowTelemetry(project, disposable)
 

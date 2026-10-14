@@ -133,8 +133,6 @@ class WorkspaceWatchCoordinator(
         return ObservedFile(resolved.absolutePath, resolved.repoRoot, current)
     }
 
-    fun isWatched(repoRoot: String): Boolean = watch.isWatched(repoRoot)
-
     fun dispose() {
         sentListenerRegistration?.close()
         busConnection?.disconnect()

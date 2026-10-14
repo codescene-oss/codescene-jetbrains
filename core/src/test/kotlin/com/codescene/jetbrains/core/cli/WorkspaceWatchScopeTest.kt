@@ -1,7 +1,6 @@
 package com.codescene.jetbrains.core.cli
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -12,13 +11,7 @@ class WorkspaceWatchScopeTest {
 
     @Test
     fun `new roots schedule one confirm each`() {
-        val effects =
-            watch.setScopes(
-                mapOf(
-                    "/a" to listOf("."),
-                    "/b" to listOf("src"),
-                ),
-            )
+        val effects = watch.setScopes(mapOf("/a" to listOf("."), "/b" to listOf("src")))
         val confirms = effects.filterIsInstance<WatchEffect.ScheduleConfirm>()
         assertEquals(2, confirms.size)
         confirms.forEach { assertEquals(WorkspaceWatch.CONFIRM_DELAY_MS, it.delayMs) }
@@ -35,14 +28,28 @@ class WorkspaceWatchScopeTest {
     }
 
     @Test
-    fun `a removed root is no longer resolved or watched`() {
+    fun `a removed root syncs the monitor to empty and is no longer resolved`() {
         watch.setScopes(mapOf("/repo" to listOf(".")))
         watch.inventoryPushed(WatchInventory("/repo", setOf("a.kt")))
-        assertTrue(watch.isWatched("/repo"))
         assertEquals(ResolvedPath("/repo", "/repo/a.kt"), watch.resolve("/repo", "a.kt"))
-        watch.setScopes(emptyMap())
-        assertFalse(watch.isWatched("/repo"))
+        val effects = watch.setScopes(emptyMap())
+        assertEquals(listOf(WatchEffect.SyncMonitor("/repo", emptySet())), effects)
         assertNull(watch.resolve("/repo", "a.kt"))
+        assertNull(watch.inventory("/repo"))
+    }
+
+    @Test
+    fun `a removed root without an inventory emits nothing`() {
+        watch.setScopes(mapOf("/repo" to listOf(".")))
+        assertEquals(emptyList<WatchEffect>(), watch.setScopes(emptyMap()))
+    }
+
+    @Test
+    fun `a removed root matches its key on Windows`() {
+        val windowsWatch = WorkspaceWatch(windows = true)
+        windowsWatch.setScopes(mapOf("C:/repo" to listOf(".")))
+        windowsWatch.inventoryPushed(WatchInventory("c:\\Repo", setOf("a.kt")))
+        assertEquals(listOf(WatchEffect.SyncMonitor("C:/repo", emptySet())), windowsWatch.setScopes(emptyMap()))
     }
 
     @Test
@@ -51,10 +58,7 @@ class WorkspaceWatchScopeTest {
             watch.setScopes(mapOf("/repo" to listOf("."))).single() as WatchEffect.ScheduleConfirm
         val sentConfirm = watch.watchSent("/repo").single() as WatchEffect.ScheduleConfirm
         assertEquals(emptyList<WatchEffect>(), watch.confirmDue("/repo", scopeConfirm.token))
-        assertEquals(
-            listOf(WatchEffect.FetchInventory("/repo", 0)),
-            watch.confirmDue("/repo", sentConfirm.token),
-        )
+        assertEquals(listOf(WatchEffect.FetchInventory("/repo", 0)), watch.confirmDue("/repo", sentConfirm.token))
         assertEquals(emptyList<WatchEffect>(), watch.confirmDue("/repo", sentConfirm.token))
     }
 
@@ -92,15 +96,15 @@ class WorkspaceWatchScopeTest {
     }
 
     @Test
-    fun `isWatched becomes true after the first push or fetch`() {
+    fun `the inventory is set by the first push or fetch`() {
         watch.setScopes(mapOf("/repo" to listOf(".")))
-        assertFalse(watch.isWatched("/repo"))
+        assertNull(watch.inventory("/repo"))
         watch.inventoryPushed(WatchInventory("/repo", setOf("a.kt")))
-        assertTrue(watch.isWatched("/repo"))
+        assertEquals(setOf("a.kt"), watch.inventory("/repo"))
         val fresh = WorkspaceWatch(windows = false)
         fresh.setScopes(mapOf("/repo" to listOf(".")))
-        assertFalse(fresh.isWatched("/repo"))
+        assertNull(fresh.inventory("/repo"))
         fresh.inventoryFetched(WatchInventory("/repo", setOf("b.kt")), 0)
-        assertTrue(fresh.isWatched("/repo"))
+        assertEquals(setOf("b.kt"), fresh.inventory("/repo"))
     }
 }

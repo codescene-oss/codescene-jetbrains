@@ -16,6 +16,7 @@ members, ensuring transparency and consistency throughout the project lifecycle.
 5. [DEC-2024-10-04-001: Multiple CodeVision Providers for Distinct Code Smells](#dec-2024-10-04-001-multiple-codevision-providers-for-distinct-code-smells)
 6. [DEC-2025-01-03-001: Code Smell Documentation Location Update](#dec-2025-01-03-001-code-smell-documentation-location-update)
 7. [DEC-2026-10-13-001: Run analysis through cs-ide JSON-RPC child process](#dec-2026-10-13-001-run-analysis-through-cs-ide-json-rpc-child-process)
+8. [DEC-2026-10-14-001: Let cs-ide own git watching and baselines](#dec-2026-10-14-001-let-cs-ide-own-git-watching-and-baselines)
 
 ---
 
@@ -326,3 +327,44 @@ only provides the launch environment and an application service.
 
 **Related Decisions**:
 None
+
+---
+
+## DEC-2026-10-14-001: Let cs-ide own git watching and baselines
+
+[Back to Top](#table-of-contents)
+
+**Date**: 2026-10-14
+
+**Decision Maker(s)**: Martin Säfsten
+
+**Status**: Accepted
+
+**Decision**:
+The plugin no longer observes git, lists changed files, resolves baselines or caches baseline reviews. The `cs-ide`
+server watches each git root, keeps the changed-file inventory and scores files against its own merge-base. The plugin
+submits only editor buffers and prunes the monitor from the server's inventory.
+
+**Context**:
+Phase 3 ran the watch beside the 9 s poller until `WatchInventoryParityLiveTest` proved both produced the same files
+on Linux, Windows and macOS. Two implementations of change detection and baseline resolution had to agree.
+
+**Rationale**:
+One implementation shared with the other IDE integrations; no git subprocesses from the plugin every 9 s; ignore, rules,
+config and HEAD changes handled where the inventory lives.
+
+**Consequences**:
+Every untracked supported file is listed. Merge-base candidates follow the server (`baseline_branch`, `origin/HEAD`,
+`origin/main`, `origin/master`, `main`, `master`); a repository whose main line is only `develop`, `trunk`, `dev` or
+`development` without `origin/HEAD` falls back to HEAD with every tracked file in the inventory unless `baseline_branch`
+is set. No reflog fallback. After a `.gitignore` or `.codescene/*.json` change, unsaved buffers keep their score until
+their next edit. Files without an editor are reviewed only by the watch.
+
+**Alternatives Considered**:
+
+- **Keep the poller as a fallback**: Rejected; two sources of truth and the poller's git load.
+- **Keep the plugin's merge-base order and send `baseline-revision`**: Rejected; diverges from the other IDEs; the
+  server's `baseline_branch` covers custom main lines.
+
+**Related Decisions**:
+`DEC-2026-10-13-001`.

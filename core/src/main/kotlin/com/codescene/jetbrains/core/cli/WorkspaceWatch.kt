@@ -11,7 +11,12 @@ class WorkspaceWatch(
         synchronized(lock) {
             val effects = mutableListOf<WatchEffect>()
             val desiredKeys = scopes.map { WorkspacePaths.rootKey(it.key, windows) }.toSet()
-            roots.keys.filter { it !in desiredKeys }.forEach { roots.remove(it) }
+            roots.keys.filter { it !in desiredKeys }.toList().forEach { key ->
+                val removed = roots.remove(key)!!
+                if (removed.inventory != null) {
+                    effects += WatchEffect.SyncMonitor(removed.localRoot, emptySet())
+                }
+            }
             for ((root, paths) in scopes) {
                 val key = WorkspacePaths.rootKey(root, windows)
                 val existing = roots[key]
@@ -119,11 +124,6 @@ class WorkspaceWatch(
             if (!inScope(normalized, state.paths)) return null
             val base = state.localRoot.trimEnd('/', '\\')
             ResolvedPath(state.localRoot, "$base/$normalized")
-        }
-
-    fun isWatched(repoRoot: String): Boolean =
-        synchronized(lock) {
-            stateFor(repoRoot)?.inventory != null
         }
 
     fun inventory(repoRoot: String): Set<String>? =
