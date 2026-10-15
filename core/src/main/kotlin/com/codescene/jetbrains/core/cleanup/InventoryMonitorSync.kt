@@ -12,14 +12,17 @@ class InventoryMonitorSync(
         repoRoot: String,
         inventoryPaths: Set<String>,
         openPaths: Set<String>,
+        excludedRoots: Set<String> = emptySet(),
     ): Int {
-        val rootPrefix = pathCacheKey(repoRoot).trimEnd('/') + "/"
+        val rootPrefix = rootPrefix(repoRoot)
+        val excludedPrefixes = excludedRoots.map { rootPrefix(it) }
         val allowedKeys =
             (inventoryPaths + openPaths).map { pathCacheKey(it) }.toSet()
         var hidden = 0
         for ((filePath, _) in deltaCacheService.getAll()) {
             val fileKey = pathCacheKey(filePath)
             if (!fileKey.startsWith(rootPrefix)) continue
+            if (excludedPrefixes.any { fileKey.startsWith(it) }) continue
             if (!allowedKeys.contains(fileKey)) {
                 deltaCacheService.setIncludeInCodeHealthMonitor(filePath, false)
                 hidden++
@@ -31,4 +34,6 @@ class InventoryMonitorSync(
         logger.info("monitor sync for $repoRoot: hidden=$hidden", "InventoryMonitorSync")
         return hidden
     }
+
+    private fun rootPrefix(root: String): String = pathCacheKey(root).trimEnd('/') + "/"
 }

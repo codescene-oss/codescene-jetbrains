@@ -14,7 +14,7 @@ class WorkspaceWatch(
             roots.keys.filter { it !in desiredKeys }.toList().forEach { key ->
                 val removed = roots.remove(key)!!
                 if (removed.inventory != null) {
-                    effects += WatchEffect.SyncMonitor(removed.localRoot, emptySet())
+                    effects += monitorSync(removed.localRoot, emptySet())
                 }
             }
             for ((root, paths) in scopes) {
@@ -110,7 +110,7 @@ class WorkspaceWatch(
             roots.values
                 .filter { it.inventory != null }
                 .map { state ->
-                    WatchEffect.SyncMonitor(state.localRoot, absolutePaths(state))
+                    monitorSync(state, absolutePaths(state))
                 }
         }
 
@@ -143,8 +143,25 @@ class WorkspaceWatch(
     ): WatchEffect.SyncMonitor {
         val filtered = files.filter { inScope(WorkspacePaths.normalizeRel(it), state.paths) }.toSet()
         state.inventory = filtered
-        return WatchEffect.SyncMonitor(state.localRoot, absolutePaths(state))
+        return monitorSync(state, absolutePaths(state))
     }
+
+    private fun monitorSync(
+        state: RootState,
+        absolutePaths: Set<String>,
+    ): WatchEffect.SyncMonitor =
+        WatchEffect.SyncMonitor(state.localRoot, absolutePaths, nestedWatchedRoots(state.localRoot))
+
+    private fun monitorSync(
+        repoRoot: String,
+        absolutePaths: Set<String>,
+    ): WatchEffect.SyncMonitor = WatchEffect.SyncMonitor(repoRoot, absolutePaths, nestedWatchedRoots(repoRoot))
+
+    private fun nestedWatchedRoots(repoRoot: String): Set<String> =
+        roots.values.map { it.localRoot }.filter { other ->
+            val relative = WorkspacePaths.relativeTo(repoRoot, other, windows)
+            relative != null && relative != "."
+        }.toSet()
 
     private fun absolutePaths(state: RootState): Set<String> {
         val base = state.localRoot.trimEnd('/', '\\')

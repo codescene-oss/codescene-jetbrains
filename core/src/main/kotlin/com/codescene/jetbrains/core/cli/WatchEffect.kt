@@ -19,6 +19,7 @@ sealed interface WatchEffect {
     data class SyncMonitor(
         val repoRoot: String,
         val absolutePaths: Set<String>,
+        val excludedRoots: Set<String> = emptySet(),
     ) : WatchEffect
 
     data class Reseed(

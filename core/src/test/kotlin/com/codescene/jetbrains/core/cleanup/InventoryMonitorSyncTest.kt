@@ -100,4 +100,35 @@ class InventoryMonitorSyncTest {
         assertEquals(0, hidden)
         assertEquals(0, deltaCacheService.getAll().size)
     }
+
+    @Test
+    fun `a nested excluded root stays visible and a sibling prefix is hidden`() {
+        addToCache("/p/a.kt")
+        addToCache("/p/sub/b.kt")
+        addToCache("/p/sub2/c.kt")
+        val hidden =
+            sync.sync(
+                repoRoot = "/p",
+                inventoryPaths = setOf("/p/a.kt"),
+                openPaths = emptySet(),
+                excludedRoots = setOf("/p/sub"),
+            )
+        assertEquals(1, hidden)
+        assertEquals(setOf("/p/a.kt", "/p/sub/b.kt"), deltaCacheService.getAll().map { it.first }.toSet())
+    }
+
+    @Test
+    fun `windows nested exclusion uses the cache key`() {
+        addToCache("C:/Repo/sub/A.kt")
+        addToCache("C:/Repo/other.kt")
+        val hidden =
+            sync.sync(
+                repoRoot = "c:\\repo",
+                inventoryPaths = emptySet(),
+                openPaths = emptySet(),
+                excludedRoots = setOf("C:/Repo/sub"),
+            )
+        assertEquals(1, hidden)
+        assertEquals(setOf("C:/Repo/sub/A.kt"), deltaCacheService.getAll().map { it.first }.toSet())
+    }
 }

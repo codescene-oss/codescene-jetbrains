@@ -111,4 +111,28 @@ class WorkspaceWatchInventoryTest {
         watch.setScopes(mapOf("/repo" to listOf(".")))
         assertEquals(emptyList<WatchEffect>(), watch.inventoryPushed(WatchInventory("/other", setOf("a.kt"))))
     }
+
+    @Test
+    fun `parent sync and idle exclude a nested watched root and ignore siblings`() {
+        watch.setScopes(mapOf("/p" to listOf("."), "/p/sub" to listOf("."), "/p2" to listOf(".")))
+        val parent =
+            watch.inventoryPushed(WatchInventory("/p", setOf("a.kt"))).single() as WatchEffect.SyncMonitor
+        assertEquals(setOf("/p/sub"), parent.excludedRoots)
+        assertEquals(setOf("/p/a.kt"), parent.absolutePaths)
+        val child =
+            watch.inventoryPushed(WatchInventory("/p/sub", setOf("b.kt"))).single() as WatchEffect.SyncMonitor
+        assertEquals(emptySet<String>(), child.excludedRoots)
+        val sibling =
+            watch.inventoryPushed(WatchInventory("/p2", emptySet())).first() as WatchEffect.SyncMonitor
+        assertEquals(emptySet<String>(), sibling.excludedRoots)
+        val idleParent =
+            watch.progressIdle().filterIsInstance<WatchEffect.SyncMonitor>().single { it.repoRoot == "/p" }
+        assertEquals(setOf("/p/sub"), idleParent.excludedRoots)
+        val removedParent =
+            watch.setScopes(mapOf("/p/sub" to listOf("."), "/p2" to listOf(".")))
+                .filterIsInstance<WatchEffect.SyncMonitor>()
+                .single { it.repoRoot == "/p" }
+        assertEquals(emptySet<String>(), removedParent.absolutePaths)
+        assertEquals(setOf("/p/sub"), removedParent.excludedRoots)
+    }
 }

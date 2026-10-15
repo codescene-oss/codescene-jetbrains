@@ -170,7 +170,12 @@ class WorkspaceWatchCoordinator(
                     }
                 is WatchEffect.ReportLost -> CsIdeWatchService.getInstance().reportLost(effect.repoRoot)
                 is WatchEffect.SyncMonitor ->
-                    sync.sync(effect.repoRoot, effect.absolutePaths, openFiles.getAllVisibleFileNames())
+                    sync.sync(
+                        effect.repoRoot,
+                        effect.absolutePaths,
+                        openFiles.getAllVisibleFileNames(),
+                        effect.excludedRoots,
+                    )
                 is WatchEffect.Reseed -> reseed(effect.repoRoot)
             }
         }
