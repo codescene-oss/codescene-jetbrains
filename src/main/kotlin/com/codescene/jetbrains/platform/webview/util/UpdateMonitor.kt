@@ -13,12 +13,16 @@ import com.codescene.jetbrains.platform.delta.PlatformDeltaCacheService
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.icons.CodeSceneIcons.CODESCENE_TW
 import com.codescene.jetbrains.platform.review.PlatformAceRefactorableFunctionsCacheService
+import com.codescene.jetbrains.platform.review.WorkspaceReviewService
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.UpdateToolWindowIconParams
 import com.codescene.jetbrains.platform.util.updateToolWindowIcon
 import com.codescene.jetbrains.platform.webview.handler.CwfMessageHandler
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.SystemInfo
+import git4idea.repo.GitRepositoryManager
 
 /**
  * Updates the Code Health Monitor in the Home view (CWF).
@@ -49,18 +53,29 @@ private fun updateMonitorImpl(project: Project) {
 
     val services = CodeSceneProjectServiceProvider.getInstance(project)
     val deltaResults = PlatformDeltaCacheService.getInstance(project).getAll()
-    val activeJobs = CachedReviewService.getInstance(project).activeReviewCalls.toList()
+    val runningPaths = CachedReviewService.getInstance(project).activeReviewCalls.toList()
+    val progress = WorkspaceReviewService.getInstance(project).reviewProgressSnapshot()
+    val repoRoots = GitRepositoryManager.getInstance(project).repositories.map { it.root.path }
+    val candidatePaths =
+        buildList {
+            addAll(runningPaths)
+            FileEditorManager.getInstance(project).openFiles.forEach { file -> add(file.path) }
+        }
 
-    val shortNames = activeJobs.map { pathFileName(it) }
+    val shortNames = runningPaths.map { pathFileName(it) }
     Log.info("Active jobs: $shortNames deltaResults=${deltaResults.size}", "UpdateMonitor")
-    activeJobs.forEach { Log.info("activeJob path=$it", "UpdateMonitor") }
+    runningPaths.forEach { Log.info("activeJob path=$it", "UpdateMonitor") }
     deltaResults.forEach { (path, _) -> Log.info("deltaResult path=$path", "UpdateMonitor") }
 
     val settings = services.settingsProvider.currentState()
     val update =
         codeHealthMonitorMapper.buildUpdate(
             deltaResults = deltaResults,
-            activeJobs = activeJobs,
+            runningPaths = runningPaths,
+            progress = progress,
+            repoRoots = repoRoots,
+            candidatePaths = candidatePaths,
+            windows = SystemInfo.isWindows,
             functionToRefactorResolver = { filePath, contentSha, fn ->
                 val cache = PlatformAceRefactorableFunctionsCacheService.getInstance(project)
                 val candidates = resolveAceCandidatesForMonitor(cache, filePath, contentSha)
@@ -80,7 +95,7 @@ private fun updateMonitorImpl(project: Project) {
         ),
     )
     CwfMessageHandler.getInstance(project).postMessage(View.HOME, update.message)
-    markCodeHealthMonitorStateForUiTests(project, activeJobs.size, deltaResults.size)
+    markCodeHealthMonitorStateForUiTests(project, runningPaths.size, deltaResults.size)
 
     val elapsedTime = System.currentTimeMillis() - startTime
     Log.info("Completed updating monitor for project '${project.name}' in ${elapsedTime}ms", "UpdateMonitor")

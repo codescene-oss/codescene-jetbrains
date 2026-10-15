@@ -15,6 +15,7 @@ class CodeHealthMonitorMapperPathTest {
     private val autoRefactorConfig = AutoRefactorConfig()
     private val defaultFeatureFlags = listOf("jobs", "ace-status-indicator")
     private val noRefactorResolver: (String, String, DeltaFunctionFinding) -> FunctionToRefactor? = { _, _, _ -> null }
+    private val idleAnalysis = MonitorAnalysis(emptyList(), "idle", null, 0)
 
     private fun createDelta(): Delta {
         val delta = mockk<Delta>(relaxed = true)
@@ -36,7 +37,7 @@ class CodeHealthMonitorMapperPathTest {
             CodeHealthMonitorMapper(pathSeparator = '\\')
                 .toCwfData(
                     deltaResults = listOf(mixedPath to createCacheItem(createDelta())),
-                    activeJobs = emptyList(),
+                    monitorAnalysis = idleAnalysis,
                     functionToRefactorResolver = noRefactorResolver,
                     autoRefactorConfig = autoRefactorConfig,
                     featureFlags = defaultFeatureFlags,
@@ -55,7 +56,7 @@ class CodeHealthMonitorMapperPathTest {
             CodeHealthMonitorMapper(pathSeparator = '/')
                 .toCwfData(
                     deltaResults = listOf(mixedPath to createCacheItem(createDelta())),
-                    activeJobs = emptyList(),
+                    monitorAnalysis = idleAnalysis,
                     functionToRefactorResolver = noRefactorResolver,
                     autoRefactorConfig = autoRefactorConfig,
                     featureFlags = defaultFeatureFlags,
@@ -98,7 +99,7 @@ class CodeHealthMonitorMapperPathTest {
         CodeHealthMonitorMapper(pathSeparator = '\\')
             .toCwfData(
                 deltaResults = listOf(mixedPath to createCacheItem(delta)),
-                activeJobs = emptyList(),
+                monitorAnalysis = idleAnalysis,
                 functionToRefactorResolver = resolver,
                 autoRefactorConfig = autoRefactorConfig,
                 featureFlags = defaultFeatureFlags,

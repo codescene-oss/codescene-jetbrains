@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.review
 
 import com.codescene.jetbrains.core.cli.RepoLocation
+import com.codescene.jetbrains.core.cli.ReviewProgressNotice
 import com.codescene.jetbrains.core.cli.WorkspacePaths
 import com.codescene.jetbrains.core.cli.WorkspaceReviewClient
 import com.codescene.jetbrains.core.cli.WorkspaceReviewPipeline
@@ -12,6 +13,7 @@ import com.codescene.jetbrains.platform.git.Git4IdeaGitService
 import com.codescene.jetbrains.platform.progress.ReviewProgressIndicator
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.isPathSupportedForReview
+import com.codescene.jetbrains.platform.webview.util.updateMonitor
 import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ReadAction
@@ -37,7 +39,16 @@ class WorkspaceReviewService(
     private val csIdeServer = CsIdeServerService.getInstance()
     private val gitService = Git4IdeaGitService.getInstance(project)
     private val progressIndicator = ReviewProgressIndicator(project, scope)
-    private val presenter = WorkspaceReviewPresenter(project, scope, progressIndicator)
+
+    @Volatile
+    private var reviewProgress = ReviewProgressNotice(count = 0, done = 0, files = emptyList())
+    private val presenter =
+        WorkspaceReviewPresenter(
+            project = project,
+            scope = scope,
+            progressIndicator = progressIndicator,
+            onReviewProgress = ::applyReviewProgress,
+        )
     private val coordinator =
         WorkspaceWatchCoordinator(
             project = project,
@@ -111,6 +122,13 @@ class WorkspaceReviewService(
     }
 
     fun activePaths(): Set<String> = pipeline.activePaths()
+
+    fun reviewProgressSnapshot(): ReviewProgressNotice = reviewProgress
+
+    private fun applyReviewProgress(notice: ReviewProgressNotice) {
+        reviewProgress = notice
+        updateMonitor(project)
+    }
 
     private fun reseed(repoRoot: String) {
         pipeline.forgetAccepted(repoRoot)

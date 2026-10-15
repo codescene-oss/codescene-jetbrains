@@ -27,6 +27,7 @@ class WorkspaceReviewPresenter(
     private val project: Project,
     private val scope: CoroutineScope,
     private val progressIndicator: ReviewProgressIndicator,
+    private val onReviewProgress: (ReviewProgressNotice) -> Unit,
 ) : WorkspaceReviewSink {
     private val serviceProvider = CodeSceneProjectServiceProvider.getInstance(project)
     private val serviceName = "${javaClass.simpleName} - ${project.name}"
@@ -100,9 +101,11 @@ class WorkspaceReviewPresenter(
 
     override fun progress(event: ReviewProgressNotice) {
         progressIndicator.onProgress(event)
+        onReviewProgress(event)
     }
 
     override fun sessionLost() {
         progressIndicator.sessionLost()
+        onReviewProgress(ReviewProgressNotice(count = 0, done = 0, files = emptyList()))
     }
 }

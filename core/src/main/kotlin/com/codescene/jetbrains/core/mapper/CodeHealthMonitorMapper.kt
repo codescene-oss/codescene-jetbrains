@@ -1,12 +1,10 @@
 package com.codescene.jetbrains.core.mapper
 
+import com.codescene.jetbrains.core.cli.ReviewProgressNotice
 import com.codescene.jetbrains.core.delta.DeltaCacheItem
-import com.codescene.jetbrains.core.git.pathFileName
 import com.codescene.jetbrains.core.models.CwfData
 import com.codescene.jetbrains.core.models.View
-import com.codescene.jetbrains.core.models.shared.AnalysisJob
 import com.codescene.jetbrains.core.models.shared.AutoRefactorConfig
-import com.codescene.jetbrains.core.models.shared.FileMetaType
 import com.codescene.jetbrains.core.models.shared.Range
 import com.codescene.jetbrains.core.models.view.ChangeDetail
 import com.codescene.jetbrains.core.models.view.DeltaForFile
@@ -16,8 +14,6 @@ import com.codescene.jetbrains.core.models.view.FunctionFinding
 import com.codescene.jetbrains.core.models.view.FunctionInfo
 import com.codescene.jetbrains.core.models.view.FunctionToRefactor
 import com.codescene.jetbrains.core.models.view.HomeData
-import com.codescene.jetbrains.core.util.Constants.DELTA_ANALYSIS_JOB
-import com.codescene.jetbrains.core.util.Constants.JOB_STATE_RUNNING
 import com.codescene.jetbrains.core.util.parseMessage
 
 data class CodeHealthMonitorUpdate(
@@ -30,7 +26,7 @@ class CodeHealthMonitorMapper(
 ) {
     fun toCwfData(
         deltaResults: List<Pair<String, DeltaCacheItem>>,
-        activeJobs: List<String>,
+        monitorAnalysis: MonitorAnalysis,
         functionToRefactorResolver: (String, String, com.codescene.data.delta.FunctionFinding) -> FunctionToRefactor?,
         autoRefactorConfig: AutoRefactorConfig,
         featureFlags: List<String>,
@@ -45,7 +41,10 @@ class CodeHealthMonitorMapper(
             data =
                 HomeData(
                     signedIn = true,
-                    jobs = getActiveJobs(activeJobs),
+                    jobs = monitorAnalysis.jobs,
+                    analysisState = monitorAnalysis.analysisState,
+                    totalCount = monitorAnalysis.totalCount,
+                    remainingCount = monitorAnalysis.remainingCount,
                     fileDeltaData = getFileDeltaData(deltaResults, functionToRefactorResolver),
                     autoRefactor = autoRefactorConfig,
                 ),
@@ -53,7 +52,7 @@ class CodeHealthMonitorMapper(
 
     fun toMessage(
         deltaResults: List<Pair<String, DeltaCacheItem>>,
-        activeJobs: List<String>,
+        monitorAnalysis: MonitorAnalysis,
         functionToRefactorResolver: (String, String, com.codescene.data.delta.FunctionFinding) -> FunctionToRefactor?,
         autoRefactorConfig: AutoRefactorConfig,
         featureFlags: List<String>,
@@ -64,7 +63,7 @@ class CodeHealthMonitorMapper(
             mapper = {
                 toCwfData(
                     deltaResults = deltaResults,
-                    activeJobs = activeJobs,
+                    monitorAnalysis = monitorAnalysis,
                     functionToRefactorResolver = functionToRefactorResolver,
                     autoRefactorConfig = autoRefactorConfig,
                     featureFlags = featureFlags,
@@ -77,18 +76,30 @@ class CodeHealthMonitorMapper(
 
     fun buildUpdate(
         deltaResults: List<Pair<String, DeltaCacheItem>>,
-        activeJobs: List<String>,
+        runningPaths: Iterable<String>,
+        progress: ReviewProgressNotice,
+        repoRoots: List<String>,
+        candidatePaths: Iterable<String>,
+        windows: Boolean,
         functionToRefactorResolver: (String, String, com.codescene.data.delta.FunctionFinding) -> FunctionToRefactor?,
         autoRefactorConfig: AutoRefactorConfig,
         featureFlags: List<String>,
         pro: Boolean = true,
         devmode: Boolean,
-    ): CodeHealthMonitorUpdate =
-        CodeHealthMonitorUpdate(
+    ): CodeHealthMonitorUpdate {
+        val monitorAnalysis =
+            buildMonitorAnalysis(
+                runningPaths = runningPaths,
+                progress = progress,
+                repoRoots = repoRoots,
+                candidatePaths = candidatePaths,
+                windows = windows,
+            )
+        return CodeHealthMonitorUpdate(
             message =
                 toMessage(
                     deltaResults = deltaResults,
-                    activeJobs = activeJobs,
+                    monitorAnalysis = monitorAnalysis,
                     functionToRefactorResolver = functionToRefactorResolver,
                     autoRefactorConfig = autoRefactorConfig,
                     featureFlags = featureFlags,
@@ -97,17 +108,9 @@ class CodeHealthMonitorMapper(
                 ),
             hasNotification = hasNotification(deltaResults),
         )
+    }
 
     fun hasNotification(deltaResults: List<Pair<String, DeltaCacheItem>>): Boolean = deltaResults.isNotEmpty()
-
-    private fun getActiveJobs(activeJobs: List<String>) =
-        activeJobs.map { job ->
-            AnalysisJob(
-                type = DELTA_ANALYSIS_JOB,
-                state = JOB_STATE_RUNNING,
-                file = FileMetaType(fileName = pathFileName(job)),
-            )
-        }
 
     private fun getFileDeltaData(
         deltaResults: List<Pair<String, DeltaCacheItem>>,
