@@ -528,24 +528,54 @@ None. Same repositories as PKG-33.
 
 ### U checks (user, in the IDE)
 
-- [ ] U1–U9 as in PKG-33.
-- [ ] U10. Add `repo-b` as a second content root of `repo-a` (register the VCS root if asked): its changes appear; remove the content root: its entries leave the monitor except an open file.
-- [ ] U11. With every editor closed, a shell edit to `src/Util.kt` updates its monitor entry.
+- [x] U1–U9 as in PKG-33.
+- [x] U10. Add `repo-b` as a second content root of `repo-a` (register the VCS root if asked): its changes appear; remove the content root: its entries leave the monitor except an open file.
+- [x] U11. With every editor closed, a shell edit to `src/Util.kt` updates its monitor entry.
 
 ### C checks (coordinator)
 
-- [ ] C1–C8 and C10 as in PKG-33.
-- [ ] C9. 60 s idle: no `Poll found`, `Removing stale item`, `Git4IdeaChangeLister` or `PeriodicChangeListerService` lines, no new inventory or `watch started` lines.
-- [ ] C11. U10 logs `watch started for <repo-b>` and a push, then `watch stopped for <repo-b> (sent=true)` and `monitor sync for <repo-b>: hidden=<n>` with `n` > 0.
-- [ ] C12. No `Replaying queued review by path` lines; any `Dropping queued review without editor` lines are listed.
+- [x] C1–C8 and C10 as in PKG-33.
+- [x] C9. 60 s idle: no `Poll found`, `Removing stale item`, `Git4IdeaChangeLister` or `PeriodicChangeListerService` lines, no new inventory or `watch started` lines.
+- [x] C11. U10 logs `watch started for <repo-b>` and a push, then `watch stopped for <repo-b> (sent=true)` and `monitor sync for <repo-b>: hidden=<n>` with `n` > 0.
+- [x] C12. No `Replaying queued review by path` lines; any `Dropping queued review without editor` lines are listed.
 
 ### Results
 
-_To be filled in by PKG-36._
+Run 2026-10-14 16:33–2026-10-15 08:48 on local `feature/cs-12077-phase4` at `ed04203` (PKG-35 `0b0b278`, PKG-36A `7f43f7e`, PKG-36B `ed04203`), sandbox IC-2024.3.7, `cs-ide` 1.0.74-SNAPSHOT (`efcaeed`). First diagnostic session: `repo-a` 7 files. Final session started 08:43 with `6 files (push)`.
+
+U3 first failed for a closed tracked file whose cached `Document` SHA did not match disk (stale text and CRLF vs LF). That is PKG-36A. Monitor paths used forward slashes on Windows; that is PKG-36B. Both were merged and the smoke resumed.
+
+- [x] U1. Pass after `src` was marked as a Sources root (annotations need that). Monitor, Code Vision and annotations update; ACE refactors in `src/AceProbe.java`.
+- [x] U2. Pass. `Ctrl+S` keeps annotations; no second indicator.
+- [x] U3. Pass after PKG-36A. External append to closed `src/App.kt` (sandbox unfocused, tab closed after a prior open) produced `deltaCachePut` at 19:19:39 and updated the monitor. `git checkout -- src/App.kt` removed it. `Clean.kt` stays off the monitor when its delta is null.
+- [x] U4. Pass. Untracked `src/Smoke.kt` appeared; deleting it logged `6 files (push)` and `hidden=1` and removed it.
+- [x] U5. Pass. Ignoring `src/Untracked.kt` hid it (`hidden=1`). Clearing `.gitignore` alone did not re-show it until the file was touched: the pipeline had already accepted that SHA. After the touch, `deltaCachePut` at 19:23:08 brought it back.
+- [x] U6. Pass. Branch widget `feature` → `other` → `feature`: annotations stay, monitor follows. Logged `reseeding 0 unsaved documents` (08:30:05, 08:30:16, 08:30:39).
+- [x] U7. Pass. Built-in terminal checkouts kept annotations. No extra `HEAD moved` lines (IntelliJ saves on terminal focus, same as PKG-33). Coordinator-shell checkouts while focused updated inventory but did not log `reseeding 1` this run.
+- [x] U8. Pass. Rename and delete of an open modified file in the project view: entry followed, then went (`src/Util.kt` was the file).
+- [x] U9. Pass. `repo-b` in a second window: both update. Close logged `watch stopped for C:/temp/cs12077-smoke/repo-b (sent=true)` (08:36:53). `repo-a` kept updating.
+- [x] U10. Pass. Adding `repo-b` as a content root: `watch started` and `2 files (push)` (08:38:06). Removing it: `watch stopped (sent=true)` and `monitor sync … hidden=2`.
+- [x] U11. Pass. `src/Util.kt` was already deleted in U8, so the closed-file edit used `src/Feature.kt`. After a session restart (all editors closed), a Code Health–changing append produced `deltaCachePut` at 08:45:55 and the monitor entry updated.
+- [x] Monitor paths. Pass after PKG-36B. Windows monitor entries show `C:\temp\...` backslashes.
+
+- [x] C1. Pass. One `cs-ide` child of the sandbox IDE in each session (pid 14468 of 42548; 46900 of 45396; 46108 of 27100; after C6, 47876 of 27100).
+- [x] C2. Pass. No lines from deleted classes.
+- [x] C3. Pass as server behaviour. Append kept `App.kt` in the inventory; restore hid it via a later review / null delta rather than an immediate `n-1` push. Same documented server inventory rule as PKG-33.
+- [x] C4. Pass with the U5 touch note above. Ignore hid the file; un-ignore plus a content change restored it. Delete of `Smoke.kt`: `7` → `6 files (push)`.
+- [x] C5. Partial, same as PKG-33. U6 logged `reseeding 0`. U7 built-in terminal did not log `reseeding 1`. Coordinator-shell checkouts this run did not emit `HEAD moved` (git4idea did not fire); cs-ide still pushed inventory.
+- [x] C6. Pass. `Stop-Process` on pid 46108 at 08:47:38: `cs-ide JSON-RPC closed: JSON-RPC stream ended`, `cs-ide server started` at 08:47:45, `watch started for repo-a … session=2`, `6 files (push)` at 08:47:46. One child again (pid 47876). U1 still works.
+- [x] C7. Pass. `cs-ide watch stopped for C:/temp/cs12077-smoke/repo-b (sent=true)` (08:36:53).
+- [x] C8. Pass. No exceptions mentioning the five classes, no ` failed: ` lines.
+- [x] C9. Pass. 60 s idle 08:46:29–08:47:29: no `Poll found`, `Removing stale item`, `Git4IdeaChangeLister` or `PeriodicChangeListerService` lines, no new inventory or `watch started` lines.
+- [x] C10. Pass for the 16:32 and 08:43 exits (no leftover IDE/`cs-ide` before the next launch). Confirm again after this session exits.
+- [x] C11. Pass. U10: `watch started for repo-b`, `2 files (push)`, then `watch stopped (sent=true)` and `hidden=2`.
+- [x] C12. Pass. No `Replaying queued review by path` lines; no `Dropping queued review without editor` lines.
+
+Plan corrections: IntelliJ external annotators require `src` as a source root. Watch matching must use unsaved document text only (PKG-36A / DEC-2026-10-14-002). Monitor file paths use the platform separator (PKG-36B). A file restored to baseline can leave the monitor via a null delta without an immediate smaller inventory push. Re-showing an ignored file after `.gitignore` is cleared may need a content change if that SHA was already accepted.
 
 ### Definition of done
 
-- [ ] Every U and C line has a result. Failures are fixed in their own package and re-run. After this, the coordinator asks the user before the final fast-forward of `feature/cs-12077-cs-ide-json-rpc`.
+- [x] Every U and C line has a result. Failures are fixed in their own package and re-run. After this, the coordinator asks the user before the final fast-forward of `feature/cs-12077-cs-ide-json-rpc`.
 
 ---
 
