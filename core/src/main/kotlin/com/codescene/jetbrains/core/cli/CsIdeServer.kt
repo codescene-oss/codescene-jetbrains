@@ -238,8 +238,9 @@ class CsIdeServer(
     ) {
         val detached =
             synchronized(lock) {
-                if (closed.get() || process !== exited) return
+                if (closed.get()) return
                 logger.warn("cs-ide server exited with code $code", SERVICE)
+                if (process !== exited) return
                 connection?.failPending(CsIdeUnavailableException("cs-ide server exited with code $code"))
                 backoff.recordFailure(clock())
                 detach()

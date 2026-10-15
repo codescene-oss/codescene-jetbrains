@@ -253,16 +253,6 @@ class CsIdeServerTest {
         }
     }
 
-    private fun readRequest(peer: FakeCsIdePeer): com.fasterxml.jackson.databind.JsonNode {
-        var message: com.fasterxml.jackson.databind.JsonNode? = null
-        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)
-        while (message == null && System.nanoTime() < deadline) {
-            message = peer.readClientMessage()
-            if (message == null) Thread.sleep(5)
-        }
-        return message ?: throw AssertionError("No request from client")
-    }
-
     private fun peerClose(peer: FakeCsIdePeer) {
         peer.closeClientInput()
     }

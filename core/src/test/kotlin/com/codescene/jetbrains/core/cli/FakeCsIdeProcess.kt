@@ -41,6 +41,7 @@ class FakeCsIdeProcess(
 ) : CsIdeProcess {
     private val alive = AtomicBoolean(true)
     private val exitFuture = CompletableFuture<Int>()
+    var completeOnDestroy: Boolean = true
 
     override val stdin: OutputStream = peer.processStdin
     override val stdout: InputStream = peer.processStdout
@@ -50,11 +51,16 @@ class FakeCsIdeProcess(
 
     override fun onExit(): CompletableFuture<Int> = exitFuture
 
+    fun completeExit(code: Int) {
+        alive.set(false)
+        exitFuture.complete(code)
+    }
+
     override fun destroyTree() {
         if (!alive.compareAndSet(true, false)) return
         runCatching { stdin.close() }
         runCatching { peer.closeClientInput() }
-        exitFuture.complete(0)
+        if (completeOnDestroy) exitFuture.complete(0)
     }
 }
 
