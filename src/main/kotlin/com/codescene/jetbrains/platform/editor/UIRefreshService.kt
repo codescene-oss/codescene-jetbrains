@@ -14,6 +14,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiFile
+import java.lang.reflect.InvocationTargetException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -125,8 +126,15 @@ class UIRefreshService(
                     .getMethod("restart", PsiFile::class.java, Any::class.java)
                     .invoke(analyzer, psiFile, "CodeScene annotation refresh")
             } catch (_: NoSuchMethodException) {
-                @Suppress("DEPRECATION")
-                analyzer.restart(psiFile)
+                try {
+                    analyzer.javaClass
+                        .getMethod("restart", PsiFile::class.java)
+                        .invoke(analyzer, psiFile)
+                } catch (e: InvocationTargetException) {
+                    val cause = e.cause
+                    if (cause != null) throw cause
+                    throw e
+                }
             }
         }
     }

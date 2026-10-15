@@ -9,7 +9,7 @@ import org.junit.Test
 
 class BaseServiceTest {
     @Test
-    fun `runWithClassLoaderChange returns result and elapsed time`() {
+    fun `runTimed returns result and elapsed time`() {
         val logger = mockk<ILogger>(relaxed = true)
         val service = TestBaseService(logger)
 
@@ -18,11 +18,10 @@ class BaseServiceTest {
         assertEquals("ok", result.result)
         assertTrue(result.elapsedMs >= 0)
         verify { logger.info(match { it.contains("Received response from CodeScene API in") }, "TestBaseService") }
-        verify { logger.debug("Reverted to original ClassLoader", "TestBaseService") }
     }
 
     @Test
-    fun `runWithClassLoaderChange rethrows exceptions`() {
+    fun `runTimed rethrows exceptions`() {
         val logger = mockk<ILogger>(relaxed = true)
         val service = TestBaseService(logger)
 
@@ -39,12 +38,11 @@ class BaseServiceTest {
                 "TestBaseService",
             )
         }
-        verify { logger.debug("Reverted to original ClassLoader", "TestBaseService") }
     }
 
     private class TestBaseService(
         log: ILogger,
     ) : BaseService(log) {
-        fun <T> run(action: () -> T): TimedResult<T> = runWithClassLoaderChange(action)
+        fun <T> run(action: () -> T): TimedResult<T> = runTimed(action)
     }
 }

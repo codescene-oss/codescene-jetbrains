@@ -10,7 +10,6 @@ class DeviceIdStoreTest {
         val store =
             DeviceIdStore(
                 logger = TestLogger,
-                classLoader = Thread.currentThread().contextClassLoader,
                 deviceIdProvider = { "device-123" },
             )
         assertEquals("device-123", store.get())
@@ -22,7 +21,6 @@ class DeviceIdStoreTest {
         val store =
             DeviceIdStore(
                 logger = TestLogger,
-                classLoader = Thread.currentThread().contextClassLoader,
                 deviceIdProvider = {
                     callCount++
                     "device-123"
@@ -38,26 +36,25 @@ class DeviceIdStoreTest {
         val store =
             DeviceIdStore(
                 logger = TestLogger,
-                classLoader = Thread.currentThread().contextClassLoader,
                 deviceIdProvider = { throw RuntimeException("fail") },
             )
         assertEquals("", store.get())
     }
 
     @Test
-    fun `get caches empty string after exception`() {
+    fun `get retries provider after exception`() {
         var callCount = 0
         val store =
             DeviceIdStore(
                 logger = TestLogger,
-                classLoader = Thread.currentThread().contextClassLoader,
                 deviceIdProvider = {
                     callCount++
-                    throw RuntimeException("fail")
+                    if (callCount == 1) throw RuntimeException("fail")
+                    "device-123"
                 },
             )
-        store.get()
-        store.get()
-        assertEquals(1, callCount)
+        assertEquals("", store.get())
+        assertEquals("device-123", store.get())
+        assertEquals(2, callCount)
     }
 }

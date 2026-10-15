@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.platform.api
 
-import com.codescene.ExtensionAPI
 import com.codescene.ExtensionAPI.CacheParams
 import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.data.ace.PreflightResponse
@@ -18,6 +17,7 @@ import com.codescene.jetbrains.core.review.RefactorableFunctionsOrchestrator
 import com.codescene.jetbrains.core.util.Constants.ACE
 import com.codescene.jetbrains.core.util.TelemetryEvents
 import com.codescene.jetbrains.core.util.normalizeAbsolutePath
+import com.codescene.jetbrains.platform.cli.CsIdeServerService
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.telemetry.StatsCollectorService
@@ -54,7 +54,8 @@ internal sealed class RefactorableFunctionsSource {
         override fun fetch(
             params: CodeParams,
             cacheParams: CacheParams,
-        ): List<com.codescene.data.ace.FnToRefactor> = ExtensionAPI.fnToRefactor(params, cacheParams, codeSmells)
+        ): List<com.codescene.data.ace.FnToRefactor> =
+            CsIdeServerService.getInstance().client().fnsToRefactor(params, cacheParams, codeSmells)
     }
 
     data class FromDelta(
@@ -65,7 +66,8 @@ internal sealed class RefactorableFunctionsSource {
         override fun fetch(
             params: CodeParams,
             cacheParams: CacheParams,
-        ): List<com.codescene.data.ace.FnToRefactor> = ExtensionAPI.fnToRefactor(params, cacheParams, delta)
+        ): List<com.codescene.data.ace.FnToRefactor> =
+            CsIdeServerService.getInstance().client().fnsToRefactor(params, cacheParams, delta)
     }
 }
 
@@ -165,7 +167,7 @@ class AceService :
                 filePath = path,
                 content = content,
                 serviceName = "$serviceImplementation - ${project.name}",
-                getFunctions = { runWithClassLoaderChange { getFunctions() } },
+                getFunctions = { runTimed { getFunctions() } },
             )
 
         val entry = AceRefactorableFunctionCacheEntry(result.filePath, result.content, result.functions)
@@ -185,7 +187,7 @@ class AceService :
             serviceName = serviceImplementation,
             fetchPreflight = { bypassCache ->
                 withContext(Dispatchers.IO) {
-                    runWithClassLoaderChange { ExtensionAPI.preflight(bypassCache) }
+                    runTimed { CsIdeServerService.getInstance().client().preflight(bypassCache) }
                 }
             },
             onStatusChange = { status -> AceEntryOrchestrator.handleAceStatusChange(status) },
@@ -196,8 +198,8 @@ class AceService :
             logger = Log,
             serviceName = serviceImplementation,
             executeRefactor = { request, options ->
-                runWithClassLoaderChange {
-                    ExtensionAPI.refactor(request.function, options)
+                runTimed {
+                    CsIdeServerService.getInstance().client().refactor(request.function, options)
                 }
             },
             getToken = { settingsProvider.getAceAuthToken() },

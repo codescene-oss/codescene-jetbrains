@@ -13,6 +13,11 @@ class InMemoryDeltaCacheService : IDeltaCacheService {
 
     override fun get(query: DeltaCacheQuery): Pair<Boolean, Delta?> = delegate.get(query)
 
+    override fun getByCurrentContent(
+        filePath: String,
+        currentContent: String,
+    ): Pair<Boolean, Delta?> = delegate.getByCurrentContent(filePath, currentContent)
+
     override fun put(entry: DeltaCacheEntry) {
         delegate.put(entry)
     }

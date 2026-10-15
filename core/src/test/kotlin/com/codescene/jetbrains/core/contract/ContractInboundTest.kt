@@ -6,6 +6,7 @@ import com.codescene.data.delta.FunctionFinding
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.core.delta.DeltaCacheItem
 import com.codescene.jetbrains.core.mapper.CodeHealthMonitorMapper
+import com.codescene.jetbrains.core.mapper.MonitorAnalysis
 import com.codescene.jetbrains.core.models.shared.AutoRefactorConfig
 import com.codescene.jetbrains.core.models.shared.Fn
 import com.codescene.jetbrains.core.models.shared.Range
@@ -71,7 +72,7 @@ class ContractInboundTest {
         monitorMapper
             .toCwfData(
                 deltaResults = listOf("file.js" to DeltaCacheItem("head", "current", delta)),
-                activeJobs = emptyList(),
+                monitorAnalysis = MonitorAnalysis(emptyList(), "idle", null, 0),
                 functionToRefactorResolver = resolver,
                 autoRefactorConfig = AutoRefactorConfig(),
                 featureFlags = emptyList(),

@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.core.contract
 
 import com.codescene.data.delta.Delta
+import com.codescene.jetbrains.core.cli.ReviewProgressNotice
 import com.codescene.jetbrains.core.delta.DeltaCacheItem
 import com.codescene.jetbrains.core.flag.RuntimeFlags
 import com.codescene.jetbrains.core.handler.ICwfActionHandler
@@ -9,6 +10,8 @@ import com.codescene.jetbrains.core.handler.toDocsData
 import com.codescene.jetbrains.core.mapper.CodeHealthMonitorMapper
 import com.codescene.jetbrains.core.mapper.DocsCodeSmellInput
 import com.codescene.jetbrains.core.mapper.DocumentationMapper
+import com.codescene.jetbrains.core.mapper.MonitorPathScope
+import com.codescene.jetbrains.core.mapper.buildMonitorAnalysis
 import com.codescene.jetbrains.core.mapper.resolveGeneralDocsData
 import com.codescene.jetbrains.core.mapper.toCodeSmellDocsData
 import com.codescene.jetbrains.core.mapper.toGeneralDocsData
@@ -81,7 +84,13 @@ class ContractWebviewTest {
                         deltas.mapIndexed { index, delta ->
                             "src/file$index.js" to DeltaCacheItem("head", "current", delta)
                         },
-                    activeJobs = activeJobs,
+                    monitorAnalysis =
+                        buildMonitorAnalysis(
+                            runningPaths = activeJobs,
+                            progress = ReviewProgressNotice(count = 0, done = 0, files = emptyList()),
+                            candidatePaths = activeJobs,
+                            scope = MonitorPathScope(repoRoots = listOf("src"), windows = false),
+                        ),
                     functionToRefactorResolver = { _, _, _ -> null },
                     autoRefactorConfig = toAutoRefactorConfig(settings),
                     featureFlags = resolveFeatureFlags(settings.aceTokenConfigured),

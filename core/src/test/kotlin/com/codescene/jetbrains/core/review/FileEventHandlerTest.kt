@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.core.review
 
-import com.codescene.jetbrains.core.contracts.IBaselineReviewCacheService
 import com.codescene.jetbrains.core.contracts.IDeltaCacheService
 import com.codescene.jetbrains.core.contracts.IReviewCacheService
 import io.mockk.mockk
@@ -10,15 +9,13 @@ import org.junit.Test
 class FileEventHandlerTest {
     private val deltaCache = mockk<IDeltaCacheService>(relaxed = true)
     private val reviewCache = mockk<IReviewCacheService>(relaxed = true)
-    private val baselineReviewCache = mockk<IBaselineReviewCacheService>(relaxed = true)
-    private val handler = FileEventHandler(deltaCache, reviewCache, baselineReviewCache)
+    private val handler = FileEventHandler(deltaCache, reviewCache)
 
     @Test
     fun `handleRename updates all caches`() {
         handler.handleRename("old.kt", "new.kt")
         verify(exactly = 1) { deltaCache.updateKey("old.kt", "new.kt") }
         verify(exactly = 1) { reviewCache.updateKey("old.kt", "new.kt") }
-        verify(exactly = 1) { baselineReviewCache.updateKey("old.kt", "new.kt") }
     }
 
     @Test
@@ -27,7 +24,6 @@ class FileEventHandlerTest {
         verify(exactly = 1) { deltaCache.setIncludeInCodeHealthMonitor("a.kt", false) }
         verify(exactly = 0) { deltaCache.invalidate("a.kt") }
         verify(exactly = 0) { reviewCache.invalidate("a.kt") }
-        verify(exactly = 0) { baselineReviewCache.invalidate("a.kt") }
     }
 
     @Test
@@ -35,7 +31,6 @@ class FileEventHandlerTest {
         handler.handleMove("old.kt", "new.kt")
         verify(exactly = 1) { deltaCache.updateKey("old.kt", "new.kt") }
         verify(exactly = 1) { reviewCache.updateKey("old.kt", "new.kt") }
-        verify(exactly = 1) { baselineReviewCache.updateKey("old.kt", "new.kt") }
     }
 
     @Test
@@ -43,7 +38,6 @@ class FileEventHandlerTest {
         handler.handleFileCacheUpdate(FileCacheUpdate.Rename("a.kt", "b.kt"))
         verify(exactly = 1) { deltaCache.updateKey("a.kt", "b.kt") }
         verify(exactly = 1) { reviewCache.updateKey("a.kt", "b.kt") }
-        verify(exactly = 1) { baselineReviewCache.updateKey("a.kt", "b.kt") }
     }
 
     @Test
@@ -51,7 +45,6 @@ class FileEventHandlerTest {
         handler.handleFileCacheUpdate(FileCacheUpdate.Move("x.kt", "y.kt"))
         verify(exactly = 1) { deltaCache.updateKey("x.kt", "y.kt") }
         verify(exactly = 1) { reviewCache.updateKey("x.kt", "y.kt") }
-        verify(exactly = 1) { baselineReviewCache.updateKey("x.kt", "y.kt") }
     }
 
     @Test
@@ -60,6 +53,5 @@ class FileEventHandlerTest {
         verify(exactly = 1) { deltaCache.setIncludeInCodeHealthMonitor("z.kt", false) }
         verify(exactly = 0) { deltaCache.invalidate("z.kt") }
         verify(exactly = 0) { reviewCache.invalidate("z.kt") }
-        verify(exactly = 0) { baselineReviewCache.invalidate("z.kt") }
     }
 }

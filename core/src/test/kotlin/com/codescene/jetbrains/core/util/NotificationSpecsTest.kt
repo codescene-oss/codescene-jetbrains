@@ -16,17 +16,6 @@ class NotificationSpecsTest {
     }
 
     @Test
-    fun `buildRefactoringFinishedNotificationSpec includes refactoring message and actions`() {
-        val result = buildRefactoringFinishedNotificationSpec("extractMethod")
-
-        assertEquals("Refactoring is ready for extractMethod.", result.message)
-        assertEquals(
-            listOf(NotificationActionId.VIEW_REFACTORING_RESULT, NotificationActionId.DISMISS),
-            result.actionIds,
-        )
-    }
-
-    @Test
     fun `buildInfoNotificationSpec includes dismiss action`() {
         val result = buildInfoNotificationSpec("info")
 
@@ -41,19 +30,6 @@ class NotificationSpecsTest {
         assertEquals(
             listOf(
                 NotificationActionSpec(NotificationActionId.OPEN_SETTINGS, "openSettingsButton"),
-                NotificationActionSpec(NotificationActionId.DISMISS, "dismissRefactoringResult"),
-            ),
-            result,
-        )
-    }
-
-    @Test
-    fun `toActionSpecs maps refactoring actions to label keys`() {
-        val result = buildRefactoringFinishedNotificationSpec("extractMethod").toActionSpecs()
-
-        assertEquals(
-            listOf(
-                NotificationActionSpec(NotificationActionId.VIEW_REFACTORING_RESULT, "viewRefactoringResult"),
                 NotificationActionSpec(NotificationActionId.DISMISS, "dismissRefactoringResult"),
             ),
             result,

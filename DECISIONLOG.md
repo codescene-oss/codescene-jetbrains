@@ -15,6 +15,9 @@ members, ensuring transparency and consistency throughout the project lifecycle.
 4. [DEC-2024-09-18-001: Update Supported Product Versions for the Plugin](#dec-2024-09-18-001-update-supported-product-versions-for-the-plugin)
 5. [DEC-2024-10-04-001: Multiple CodeVision Providers for Distinct Code Smells](#dec-2024-10-04-001-multiple-codevision-providers-for-distinct-code-smells)
 6. [DEC-2025-01-03-001: Code Smell Documentation Location Update](#dec-2025-01-03-001-code-smell-documentation-location-update)
+7. [DEC-2026-10-13-001: Run analysis through cs-ide JSON-RPC child process](#dec-2026-10-13-001-run-analysis-through-cs-ide-json-rpc-child-process)
+8. [DEC-2026-10-14-001: Let cs-ide own git watching and baselines](#dec-2026-10-14-001-let-cs-ide-own-git-watching-and-baselines)
+9. [DEC-2026-10-14-002: Hash saved open files from disk for watch matching](#dec-2026-10-14-002-hash-saved-open-files-from-disk-for-watch-matching)
 
 ---
 
@@ -280,3 +283,127 @@ To run the extension locally, users will need to ensure the documentation is pop
 
 **Alternatives Considered**:
 None
+
+---
+
+## DEC-2026-10-13-001: Run analysis through cs-ide JSON-RPC child process
+
+[Back to Top](#table-of-contents)
+
+**Date**: 2026-10-13
+
+**Decision Maker(s)**: Martin Säfsten
+
+**Status**: Accepted
+
+**Decision**:
+The plugin runs all extension API calls (review, delta, ACE preflight, functions to refactor, refactor, telemetry and
+device id) in one long-lived `cs-ide server` child process per IDE, started from the bundled `codescene.extension:api`
+jar on the IDE's own JBR with `-Xmx2g`, and talks to it with JSON-RPC 2.0 over stdio. There is no in-process fallback.
+
+**Context**:
+Calling `ExtensionAPI` in-process required switching the thread context classloader around every call to avoid ANTLR
+version clashes and Clojure failing on IntelliJ's jar URL handling. Analysis also shared the IDE's heap, so a heavy or
+failing analysis could affect the IDE itself. The VS Code extension already talks to the same `cs-ide` server, and later
+phases move file watching and the review queue to the server.
+
+**Rationale**:
+A supervised child process removes the classloader workaround, isolates analysis memory and crashes from the IDE, and
+uses the same protocol as the other IDE integrations. The supervisor starts the server lazily, restarts it with backoff
+after a crash, and kills the process tree on shutdown. Protocol and process code lives in `core`; the platform module
+only provides the launch environment and an application service.
+
+**Consequences**:
+- Each IDE runs one extra JVM. Calls pay IPC and serialization overhead, so benchmarks start a new
+  `JetBrains Plugin - cs-ide RPC` series.
+- The child gets the user's shell environment over the IDE environment, Git4Idea's git directory first on `PATH`, the
+  IDE's static HTTP proxy as `HTTP(S)_PROXY`, and a trust store with the IDE's and the JDK's certificates.
+- When the server cannot start, calls fail with `CsIdeUnavailableException`; ACE shows its error state.
+
+**Alternatives Considered**:
+
+- **Keep in-process `ExtensionAPI`**: Rejected; the classloader workaround is fragile and analysis shares the IDE heap.
+- **Download a separate runtime or CLI binary**: Rejected; the IDE's JBR and the bundled jar are enough.
+- **Feature flag with in-process fallback**: Rejected; two code paths to maintain for little benefit.
+
+**Related Decisions**:
+None
+
+---
+
+## DEC-2026-10-14-001: Let cs-ide own git watching and baselines
+
+[Back to Top](#table-of-contents)
+
+**Date**: 2026-10-14
+
+**Decision Maker(s)**: Martin Säfsten
+
+**Status**: Accepted
+
+**Decision**:
+The plugin no longer observes git, lists changed files, resolves baselines or caches baseline reviews. The `cs-ide`
+server watches each git root, keeps the changed-file inventory and scores files against its own merge-base. The plugin
+submits only editor buffers and prunes the monitor from the server's inventory.
+
+**Context**:
+Phase 3 ran the watch beside the 9 s poller until `WatchInventoryParityLiveTest` proved both produced the same files
+on Linux, Windows and macOS. Two implementations of change detection and baseline resolution had to agree.
+
+**Rationale**:
+One implementation shared with the other IDE integrations; no git subprocesses from the plugin every 9 s; ignore, rules,
+config and HEAD changes handled where the inventory lives.
+
+**Consequences**:
+Every untracked supported file is listed. Merge-base candidates follow the server (`baseline_branch`, `origin/HEAD`,
+`origin/main`, `origin/master`, `main`, `master`); a repository whose main line is only `develop`, `trunk`, `dev` or
+`development` without `origin/HEAD` falls back to HEAD with every tracked file in the inventory unless `baseline_branch`
+is set. No reflog fallback. After a `.gitignore` or `.codescene/*.json` change, unsaved buffers keep their score until
+their next edit. Files without an editor are reviewed only by the watch.
+
+**Alternatives Considered**:
+
+- **Keep the poller as a fallback**: Rejected; two sources of truth and the poller's git load.
+- **Keep the plugin's merge-base order and send `baseline-revision`**: Rejected; diverges from the other IDEs; the
+  server's `baseline_branch` covers custom main lines.
+
+**Related Decisions**:
+`DEC-2026-10-13-001`.
+
+---
+
+## DEC-2026-10-14-002: Hash saved open files from disk for watch matching
+
+[Back to Top](#table-of-contents)
+
+**Date**: 2026-10-14
+
+**Decision Maker(s)**: Martin Säfsten
+
+**Status**: Accepted
+
+**Decision**:
+When matching id-less watch results, use loaded `Document` UTF-8 text only if `FileDocumentManager.isDocumentUnsaved`
+is true; otherwise hash the raw bytes read from disk.
+
+**Context**:
+`cs-ide` watch results carry git blob SHAs over disk bytes. Final smoke U3 showed valid results dropped for open files.
+`WorkspaceWatchCoordinator` preferred any cached `Document` text. A saved buffer can lag an external write, and IntelliJ
+normalizes line endings to LF while Windows files on disk often stay CRLF, so the cached text SHA disagrees with the
+server.
+
+**Rationale**:
+Unsaved editor content is what the user is editing and must stay authoritative for buffer submissions. Saved buffers are
+not a trustworthy view of disk; only unsaved state makes the in-memory text current for matching.
+
+**Consequences**:
+Open but saved files match watch results against disk like closed files. Unsaved buffers still win over bytes. External
+edits to a file that stays open without dirty state are visible to matching as soon as disk bytes are read.
+
+**Alternatives Considered**:
+
+- **Always prefer loaded document text**: Rejected; stale LF text rejects valid disk hashes.
+- **Refresh the document from VFS before hashing**: Rejected; extra platform I/O and still not the server's disk view.
+
+**Related Decisions**:
+`DEC-2026-10-13-001`, `DEC-2026-10-14-001`.

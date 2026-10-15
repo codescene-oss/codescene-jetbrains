@@ -12,7 +12,6 @@ cs-cwf
 build.log
 format.log
 format-check.log
-delta.log
 test.log
 test-mine.log
 .clj-kondo

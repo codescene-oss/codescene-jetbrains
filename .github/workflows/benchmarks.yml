@@ -20,7 +20,7 @@ env:
 
 jobs:
   benchmarks:
-    name: Run ExtensionAPI benchmarks
+    name: Run cs-ide RPC benchmarks
     runs-on: ubuntu-latest
     steps:
       - name: Fetch Sources
@@ -39,13 +39,13 @@ jobs:
             caches/modules-2/files-2.1/idea/**
             caches/**/transforms/**
 
-      - name: Run ExtensionAPI benchmarks
+      - name: Run cs-ide RPC benchmarks
         run: ./gradlew :benchmarks:jmh
 
-      - name: Store ExtensionAPI benchmark result
+      - name: Store cs-ide RPC benchmark result
         uses: benchmark-action/github-action-benchmark@52576c92bccf6ac60c8223ec7eb2565637cae9ba
         with:
-          name: JetBrains Plugin - ExtensionAPI
+          name: JetBrains Plugin - cs-ide RPC
           tool: 'jmh'
           output-file-path: benchmarks/build/reports/jmh/results.json
           github-token: ${{ secrets.GITHUB_TOKEN }}

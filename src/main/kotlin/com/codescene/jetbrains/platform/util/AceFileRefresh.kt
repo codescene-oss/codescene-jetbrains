@@ -7,7 +7,6 @@ import com.codescene.data.review.Review
 import com.codescene.jetbrains.core.review.shouldCheckRefactorableFunctions
 import com.codescene.jetbrains.core.util.extractExtension
 import com.codescene.jetbrains.core.util.normalizeAbsolutePath
-import com.codescene.jetbrains.core.util.resolveCliCacheFileName
 import com.codescene.jetbrains.platform.api.AceService
 import com.codescene.jetbrains.platform.api.RefactorableFunctionsSource
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
@@ -28,9 +27,7 @@ suspend fun refreshAceFromReview(
     }
     val services = CodeSceneProjectServiceProvider.getInstance(project)
     val normalizedPath = normalizeAbsolutePath(filePath)
-    val cliFileName =
-        resolveCliCacheFileName(normalizedPath, services.gitService.getRepoRelativePath(normalizedPath))
-    val params = CodeParams(currentCode, cliFileName)
+    val params = CodeParams(currentCode, normalizedPath)
     val cacheParams = CacheParams(services.cliCacheService.getCachePath())
     return AceService.getInstance().getRefactorableFunctions(
         project,
@@ -56,9 +53,7 @@ suspend fun refreshAceFromDelta(
     }
     val services = CodeSceneProjectServiceProvider.getInstance(project)
     val normalizedPath = normalizeAbsolutePath(filePath)
-    val cliFileName =
-        resolveCliCacheFileName(normalizedPath, services.gitService.getRepoRelativePath(normalizedPath))
-    val params = CodeParams(currentCode, cliFileName)
+    val params = CodeParams(currentCode, normalizedPath)
     val cacheParams = CacheParams(services.cliCacheService.getCachePath())
     return AceService.getInstance().getRefactorableFunctions(
         project,

@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.platform.statusbar
 
 import com.codescene.jetbrains.platform.listeners.AceStatusRefreshNotifier
+import com.codescene.jetbrains.platform.listeners.CodeSceneProjectLifetime
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.PlatformConstants.ACE_STATUS
@@ -13,10 +14,12 @@ import com.intellij.openapi.wm.StatusBar
 import com.intellij.openapi.wm.StatusBarWidget
 import com.intellij.openapi.wm.StatusBarWidgetFactory
 import com.intellij.util.Consumer
+import com.intellij.util.messages.MessageBusConnection
 import java.awt.event.MouseEvent
 
 class AceStatusBarWidget : StatusBarWidget.IconPresentation, StatusBarWidget {
     private var statusBar: StatusBar? = null
+    private var refreshConnection: MessageBusConnection? = null
     private var value: String = CodeSceneGlobalSettingsStore.getInstance().currentState().aceStatus.value
 
     override fun ID(): String = this::class.simpleName!!
@@ -29,24 +32,29 @@ class AceStatusBarWidget : StatusBarWidget.IconPresentation, StatusBarWidget {
 
     override fun install(statusBar: StatusBar) {
         this.statusBar = statusBar
-        subscribeToAceStatusRefreshEvent()
-    }
-
-    override fun dispose() {
-        statusBar = null
-    }
-
-    private fun subscribeToAceStatusRefreshEvent() {
-        ApplicationManager.getApplication().messageBus.connect().subscribe(
+        refreshConnection?.disconnect()
+        val project = statusBar.project ?: return
+        val connection =
+            ApplicationManager.getApplication().messageBus.connect(
+                CodeSceneProjectLifetime.getInstance(project),
+            )
+        refreshConnection = connection
+        connection.subscribe(
             AceStatusRefreshNotifier.TOPIC,
             object : AceStatusRefreshNotifier {
                 override fun refresh() {
                     Log.debug("Refreshing $ACE_STATUS in Status Bar...")
                     value = CodeSceneGlobalSettingsStore.getInstance().currentState().aceStatus.value
-                    statusBar?.updateWidget(ID())
+                    this@AceStatusBarWidget.statusBar?.updateWidget(ID())
                 }
             },
         )
+    }
+
+    override fun dispose() {
+        refreshConnection?.disconnect()
+        refreshConnection = null
+        statusBar = null
     }
 
     /**

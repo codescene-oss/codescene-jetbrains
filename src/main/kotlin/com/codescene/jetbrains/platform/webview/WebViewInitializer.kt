@@ -12,6 +12,7 @@ import com.codescene.jetbrains.platform.webview.util.JsEmbedEscapes
 import com.codescene.jetbrains.platform.webview.util.StyleHelper
 import com.intellij.ide.ui.LafManager
 import com.intellij.ide.ui.LafManagerListener
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -23,7 +24,7 @@ import kotlinx.serialization.json.Json
 @Service(Service.Level.PROJECT)
 class WebViewInitializer(
     private val project: Project,
-) : LafManagerListener {
+) : LafManagerListener, Disposable {
     private val browsers = mutableMapOf<View, JBCefBrowser>()
 
     companion object {
@@ -31,9 +32,10 @@ class WebViewInitializer(
     }
 
     init {
-        val bus = ApplicationManager.getApplication().messageBus.connect()
-        bus.subscribe(LafManagerListener.TOPIC, this)
+        ApplicationManager.getApplication().messageBus.connect(this).subscribe(LafManagerListener.TOPIC, this)
     }
+
+    override fun dispose() = Unit
 
     private fun registerBrowser(
         id: View,

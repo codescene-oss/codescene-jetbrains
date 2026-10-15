@@ -1,40 +1,11 @@
 package com.codescene.jetbrains.core.util
 
 import java.time.Duration
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CliCacheUtilsTest {
-    @Test
-    fun `resolveCliCacheFileName uses absolute file path`() {
-        val result = resolveCliCacheFileName("/repo/src/Main.kt", "src/Main.kt")
-
-        assertEquals("/repo/src/Main.kt", result)
-    }
-
-    @Test
-    fun `resolveCliCacheFileName falls back to full file path`() {
-        val result = resolveCliCacheFileName("/repo/src/Main.kt", null)
-
-        assertEquals("/repo/src/Main.kt", result)
-    }
-
-    @Test
-    fun `resolveBaselineCliCacheFileName prefixes commit when available`() {
-        val result = resolveBaselineCliCacheFileName("/repo/src/Main.kt", "src/Main.kt", "abc123")
-
-        assertEquals("abc123:/repo/src/Main.kt", result)
-    }
-
-    @Test
-    fun `resolveBaselineCliCacheFileName falls back to current file name without commit`() {
-        val result = resolveBaselineCliCacheFileName("/repo/src/Main.kt", "src/Main.kt", null)
-
-        assertEquals("/repo/src/Main.kt", result)
-    }
-
     @Test
     fun `isExpiredCliCacheEntry returns true when file age reaches max age`() {
         val result =

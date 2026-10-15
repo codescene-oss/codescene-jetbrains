@@ -1,27 +1,18 @@
 package com.codescene.jetbrains.benchmarks
 
-import com.codescene.ExtensionAPI
 import java.util.concurrent.atomic.AtomicInteger
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.Scope
 import org.openjdk.jmh.annotations.Setup
 import org.openjdk.jmh.annotations.State
-import org.openjdk.jmh.annotations.TearDown
 
-@State(Scope.Thread)
-open class ReviewDeltaFlowBenchmark {
-    private lateinit var environment: BenchmarkEnvironment
+@State(Scope.Benchmark)
+open class ReviewDeltaFlowBenchmark : CsIdeBenchmarkState() {
     private val coldCounter = AtomicInteger()
 
     @Setup
     fun setup() {
-        environment = BenchmarkEnvironment()
         reviewDeltaFlow("flow-warm")
-    }
-
-    @TearDown
-    fun tearDown() {
-        environment.close()
     }
 
     @Benchmark
@@ -33,9 +24,9 @@ open class ReviewDeltaFlowBenchmark {
     private fun reviewDeltaFlow(suffix: String): ReviewDeltaFlowResult {
         val baselineParams = environment.baselineReviewParams(suffix)
         val currentParams = environment.currentReviewParams(suffix)
-        val baselineReview = ExtensionAPI.review(baselineParams, environment.cacheParams)
-        val currentReview = ExtensionAPI.review(currentParams, environment.cacheParams)
-        val delta = ExtensionAPI.delta(baselineParams, currentParams, environment.cacheParams)
+        val baselineReview = client.review(baselineParams, environment.cacheParams)!!
+        val currentReview = client.review(currentParams, environment.cacheParams)!!
+        val delta = client.reviewDelta(baselineParams, currentParams, environment.cacheParams)!!
         return ReviewDeltaFlowResult(currentReview, baselineReview, delta)
     }
 }

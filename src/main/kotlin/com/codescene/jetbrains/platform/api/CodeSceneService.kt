@@ -17,7 +17,7 @@ abstract class CodeSceneService :
     abstract val codeReviewer: CodeReviewer
     protected abstract val reviewOrchestrator: ReviewOrchestrator
 
-    val activeReviewCalls: Set<String>
+    open val activeReviewCalls: Set<String>
         get() = reviewOrchestrator.activeFilePaths()
 
     protected val serviceImplementation: String = this::class.java.simpleName
@@ -42,6 +42,7 @@ abstract class CodeSceneService :
             isCodeReview = isCodeReview(),
             timeout = timeout,
             debounceDelayMs = debounceDelayMs,
+            showProgress = false,
             performAction = performAction,
             onScheduled = { onReviewScheduled(filePath) },
             onFinished = { onReviewFinished(filePath) },
@@ -55,7 +56,7 @@ abstract class CodeSceneService :
 
     protected open fun isCodeReview(): Boolean = false
 
-    fun cancelFileReview(filePath: String) {
+    open fun cancelFileReview(filePath: String) {
         reviewOrchestrator.cancel(filePath, serviceImplementation)
     }
 

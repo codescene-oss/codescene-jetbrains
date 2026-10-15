@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.platform.telemetry
 
-import com.codescene.ExtensionAPI
 import com.codescene.jetbrains.core.contracts.ITelemetryService
 import com.codescene.jetbrains.core.flag.RuntimeFlags
 import com.codescene.jetbrains.core.review.BaseService
@@ -12,6 +11,7 @@ import com.codescene.jetbrains.core.telemetry.buildUnhandledErrorPayload
 import com.codescene.jetbrains.core.telemetry.normalizeIdeName
 import com.codescene.jetbrains.core.telemetry.resolveTelemetryEventData
 import com.codescene.jetbrains.core.util.TelemetryEvents
+import com.codescene.jetbrains.platform.cli.CsIdeServerService
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.platform.util.Log
@@ -42,41 +42,41 @@ class TelemetryService : BaseService(Log), Disposable, ITelemetryService {
         val settings = CodeSceneGlobalSettingsStore.getInstance().currentState()
         if (!settings.telemetryConsentGiven || !settings.telemetryNoticeShown) return
 
-        val eventInfo =
-            resolveTelemetryEventData(
-                consentGiven = settings.telemetryConsentGiven,
-                noticeDisplayed = settings.telemetryNoticeShown,
-                request =
-                    TelemetryRequest(
-                        editorType = TELEMETRY_EDITOR_TYPE,
-                        eventName = eventName,
-                        data = eventData,
-                        ideInfo = getIdeInfo(),
-                        editorVersion = getEditorVersion(),
-                        pluginVersion = getPluginVersion(),
-                        deviceId = CodeSceneApplicationServiceProvider.getInstance().deviceIdStore.get(),
-                    ),
-            ) ?: return
-
-        val telemetryEvent =
-            buildTelemetryEvent(
-                eventInfo,
-                TelemetryRuntimeInfo(
-                    eventTime = Instant.now().toString(),
-                    processPlatform = processPlatform(),
-                    processArch = processArch(),
-                    internal = internalTelemetryFlag(),
-                ),
-            )
-
         scope.launch {
             try {
-                runWithClassLoaderChange {
-                    ExtensionAPI.sendTelemetry(telemetryEvent)
+                val eventInfo =
+                    resolveTelemetryEventData(
+                        consentGiven = settings.telemetryConsentGiven,
+                        noticeDisplayed = settings.telemetryNoticeShown,
+                        request =
+                            TelemetryRequest(
+                                editorType = TELEMETRY_EDITOR_TYPE,
+                                eventName = eventName,
+                                data = eventData,
+                                ideInfo = getIdeInfo(),
+                                editorVersion = getEditorVersion(),
+                                pluginVersion = getPluginVersion(),
+                                deviceId = CodeSceneApplicationServiceProvider.getInstance().deviceIdStore.get(),
+                            ),
+                    ) ?: return@launch
+
+                val telemetryEvent =
+                    buildTelemetryEvent(
+                        eventInfo,
+                        TelemetryRuntimeInfo(
+                            eventTime = Instant.now().toString(),
+                            processPlatform = processPlatform(),
+                            processArch = processArch(),
+                            internal = internalTelemetryFlag(),
+                        ),
+                    )
+
+                runTimed {
+                    CsIdeServerService.getInstance().client().telemetry(telemetryEvent)
                 }
                 log.debug("Telemetry event logged: ${telemetryEvent.eventName}")
             } catch (e: Exception) {
-                log.debug("Error during telemetry event ${eventInfo.eventName} sending.")
+                log.debug("Error during telemetry event $eventName sending.")
             }
         }
     }
