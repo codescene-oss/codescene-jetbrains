@@ -85,3 +85,7 @@ ktlint {
         exclude("**/build/**")
     }
 }
+
+tasks.test {
+    optionalEnv("CS_IDE_JAVA")?.let { systemProperty("csIde.java", it) }
+}

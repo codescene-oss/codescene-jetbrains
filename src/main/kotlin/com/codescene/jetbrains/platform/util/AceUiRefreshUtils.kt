@@ -1,40 +1,19 @@
 package com.codescene.jetbrains.platform.util
 
-import com.codescene.jetbrains.core.models.settings.AceStatus
 import com.codescene.jetbrains.core.review.ReviewCacheQuery
 import com.codescene.jetbrains.platform.editor.UIRefreshService
 import com.codescene.jetbrains.platform.editor.codeVision.providers.AceCodeVisionProvider
-import com.codescene.jetbrains.platform.listeners.AceStatusRefreshNotifier
 import com.codescene.jetbrains.platform.review.PlatformReviewCacheService
 import com.codescene.jetbrains.platform.webview.util.updateDocs
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
-import kotlin.properties.Delegates
-import kotlin.properties.ReadWriteProperty
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
-
-fun aceStatusDelegate(): ReadWriteProperty<Any?, AceStatus> =
-    Delegates.observable(AceStatus.DEACTIVATED) { _, _, newValue ->
-        refreshAceUi(newValue != AceStatus.DEACTIVATED)
-
-        ApplicationManager
-            .getApplication()
-            .messageBus
-            .syncPublisher(AceStatusRefreshNotifier.TOPIC)
-            .refresh()
-    }
-
-fun aceAuthTokenDelegate(): ReadWriteProperty<Any?, String> =
-    Delegates.observable("") { _, _, _ ->
-        refreshAceUi(true)
-    }
 
 private val aceUiRefreshLock = Mutex()
 

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Changed**
+  - run code analysis in a `cs-ide` JSON-RPC server child process instead of in-process `ExtensionAPI` (CS-12077)
+  - the `cs-ide` server watches git roots and decides which files differ from the baseline; the plugin no longer polls git or lists changes itself (CS-12077)
+  - every untracked supported file appears in the Code Health Monitor, not at most five per directory (CS-12077)
+  - the baseline is the merge-base with `baseline_branch` from `.codescene/config.json`, else `origin/HEAD`, `origin/main`, `origin/master`, `main` or `master`; `develop`, `trunk`, `dev` and `development` are no longer probed and there is no reflog fallback (CS-12077)
+
 ### [0.5.8] - 2026-10-09
 - **Changed**
   - bump extension API to 1.0-fdef705 (#192)

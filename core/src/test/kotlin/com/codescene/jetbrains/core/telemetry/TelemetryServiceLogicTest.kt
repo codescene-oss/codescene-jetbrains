@@ -75,9 +75,4 @@ class TelemetryServiceLogicTest {
     fun `buildSettingsVisibilityTelemetryData stores visible flag`() {
         assertEquals(mapOf("visible" to true), buildSettingsVisibilityTelemetryData(true))
     }
-
-    @Test
-    fun `buildOpenLinkTelemetryData stores url`() {
-        assertEquals(mapOf("url" to "https://example.com"), buildOpenLinkTelemetryData("https://example.com"))
-    }
 }

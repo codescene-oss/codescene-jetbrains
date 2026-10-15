@@ -36,7 +36,6 @@ class FileEventProcessor(
         FileEventHandler(
             serviceProvider.deltaCacheService,
             serviceProvider.reviewCacheService,
-            serviceProvider.baselineReviewCacheService,
         )
     private val cachedReviewService = project.service<CachedReviewService>()
 

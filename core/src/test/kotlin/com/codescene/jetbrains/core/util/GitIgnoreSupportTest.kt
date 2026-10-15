@@ -147,10 +147,6 @@ class GitIgnoreSupportTest {
     private class CliGitService(
         private val repoRoot: Path,
     ) : IGitService {
-        override fun getBranchCreationCommitCode(filePath: String): String = ""
-
-        override fun getBranchCreationCommitHash(filePath: String): String? = null
-
         override fun getRepoRelativePath(filePath: String): String? = null
 
         override fun getRepoRoot(filePath: String): String? = repoRoot.toString()

@@ -277,8 +277,9 @@ jobs:
 
       # Run dependency check
       - name: Depcheck
+        id: depcheck
+        continue-on-error: true
         uses: dependency-check/Dependency-Check_Action@1e54355a8b4c8abaa8cc7d0b70aa655a3bb15a6c
-        id: Depcheck
         with:
           project: "codescene-jetbrains"
           path: "."
@@ -287,6 +288,31 @@ jobs:
             --failOnCVSS 5
             --ossIndexUsername ${{ secrets.DEPENDENCY_CHECK_API_USERNAME }}
             --ossIndexPassword ${{ secrets.DEPENDENCY_CHECK_API_TOKEN }}
+
+      - name: Reject dependency-check failures other than a Central outage
+        if: steps.depcheck.outcome == 'failure'
+        shell: bash
+        run: |
+          report="reports/dependency-check-report.html"
+          if [ ! -f "$report" ]; then
+            echo "dependency-check failed before writing a report"
+            exit 1
+          fi
+          python3 - <<'PY'
+          import pathlib, re, sys
+          text = pathlib.Path("reports/dependency-check-report.html").read_text(encoding="utf-8", errors="replace")
+          vuln = re.search(r"Vulnerable Dependencies\s*:&nbsp;\s*(\d+)", text)
+          found = re.search(r"Vulnerabilities Found\s*:&nbsp;\s*(\d+)", text)
+          if not vuln or not found:
+              sys.exit("dependency-check report is missing the vulnerability summary")
+          if vuln.group(1) != "0" or found.group(1) != "0":
+              sys.exit(
+                  f"vulnerable dependencies={vuln.group(1)} vulnerabilities={found.group(1)}"
+              )
+          if "Could not connect to Central search" not in text:
+              sys.exit("dependency-check failed without a Central connectivity error")
+          print("Central search failed and the report lists 0 vulnerabilities")
+          PY
 
       # Upload dependency check report
       - name: Upload Test results

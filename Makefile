@@ -1,12 +1,14 @@
+# Gradle and make recipes need JDK 17 on JAVA_HOME; newer JDKs can fail Kotlin DSL parsing before jvmToolchain applies.
 BB := bb
-NULL := /dev/null
 ifeq ($(OS),Windows_NT)
+NULL := NUL
 IDEA_LOG := build\idea-sandbox\*\log\idea.log
 else
+NULL := /dev/null
 IDEA_LOG := build/idea-sandbox/*/log/idea.log
 endif
 
-.PHONY: install-cli check-bb build test benchmarks format format-check delta iter coverage-summary release test-release test-release-script class-size-mine run-ide kill-ide logs rm-nul
+.PHONY: install-cli check-bb build test benchmarks format format-check iter coverage-summary release test-release test-release-script class-size-mine run-ide run-rider kill-ide logs rm-nul
 
 install-cli: check-bb
 	@$(BB) -f .github/install-cli.clj
@@ -23,7 +25,7 @@ GRADLE_FILES := $(wildcard build.gradle.kts) $(wildcard core/build.gradle.kts) $
 
 .build-timestamp: check-bb $(KT_FILES) $(GRADLE_FILES)
 ifeq ($(OS),Windows_NT)
-	@$(BB) -f .github/run-quiet.clj build.log "gradle buildPlugin" cmd //c ".\\gradlew.bat --rerun-tasks --warn buildPlugin"
+	@$(BB) -f .github/run-quiet.clj build.log "gradle buildPlugin" cmd /c ".\\gradlew.bat --rerun-tasks --warn buildPlugin"
 else
 	@$(BB) -f .github/run-quiet.clj build.log "gradle buildPlugin" ./gradlew --rerun-tasks --warn buildPlugin
 endif
@@ -33,22 +35,22 @@ build: .build-timestamp
 
 test: kill-ide check-bb build
 ifeq ($(OS),Windows_NT)
-	@$(BB) -f .github/run-quiet.clj test.log "gradle test" cmd //c ".\\gradlew.bat test"
+	@$(BB) -f .github/run-quiet.clj test.log "gradle test" cmd /c ".\\gradlew.bat test"
 else
 	@$(BB) -f .github/run-quiet.clj test.log "gradle test" ./gradlew test
 endif
 
 benchmarks: check-bb
 ifeq ($(OS),Windows_NT)
-	@$(BB) -f .github/run-quiet.clj benchmarks.log "gradle benchmarks" cmd //c ".\\gradlew.bat :benchmarks:jmh"
+	@$(BB) -f .github/run-quiet.clj benchmarks.log "gradle benchmarks" cmd /c ".\\gradlew.bat :benchmarks:jmh"
 else
 	@$(BB) -f .github/run-quiet.clj benchmarks.log "gradle benchmarks" ./gradlew :benchmarks:jmh
 endif
 
 format: check-bb
 ifeq ($(OS),Windows_NT)
-	@$(BB) -f .github/run-quiet.clj format.log "gradle ktlintFormat" cmd //c ".\\gradlew.bat ktlintFormat"
-	@$(BB) -f .github/run-quiet.clj format.log "gradle core:ktlintFormat" cmd //c ".\\gradlew.bat core:ktlintFormat"
+	@$(BB) -f .github/run-quiet.clj format.log "gradle ktlintFormat" cmd /c ".\\gradlew.bat ktlintFormat"
+	@$(BB) -f .github/run-quiet.clj format.log "gradle core:ktlintFormat" cmd /c ".\\gradlew.bat core:ktlintFormat"
 else
 	@$(BB) -f .github/run-quiet.clj format.log "gradle ktlintFormat" ./gradlew ktlintFormat
 	@$(BB) -f .github/run-quiet.clj format.log "gradle core:ktlintFormat" ./gradlew core:ktlintFormat
@@ -56,13 +58,10 @@ endif
 
 format-check: check-bb
 ifeq ($(OS),Windows_NT)
-	@$(BB) -f .github/run-quiet.clj format-check.log "gradle ktlintCheck" cmd //c ".\\gradlew.bat --console=plain -PktlintFailOnError=true ktlintCheck"
+	@$(BB) -f .github/run-quiet.clj format-check.log "gradle ktlintCheck" cmd /c ".\\gradlew.bat --console=plain -PktlintFailOnError=true ktlintCheck"
 else
 	@$(BB) -f .github/run-quiet.clj format-check.log "gradle ktlintCheck" ./gradlew --console=plain -PktlintFailOnError=true ktlintCheck
 endif
-
-delta: check-bb install-cli
-	@$(BB) -f .github/run-quiet.clj delta.log "cs delta" cs delta master --error-on-warnings
 
 coverage-summary: check-bb
 	@$(BB) -f .github/coverage-summary.clj
@@ -90,13 +89,24 @@ endif
 run-ide: build
 ifeq ($(OS),Windows_NT)
 	@powershell -Command "Remove-Item -Force -ErrorAction SilentlyContinue '$(IDEA_LOG)'"
-	cmd //c ".\\gradlew.bat runIde"
+	cmd /c ".\\gradlew.bat runIde"
 else
 	@rm -f $(IDEA_LOG)
 	./gradlew runIde
 endif
 
-iter: format format-check class-size-mine delta test-release-script test
+RIDER_HOME ?= C:/Program Files/JetBrains/JetBrains Rider 2026.1.1
+
+run-rider: build
+ifeq ($(OS),Windows_NT)
+	@powershell -Command "Remove-Item -Force -ErrorAction SilentlyContinue '$(IDEA_LOG)'"
+	cmd /c ".\\gradlew.bat runRiderIde \"-PriderHome=$(RIDER_HOME)\""
+else
+	@rm -f $(IDEA_LOG)
+	./gradlew runRiderIde "-PriderHome=$(RIDER_HOME)"
+endif
+
+iter: format format-check class-size-mine test-release-script test
 
 logs:
 ifeq ($(OS),Windows_NT)
@@ -106,4 +116,8 @@ else
 endif
 
 rm-nul:
+ifeq ($(OS),Windows_NT)
+	@powershell -NoProfile -ExecutionPolicy Bypass -File .github/rm-nul.ps1 > $(NULL) 2>&1
+else
 	@rm -f NUL
+endif

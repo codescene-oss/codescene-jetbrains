@@ -3,8 +3,8 @@ package com.codescene.jetbrains.core.mapper
 import com.codescene.data.delta.ChangeDetail as DeltaChangeDetail
 import com.codescene.data.delta.Delta
 import com.codescene.data.delta.FunctionFinding as DeltaFunctionFinding
+import com.codescene.jetbrains.core.cli.ReviewProgressNotice
 import com.codescene.jetbrains.core.delta.DeltaCacheItem
-import com.codescene.jetbrains.core.models.CwfMessage
 import com.codescene.jetbrains.core.models.View
 import com.codescene.jetbrains.core.models.shared.AutoRefactorConfig
 import com.codescene.jetbrains.core.models.view.FunctionToRefactor
@@ -15,7 +15,6 @@ import com.codescene.jetbrains.core.util.resolveFeatureFlags
 import io.mockk.every
 import io.mockk.mockk
 import java.util.Optional
-import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -27,6 +26,8 @@ class CodeHealthMonitorMapperTest {
     private val defaultFeatureFlags = listOf("jobs", "ace-status-indicator")
     private val noRefactorResolver: (String, String, DeltaFunctionFinding) -> FunctionToRefactor? = { _, _, _ -> null }
     private val emptyDeltaResults = emptyList<Pair<String, DeltaCacheItem>>()
+    private val idleAnalysis = MonitorAnalysis(emptyList(), "idle", null, 0)
+    private val repoRoot = "/repo"
 
     private fun createDelta(
         scoreChange: Double? = 0.0,
@@ -49,13 +50,13 @@ class CodeHealthMonitorMapperTest {
 
     private fun toCwfData(
         deltaResults: List<Pair<String, DeltaCacheItem>> = emptyDeltaResults,
-        activeJobs: List<String> = emptyList(),
+        monitorAnalysis: MonitorAnalysis = idleAnalysis,
         featureFlags: List<String> = defaultFeatureFlags,
         pro: Boolean = true,
         devmode: Boolean = false,
     ) = mapper.toCwfData(
         deltaResults,
-        activeJobs,
+        monitorAnalysis,
         noRefactorResolver,
         autoRefactorConfig,
         featureFlags,
@@ -106,13 +107,21 @@ class CodeHealthMonitorMapperTest {
 
     @Test
     fun `toCwfData maps active jobs`() {
-        val result = toCwfData(activeJobs = listOf("a.kt", "b.kt"))
+        val running = listOf("$repoRoot/a.kt", "$repoRoot/b.kt")
+        val monitorAnalysis =
+            buildMonitorAnalysis(
+                runningPaths = running,
+                progress = ReviewProgressNotice(count = 0, done = 0, files = emptyList()),
+                candidatePaths = running,
+                scope = MonitorPathScope(repoRoots = listOf(repoRoot)),
+            )
+        val result = toCwfData(monitorAnalysis = monitorAnalysis)
         val jobs = result.data!!.jobs
         assertEquals(2, jobs.size)
         assertEquals(DELTA_ANALYSIS_JOB, jobs[0].type)
         assertEquals(JOB_STATE_RUNNING, jobs[0].state)
-        assertEquals("a.kt", jobs[0].file.fileName)
-        assertEquals("b.kt", jobs[1].file.fileName)
+        assertEquals("$repoRoot/a.kt", jobs[0].file.fileName)
+        assertEquals("$repoRoot/b.kt", jobs[1].file.fileName)
     }
 
     @Test
@@ -204,7 +213,7 @@ class CodeHealthMonitorMapperTest {
             mapper
                 .toCwfData(
                     deltaResults = listOf("file.kt" to createCacheItem(delta)),
-                    activeJobs = emptyList(),
+                    monitorAnalysis = idleAnalysis,
                     functionToRefactorResolver = resolver,
                     autoRefactorConfig = autoRefactorConfig,
                     featureFlags = defaultFeatureFlags,
@@ -253,49 +262,13 @@ class CodeHealthMonitorMapperTest {
         val result =
             mapper.toCwfData(
                 emptyDeltaResults,
-                emptyList(),
+                idleAnalysis,
                 noRefactorResolver,
                 config,
                 defaultFeatureFlags,
                 devmode = false,
             )
         assertEquals(config, result.data!!.autoRefactor)
-    }
-
-    @Test
-    fun `toMessage encodes home payload as CWF message`() {
-        val result =
-            mapper.toMessage(
-                deltaResults = emptyList(),
-                activeJobs = listOf("src/Main.kt"),
-                functionToRefactorResolver = noRefactorResolver,
-                autoRefactorConfig = autoRefactorConfig,
-                featureFlags = defaultFeatureFlags,
-                devmode = true,
-            )
-
-        val parsed = Json.decodeFromString(CwfMessage.serializer(), result)
-        assertEquals("update-renderer", parsed.messageType)
-        assertTrue(result.contains("\"view\": \"home\""))
-        assertTrue(result.contains("\"Main.kt\""))
-    }
-
-    @Test
-    fun `buildUpdate returns message and notification state`() {
-        val delta = createDelta(scoreChange = 1.0)
-        val result =
-            mapper.buildUpdate(
-                deltaResults = listOf("file.kt" to createCacheItem(delta)),
-                activeJobs = listOf("src/Main.kt"),
-                functionToRefactorResolver = noRefactorResolver,
-                autoRefactorConfig = autoRefactorConfig,
-                featureFlags = defaultFeatureFlags,
-                devmode = true,
-            )
-
-        assertTrue(result.message.contains("\"view\": \"home\""))
-        assertTrue(result.message.contains("\"Main.kt\""))
-        assertEquals(true, result.hasNotification)
     }
 
     @Test

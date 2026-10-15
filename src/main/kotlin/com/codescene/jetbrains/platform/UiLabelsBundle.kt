@@ -7,7 +7,7 @@ import org.jetbrains.annotations.PropertyKey
 @NonNls
 private const val BUNDLE = "messages.UiLabelsBundle"
 
-object UiLabelsBundle : DynamicBundle(BUNDLE) {
+object UiLabelsBundle : DynamicBundle(UiLabelsBundle::class.java, BUNDLE) {
     fun message(
         @PropertyKey(resourceBundle = BUNDLE) key: String,
         vararg params: Any,

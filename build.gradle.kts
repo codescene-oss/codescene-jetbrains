@@ -300,6 +300,25 @@ intellijPlatformTesting {
                 robotServerPlugin()
             }
         }
+
+        register("runRiderIde") {
+            val riderHome =
+                providers.gradleProperty("riderHome").map { it.trim() }.orElse("")
+            localPath =
+                riderHome.map { path ->
+                    if (path.isEmpty()) {
+                        throw GradleException(
+                            "riderHome is required for runRiderIde, for example " +
+                                "-PriderHome=\"C:/Program Files/JetBrains/JetBrains Rider 2026.1.1\"",
+                        )
+                    }
+                    file(path)
+                }
+            task {
+                val devMode = project.properties["FEATURE_CWF_DEVMODE"]?.toString()?.toBoolean() ?: false
+                systemProperty("FEATURE_CWF_DEVMODE", devMode)
+            }
+        }
     }
 }
 

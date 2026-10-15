@@ -29,5 +29,3 @@ fun resolveTelemetryEventData(
 }
 
 fun buildSettingsVisibilityTelemetryData(isVisible: Boolean): Map<String, Any> = mapOf("visible" to isVisible)
-
-fun buildOpenLinkTelemetryData(url: String): Map<String, Any> = mapOf("url" to url)

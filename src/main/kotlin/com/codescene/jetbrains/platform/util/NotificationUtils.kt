@@ -108,15 +108,12 @@ fun showErrorNotification(
 
 private fun com.codescene.jetbrains.core.util.NotificationSpec.toActions(
     openSettings: ((Notification) -> Unit)? = null,
-    viewRefactoring: ((Notification) -> Unit)? = null,
 ): List<NotificationAction> =
     toActionSpecs().mapNotNull { action ->
         val handler =
             when (action.id) {
                 NotificationActionId.OPEN_SETTINGS -> openSettings
-                NotificationActionId.CLOSE -> { notification: Notification -> notification.expire() }
                 NotificationActionId.DISMISS -> { notification: Notification -> notification.expire() }
-                NotificationActionId.VIEW_REFACTORING_RESULT -> viewRefactoring
             }
 
         handler?.let {
