@@ -111,6 +111,9 @@ git clone git@github.com:empear-analytics/codescene-jetbrains.git
 After opening your project in *IntelliJ IDEA Community Edition* or *IntelliJ IDEA Ultimate*, the next step is to set the
 proper SDK to Java in version `17` within the [Project Structure settings](https://www.jetbrains.com/help/idea/project-settings-and-structure.html).
 
+For `make` and `./gradlew` from a terminal (Windows, macOS, or Linux), set `JAVA_HOME` to a JDK 17 install as well.
+Gradle runs on that JVM before the build’s `jvmToolchain(17)` applies, and newer JDK versions can prevent the build from starting.
+
 Project Structure — SDK
 
 ### Build the project
@@ -125,7 +128,7 @@ You can also run the build task from the Gradle menu in your IDE.
 
 ### Make targets (requires Babashka)
 
-The Makefile provides development targets for build, test, format, and CodeScene delta analysis. [Babashka](https://babashka.org) must be installed first.
+The Makefile provides development targets for build, test, and format. [Babashka](https://babashka.org) must be installed first.
 
 
 | Target                                  | Description                                        |
@@ -134,9 +137,8 @@ The Makefile provides development targets for build, test, format, and CodeScene
 | `make test`                             | Run all tests                                      |
 | `make format`                           | Format all Kotlin files with ktlint (both modules) |
 | `make format-check`                     | Check format of all Kotlin files                   |
-| `make delta`                            | Run CodeScene delta analysis (requires `cs` CLI)   |
 | `make install-cli`                      | Install CodeScene CLI (`cs`)                       |
-| `make iter`                             | Run formatting, analysis, build, and tests         |
+| `make iter`                             | Run formatting, checks, build, and tests             |
 | `make release BUMP=patch|minor|major`   | Prepare a stable release commit and tag            |
 | `make test-release [BUMP=minor|major]`  | Create a GitHub-only tagged test release            |
 | `make test-release-script`              | Test the release tooling and tag validation        |

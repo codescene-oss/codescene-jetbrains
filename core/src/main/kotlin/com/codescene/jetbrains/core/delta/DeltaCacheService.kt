@@ -89,6 +89,19 @@ open class DeltaCacheService(
         return isCacheHitOrNotStale to apiResponse
     }
 
+    open fun getByCurrentContent(
+        filePath: String,
+        currentContent: String,
+    ): Pair<Boolean, Delta?> {
+        val entry = cache[key(filePath)] ?: return false to null
+        val hit = entry.currentHash == DigestUtils.sha256Hex(currentContent)
+        log.info(
+            "delta cache current lookup file=${pathFileName(filePath)} hit=$hit",
+            DELTA_CACHE_LOG,
+        )
+        return if (hit) true to entry.deltaApiResponse else false to null
+    }
+
     open override fun put(entry: DeltaCacheEntry) {
         val headHash = DigestUtils.sha256Hex(entry.headContent)
         val currentContentHash = DigestUtils.sha256Hex(entry.currentFileContent)

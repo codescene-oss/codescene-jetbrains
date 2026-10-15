@@ -51,6 +51,7 @@ class CodeSceneServiceTest {
                 isCodeReview = any(),
                 timeout = any(),
                 debounceDelayMs = any(),
+                showProgress = any(),
                 performAction = any(),
                 onScheduled = any(),
                 onFinished = any(),

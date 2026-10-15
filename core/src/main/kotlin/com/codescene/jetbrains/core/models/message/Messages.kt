@@ -5,12 +5,6 @@ enum class LifecycleMessages(val value: String) {
     UPDATE_RENDERER("update-renderer"),
 }
 
-enum class LoginMessages(val value: String) {
-    OPEN_LOGIN("open-login"),
-    OPEN_HOME("open-home"),
-    INIT_LOGIN("init-login"),
-}
-
 enum class PanelMessages(val value: String) {
     APPLY("apply"),
     CANCEL("cancel"),
@@ -30,8 +24,4 @@ enum class EditorMessages(val value: String) {
     OPEN_LINK("open-link"), // Custom message appended on script initialization,
     OPEN_SETTINGS("open-settings"),
     GOTO_FUNCTION_LOCATION("goto-function-location"),
-}
-
-enum class StateChangeMessages(val value: String) {
-    COMMIT_BASELINE("commitBaseline"),
 }

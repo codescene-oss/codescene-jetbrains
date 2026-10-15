@@ -6,6 +6,8 @@ import com.codescene.jetbrains.platform.UiLabelsBundle
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.icons.CodeSceneIcons.LOGO
 import com.codescene.jetbrains.platform.util.Log
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.JBColor
@@ -34,6 +36,13 @@ class AboutTab : BoundConfigurable(UiLabelsBundle.message("aboutTitle")) {
             border = Borders.empty(10)
             add(aboutSection, BorderLayout.NORTH)
             add(deviceIdSection, BorderLayout.SOUTH)
+            ApplicationManager.getApplication().executeOnPooledThread {
+                val deviceId = CodeSceneApplicationServiceProvider.getInstance().deviceIdStore.get()
+                ApplicationManager.getApplication().invokeLater(
+                    { deviceIdSection.text = "device-id: $deviceId" },
+                    ModalityState.any(),
+                )
+            }
         }
 
     private val aboutSection =
@@ -55,7 +64,7 @@ class AboutTab : BoundConfigurable(UiLabelsBundle.message("aboutTitle")) {
 
     private val deviceIdSection =
         JTextArea().apply {
-            text = "device-id: ${CodeSceneApplicationServiceProvider.getInstance().deviceIdStore.get()}"
+            text = "device-id: …"
             foreground = JBColor.GRAY
             isEditable = false
             isOpaque = false

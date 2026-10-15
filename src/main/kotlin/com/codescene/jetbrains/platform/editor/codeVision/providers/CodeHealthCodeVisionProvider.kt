@@ -38,7 +38,6 @@ internal class CodeHealthCodeVisionProvider : CodeSceneCodeVisionProvider() {
             getCachedDelta(
                 filePath = editor.virtualFile.path,
                 fileContent = editor.document.text,
-                gitService = services.gitService,
                 deltaCacheService = services.deltaCacheService,
             )
 

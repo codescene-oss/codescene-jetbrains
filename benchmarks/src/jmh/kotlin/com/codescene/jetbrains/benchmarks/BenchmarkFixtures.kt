@@ -5,8 +5,6 @@ import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.ExtensionAPI.ReviewParams
 import com.codescene.data.delta.Delta
 import com.codescene.data.review.Review
-import com.codescene.jetbrains.core.util.resolveBaselineCliCacheFileName
-import com.codescene.jetbrains.core.util.resolveCliCacheFileName
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -49,16 +47,12 @@ class BenchmarkEnvironment {
 
     private fun currentReviewPath(suffix: String): String {
         val relativePath = relativePath(suffix)
-        return resolveCliCacheFileName(repoRoot.resolve(relativePath).toString(), relativePath)
+        return repoRoot.resolve(relativePath).toString()
     }
 
     private fun baselineReviewPath(suffix: String): String {
         val relativePath = relativePath(suffix)
-        return resolveBaselineCliCacheFileName(
-            filePath = repoRoot.resolve(relativePath).toString(),
-            repoRelativePath = relativePath,
-            commitSha = "benchmark-base",
-        )
+        return "benchmark-base:" + repoRoot.resolve(relativePath).toString()
     }
 
     private fun relativePath(suffix: String): String =

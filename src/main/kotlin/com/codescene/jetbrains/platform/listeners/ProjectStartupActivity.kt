@@ -7,18 +7,13 @@ import com.codescene.jetbrains.core.util.resolveSettingsChangeActions
 import com.codescene.jetbrains.platform.api.AceService
 import com.codescene.jetbrains.platform.editor.UIRefreshService
 import com.codescene.jetbrains.platform.editor.codeVision.CodeSceneCodeVisionProvider
-import com.codescene.jetbrains.platform.git.GitChangeObserverService
-import com.codescene.jetbrains.platform.git.PeriodicChangeListerService
+import com.codescene.jetbrains.platform.review.WorkspaceReviewService
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.platform.statusbar.AceStatusBarWidgetFactory
 import com.codescene.jetbrains.platform.telemetry.TelemetryService
-import com.codescene.jetbrains.platform.telemetry.installGlobalUncaughtErrorTelemetry
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.refreshAceUi
 import com.codescene.jetbrains.platform.util.showTelemetryNoticeNotification
-import com.intellij.ide.plugins.IdeaPluginDescriptor
-import com.intellij.ide.plugins.PluginInstaller
-import com.intellij.ide.plugins.PluginStateListener
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
@@ -35,7 +30,7 @@ import kotlinx.coroutines.launch
 
 class ProjectStartupActivity : ProjectActivity {
     override suspend fun execute(project: Project) {
-        installGlobalUncaughtErrorTelemetry()
+        CodeScenePluginLifetime.getInstance()
         try {
             runStartup(project)
         } catch (e: Exception) {
@@ -55,20 +50,15 @@ class ProjectStartupActivity : ProjectActivity {
     }
 
     private suspend fun runStartup(project: Project) {
-        val disposable = project as Disposable
+        val disposable = CodeSceneProjectLifetime.getInstance(project)
         val settingsStore = CodeSceneGlobalSettingsStore.getInstance()
 
         logTelemetryStatus(project, settingsStore)
         setupSettingsChangeListener(project, disposable, settingsStore)
 
-        addStateListener()
         VirtualFileManager.getInstance().addAsyncFileListener(FileChangeListener(project), disposable)
 
-        val gitChangeObserverService = project.service<GitChangeObserverService>()
-        gitChangeObserverService.start()
-
-        val periodicChangeListerService = project.service<PeriodicChangeListerService>()
-        periodicChangeListerService.start()
+        WorkspaceReviewService.getInstance(project).startWatching()
 
         registerCodeSceneToolWindowTelemetry(project, disposable)
 
@@ -140,21 +130,4 @@ class ProjectStartupActivity : ProjectActivity {
             AceService.getInstance().runPreflight(true)
         }
     }
-
-    private fun addStateListener() =
-        PluginInstaller.addStateListener(
-            object : PluginStateListener {
-                override fun install(descriptor: IdeaPluginDescriptor) {
-                    // No action needed
-                }
-
-                override fun uninstall(descriptor: IdeaPluginDescriptor) {
-                    Log.info("Plugin uninstalled: ${descriptor.pluginId} ${descriptor.version}")
-                    CodeSceneGlobalSettingsStore.getInstance().apply {
-                        updateTelemetryConsent(false)
-                        updateTelemetryNoticeShown(false)
-                    }
-                }
-            },
-        )
 }

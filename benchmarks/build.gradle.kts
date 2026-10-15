@@ -51,10 +51,18 @@ repositories {
     }
 }
 
+val extensionApiJar: Configuration by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
+
 dependencies {
     add("jmh", project(":core"))
     add("jmh", kotlin("stdlib"))
     add("jmh", "codescene.extension:api:$codeSceneExtensionAPIVersion")
+    add("extensionApiJar", "codescene.extension:api:$codeSceneExtensionAPIVersion") {
+        isTransitive = false
+    }
     add("jmhRuntimeOnly", "org.slf4j:slf4j-nop:$slf4jNopVersion")
 }
 
@@ -67,6 +75,11 @@ jmh {
     resultFormat = "JSON"
     resultsFile = project.file("${layout.buildDirectory.get().asFile}/reports/jmh/results.json")
     duplicateClassesStrategy = DuplicatesStrategy.WARN
+    jvmArgs.add(
+        extensionApiJar.elements.map { jars ->
+            "-Dcodescene.extension.api.jar=${jars.single().asFile.absolutePath}"
+        },
+    )
 }
 
 val ktlintFailOnError =

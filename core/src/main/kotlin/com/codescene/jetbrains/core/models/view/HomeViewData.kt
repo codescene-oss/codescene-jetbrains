@@ -13,6 +13,9 @@ data class HomeData( // Code Health Monitor
     val commitBaseline: String? = null, // "default" | "HEAD" | "branchCreate"
     val showOnboarding: Boolean = false,
     val jobs: List<AnalysisJob> = emptyList(),
+    val analysisState: String? = null,
+    val totalCount: Int? = null,
+    val remainingCount: Int? = null,
     val fileDeltaData: List<FileDeltaData> = emptyList(),
     val autoRefactor: AutoRefactorConfig = AutoRefactorConfig(),
 )
