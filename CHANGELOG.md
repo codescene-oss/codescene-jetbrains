@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - **Changed**
+  - bump extension API to 1.0-37a601f (#197)
   - run code analysis in a `cs-ide` JSON-RPC server child process instead of in-process `ExtensionAPI` (CS-12077)
   - the `cs-ide` server watches git roots and decides which files differ from the baseline; the plugin no longer polls git or lists changes itself (CS-12077)
   - every untracked supported file appears in the Code Health Monitor, not at most five per directory (CS-12077)
