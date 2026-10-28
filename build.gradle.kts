@@ -57,6 +57,46 @@ val cwfTokenEnvName =
         "GH_PACKAGE_TOKEN"
     }
 
+fun parseCwfVersion(
+    text: String,
+    source: String,
+): String {
+    val value = text.removePrefix("\uFEFF").trim()
+    if (!Regex("v?[0-9]+\\.[0-9]+\\.[0-9]+").matches(value)) {
+        throw GradleException(
+            "Invalid CWF version '$value' from $source. Expected a version like 2.5.8 or v2.5.8.",
+        )
+    }
+    return value.removePrefix("v")
+}
+
+fun resolveCwfVersion(pinFile: File): String {
+    val fromEnv = optionalEnv("CWF_VERSION")?.removePrefix("\uFEFF")?.trim()?.takeIf { it.isNotEmpty() }
+    if (fromEnv != null) {
+        return parseCwfVersion(fromEnv, "CWF_VERSION")
+    }
+    if (!pinFile.isFile) {
+        throw GradleException(
+            "No CWF version configured: ${pinFile.name} not found at ${pinFile.absolutePath} " +
+                "and CWF_VERSION is not set.",
+        )
+    }
+    return parseCwfVersion(pinFile.readText(), pinFile.name)
+}
+
+fun githubHttpFailure(
+    step: String,
+    code: Int,
+): GradleException {
+    val hint =
+        if (code == 401 || code == 403) {
+            " Check that the token has access to the empear-analytics/cs-webview repository."
+        } else {
+            ""
+        }
+    return GradleException("GitHub $step failed with HTTP $code.$hint")
+}
+
 requireGithubPackageCredentialsForDependencyResolution()
 
 // Set the JVM language level used to build the project.
@@ -325,27 +365,47 @@ tasks.processResources {
 
 tasks.register("fetchCwf") {
     group = "codescene assets"
-    description = "Get the CWF (webview) asset from the latest GitHub release."
+    description = "Get the CWF (webview) asset from the GitHub release pinned in cwf.version."
 
-    val assetName = "cs-webview"
     val assetType = "cs-cwf"
     val user = "empear-analytics"
     val repo = "cs-webview"
+    val pinFile = layout.projectDirectory.file("cwf.version").asFile
+    val cwfDir = File("src/main/resources/cs-cwf")
 
     doLast {
+        val version = resolveCwfVersion(pinFile)
+        val stamp = File(cwfDir, ".cwf-version")
+        val indexJs = File(cwfDir, "index.js")
+        if (stamp.isFile && stamp.readText().trim() == version && indexJs.isFile) {
+            logger.lifecycle("CWF $version already present, skipping download")
+            return@doLast
+        }
         val token = requiredEnv(cwfTokenEnvName)
-        val apiUrl = "https://api.github.com/repos/$user/$repo/releases"
+        val apiUrl = "https://api.github.com/repos/$user/$repo/releases/tags/v$version"
 
-        val releasesJson =
+        val releaseJson =
             run {
                 val url = URI.create(apiUrl).toURL()
                 val connection = url.openConnection() as HttpURLConnection
                 connection.setRequestProperty("Authorization", "token $token")
-                connection.inputStream.reader().readText()
+                connection.setRequestProperty("Accept", "application/vnd.github+json")
+                val code = connection.responseCode
+                if (code == 404) {
+                    throw GradleException("CWF release tag v$version not found in $user/$repo.")
+                }
+                if (code !in 200..299) {
+                    throw githubHttpFailure("release lookup", code)
+                }
+                connection.inputStream.reader().use { it.readText() }
             }
 
-        val (tag, assetUrl) = parseResponse(releasesJson, assetName)
-        saveAsset(tag, assetUrl, token, assetType)
+        val assetUrl = selectCwfAssetUrl(releaseJson, version)
+        saveAsset("v$version", assetUrl, token, assetType)
+        if (!indexJs.isFile) {
+            throw GradleException("CWF $version is missing src/main/resources/cs-cwf/index.js after download.")
+        }
+        stamp.writeText("$version\n")
     }
 }
 
@@ -404,28 +464,18 @@ tasks.named("buildPlugin") {
 }
 
 @Suppress("UNCHECKED_CAST")
-fun parseResponse(
-    json: String,
-    assetName: String,
-): Pair<String, String> {
-    val releases = JsonSlurper().parseText(json) as List<Map<String, Any>>
-    val release =
-        releases.find { it["prerelease"] == false && it["draft"] == false }
-            ?: throw GradleException("No suitable release found.")
-    val tag = release["tag_name"] as String
-
-    val assets = release["assets"] as List<Map<String, Any>>
-
-    val latest = "$assetName-$tag.zip"
+fun selectCwfAssetUrl(
+    releaseJson: String,
+    version: String,
+): String {
+    val release = JsonSlurper().parseText(releaseJson) as Map<String, Any>
+    val assets = release["assets"] as? List<Map<String, Any>> ?: emptyList()
+    val assetName = "cs-webview-v$version.zip"
     val asset =
-        assets.find { (it["name"] as String) == latest }
-            ?: throw GradleException("No $assetName found in the latest release.")
+        assets.find { it["name"] == assetName }
+            ?: throw GradleException("Asset $assetName not found in CWF release v$version.")
 
-    val assetUrl = asset["url"] as String
-
-    logger.trace("Found $assetName for release: $tag")
-
-    return tag to assetUrl
+    return asset["url"] as String
 }
 
 fun saveAsset(
@@ -450,11 +500,16 @@ fun saveAsset(
 
     val url = URI.create(assetUrl).toURL()
     val assets =
-        url.openConnection().apply {
+        (url.openConnection() as HttpURLConnection).apply {
             setRequestProperty("Authorization", "token $token")
             setRequestProperty("Accept", "application/octet-stream")
             connect()
         }
+
+    val code = assets.responseCode
+    if (code !in 200..299) {
+        throw githubHttpFailure("asset download", code)
+    }
 
     outputFile.outputStream().use {
         assets.inputStream.use { input ->
