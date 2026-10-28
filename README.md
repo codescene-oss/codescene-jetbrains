@@ -175,7 +175,7 @@ Alternatively, you can run the following command:
 
 The Centralized Webviews Framework (CWF) used by the extension, which provides shared webview components across all supported IDEs, is maintained in a private repository.
 
-To fetch the latest CWF necessary for **local** development, run the following command:
+To fetch the CWF version pinned in `cwf.version` (overridable with the `CWF_VERSION` environment variable), necessary for **local** development, run the following command:
 
 ```bash
 ./gradlew fetchCwf
