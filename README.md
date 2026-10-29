@@ -137,16 +137,15 @@ The Makefile provides development targets for build, test, format, and CodeScene
 | `make delta`                            | Run CodeScene delta analysis (requires `cs` CLI)   |
 | `make install-cli`                      | Install CodeScene CLI (`cs`)                       |
 | `make iter`                             | Run formatting, analysis, build, and tests         |
-| `make release BUMP=patch|minor|major`   | Prepare a stable release commit and tag            |
-| `make test-release [BUMP=minor|major]`  | Create a GitHub-only tagged test release            |
+| `make test-release [BUMP=patch|minor|major]` | Create a test-release tag from the latest published stable release |
 | `make test-release-script`              | Test the release tooling and tag validation        |
 
 
 ### Release commands
 
-The release flow is tag-driven. Stable releases perform an explicit semantic-version bump, while test releases derive the next version without changing committed metadata.
+The release flow is tag-driven. A stable release is made by pushing an annotated `vX.Y.Z` tag on a `master` commit that has a green `Build` run; GitHub Actions then builds the plugin, creates the GitHub release with generated notes, publishes to JetBrains Marketplace and marks the release latest. Test releases are made with `make test-release`, which tags the current commit as a `vX.Y.Z-test.<sha>` prerelease based on the latest published stable release, without any commit or Marketplace publish.
 
-See [Releasing CodeScene for JetBrains](.github/RELEASING.md) for commands, validation rules, generated release notes, and test-plugin installation.
+See [Releasing CodeScene for JetBrains](.github/RELEASING.md) for the tagging rules, what the workflow does, release notes, recovery, and test-plugin installation.
 
 ### Run the plugin
 
@@ -244,7 +243,6 @@ The CodeScene project uses a multi-module architecture with a clear separation b
 │       └── testData/       Test data used by tests
 ├── .gitignore              Git ignoring rules
 ├── build.gradle.kts        Gradle configuration
-├── CHANGELOG.md            Full change history
 ├── DECISIONLOG.md          Full decision history
 ├── gradle.properties       Gradle configuration properties
 ├── gradlew                 *nix Gradle Wrapper script
