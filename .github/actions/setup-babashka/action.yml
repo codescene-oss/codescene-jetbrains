@@ -1,0 +1,23 @@
+name: "Setup Babashka"
+description: "Installs a pinned Babashka release and adds bb to the PATH"
+inputs:
+  version:
+    description: "The Babashka version to install"
+    required: false
+    default: "1.12.218"
+runs:
+  using: "composite"
+  steps:
+    - name: Install Babashka
+      shell: bash
+      env:
+        BABASHKA_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        install_dir="$RUNNER_TEMP/babashka"
+        mkdir -p "$install_dir"
+        archive="$install_dir/babashka.tar.gz"
+        curl -fsSL -o "$archive" "https://github.com/babashka/babashka/releases/download/v${BABASHKA_VERSION}/babashka-${BABASHKA_VERSION}-linux-amd64-static.tar.gz"
+        tar -xzf "$archive" -C "$install_dir" bb
+        echo "$install_dir" >> "$GITHUB_PATH"
+        "$install_dir/bb" --version

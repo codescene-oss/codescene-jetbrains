@@ -2,17 +2,29 @@ import groovy.json.JsonSlurper
 import java.net.HttpURLConnection
 import java.net.URI
 import java.util.zip.ZipInputStream
-import org.jetbrains.changelog.Changelog
-import org.jetbrains.changelog.markdownToHTML
+import org.intellij.markdown.MarkdownElementTypes
+import org.intellij.markdown.flavours.gfm.GFMFlavourDescriptor
+import org.intellij.markdown.html.HtmlGenerator
+import org.intellij.markdown.html.TrimmingInlineHolderProvider
+import org.intellij.markdown.parser.LinkMap
+import org.intellij.markdown.parser.MarkdownParser
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.intellij.platform.gradle.models.ProductRelease
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask
 
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath(libs.markdown)
+    }
+}
+
 plugins {
     alias(libs.plugins.kotlin) // Kotlin support
     alias(libs.plugins.intelliJPlatform) // IntelliJ Platform Gradle Plugin
-    alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.ktlint)
     jacoco
     kotlin("plugin.serialization") version "2.2.0"
@@ -82,6 +94,22 @@ fun resolveCwfVersion(pinFile: File): String {
         )
     }
     return parseCwfVersion(pinFile.readText(), pinFile.name)
+}
+
+class CodeSceneMarkdownFlavour : GFMFlavourDescriptor() {
+    override fun createHtmlGeneratingProviders(
+        linkMap: LinkMap,
+        baseURI: URI?,
+    ) = super.createHtmlGeneratingProviders(linkMap, baseURI) +
+        mapOf(MarkdownElementTypes.MARKDOWN_FILE to TrimmingInlineHolderProvider())
+}
+
+fun markdownToHtml(input: String): String {
+    val flavour = CodeSceneMarkdownFlavour()
+    val lineBreak = "\\R".toRegex()
+    val text = input.replace(lineBreak, "\n")
+    val tree = MarkdownParser(flavour).buildMarkdownTreeFromString(text)
+    return HtmlGenerator(text, tree, flavour, false).generateHtml().replace(lineBreak, "\n")
 }
 
 fun githubHttpFailure(
@@ -168,21 +196,7 @@ intellijPlatform {
                     if (!containsAll(listOf(start, end))) {
                         throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
                     }
-                    subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
-                }
-            }
-
-        val changelog = project.changelog // local variable for configuration cache compatibility
-        // Get the latest available change notes from the changelog file
-        changeNotes =
-            effectivePluginVersion.map { pluginVersion ->
-                with(changelog) {
-                    renderItem(
-                        (getOrNull(pluginVersion) ?: getUnreleased())
-                            .withHeader(false)
-                            .withEmptySections(false),
-                        Changelog.OutputType.HTML,
-                    )
+                    subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHtml)
                 }
             }
 
@@ -246,12 +260,6 @@ ktlint {
         exclude("**/generated/**")
         exclude("**/build/**")
     }
-}
-
-// Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
-changelog {
-    groups.empty()
-    repositoryUrl = providers.gradleProperty("pluginRepositoryUrl")
 }
 
 tasks {

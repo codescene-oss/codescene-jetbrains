@@ -6,7 +6,7 @@ else
 IDEA_LOG := build/idea-sandbox/*/log/idea.log
 endif
 
-.PHONY: install-cli check-bb build test benchmarks format format-check delta iter coverage-summary release test-release test-release-script class-size-mine run-ide kill-ide logs rm-nul
+.PHONY: install-cli check-bb build test benchmarks format format-check delta iter coverage-summary test-release test-release-script class-size-mine run-ide kill-ide logs rm-nul
 
 install-cli: check-bb
 	@$(BB) -f .github/install-cli.clj
@@ -68,14 +68,12 @@ coverage-summary: check-bb
 	@$(BB) -f .github/coverage-summary.clj
 
 
-release: check-bb
-	@$(BB) --classpath .github -m release stable "$(BUMP)"
-
 test-release: check-bb
 	@$(BB) --classpath .github -m release test "$(BUMP)"
 
 test-release-script: check-bb
 	@$(BB) --classpath .github .github/release_test.clj
+	@$(BB) --classpath .github .github/migrate_changelog_test.clj
 
 class-size-mine: check-bb
 	@$(BB) -f .github/check-class-size-mine.clj
