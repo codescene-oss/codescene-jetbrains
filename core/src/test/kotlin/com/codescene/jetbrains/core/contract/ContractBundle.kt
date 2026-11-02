@@ -56,6 +56,14 @@ class ContractBundle private constructor(private val root: Path) {
         return readJson(path, "fixture $entity/$variant")
     }
 
+    fun wireFixture(
+        entity: String,
+        variant: String,
+    ): JsonNode {
+        val path = root.resolve("fixtures").resolve("wire").resolve(entity).resolve("$variant.json")
+        return readJson(path, "wire fixture $entity/$variant")
+    }
+
     fun validate(
         file: String,
         definition: String,

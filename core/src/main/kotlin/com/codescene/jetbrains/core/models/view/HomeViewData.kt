@@ -57,7 +57,7 @@ data class FunctionToRefactor(
     val body: String,
     val name: String,
     @SerialName("file-type") val fileType: String,
-    @SerialName("function-type") val functionType: String,
+    @SerialName("function-type") val functionType: String? = null,
     @SerialName("refactoring-targets") val refactoringTargets: List<RefactoringTarget>,
 )
 

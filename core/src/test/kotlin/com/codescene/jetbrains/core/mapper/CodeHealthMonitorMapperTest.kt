@@ -18,6 +18,7 @@ import java.util.Optional
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -158,7 +159,7 @@ class CodeHealthMonitorMapperTest {
     }
 
     @Test
-    fun `toCwfData maps file level finding with absent line to 0`() {
+    fun `toCwfData keeps an absent file level finding line absent`() {
         val changeDetail = mockk<DeltaChangeDetail>(relaxed = true)
         every { changeDetail.category } returns "Cat"
         every { changeDetail.description } returns "desc"
@@ -166,7 +167,7 @@ class CodeHealthMonitorMapperTest {
         every { changeDetail.line } returns Optional.empty()
 
         val delta = createDelta(fileLevelFindings = listOf(changeDetail))
-        assertEquals(0, singleFileDelta(delta).delta.fileLevelFindings[0].line)
+        assertNull(singleFileDelta(delta).delta.fileLevelFindings[0].line)
     }
 
     @Test

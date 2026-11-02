@@ -35,35 +35,35 @@ data class HealthInformation(
     val percentage: String = "",
 )
 
+private const val NO_SCORE = "N/A"
+
+private fun scoreText(score: Double?) = score?.toString() ?: NO_SCORE
+
 fun resolveCodeHealthDescription(
     deltaResult: Delta?,
     review: Review?,
 ): String? {
-    val hasChanged = deltaResult?.oldScore?.orElse(null) != deltaResult?.newScore?.orElse(null)
+    val oldReviewScore = deltaResult?.oldScore?.orElse(null)
+    val newReviewScore = deltaResult?.newScore?.orElse(null)
+    // Compared as nullable values: an absent score is never mapped to a default before comparing.
+    val hasChanged = oldReviewScore != newReviewScore
 
     return when {
-        deltaResult != null && hasChanged -> {
-            val oldReviewScore = deltaResult.oldScore.orElse(null)
-            val newReviewScore = deltaResult.newScore.orElse(null)
-            getCodeHealth(HealthDetails(oldReviewScore, newReviewScore)).change
-        }
+        deltaResult != null && hasChanged -> getCodeHealth(HealthDetails(oldReviewScore, newReviewScore)).change
         review?.score?.isPresent == true -> review.score.get().toString()
-        else -> "N/A".takeIf { review != null }
+        else -> NO_SCORE.takeIf { review != null }
     }
 }
 
 fun getCodeHealth(healthDetails: HealthDetails): HealthInformation {
-    val newScore = healthDetails.newScore ?: "N/A"
-    val oldScore = healthDetails.oldScore ?: "N/A"
-
     val changePercentage = getChangePercentage(healthDetails)
     val sign = codeImproved(healthDetails)
 
     val percentage = if (changePercentage == null || sign.isEmpty()) "" else "$sign$changePercentage%"
 
-    return if (newScore != oldScore) {
-        HealthInformation("$oldScore -> $newScore", percentage)
+    return if (healthDetails.newScore != healthDetails.oldScore) {
+        HealthInformation("${scoreText(healthDetails.oldScore)} -> ${scoreText(healthDetails.newScore)}", percentage)
     } else {
-        HealthInformation(newScore.toString())
+        HealthInformation(scoreText(healthDetails.newScore))
     }
 }

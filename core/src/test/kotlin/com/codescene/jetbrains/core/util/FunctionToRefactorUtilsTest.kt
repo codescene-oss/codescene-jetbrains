@@ -151,7 +151,7 @@ class FunctionToRefactorUtilsTest {
     }
 
     @Test
-    fun `toFunctionToRefactor maps empty functionType`() {
+    fun `toFunctionToRefactor keeps an absent functionType absent`() {
         val fn = mockk<FnToRefactor>(relaxed = true)
         every { fn.name } returns "fn"
         every { fn.body } returns ""
@@ -160,7 +160,7 @@ class FunctionToRefactorUtilsTest {
         every { fn.refactoringTargets } returns emptyList()
 
         val result = fn.toFunctionToRefactor()
-        assertEquals("", result.functionType)
+        assertNull(result.functionType)
     }
 
     @Test
