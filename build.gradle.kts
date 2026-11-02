@@ -134,7 +134,9 @@ kotlin {
 
 // Configure project's dependencies
 repositories {
-    mavenLocal()
+    if (providers.gradleProperty("useMavenLocal").isPresent) {
+        mavenLocal()
+    }
     mavenCentral()
 
     maven {

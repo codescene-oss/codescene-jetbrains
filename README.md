@@ -170,6 +170,18 @@ Alternatively, you can run the following command:
 ./gradlew runIde
 ```
 
+## IDE contract tests
+
+The tests in `core` validate payloads against the CodeScene IDE contract (JSON Schemas and shared fixtures). The contract is resolved as `codescene.extension:api:<codeSceneExtensionAPIVersion>:contract@zip`, the artifact published next to the extension API jar, and unpacked to `core/build/cs-ide-contract` by the `unpackCliContract` task before `test` runs. A missing bundle fails the test run.
+
+Before that protocol version is published, or to try a local protocol change:
+
+1. In the `codescene-ide-protocol` checkout run `make install-local`, which installs the jar and the contract zip to `~/.m2` under the version `make` derives from the checkout's commit.
+2. Set `codeSceneExtensionAPIVersion` in `gradle.properties` to that version.
+3. Run Gradle with `-PuseMavenLocal` (or put `useMavenLocal=true` in `~/.gradle/gradle.properties`), which lists `mavenLocal()` first in the repositories. CI never sets it.
+
+To use a bundle that is not published (for example `cli/target/cs-ide-contract` in the CLI checkout), set `CS_IDE_CONTRACT_BUNDLE` to an unpacked bundle directory or a bundle zip. It overrides the contract artifact; the protocol classes still come from `codeSceneExtensionAPIVersion`.
+
 ## Webview Framework (CWF) management
 
 The Centralized Webviews Framework (CWF) used by the extension, which provides shared webview components across all supported IDEs, is maintained in a private repository.
