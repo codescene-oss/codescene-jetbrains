@@ -42,7 +42,6 @@ class CodeHealthMonitorMapper {
             featureFlags = featureFlags,
             data =
                 HomeData(
-                    signedIn = true,
                     jobs = getActiveJobs(activeJobs),
                     fileDeltaData = getFileDeltaData(deltaResults, functionToRefactorResolver),
                     autoRefactor = autoRefactorConfig,

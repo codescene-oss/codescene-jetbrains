@@ -2,8 +2,6 @@ package com.codescene.jetbrains.core.handler
 
 import com.codescene.jetbrains.core.models.CwfMessage
 import com.codescene.jetbrains.core.models.message.AceAcknowledgedPayload
-import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionDeselected
-import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionSelected
 import com.codescene.jetbrains.core.models.message.CopyCodePayload
 import com.codescene.jetbrains.core.models.message.EditorMessages
 import com.codescene.jetbrains.core.models.message.GotoFunctionLocation
@@ -11,10 +9,13 @@ import com.codescene.jetbrains.core.models.message.LifecycleMessages
 import com.codescene.jetbrains.core.models.message.OpenDocsForFunction
 import com.codescene.jetbrains.core.models.message.PanelMessages
 import com.codescene.jetbrains.core.models.message.RequestAndPresentRefactoring
+import com.codescene.jetbrains.core.models.message.UnsupportedMessages
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
+
+private val unsupportedMessageTypes: Set<String> = UnsupportedMessages.entries.map { it.value }.toSet()
 
 fun routeCwfMessage(
     message: CwfMessage,
@@ -105,20 +106,8 @@ fun routeCwfMessage(
             handler.handleRequestAndPresentRefactoring(request)
         }
 
-        PanelMessages.CODE_HEALTH_DETAILS_FUNCTION_SELECTED.value -> {
-            val payload =
-                message.payload?.let {
-                    json.decodeFromJsonElement(CodeHealthDetailsFunctionSelected.serializer(), it)
-                } ?: return false
-            handler.handleCodeHealthDetailsFunctionSelected(payload)
-        }
-
-        PanelMessages.CODE_HEALTH_DETAILS_FUNCTION_DESELECTED.value -> {
-            val payload =
-                message.payload?.let {
-                    json.decodeFromJsonElement(CodeHealthDetailsFunctionDeselected.serializer(), it)
-                } ?: return false
-            handler.handleCodeHealthDetailsFunctionDeselected(payload)
+        in unsupportedMessageTypes -> {
+            handler.handleUnsupportedMessage(message.messageType)
         }
 
         else -> {

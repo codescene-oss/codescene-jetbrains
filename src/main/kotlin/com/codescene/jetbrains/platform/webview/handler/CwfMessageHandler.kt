@@ -10,8 +10,6 @@ import com.codescene.jetbrains.core.models.CwfMessage
 import com.codescene.jetbrains.core.models.DocsEntryPoint
 import com.codescene.jetbrains.core.models.View
 import com.codescene.jetbrains.core.models.message.AceAcknowledgedPayload
-import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionDeselected
-import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionSelected
 import com.codescene.jetbrains.core.models.message.GotoFunctionLocation
 import com.codescene.jetbrains.core.models.message.OpenDocsForFunction
 import com.codescene.jetbrains.core.models.message.RequestAndPresentRefactoring
@@ -217,22 +215,8 @@ class CwfMessageHandler(
         openDocs(docsData, project, DocsEntryPoint.CODE_HEALTH_DETAILS, fnToRefactor)
     }
 
-    override fun handleCodeHealthDetailsFunctionSelected(payload: CodeHealthDetailsFunctionSelected) {
-        services.telemetryService.logUsage(
-            TelemetryEvents.DETAILS_FUNCTION_SELECTED,
-            mapOf(
-                "visible" to payload.visible,
-                "isRefactoringSupported" to payload.isRefactoringSupported,
-                "nIssues" to payload.nIssues,
-            ),
-        )
-    }
-
-    override fun handleCodeHealthDetailsFunctionDeselected(payload: CodeHealthDetailsFunctionDeselected) {
-        services.telemetryService.logUsage(
-            TelemetryEvents.DETAILS_FUNCTION_DESELECTED,
-            mapOf("visible" to payload.visible),
-        )
+    override fun handleUnsupportedMessage(messageType: String) {
+        Log.debug("Ignoring CWF message '$messageType', it is not supported by this IDE", serviceName)
     }
 
     override fun handleGotoFunctionLocation(location: GotoFunctionLocation) {

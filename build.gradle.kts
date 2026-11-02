@@ -373,6 +373,8 @@ tasks.processResources {
     }
 }
 
+val cwfSchemaFiles = listOf("webview-schema.json", "message-schema.json")
+
 tasks.register("fetchCwf") {
     group = "codescene assets"
     description = "Get the CWF (webview) asset from the GitHub release pinned in cwf.version."
@@ -387,7 +389,8 @@ tasks.register("fetchCwf") {
         val version = resolveCwfVersion(pinFile)
         val stamp = File(cwfDir, ".cwf-version")
         val indexJs = File(cwfDir, "index.js")
-        if (stamp.isFile && stamp.readText().trim() == version && indexJs.isFile) {
+        val schemasPresent = cwfSchemaFiles.all { File(cwfDir, it).isFile }
+        if (stamp.isFile && stamp.readText().trim() == version && indexJs.isFile && schemasPresent) {
             logger.lifecycle("CWF $version already present, skipping download")
             return@doLast
         }
@@ -414,6 +417,12 @@ tasks.register("fetchCwf") {
         saveAsset("v$version", assetUrl, token, assetType)
         if (!indexJs.isFile) {
             throw GradleException("CWF $version is missing src/main/resources/cs-cwf/index.js after download.")
+        }
+        val missingSchemas = cwfSchemaFiles.filterNot { File(cwfDir, it).isFile }
+        if (missingSchemas.isNotEmpty()) {
+            throw GradleException(
+                "CWF $version is missing $missingSchemas in src/main/resources/cs-cwf after download.",
+            )
         }
         stamp.writeText("$version\n")
     }

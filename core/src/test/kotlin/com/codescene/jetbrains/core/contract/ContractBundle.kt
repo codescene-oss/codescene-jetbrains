@@ -68,11 +68,7 @@ class ContractBundle private constructor(private val root: Path) {
         file: String,
         definition: String,
         value: JsonNode,
-    ): List<ContractViolation> =
-        registry.getSchema(wrapperSchema(file, definition))
-            .validate(value)
-            .map { ContractViolation(path = errorPath(it), message = it.message) }
-            .sortedWith(compareBy({ it.path }, { it.message }))
+    ): List<ContractViolation> = validateAgainst(wrapperSchema(file, definition), value)
 
     fun validateEntity(
         entity: String,
@@ -143,6 +139,15 @@ class ContractBundle private constructor(private val root: Path) {
                     )
             open(Paths.get(directory))
         }
+
+        fun validateAgainst(
+            schema: JsonNode,
+            value: JsonNode,
+        ): List<ContractViolation> =
+            registry.getSchema(schema)
+                .validate(value)
+                .map { ContractViolation(path = errorPath(it), message = it.message) }
+                .sortedWith(compareBy({ it.path }, { it.message }))
 
         fun open(directory: Path): ContractBundle {
             if (!Files.isDirectory(directory)) throw AssertionError("Contract bundle directory $directory is missing")

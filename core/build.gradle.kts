@@ -88,10 +88,18 @@ val unpackCliContract by tasks.registering(Sync::class) {
     into(layout.buildDirectory.dir("cs-ide-contract"))
 }
 
+val cwfSchemaOverride = optionalEnv("CS_CWF_SCHEMA_DIR")
+val cwfSchemaDir = cwfSchemaOverride?.let { file(it) } ?: rootProject.file("src/main/resources/cs-cwf")
+
 tasks.test {
     dependsOn(unpackCliContract)
     inputs.dir(unpackCliContract.map { it.destinationDir })
     systemProperty("cs.ide.contract.dir", unpackCliContract.get().destinationDir.absolutePath)
+    if (cwfSchemaOverride == null) {
+        dependsOn(":fetchCwf")
+    }
+    inputs.files(fileTree(cwfSchemaDir) { include("*.json") })
+    systemProperty("cs.cwf.dir", cwfSchemaDir.absolutePath)
 }
 
 val ktlintFailOnError =

@@ -194,6 +194,8 @@ To fetch the CWF version pinned in `cwf.version` (overridable with the `CWF_VERS
 
 **Note:** Access to the CWF repository requires appropriate permissions.
 
+The CWF download must keep `webview-schema.json` and `message-schema.json` in `src/main/resources/cs-cwf`; `fetchCwf` fails if either is missing. The `core` tests validate the payloads sent to the webview and the messages received from it against these two files (`ContractWebviewTest`), and `core:test` runs `fetchCwf` first. To validate against a CWF build that is not released yet (for example `build/` in the `cs-webview` checkout after `npm run schema:generate`), set `CS_CWF_SCHEMA_DIR` to the directory holding the two files; it replaces the downloaded CWF for the test run only and skips the `fetchCwf` dependency.
+
 ## Feature Flags
 
 This plugin supports simple feature flags that can be controlled at build time or when running the plugin in the IDE sandbox.

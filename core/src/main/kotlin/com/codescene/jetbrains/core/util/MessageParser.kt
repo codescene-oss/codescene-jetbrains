@@ -13,6 +13,7 @@ fun <T> parseMessage(
     val json =
         Json {
             encodeDefaults = true
+            explicitNulls = false
             prettyPrint = true
         }
 

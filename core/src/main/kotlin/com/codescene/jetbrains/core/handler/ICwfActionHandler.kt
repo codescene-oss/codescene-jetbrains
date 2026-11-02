@@ -1,8 +1,6 @@
 package com.codescene.jetbrains.core.handler
 
 import com.codescene.jetbrains.core.models.message.AceAcknowledgedPayload
-import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionDeselected
-import com.codescene.jetbrains.core.models.message.CodeHealthDetailsFunctionSelected
 import com.codescene.jetbrains.core.models.message.GotoFunctionLocation
 import com.codescene.jetbrains.core.models.message.OpenDocsForFunction
 import com.codescene.jetbrains.core.models.message.RequestAndPresentRefactoring
@@ -36,7 +34,5 @@ interface ICwfActionHandler {
 
     fun handleRequestAndPresentRefactoring(request: RequestAndPresentRefactoring)
 
-    fun handleCodeHealthDetailsFunctionSelected(payload: CodeHealthDetailsFunctionSelected)
-
-    fun handleCodeHealthDetailsFunctionDeselected(payload: CodeHealthDetailsFunctionDeselected)
+    fun handleUnsupportedMessage(messageType: String)
 }

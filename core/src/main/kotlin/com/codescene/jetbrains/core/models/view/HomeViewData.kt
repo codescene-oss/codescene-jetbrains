@@ -9,7 +9,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class HomeData( // Code Health Monitor
     val user: User? = null,
-    val signedIn: Boolean = false,
     val commitBaseline: String? = null, // "default" | "HEAD" | "branchCreate"
     val showOnboarding: Boolean = false,
     val jobs: List<AnalysisJob> = emptyList(),
