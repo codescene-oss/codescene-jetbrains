@@ -18,13 +18,14 @@ import java.util.Optional
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CodeHealthMonitorMapperTest {
     private val mapper = CodeHealthMonitorMapper()
     private val autoRefactorConfig = AutoRefactorConfig()
-    private val defaultFeatureFlags = listOf("jobs", "ace-status-indicator")
+    private val defaultFeatureFlags = listOf("ace-status-indicator")
     private val noRefactorResolver: (String, String, DeltaFunctionFinding) -> FunctionToRefactor? = { _, _, _ -> null }
     private val emptyDeltaResults = emptyList<Pair<String, DeltaCacheItem>>()
 
@@ -87,21 +88,13 @@ class CodeHealthMonitorMapperTest {
     @Test
     fun `toCwfData includes ace-status-indicator when token is configured`() {
         val result = toCwfData(featureFlags = resolveFeatureFlags(aceTokenConfigured = true))
-        assertTrue(result.featureFlags.contains("jobs"))
-        assertTrue(result.featureFlags.contains("ace-status-indicator"))
+        assertEquals(listOf("ace-status-indicator"), result.featureFlags)
     }
 
     @Test
     fun `toCwfData excludes ace-status-indicator when token is not configured`() {
         val result = toCwfData(featureFlags = resolveFeatureFlags(aceTokenConfigured = false))
-        assertTrue(result.featureFlags.contains("jobs"))
-        assertTrue(!result.featureFlags.contains("ace-status-indicator"))
-    }
-
-    @Test
-    fun `toCwfData sets signedIn to true`() {
-        val result = toCwfData()
-        assertTrue(result.data!!.signedIn)
+        assertEquals(emptyList<String>(), result.featureFlags)
     }
 
     @Test
@@ -158,7 +151,7 @@ class CodeHealthMonitorMapperTest {
     }
 
     @Test
-    fun `toCwfData maps file level finding with absent line to 0`() {
+    fun `toCwfData keeps an absent file level finding line absent`() {
         val changeDetail = mockk<DeltaChangeDetail>(relaxed = true)
         every { changeDetail.category } returns "Cat"
         every { changeDetail.description } returns "desc"
@@ -166,7 +159,7 @@ class CodeHealthMonitorMapperTest {
         every { changeDetail.line } returns Optional.empty()
 
         val delta = createDelta(fileLevelFindings = listOf(changeDetail))
-        assertEquals(0, singleFileDelta(delta).delta.fileLevelFindings[0].line)
+        assertNull(singleFileDelta(delta).delta.fileLevelFindings[0].line)
     }
 
     @Test

@@ -9,7 +9,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class HomeData( // Code Health Monitor
     val user: User? = null,
-    val signedIn: Boolean = false,
     val commitBaseline: String? = null, // "default" | "HEAD" | "branchCreate"
     val showOnboarding: Boolean = false,
     val jobs: List<AnalysisJob> = emptyList(),
@@ -57,7 +56,7 @@ data class FunctionToRefactor(
     val body: String,
     val name: String,
     @SerialName("file-type") val fileType: String,
-    @SerialName("function-type") val functionType: String,
+    @SerialName("function-type") val functionType: String? = null,
     @SerialName("refactoring-targets") val refactoringTargets: List<RefactoringTarget>,
 )
 

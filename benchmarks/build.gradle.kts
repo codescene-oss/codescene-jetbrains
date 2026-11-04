@@ -40,7 +40,9 @@ fun requireGithubPackageCredentialsForDependencyResolution() {
 requireGithubPackageCredentialsForDependencyResolution()
 
 repositories {
-    mavenLocal()
+    if (providers.gradleProperty("useMavenLocal").isPresent) {
+        mavenLocal()
+    }
     mavenCentral()
     maven {
         url = uri(codeSceneRepository)

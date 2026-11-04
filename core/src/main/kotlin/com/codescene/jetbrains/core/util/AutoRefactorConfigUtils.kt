@@ -36,9 +36,9 @@ private const val DOCS_ISSUES_PREFIX = "docs_issues_"
 
 fun resolveFeatureFlags(aceTokenConfigured: Boolean): List<String> =
     if (aceTokenConfigured) {
-        listOf("jobs", "ace-status-indicator")
+        listOf("ace-status-indicator")
     } else {
-        listOf("jobs")
+        emptyList()
     }
 
 fun autoRefactorConfigForDocsView(

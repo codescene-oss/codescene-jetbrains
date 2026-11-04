@@ -18,8 +18,6 @@ object TelemetryEvents {
     const val MONITOR_FILE_REMOVED = "code_health_monitor/file_removed"
 
     const val DETAILS_VISIBILITY = "code_health_details/visibility"
-    const val DETAILS_FUNCTION_SELECTED = "code_health_details/function_selected"
-    const val DETAILS_FUNCTION_DESELECTED = "code_health_details/function_deselected"
 
     const val REVIEW_OR_DELTA_TIMEOUT = "review_or_delta_timeout"
     const val ANALYSIS_PERFORMANCE = "analysis/performance"

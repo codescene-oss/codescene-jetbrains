@@ -42,7 +42,6 @@ class CodeHealthMonitorMapper {
             featureFlags = featureFlags,
             data =
                 HomeData(
-                    signedIn = true,
                     jobs = getActiveJobs(activeJobs),
                     fileDeltaData = getFileDeltaData(deltaResults, functionToRefactorResolver),
                     autoRefactor = autoRefactorConfig,
@@ -139,7 +138,7 @@ class CodeHealthMonitorMapper {
                 category = finding.category,
                 description = finding.description,
                 changeType = finding.changeType.value(),
-                line = if (finding.line.isPresent) finding.line.get() else 0,
+                line = finding.line.orElse(null),
             )
         } ?: emptyList()
 
@@ -159,12 +158,14 @@ class CodeHealthMonitorMapper {
                     FunctionInfo(
                         name = fn.function.name,
                         range =
-                            Range(
-                                startLine = range?.startLine ?: 0,
-                                startColumn = range?.startColumn ?: 0,
-                                endLine = range?.endLine ?: 0,
-                                endColumn = range?.endColumn ?: 0,
-                            ),
+                            range?.let {
+                                Range(
+                                    startLine = it.startLine,
+                                    startColumn = it.startColumn,
+                                    endLine = it.endLine,
+                                    endColumn = it.endColumn,
+                                )
+                            },
                     ),
                 changeDetails = getChangeDetails(fn.changeDetails),
                 functionToRefactor = functionToRefactorResolver(filePath, contentSha, fn),

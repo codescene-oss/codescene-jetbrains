@@ -1,12 +1,13 @@
 package com.codescene.jetbrains.platform.telemetry
 
 import com.codescene.ExtensionAPI
-import com.codescene.data.telemetry.TelemetryEvent
 import com.codescene.jetbrains.core.contracts.ITelemetryService
 import com.codescene.jetbrains.core.flag.RuntimeFlags
 import com.codescene.jetbrains.core.review.BaseService
 import com.codescene.jetbrains.core.telemetry.TelemetryRequest
+import com.codescene.jetbrains.core.telemetry.TelemetryRuntimeInfo
 import com.codescene.jetbrains.core.telemetry.UnhandledErrorTelemetry
+import com.codescene.jetbrains.core.telemetry.buildTelemetryEvent
 import com.codescene.jetbrains.core.telemetry.buildUnhandledErrorPayload
 import com.codescene.jetbrains.core.telemetry.normalizeIdeName
 import com.codescene.jetbrains.core.telemetry.resolveTelemetryEventData
@@ -58,23 +59,15 @@ class TelemetryService : BaseService(Log), Disposable, ITelemetryService {
             ) ?: return
 
         val telemetryEvent =
-            TelemetryEvent(
-                eventInfo.eventName,
-                eventInfo.userId,
-                eventInfo.ideInfo,
-                eventInfo.pluginVersion,
-                eventInfo.isDevMode,
+            buildTelemetryEvent(
+                eventInfo,
+                TelemetryRuntimeInfo(
+                    eventTime = Instant.now().toString(),
+                    processPlatform = processPlatform(),
+                    processArch = processArch(),
+                    internal = internalTelemetryFlag(),
+                ),
             )
-
-        telemetryEvent.setAdditionalProperty("device-id", eventInfo.deviceId)
-        telemetryEvent.setAdditionalProperty("event-time", Instant.now().toString())
-        telemetryEvent.setAdditionalProperty("process-platform", processPlatform())
-        telemetryEvent.setAdditionalProperty("process-arch", processArch())
-        telemetryEvent.setAdditionalProperty("editor-version", eventInfo.editorVersion)
-        if (internalTelemetryFlag()) {
-            telemetryEvent.setAdditionalProperty("internal", true)
-        }
-        eventInfo.additionalProperties.forEach { telemetryEvent.setAdditionalProperty(it.key, it.value) }
 
         scope.launch {
             try {

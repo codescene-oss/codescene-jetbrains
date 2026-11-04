@@ -21,12 +21,14 @@ fun resolveFunctionToRefactor(
     candidates: List<FnToRefactor>,
     functionFinding: com.codescene.data.delta.FunctionFinding,
 ): FunctionToRefactor? {
-    val range = functionFinding.function.range.orElse(null)
+    val range = functionFinding.function.range.orElse(null) ?: return null
+    val startLine: Int = range.startLine ?: return null
+    val endLine: Int = range.endLine ?: return null
     val fnToRefactor =
         candidates.find {
             it.name == functionFinding.function.name &&
-                it.range.startLine == range?.startLine &&
-                it.range.endLine == range?.endLine
+                it.range?.startLine == startLine &&
+                it.range?.endLine == endLine
         }
 
     return fnToRefactor?.toFunctionToRefactor()
@@ -37,7 +39,7 @@ fun FnToRefactor.toFunctionToRefactor(): FunctionToRefactor =
         body = body,
         name = name,
         fileType = fileType,
-        functionType = functionType.orElse(""),
+        functionType = functionType.orElse(null),
         refactoringTargets =
             refactoringTargets.map { target ->
                 RefactoringTarget(

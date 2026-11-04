@@ -16,6 +16,7 @@ val codeSceneExtensionAPIVersion = rootProject.providers.gradleProperty("codeSce
 val codeSceneRepository = rootProject.providers.gradleProperty("codeSceneRepository").get()
 val kotlinxSerializationVersion = rootProject.providers.gradleProperty("kotlinxSerializationVersion").get()
 val mockkVersion = rootProject.providers.gradleProperty("mockkVersion").get()
+val jsonSchemaValidatorVersion = rootProject.providers.gradleProperty("jsonSchemaValidatorVersion").get()
 val slf4jNopVersion = rootProject.providers.gradleProperty("slf4jNopVersion").get()
 val kotlinxCoroutinesVersion = rootProject.providers.gradleProperty("kotlinxCoroutinesVersion").get()
 
@@ -42,7 +43,9 @@ fun requireGithubPackageCredentialsForDependencyResolution() {
 requireGithubPackageCredentialsForDependencyResolution()
 
 repositories {
-    mavenLocal()
+    if (providers.gradleProperty("useMavenLocal").isPresent) {
+        mavenLocal()
+    }
     mavenCentral()
     maven {
         url = uri(codeSceneRepository)
@@ -60,7 +63,43 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
     testImplementation(libs.junit)
     testImplementation("io.mockk:mockk:$mockkVersion")
+    testImplementation("com.networknt:json-schema-validator:$jsonSchemaValidatorVersion")
     testRuntimeOnly("org.slf4j:slf4j-nop:$slf4jNopVersion")
+}
+
+val cliContract by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
+
+dependencies {
+    cliContract("codescene.extension:api:$codeSceneExtensionAPIVersion:contract@zip")
+}
+
+val contractBundleOverride = optionalEnv("CS_IDE_CONTRACT_BUNDLE")
+
+val unpackCliContract by tasks.registering(Sync::class) {
+    if (contractBundleOverride == null) {
+        from(provider { zipTree(cliContract.singleFile) })
+    } else {
+        val override = file(contractBundleOverride)
+        if (override.isDirectory) from(override) else from(provider { zipTree(override) })
+    }
+    into(layout.buildDirectory.dir("cs-ide-contract"))
+}
+
+val cwfSchemaOverride = optionalEnv("CS_CWF_SCHEMA_DIR")
+val cwfSchemaDir = cwfSchemaOverride?.let { file(it) } ?: rootProject.file("src/main/resources/cs-cwf")
+
+tasks.test {
+    dependsOn(unpackCliContract)
+    inputs.dir(unpackCliContract.map { it.destinationDir })
+    systemProperty("cs.ide.contract.dir", unpackCliContract.get().destinationDir.absolutePath)
+    if (cwfSchemaOverride == null) {
+        dependsOn(":fetchCwf")
+    }
+    inputs.files(fileTree(cwfSchemaDir) { include("*.json") })
+    systemProperty("cs.cwf.dir", cwfSchemaDir.absolutePath)
 }
 
 val ktlintFailOnError =
