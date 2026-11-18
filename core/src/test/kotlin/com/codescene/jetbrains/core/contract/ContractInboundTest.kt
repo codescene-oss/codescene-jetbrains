@@ -200,14 +200,14 @@ class ContractInboundTest {
     }
 
     @Test
-    fun `a delta with only new-score is a change from an absent old score`() {
+    fun `a delta with only new-score shows the current score out of ten`() {
         val withoutOldScore = fixture("delta", "full").also { it.remove("old-score") }
         val delta = delta(withoutOldScore)
         assertFalse(delta.oldScore.isPresent)
 
         val description = resolveCodeHealthDescription(delta, review(fixture("review", "full")))
 
-        assertEquals("N/A -> 8.0", description)
+        assertEquals("8.0/10", description)
         assertNull(mappedDelta(delta).oldScore)
     }
 

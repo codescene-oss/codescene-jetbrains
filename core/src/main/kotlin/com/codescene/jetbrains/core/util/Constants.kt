@@ -26,7 +26,7 @@ object Constants {
     const val TELEMETRY_SAMPLES_URL =
         "$REPOSITORY_URL/tree/master/src/main/resources/telemetrySamples"
     const val TELEMETRY_EVENTS_URL =
-        "$REPOSITORY_URL/tree/master/src/main/kotlin/com/codescene/jetbrains/core/util/TelemetryEvents.kt"
+        "$REPOSITORY_URL/tree/master/core/src/main/kotlin/com/codescene/jetbrains/core/util/TelemetryEvents.kt"
 
     const val GENERAL_CODE_HEALTH = "General Code Health"
     const val CODE_HEALTH_MONITOR = "Code Health Monitor"

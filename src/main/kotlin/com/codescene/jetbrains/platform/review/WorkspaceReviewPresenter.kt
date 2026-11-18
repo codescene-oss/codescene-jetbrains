@@ -5,7 +5,6 @@ import com.codescene.jetbrains.core.cli.PresentedReview
 import com.codescene.jetbrains.core.cli.ReviewFailedNotice
 import com.codescene.jetbrains.core.cli.ReviewProgressNotice
 import com.codescene.jetbrains.core.cli.WorkspaceReviewSink
-import com.codescene.jetbrains.core.delta.adaptDeltaResult
 import com.codescene.jetbrains.core.delta.completeDeltaAnalysis
 import com.codescene.jetbrains.core.delta.presentedDeltaContents
 import com.codescene.jetbrains.core.review.completeReviewAnalysis
@@ -64,7 +63,7 @@ class WorkspaceReviewPresenter(
     override fun presentDelta(event: PresentedDelta) {
         val content = event.scoredContent
         val fileName = File(event.absolutePath).name
-        val adapted = adaptDeltaResult(event.delta)
+        val delta = event.delta
         val (headContent, currentContent) =
             presentedDeltaContents(event.scoredContent, event.oldGitBlobSha, event.newGitBlobSha)
         val telemetryInfo = resolveTelemetryInfo(content?.lines()?.size, extractExtension(fileName))
@@ -72,7 +71,7 @@ class WorkspaceReviewPresenter(
             path = event.absolutePath,
             oldCode = headContent,
             currentCode = currentContent,
-            delta = adapted,
+            delta = delta,
             telemetryInfo = telemetryInfo,
             elapsedMs = event.elapsedMs,
             telemetryService = serviceProvider.telemetryService,
@@ -87,9 +86,9 @@ class WorkspaceReviewPresenter(
                     CodeSceneCodeVisionProvider.getProviders(),
                 )
             }
-            if (adapted != null) {
+            if (delta != null) {
                 scope.launch {
-                    refreshAceFromDelta(project, event.absolutePath, fileName, content, adapted)
+                    refreshAceFromDelta(project, event.absolutePath, fileName, content, delta)
                 }
             }
         }

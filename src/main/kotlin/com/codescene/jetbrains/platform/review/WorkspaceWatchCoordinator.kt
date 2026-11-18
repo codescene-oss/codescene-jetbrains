@@ -14,7 +14,6 @@ import com.codescene.jetbrains.core.cli.WorkspaceReviewNotices
 import com.codescene.jetbrains.core.cli.WorkspaceWatch
 import com.codescene.jetbrains.platform.cli.CsIdeServerService
 import com.codescene.jetbrains.platform.delta.PlatformDeltaCacheService
-import com.codescene.jetbrains.platform.git.OpenFilesObserverAdapter
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.util.isPathSupportedForReview
 import com.codescene.jetbrains.platform.watch.CsIdeWatchService
@@ -70,7 +69,6 @@ class WorkspaceWatchCoordinator(
             },
         )
     private val sync = InventoryMonitorSync(PlatformDeltaCacheService.getInstance(project), Log)
-    private val openFiles = OpenFilesObserverAdapter(project)
     private val watchClient = CsIdeServerService.getInstance().watchClient()
     private var sentListenerRegistration: AutoCloseable? = null
     private var busConnection: MessageBusConnection? = null
@@ -214,13 +212,19 @@ class WorkspaceWatchCoordinator(
                     sync.sync(
                         effect.repoRoot,
                         effect.absolutePaths,
-                        openFiles.getAllVisibleFileNames(),
+                        unsavedDocumentPaths(),
                         effect.excludedRoots,
                     )
                 is WatchEffect.Reseed -> reseed(effect.repoRoot)
             }
         }
     }
+
+    private fun unsavedDocumentPaths(): Set<String> =
+        ReadAction.compute<Set<String>, Exception> {
+            val manager = FileDocumentManager.getInstance()
+            manager.unsavedDocuments.mapNotNull { manager.getFile(it)?.path }.toSet()
+        }
 
     private fun fetchInventory(effect: WatchEffect.FetchInventory) {
         watchClient.getWatchInventory(effect.repoRoot).whenComplete { inventory, error ->

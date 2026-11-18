@@ -9,25 +9,6 @@ import com.codescene.jetbrains.core.util.Constants.CODESCENE
 import com.codescene.jetbrains.core.util.Constants.DELTA
 import com.codescene.jetbrains.core.util.TelemetryEvents
 
-fun adaptDeltaResult(raw: Delta?): Delta? {
-    if (raw == null) return null
-    if (raw.oldScore?.isEmpty == true && raw.newScore?.isEmpty == false) {
-        return Delta(
-            10.0,
-            raw.newScore.get(),
-            raw.scoreChange,
-            raw.fileLevelFindings,
-            raw.functionLevelFindings,
-        )
-    }
-    return raw
-}
-
-data class DeltaAnalysisResult(
-    val delta: Delta?,
-    val shouldRefreshUi: Boolean,
-)
-
 fun completeDeltaAnalysis(
     path: String,
     oldCode: String,

@@ -11,13 +11,13 @@ class InventoryMonitorSync(
     fun sync(
         repoRoot: String,
         inventoryPaths: Set<String>,
-        openPaths: Set<String>,
+        unsavedPaths: Set<String>,
         excludedRoots: Set<String> = emptySet(),
     ): Int {
         val rootPrefix = rootPrefix(repoRoot)
         val excludedPrefixes = excludedRoots.map { rootPrefix(it) }
         val allowedKeys =
-            (inventoryPaths + openPaths).map { pathCacheKey(it) }.toSet()
+            (inventoryPaths + unsavedPaths).map { pathCacheKey(it) }.toSet()
         var hidden = 0
         for ((filePath, _) in deltaCacheService.getAll()) {
             val fileKey = pathCacheKey(filePath)

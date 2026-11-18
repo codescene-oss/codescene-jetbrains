@@ -14,18 +14,6 @@ import org.junit.Test
 
 class DeltaAnalysisOrchestrationTest {
     @Test
-    fun `adaptDeltaResult returns null for null input`() {
-        assertNull(adaptDeltaResult(null))
-    }
-
-    @Test
-    fun `adaptDeltaResult returns same object when no adaptation needed`() {
-        val delta = mockk<Delta>(relaxed = true)
-        val result = adaptDeltaResult(delta)
-        assertSame(delta, result)
-    }
-
-    @Test
     fun `completeDeltaAnalysis caches null delta and does not refresh ui for null delta`() {
         val telemetry = RecordingTelemetryService()
         val cache = InMemoryDeltaCacheService()

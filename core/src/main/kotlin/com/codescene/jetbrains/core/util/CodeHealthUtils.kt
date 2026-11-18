@@ -49,6 +49,7 @@ fun resolveCodeHealthDescription(
     val hasChanged = oldReviewScore != newReviewScore
 
     return when {
+        deltaResult != null && oldReviewScore == null && newReviewScore != null -> "$newReviewScore/10"
         deltaResult != null && hasChanged -> getCodeHealth(HealthDetails(oldReviewScore, newReviewScore)).change
         review?.score?.isPresent == true -> review.score.get().toString()
         else -> NO_SCORE.takeIf { review != null }

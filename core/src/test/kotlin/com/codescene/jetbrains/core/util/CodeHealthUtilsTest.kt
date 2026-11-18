@@ -97,14 +97,21 @@ class CodeHealthUtilsTest {
         assertEquals("N/A", resolveCodeHealthDescription(null, review))
     }
 
+    @Test
+    fun `resolveCodeHealthDescription shows only the current score out of ten for a file without a baseline`() {
+        val delta = mockDelta(oldScore = null, newScore = 9.38)
+        val review = mockReview(score = 9.38)
+        assertEquals("9.38/10", resolveCodeHealthDescription(delta, review))
+    }
+
     private fun mockReview(score: Double?): Review =
         mockk {
             every { this@mockk.score } returns Optional.ofNullable(score)
         }
 
     private fun mockDelta(
-        oldScore: Double,
-        newScore: Double,
+        oldScore: Double?,
+        newScore: Double?,
     ): Delta =
         mockk {
             every { this@mockk.oldScore } returns Optional.ofNullable(oldScore)

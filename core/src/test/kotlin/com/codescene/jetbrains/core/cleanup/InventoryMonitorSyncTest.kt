@@ -38,7 +38,7 @@ class InventoryMonitorSyncTest {
     }
 
     @Test
-    fun `hides entries under the root outside inventory and open files`() {
+    fun `hides entries under the root outside inventory and unsaved documents`() {
         addToCache("/repo/a.kt")
         addToCache("/repo/b.kt")
         addToCache("/repo/c.kt")
@@ -46,7 +46,7 @@ class InventoryMonitorSyncTest {
             sync.sync(
                 repoRoot = "/repo",
                 inventoryPaths = setOf("/repo/a.kt"),
-                openPaths = setOf("/repo/b.kt"),
+                unsavedPaths = setOf("/repo/b.kt"),
             )
         assertEquals(1, hidden)
         val visible = deltaCacheService.getAll().map { it.first }.toSet()
@@ -61,7 +61,7 @@ class InventoryMonitorSyncTest {
             sync.sync(
                 repoRoot = "/repo",
                 inventoryPaths = emptySet(),
-                openPaths = emptySet(),
+                unsavedPaths = emptySet(),
             )
         assertEquals(0, hidden)
         assertEquals(2, deltaCacheService.getAll().size)
@@ -71,9 +71,9 @@ class InventoryMonitorSyncTest {
     fun `re-includes a hidden entry that is back in the inventory`() {
         val path = "/repo/a.kt"
         addToCache(path)
-        sync.sync(repoRoot = "/repo", inventoryPaths = emptySet(), openPaths = emptySet())
+        sync.sync(repoRoot = "/repo", inventoryPaths = emptySet(), unsavedPaths = emptySet())
         assertEquals(0, deltaCacheService.getAll().size)
-        sync.sync(repoRoot = "/repo", inventoryPaths = setOf(path), openPaths = emptySet())
+        sync.sync(repoRoot = "/repo", inventoryPaths = setOf(path), unsavedPaths = emptySet())
         assertEquals(1, deltaCacheService.getAll().size)
         assertEquals(path, deltaCacheService.getAll().single().first)
     }
@@ -84,7 +84,7 @@ class InventoryMonitorSyncTest {
         sync.sync(
             repoRoot = "c:\\repo",
             inventoryPaths = setOf("C:\\Repo\\src\\A.kt"),
-            openPaths = emptySet(),
+            unsavedPaths = emptySet(),
         )
         assertEquals(1, deltaCacheService.getAll().size)
     }
@@ -95,7 +95,7 @@ class InventoryMonitorSyncTest {
             sync.sync(
                 repoRoot = "/repo",
                 inventoryPaths = setOf("/repo/new.kt"),
-                openPaths = emptySet(),
+                unsavedPaths = emptySet(),
             )
         assertEquals(0, hidden)
         assertEquals(0, deltaCacheService.getAll().size)
@@ -110,7 +110,7 @@ class InventoryMonitorSyncTest {
             sync.sync(
                 repoRoot = "/p",
                 inventoryPaths = setOf("/p/a.kt"),
-                openPaths = emptySet(),
+                unsavedPaths = emptySet(),
                 excludedRoots = setOf("/p/sub"),
             )
         assertEquals(1, hidden)
@@ -125,7 +125,7 @@ class InventoryMonitorSyncTest {
             sync.sync(
                 repoRoot = "c:\\repo",
                 inventoryPaths = emptySet(),
-                openPaths = emptySet(),
+                unsavedPaths = emptySet(),
                 excludedRoots = setOf("C:/Repo/sub"),
             )
         assertEquals(1, hidden)
