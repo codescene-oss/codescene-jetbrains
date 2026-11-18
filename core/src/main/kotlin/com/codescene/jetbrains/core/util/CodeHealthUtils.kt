@@ -2,69 +2,36 @@ package com.codescene.jetbrains.core.util
 
 import com.codescene.data.delta.Delta
 import com.codescene.data.review.Review
-import kotlin.math.abs
 
-data class HealthDetails(
-    val oldScore: Double?,
-    val newScore: Double?,
-)
+private const val NO_APPLICATION_CODE = "No application code detected for scoring"
+private const val NO_SCORE = "n/a"
 
-fun getChangePercentage(healthDetails: HealthDetails): Double? {
-    if (healthDetails.newScore == null || healthDetails.oldScore == null) return null
+private fun scoreNumber(score: Double): String = if (score % 1.0 == 0.0) score.toLong().toString() else score.toString()
 
-    if (healthDetails.oldScore == 0.0) {
-        return if (healthDetails.newScore == 0.0) 0.0 else 100.0
+private fun isScored(score: Double?): Boolean = score != null && score != 0.0
+
+private fun formatScore(score: Double?): String =
+    if (isScored(score)) "${scoreNumber(score!!)}/10" else NO_APPLICATION_CODE
+
+private fun scoreOrNoScore(score: Double?): String = if (isScored(score)) scoreNumber(score!!) else NO_SCORE
+
+private fun deltaDescription(delta: Delta): String {
+    val oldScore = delta.oldScore?.orElse(null)
+    val newScore = delta.newScore?.orElse(null)
+    // Compared as nullable values: an absent score is never mapped to a default before comparing.
+    return when {
+        oldScore == null && newScore != null -> formatScore(newScore)
+        oldScore == newScore -> formatScore(oldScore)
+        else -> "${scoreOrNoScore(oldScore)} → ${scoreOrNoScore(newScore)}"
     }
-
-    val percentageChange = ((healthDetails.newScore - healthDetails.oldScore) / healthDetails.oldScore) * 100
-
-    return kotlin.math.floor(abs(percentageChange) * 100.0) / 100.0
 }
-
-private fun codeImproved(healthDetails: HealthDetails) =
-    if (healthDetails.newScore == null || healthDetails.oldScore == null) {
-        ""
-    } else if (healthDetails.newScore > healthDetails.oldScore) {
-        "+"
-    } else {
-        "-"
-    }
-
-data class HealthInformation(
-    val change: String,
-    val percentage: String = "",
-)
-
-private const val NO_SCORE = "N/A"
-
-private fun scoreText(score: Double?) = score?.toString() ?: NO_SCORE
 
 fun resolveCodeHealthDescription(
     deltaResult: Delta?,
     review: Review?,
-): String? {
-    val oldReviewScore = deltaResult?.oldScore?.orElse(null)
-    val newReviewScore = deltaResult?.newScore?.orElse(null)
-    // Compared as nullable values: an absent score is never mapped to a default before comparing.
-    val hasChanged = oldReviewScore != newReviewScore
-
-    return when {
-        deltaResult != null && oldReviewScore == null && newReviewScore != null -> "$newReviewScore/10"
-        deltaResult != null && hasChanged -> getCodeHealth(HealthDetails(oldReviewScore, newReviewScore)).change
-        review?.score?.isPresent == true -> review.score.get().toString()
-        else -> NO_SCORE.takeIf { review != null }
+): String? =
+    when {
+        deltaResult != null -> deltaDescription(deltaResult)
+        review != null -> formatScore(review.score?.orElse(null))
+        else -> null
     }
-}
-
-fun getCodeHealth(healthDetails: HealthDetails): HealthInformation {
-    val changePercentage = getChangePercentage(healthDetails)
-    val sign = codeImproved(healthDetails)
-
-    val percentage = if (changePercentage == null || sign.isEmpty()) "" else "$sign$changePercentage%"
-
-    return if (healthDetails.newScore != healthDetails.oldScore) {
-        HealthInformation("${scoreText(healthDetails.oldScore)} -> ${scoreText(healthDetails.newScore)}", percentage)
-    } else {
-        HealthInformation(scoreText(healthDetails.newScore))
-    }
-}

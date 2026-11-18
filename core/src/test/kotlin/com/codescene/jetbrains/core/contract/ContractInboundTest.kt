@@ -182,20 +182,17 @@ class ContractInboundTest {
     }
 
     @Test
-    fun `hasChanged is computed from absent scores, not from a default`() {
+    fun `the code health label follows the delta and falls back to the review`() {
         val reviewFull = review(fixture("review", "full"))
         val reviewMinimal = review(fixture("review", "minimal"))
         val deltaMinimal = delta(fixture("delta", "minimal"))
         val deltaFull = delta(fixture("delta", "full"))
+        val noApplicationCode = "No application code detected for scoring"
 
-        // Neither score present: nothing changed, the review score is shown.
-        assertEquals("8.5", resolveCodeHealthDescription(deltaMinimal, reviewFull))
-        assertEquals("N/A", resolveCodeHealthDescription(deltaMinimal, reviewMinimal))
-        // Both present and different.
-        assertEquals("9.5 -> 8.0", resolveCodeHealthDescription(deltaFull, reviewFull))
-        // No delta at all.
-        assertEquals("8.5", resolveCodeHealthDescription(null, reviewFull))
-        assertEquals("N/A", resolveCodeHealthDescription(null, reviewMinimal))
+        assertEquals(noApplicationCode, resolveCodeHealthDescription(deltaMinimal, reviewFull))
+        assertEquals("9.5 → 8", resolveCodeHealthDescription(deltaFull, reviewFull))
+        assertEquals("8.5/10", resolveCodeHealthDescription(null, reviewFull))
+        assertEquals(noApplicationCode, resolveCodeHealthDescription(null, reviewMinimal))
         assertNull(resolveCodeHealthDescription(null, null))
     }
 
@@ -207,18 +204,18 @@ class ContractInboundTest {
 
         val description = resolveCodeHealthDescription(delta, review(fixture("review", "full")))
 
-        assertEquals("8.0/10", description)
+        assertEquals("8/10", description)
         assertNull(mappedDelta(delta).oldScore)
     }
 
     @Test
-    fun `a delta with only old-score is a change to an absent new score`() {
+    fun `a delta with only old-score is a change to n_a`() {
         val withoutNewScore = fixture("delta", "full").also { it.remove("new-score") }
         val delta = delta(withoutNewScore)
 
         val description = resolveCodeHealthDescription(delta, review(fixture("review", "full")))
 
-        assertEquals("9.5 -> N/A", description)
+        assertEquals("9.5 → n/a", description)
         assertNull(mappedDelta(delta).newScore)
     }
 

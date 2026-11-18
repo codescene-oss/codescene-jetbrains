@@ -10,98 +10,57 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class CodeHealthUtilsTest {
+    private val noApplicationCode = "No application code detected for scoring"
+
     @Test
-    fun `getChangePercentage returns null when old score is null`() {
-        val result = getChangePercentage(HealthDetails(oldScore = null, newScore = 9.0))
-        assertNull(result)
+    fun `a changed delta shows the old and the new score`() {
+        val delta = mockDelta(oldScore = 6.5, newScore = 8.25)
+        assertEquals("6.5 → 8.25", resolveCodeHealthDescription(delta, mockReview(score = 7.0)))
     }
 
     @Test
-    fun `getChangePercentage returns null when new score is null`() {
-        val result = getChangePercentage(HealthDetails(oldScore = 9.0, newScore = null))
-        assertNull(result)
+    fun `whole scores are shown without a decimal`() {
+        val delta = mockDelta(oldScore = 10.0, newScore = 9.0)
+        assertEquals("10 → 9", resolveCodeHealthDescription(delta, mockReview(score = 9.0)))
     }
 
     @Test
-    fun `getChangePercentage returns 0 when both old and new are zero`() {
-        val result = getChangePercentage(HealthDetails(oldScore = 0.0, newScore = 0.0))
-        assertEquals(0.0, result)
+    fun `a changed delta without a new score shows n_a for it`() {
+        val delta = mockDelta(oldScore = 9.5, newScore = null)
+        assertEquals("9.5 → n/a", resolveCodeHealthDescription(delta, mockReview(score = 9.5)))
     }
 
     @Test
-    fun `getChangePercentage returns 100 when old is zero and new is non zero`() {
-        val result = getChangePercentage(HealthDetails(oldScore = 0.0, newScore = 7.0))
-        assertEquals(100.0, result)
-    }
-
-    @Test
-    fun `getChangePercentage returns absolute percentage with two decimals`() {
-        val result = getChangePercentage(HealthDetails(oldScore = 6.0, newScore = 7.0))
-        assertEquals(16.66, result)
-    }
-
-    @Test
-    fun `getChangePercentage handles decline with absolute value`() {
-        val result = getChangePercentage(HealthDetails(oldScore = 10.0, newScore = 8.0))
-        assertEquals(20.0, result)
-    }
-
-    @Test
-    fun `getCodeHealth returns unchanged state when values are equal`() {
-        val result = getCodeHealth(HealthDetails(oldScore = 7.0, newScore = 7.0))
-        assertEquals(HealthInformation(change = "7.0", percentage = ""), result)
-    }
-
-    @Test
-    fun `getCodeHealth returns change and positive percentage for improvement`() {
-        val result = getCodeHealth(HealthDetails(oldScore = 6.0, newScore = 7.0))
-        assertEquals(HealthInformation(change = "6.0 -> 7.0", percentage = "+16.66%"), result)
-    }
-
-    @Test
-    fun `getCodeHealth returns change and negative percentage for decline`() {
-        val result = getCodeHealth(HealthDetails(oldScore = 10.0, newScore = 9.0))
-        assertEquals(HealthInformation(change = "10.0 -> 9.0", percentage = "-10.0%"), result)
-    }
-
-    @Test
-    fun `getCodeHealth uses NA when old score is missing`() {
-        val result = getCodeHealth(HealthDetails(oldScore = null, newScore = 9.0))
-        assertEquals(HealthInformation(change = "N/A -> 9.0", percentage = ""), result)
-    }
-
-    @Test
-    fun `getCodeHealth uses NA when new score is missing`() {
-        val result = getCodeHealth(HealthDetails(oldScore = 9.0, newScore = null))
-        assertEquals(HealthInformation(change = "9.0 -> N/A", percentage = ""), result)
-    }
-
-    @Test
-    fun `resolveCodeHealthDescription uses delta change when old and new scores differ`() {
-        val delta = mockDelta(oldScore = 6.0, newScore = 8.0)
-        val review = mockReview(score = 7.0)
-        val expected = getCodeHealth(HealthDetails(oldScore = 6.0, newScore = 8.0)).change
-        assertEquals(expected, resolveCodeHealthDescription(delta, review))
-    }
-
-    @Test
-    fun `resolveCodeHealthDescription uses review score when delta does not change score`() {
+    fun `an unchanged delta shows its score out of ten`() {
         val delta = mockDelta(oldScore = 8.0, newScore = 8.0)
-        val review = mockReview(score = 9.0)
-        assertEquals("9.0", resolveCodeHealthDescription(delta, review))
+        assertEquals("8/10", resolveCodeHealthDescription(delta, mockReview(score = 9.0)))
     }
 
     @Test
-    fun `resolveCodeHealthDescription falls back to N_A when review exists without score and no changed delta`() {
-        val review = mockReview(score = null)
-        assertEquals("N/A", resolveCodeHealthDescription(null, review))
-    }
-
-    @Test
-    fun `resolveCodeHealthDescription shows only the current score out of ten for a file without a baseline`() {
+    fun `a file without a baseline shows only the current score out of ten`() {
         val delta = mockDelta(oldScore = null, newScore = 9.38)
-        val review = mockReview(score = 9.38)
-        assertEquals("9.38/10", resolveCodeHealthDescription(delta, review))
+        assertEquals("9.38/10", resolveCodeHealthDescription(delta, mockReview(score = 9.38)))
+    }
+
+    @Test
+    fun `a delta without any score reports no application code`() {
+        val delta = mockDelta(oldScore = null, newScore = null)
+        assertEquals(noApplicationCode, resolveCodeHealthDescription(delta, mockReview(score = 8.5)))
+    }
+
+    @Test
+    fun `without a delta the review score is shown out of ten`() {
+        assertEquals("8.5/10", resolveCodeHealthDescription(null, mockReview(score = 8.5)))
+    }
+
+    @Test
+    fun `without a delta a review without a score reports no application code`() {
+        assertEquals(noApplicationCode, resolveCodeHealthDescription(null, mockReview(score = null)))
+    }
+
+    @Test
+    fun `without a delta or a review there is no description`() {
+        assertNull(resolveCodeHealthDescription(null, null))
     }
 
     private fun mockReview(score: Double?): Review =
