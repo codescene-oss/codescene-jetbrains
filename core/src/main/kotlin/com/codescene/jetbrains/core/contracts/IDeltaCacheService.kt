@@ -23,4 +23,9 @@ interface IDeltaCacheService {
     )
 
     fun getAll(): List<Pair<String, DeltaCacheItem>>
+
+    fun isCachedForCurrentContent(
+        filePath: String,
+        currentFileContent: String,
+    ): Boolean
 }

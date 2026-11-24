@@ -19,6 +19,7 @@ class VfsEventBridge(
     private val project: Project,
     private val workspacePath: String,
     private val observer: GitChangeObserverAdapter,
+    private val onWorkspaceActivity: () -> Unit = {},
 ) : Disposable {
     private var connection: MessageBusConnection? = null
 
@@ -33,6 +34,7 @@ class VfsEventBridge(
                     var queuedCount = 0
                     for (event in events) {
                         val fileEvent = convertEvent(event) ?: continue
+                        onWorkspaceActivity()
                         observer.queueEvent(fileEvent)
                         queuedCount++
                     }

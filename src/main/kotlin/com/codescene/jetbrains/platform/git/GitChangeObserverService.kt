@@ -4,6 +4,7 @@ import com.codescene.jetbrains.core.git.FileSystemAdapter
 import com.codescene.jetbrains.core.git.pathFileName
 import com.codescene.jetbrains.core.review.FileEventHandler
 import com.codescene.jetbrains.platform.api.CachedReviewService
+import com.codescene.jetbrains.platform.api.PathBasedReviewHandler
 import com.codescene.jetbrains.platform.di.CodeSceneProjectServiceProvider
 import com.codescene.jetbrains.platform.util.Log
 import com.codescene.jetbrains.platform.webview.util.updateMonitor
@@ -55,6 +56,7 @@ class GitChangeObserverService(
     private var repoStateListener: GitRepoStateListener? = null
     private var codesceneRepoFilesListener: CodesceneRepoFilesListener? = null
     private var gitIgnoreFilesListener: GitIgnoreFilesListener? = null
+    private var branchChangeListener: GitBranchChangeListener? = null
 
     fun start() {
         val workspacePath = project.basePath
@@ -70,6 +72,7 @@ class GitChangeObserverService(
         }
 
         val serviceProvider = CodeSceneProjectServiceProvider.getInstance(project)
+        val periodicChangeLister = PeriodicChangeListerService.getInstance(project)
         val fileEventHandler =
             FileEventHandler(
                 serviceProvider.deltaCacheService,
@@ -77,7 +80,7 @@ class GitChangeObserverService(
                 serviceProvider.baselineReviewCacheService,
             )
 
-        val tracker = SavedFilesTrackerAdapter(project)
+        val tracker = SavedFilesTrackerAdapter(project) { periodicChangeLister.markWorkspaceFileActivity() }
         tracker.start()
         savedFilesTracker = tracker
         Disposer.register(this, tracker)
@@ -101,11 +104,21 @@ class GitChangeObserverService(
         observer = gitChangeObserver
         Disposer.register(this, gitChangeObserver)
 
-        val bridge = VfsEventBridge(project, workspacePath, gitChangeObserver)
+        val bridge =
+            VfsEventBridge(project, workspacePath, gitChangeObserver) {
+                periodicChangeLister.markWorkspaceFileActivity()
+            }
         vfsEventBridge = bridge
         Disposer.register(this, bridge)
 
-        val listener = GitRepoStateListener(project, gitChangeObserver, workspacePath, gitRootPath)
+        val listener =
+            GitRepoStateListener(
+                project,
+                gitChangeObserver,
+                workspacePath,
+                gitRootPath,
+                periodicChangeLister,
+            )
         repoStateListener = listener
         Disposer.register(this, listener)
 
@@ -128,11 +141,21 @@ class GitChangeObserverService(
         gitIgnoreFilesListener = gitIgnoreListener
         Disposer.register(this, gitIgnoreListener)
 
+        val branchListener =
+            GitBranchChangeListener(
+                project,
+                periodicChangeLister,
+                gitChangeObserver,
+            )
+        branchChangeListener = branchListener
+        Disposer.register(this, branchListener)
+
         bridge.start()
         listener.start()
         repoFilesListener.start()
         gitIgnoreListener.start()
-        gitChangeObserver.start()
+        branchListener.start()
+        gitChangeObserver.start { filePath -> scheduleGitChangeReviewIfNeeded(project, filePath) }
     }
 
     private fun createGitChangeObserver(
@@ -180,7 +203,25 @@ class GitChangeObserverService(
         repoStateListener = null
         codesceneRepoFilesListener = null
         gitIgnoreFilesListener = null
+        branchChangeListener = null
         observer = null
+    }
+}
+
+internal fun scheduleGitChangeReviewIfNeeded(
+    project: Project,
+    filePath: String,
+) {
+    val fileName = pathFileName(filePath)
+    val reviewService = CachedReviewService.getInstance(project)
+    reviewService.scope.launch {
+        if (project.isDisposed) return@launch
+        val pathHandler = PathBasedReviewHandler.getInstance(project)
+        if (pathHandler.isFullyCachedForPath(filePath, fileName)) {
+            Log.info("Skipping cached file change path=$fileName", "GitChangeObserverService")
+            return@launch
+        }
+        scheduleGitChangeReview(project, filePath)
     }
 }
 
