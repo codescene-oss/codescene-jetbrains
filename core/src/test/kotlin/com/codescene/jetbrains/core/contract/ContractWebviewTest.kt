@@ -93,7 +93,7 @@ class ContractWebviewTest {
                         ),
                     functionToRefactorResolver = { _, _, _ -> null },
                     autoRefactorConfig = toAutoRefactorConfig(settings),
-                    featureFlags = resolveFeatureFlags(settings.aceTokenConfigured),
+                    featureFlags = resolveFeatureFlags(),
                     devmode = RuntimeFlags.isDevMode,
                 ),
             )
@@ -314,11 +314,7 @@ class ContractWebviewTest {
         fun `every flag from resolveFeatureFlags is declared by the webview schema`() {
             val declared = cwf.declaredFeatureFlags()
 
-            listOf(true, false).forEach { aceTokenConfigured ->
-                val undeclared = resolveFeatureFlags(aceTokenConfigured).filterNot { it in declared }
-
-                assertEquals("aceTokenConfigured=$aceTokenConfigured", emptyList<String>(), undeclared)
-            }
+            assertEquals(emptyList<String>(), resolveFeatureFlags().filterNot { it in declared })
         }
 
         @Test
@@ -331,9 +327,8 @@ class ContractWebviewTest {
         }
 
         @Test
-        fun `ace status indicator is sent only when an ace token is configured`() {
-            assertEquals(listOf("ace-status-indicator"), resolveFeatureFlags(aceTokenConfigured = true))
-            assertEquals(emptyList<String>(), resolveFeatureFlags(aceTokenConfigured = false))
+        fun `the removed ace status indicator flag is not sent`() {
+            assertFalse("ace-status-indicator" in resolveFeatureFlags())
         }
 
         @Test
@@ -572,6 +567,9 @@ class ContractWebviewTest {
                 "auth-remove-access-token" to unsupported("auth-remove-access-token"),
                 "auth-open-server-setting" to unsupported("auth-open-server-setting"),
                 "auth-open-pat-page" to unsupported("auth-open-pat-page"),
+                "auth-reauthorize" to unsupported("auth-reauthorize"),
+                "goal-work-session-start" to unsupported("goal-work-session-start", """{"goalId":1}"""),
+                "fix-goal" to unsupported("fix-goal", """{"goalId":1,"path":"src/file0.js"}"""),
             )
     }
 }

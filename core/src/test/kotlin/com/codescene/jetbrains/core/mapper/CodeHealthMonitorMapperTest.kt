@@ -87,14 +87,8 @@ class CodeHealthMonitorMapperTest {
     }
 
     @Test
-    fun `toCwfData includes ace-status-indicator when token is configured`() {
-        val result = toCwfData(featureFlags = resolveFeatureFlags(aceTokenConfigured = true))
-        assertEquals(listOf("ace-status-indicator"), result.featureFlags)
-    }
-
-    @Test
-    fun `toCwfData excludes ace-status-indicator when token is not configured`() {
-        val result = toCwfData(featureFlags = resolveFeatureFlags(aceTokenConfigured = false))
+    fun `toCwfData sends the resolved feature flags`() {
+        val result = toCwfData(featureFlags = resolveFeatureFlags())
         assertEquals(emptyList<String>(), result.featureFlags)
     }
 
