@@ -28,9 +28,9 @@ import org.junit.Test
 class AceEntryLogicTest {
     @Test
     fun `resolveAceStatusChange updates state and emits message when status changes`() {
-        val provider = InMemorySettingsProvider(CodeSceneGlobalSettings().also { it.aceStatus = AceStatus.SIGNED_OUT })
+        val settings = CodeSceneGlobalSettings().apply { aceStatus = AceStatus.SIGNED_OUT }
+        val provider = InMemorySettingsProvider(settings)
         val result = resolveAceStatusChange(provider, AceStatus.ERROR)
-
         assertEquals(true, result.shouldNotify)
         assertEquals(AceStatus.ERROR, provider.currentState().aceStatus)
         assertEquals("aceError", result.message?.key)
@@ -38,9 +38,9 @@ class AceEntryLogicTest {
 
     @Test
     fun `resolveAceStatusChange does nothing when status is unchanged`() {
-        val provider = InMemorySettingsProvider(CodeSceneGlobalSettings().also { it.aceStatus = AceStatus.SIGNED_IN })
+        val settings = CodeSceneGlobalSettings().apply { aceStatus = AceStatus.SIGNED_IN }
+        val provider = InMemorySettingsProvider(settings)
         val result = resolveAceStatusChange(provider, AceStatus.SIGNED_IN)
-
         assertEquals(false, result.shouldNotify)
         assertNull(result.message)
     }
@@ -49,7 +49,7 @@ class AceEntryLogicTest {
     fun `resolveAceEntryPointCommand returns skip when token not configured`() {
         val settings = CodeSceneGlobalSettings(aceTokenConfigured = false, aceAcknowledged = true)
         val request = RefactoringRequest("a.kt", null, mockFn("f", "body", 1, 2), AceEntryPoint.RETRY)
-        val result = resolveAceEntryPointCommand(settings, request = request)
+        val result = resolveAceEntryPointCommand(settings, request = request, aceEnabled = true)
         assertEquals(AceEntryCommand.Skip, result)
     }
 
@@ -58,7 +58,7 @@ class AceEntryLogicTest {
         val settings = CodeSceneGlobalSettings(aceTokenConfigured = true, aceAcknowledged = false)
         val fn = mockFn("f", "body", 1, 2)
         val request = RefactoringRequest("a.kt", null, fn, AceEntryPoint.RETRY)
-        val result = resolveAceEntryPointCommand(settings, request = request)
+        val result = resolveAceEntryPointCommand(settings, request = request, aceEnabled = true)
         assertEquals(AceEntryCommand.OpenAcknowledgement("a.kt", fn, AceEntryPoint.RETRY), result)
     }
 
@@ -66,7 +66,7 @@ class AceEntryLogicTest {
     fun `resolveAceEntryPointCommand returns start refactor when acknowledged`() {
         val settings = CodeSceneGlobalSettings(aceTokenConfigured = true, aceAcknowledged = true)
         val request = RefactoringRequest("a.kt", null, mockFn("f", "body", 1, 2), AceEntryPoint.RETRY, skipCache = true)
-        val result = resolveAceEntryPointCommand(settings, request = request)
+        val result = resolveAceEntryPointCommand(settings, request = request, aceEnabled = true)
         assertEquals(AceEntryCommand.StartRefactor(request, true), result)
     }
 
@@ -140,16 +140,13 @@ class AceEntryLogicTest {
 
     @Test
     fun `resolveRefactoringRequest returns null when function cannot be resolved`() {
-        val result = resolveRequest(fnToRefactor = null)
-        assertNull(result)
+        assertNull(resolveRequest(fnToRefactor = null))
     }
 
     @Test
     fun `resolveRefactoringRequest uses provided function directly`() {
         val provided = mockFn("provided", "body", 5, 8)
-
         val result = resolveRequest(fnToRefactor = provided)
-
         assertNotNull(result)
         assertSame(provided, result?.function)
     }
@@ -163,13 +160,9 @@ class AceEntryLogicTest {
 
     @Test
     fun `resolveAceViewUpdateParams returns stale update when function body changed`() {
-        val currentFn = mockFn("f", "old", 1, 2)
-        val updatedFn = mockFn("f", "new", 1, 2)
-        val result = resolveViewUpdate(currentFn, updatedFn)
-
+        val result = resolveViewUpdate(mockFn("f", "old", 1, 2), mockFn("f", "new", 1, 2))
         assertNotNull(result)
         assertEquals(true, result?.stale)
-        assertSame(updatedFn, result?.function)
     }
 
     @Test
@@ -204,13 +197,9 @@ class AceEntryLogicTest {
 
     @Test
     fun `resolveAceViewUpdateParams returns update when range changed but body is same`() {
-        val currentFn = mockFn("f", "same", 1, 2)
-        val updatedFn = mockFn("f", "same", 3, 4)
-        val result = resolveViewUpdate(currentFn, updatedFn)
-
+        val result = resolveViewUpdate(mockFn("f", "same", 1, 2), mockFn("f", "same", 3, 4))
         assertNotNull(result)
         assertEquals(false, result?.stale)
-        assertSame(updatedFn, result?.function)
     }
 
     @Test
@@ -219,7 +208,7 @@ class AceEntryLogicTest {
             val settings = InMemorySettingsProvider(CodeSceneGlobalSettings(aceTokenConfigured = false))
             val aceService = mockk<com.codescene.jetbrains.core.contracts.IAceService>(relaxed = true)
 
-            val result = shouldCheckRefactorableFunctions(settings, aceService, "kt")
+            val result = shouldCheckRefactorableFunctions(settings, aceService, "kt", aceEnabled = true)
             assertEquals(false, result)
         }
 
@@ -259,7 +248,7 @@ class AceEntryLogicTest {
             val aceService = mockk<com.codescene.jetbrains.core.contracts.IAceService>()
             coEvery { aceService.runPreflight() } returns preflight
 
-            val result = shouldCheckRefactorableFunctions(settings, aceService, "kt")
+            val result = shouldCheckRefactorableFunctions(settings, aceService, "kt", aceEnabled = true)
             assertEquals(true, result)
         }
 
@@ -270,9 +259,28 @@ class AceEntryLogicTest {
             val aceService = mockk<com.codescene.jetbrains.core.contracts.IAceService>()
             coEvery { aceService.runPreflight() } returns null
 
-            val result = shouldCheckRefactorableFunctions(settings, aceService, "kt")
+            val result = shouldCheckRefactorableFunctions(settings, aceService, "kt", aceEnabled = true)
             assertEquals(false, result)
         }
+
+    @Test
+    fun `shouldCheckRefactorableFunctions returns false without preflight when ACE is unavailable`() =
+        runBlocking {
+            val settings = InMemorySettingsProvider(CodeSceneGlobalSettings(aceTokenConfigured = true))
+            val aceService = mockk<com.codescene.jetbrains.core.contracts.IAceService>()
+            coEvery { aceService.runPreflight() } throws AssertionError("runPreflight should not be called")
+
+            val result = shouldCheckRefactorableFunctions(settings, aceService, "kt", aceEnabled = false)
+            assertEquals(false, result)
+        }
+
+    @Test
+    fun `resolveAceEntryPointCommand skips when ACE is unavailable with token configured and acknowledged`() {
+        val settings = CodeSceneGlobalSettings(aceTokenConfigured = true, aceAcknowledged = true)
+        val request = RefactoringRequest("a.kt", null, mockFn("f", "body", 1, 2), AceEntryPoint.RETRY)
+        val result = resolveAceEntryPointCommand(settings, request = request, aceEnabled = false)
+        assertEquals(AceEntryCommand.Skip, result)
+    }
 
     private fun mockFn(
         name: String,

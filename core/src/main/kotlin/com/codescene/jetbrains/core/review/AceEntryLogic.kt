@@ -81,7 +81,10 @@ suspend fun shouldCheckRefactorableFunctions(
     settingsProvider: ISettingsProvider,
     aceService: IAceService,
     fileExtension: String?,
+    aceEnabled: Boolean = com.codescene.jetbrains.core.flag.AceAvailability.ENABLED,
 ): Boolean {
+    if (!aceEnabled) return false
+
     val state = settingsProvider.currentState()
     if (!state.aceTokenConfigured) return false
 
@@ -104,7 +107,10 @@ sealed class AceEntryCommand {
 fun resolveAceEntryPointCommand(
     settings: CodeSceneGlobalSettings,
     request: RefactoringRequest,
+    aceEnabled: Boolean = com.codescene.jetbrains.core.flag.AceAvailability.ENABLED,
 ): AceEntryCommand {
+    if (!aceEnabled) return AceEntryCommand.Skip
+
     val decision =
         resolveAceEntryDecision(
             tokenConfigured = settings.aceTokenConfigured,

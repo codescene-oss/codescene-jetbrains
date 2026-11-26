@@ -14,6 +14,7 @@ class AcePreflightUtilsTest {
                 tokenConfigured = false,
                 token = "token",
                 force = false,
+                aceEnabled = true,
             )
 
         assertEquals(false, result.shouldRun)
@@ -27,6 +28,7 @@ class AcePreflightUtilsTest {
                 tokenConfigured = true,
                 token = "token",
                 force = true,
+                aceEnabled = true,
             )
 
         assertEquals(true, result.shouldRun)
@@ -40,6 +42,7 @@ class AcePreflightUtilsTest {
                 tokenConfigured = true,
                 token = "token",
                 force = false,
+                aceEnabled = true,
             )
 
         assertEquals(true, result.shouldRun)
@@ -55,5 +58,65 @@ class AcePreflightUtilsTest {
     @Test
     fun `resolveAceFailureStatus maps unknown failures to error`() {
         assertEquals(AceStatus.ERROR, resolveAceFailureStatus(Exception("x")))
+    }
+
+    @Test
+    fun `resolveAcePreflightDecision does not run and writes no status when ACE is unavailable with token configured and not forced`() {
+        val result =
+            resolveAcePreflightDecision(
+                tokenConfigured = true,
+                token = "token",
+                force = false,
+                aceEnabled = false,
+            )
+
+        assertEquals(false, result.shouldRun)
+        assertEquals(null, result.skippedStatus)
+        assertEquals(null, result.successStatus)
+    }
+
+    @Test
+    fun `resolveAcePreflightDecision does not run and writes no status when ACE is unavailable with token configured and forced`() {
+        val result =
+            resolveAcePreflightDecision(
+                tokenConfigured = true,
+                token = "token",
+                force = true,
+                aceEnabled = false,
+            )
+
+        assertEquals(false, result.shouldRun)
+        assertEquals(null, result.skippedStatus)
+        assertEquals(null, result.successStatus)
+    }
+
+    @Test
+    fun `resolveAcePreflightDecision does not run and writes no status when ACE is unavailable with token not configured and not forced`() {
+        val result =
+            resolveAcePreflightDecision(
+                tokenConfigured = false,
+                token = "",
+                force = false,
+                aceEnabled = false,
+            )
+
+        assertEquals(false, result.shouldRun)
+        assertEquals(null, result.skippedStatus)
+        assertEquals(null, result.successStatus)
+    }
+
+    @Test
+    fun `resolveAcePreflightDecision does not run and writes no status when ACE is unavailable with token not configured and forced`() {
+        val result =
+            resolveAcePreflightDecision(
+                tokenConfigured = false,
+                token = "",
+                force = true,
+                aceEnabled = false,
+            )
+
+        assertEquals(false, result.shouldRun)
+        assertEquals(null, result.skippedStatus)
+        assertEquals(null, result.successStatus)
     }
 }

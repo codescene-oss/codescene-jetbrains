@@ -21,7 +21,7 @@ class SettingsChangeActionTest {
         val oldState = CodeSceneGlobalSettings(aceStatus = AceStatus.DEACTIVATED)
         val newState = oldState.copy().also { it.aceStatus = AceStatus.SIGNED_IN }
 
-        val result = resolveSettingsChangeActions(oldState, newState)
+        val result = resolveSettingsChangeActions(oldState, newState, aceEnabled = true)
 
         assertEquals(2, result.size)
         assertEquals(SettingsChangeAction.RefreshAceUI(true), result[0])
@@ -33,7 +33,7 @@ class SettingsChangeActionTest {
         val oldState = CodeSceneGlobalSettings(aceTokenConfigured = false)
         val newState = oldState.copy(aceTokenConfigured = true)
 
-        val result = resolveSettingsChangeActions(oldState, newState)
+        val result = resolveSettingsChangeActions(oldState, newState, aceEnabled = true)
 
         assertEquals(
             listOf(
@@ -47,7 +47,7 @@ class SettingsChangeActionTest {
     @Test
     fun `returns refresh ace ui when auth token value changed`() {
         val state = CodeSceneGlobalSettings(aceTokenConfigured = true)
-        val result = resolveSettingsChangeActions(state, state, aceAuthTokenChanged = true)
+        val result = resolveSettingsChangeActions(state, state, aceAuthTokenChanged = true, aceEnabled = true)
 
         assertEquals(
             listOf(
@@ -72,7 +72,7 @@ class SettingsChangeActionTest {
                 aceTokenConfigured = true,
             ).also { it.aceStatus = AceStatus.OFFLINE }
 
-        val result = resolveSettingsChangeActions(oldState, newState)
+        val result = resolveSettingsChangeActions(oldState, newState, aceEnabled = true)
 
         assertEquals(
             listOf(
@@ -84,5 +84,24 @@ class SettingsChangeActionTest {
             ),
             result,
         )
+    }
+
+    @Test
+    fun `only code vision refresh is emitted when ACE is unavailable`() {
+        val oldState =
+            CodeSceneGlobalSettings(
+                enableCodeLenses = true,
+                aceTokenConfigured = false,
+                aceStatus = AceStatus.DEACTIVATED,
+            )
+        val newState =
+            oldState.copy(
+                enableCodeLenses = false,
+                aceTokenConfigured = true,
+            ).also { it.aceStatus = AceStatus.SIGNED_IN }
+
+        val result = resolveSettingsChangeActions(oldState, newState, aceAuthTokenChanged = true, aceEnabled = false)
+
+        assertEquals(listOf(SettingsChangeAction.RefreshCodeVision), result)
     }
 }

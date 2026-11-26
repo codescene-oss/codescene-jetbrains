@@ -21,4 +21,19 @@ class CodeSmellAnnotatorLogicTest {
     fun `shouldAnnotateCodeSmells returns true when ace cache exists`() {
         assertEquals(true, shouldAnnotateCodeSmells(review = null, aceCache = listOf(mockk<FnToRefactor>())))
     }
+
+    @Test
+    fun `refactor quick fix unavailable when ACE is unavailable even with a token`() {
+        assertEquals(false, isAceRefactorQuickFixAvailable(aceTokenConfigured = true, aceEnabled = false))
+    }
+
+    @Test
+    fun `refactor quick fix available with token when ACE is enabled`() {
+        assertEquals(true, isAceRefactorQuickFixAvailable(aceTokenConfigured = true, aceEnabled = true))
+    }
+
+    @Test
+    fun `refactor quick fix unavailable without token when ACE is enabled`() {
+        assertEquals(false, isAceRefactorQuickFixAvailable(aceTokenConfigured = false, aceEnabled = true))
+    }
 }

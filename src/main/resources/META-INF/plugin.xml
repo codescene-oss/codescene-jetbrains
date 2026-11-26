@@ -29,7 +29,6 @@
         <notificationGroup id="CodeScene" displayType="STICKY_BALLOON"/>
         <notificationGroup id="CodeScene Information" displayType="BALLOON"/> <!-- Short-lived notifications -->
         <notificationGroup id="CodeScene Error" displayType="BALLOON"/> <!-- Short-lived notifications -->
-        <notificationGroup id="CodeScene ACE" displayType="STICKY_BALLOON"/>
 
         <applicationConfigurable
                 parentId="tools"
@@ -50,20 +49,9 @@
                 implementation="com.codescene.jetbrains.platform.editor.codeVision.providers.AggregatedSmellCodeVisionProvider"/>
         <codeInsight.codeVisionProvider
                 implementation="com.codescene.jetbrains.platform.editor.codeVision.providers.CodeHealthCodeVisionProvider"/>
-        <codeInsight.codeVisionProvider
-                implementation="com.codescene.jetbrains.platform.editor.codeVision.providers.AceCodeVisionProvider"/>
 
         <fileEditorProvider
                 implementation="com.codescene.jetbrains.platform.fileeditor.documentation.CwfDocsFileEditorProvider"/>
-        <fileEditorProvider
-                implementation="com.codescene.jetbrains.platform.fileeditor.ace.CwfAceFileEditorProvider"/>
-        <fileEditorProvider
-                implementation="com.codescene.jetbrains.platform.fileeditor.ace.acknowledge.CwfAceAcknowledgeEditorProvider"/>
-
-        <statusBarWidgetFactory
-                implementation="com.codescene.jetbrains.platform.statusbar.AceStatusBarWidgetFactory"
-                id="AceStatusBarWidgetFactory"
-        />
 
         <iconProvider implementation="com.codescene.jetbrains.platform.icons.CodeSceneFileIconProvider"/>
     </extensions>

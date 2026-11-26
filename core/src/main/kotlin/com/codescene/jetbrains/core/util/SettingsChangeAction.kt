@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.core.util
 
+import com.codescene.jetbrains.core.flag.AceAvailability
 import com.codescene.jetbrains.core.models.settings.AceStatus
 import com.codescene.jetbrains.core.models.settings.CodeSceneGlobalSettings
 
@@ -17,11 +18,16 @@ fun resolveSettingsChangeActions(
     oldState: CodeSceneGlobalSettings,
     newState: CodeSceneGlobalSettings,
     aceAuthTokenChanged: Boolean = false,
+    aceEnabled: Boolean = AceAvailability.ENABLED,
 ): List<SettingsChangeAction> {
     val actions = mutableListOf<SettingsChangeAction>()
 
     if (oldState.enableCodeLenses != newState.enableCodeLenses) {
         actions.add(SettingsChangeAction.RefreshCodeVision)
+    }
+
+    if (!aceEnabled) {
+        return actions
     }
 
     if (oldState.aceStatus != newState.aceStatus) {
