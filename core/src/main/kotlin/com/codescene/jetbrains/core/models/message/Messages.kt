@@ -47,4 +47,7 @@ enum class UnsupportedMessages(val value: String) {
     AUTH_REMOVE_ACCESS_TOKEN("auth-remove-access-token"),
     AUTH_OPEN_SERVER_SETTING("auth-open-server-setting"),
     AUTH_OPEN_PAT_PAGE("auth-open-pat-page"),
+    AUTH_REAUTHORIZE("auth-reauthorize"),
+    GOAL_WORK_SESSION_START("goal-work-session-start"),
+    FIX_GOAL("fix-goal"),
 }

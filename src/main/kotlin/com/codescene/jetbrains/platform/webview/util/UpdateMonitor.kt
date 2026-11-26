@@ -82,7 +82,7 @@ private fun updateMonitorImpl(project: Project) {
                 resolveFunctionToRefactor(candidates, fn)
             },
             autoRefactorConfig = toAutoRefactorConfig(settings),
-            featureFlags = resolveFeatureFlags(settings.aceTokenConfigured),
+            featureFlags = resolveFeatureFlags(),
             devmode = RuntimeFlags.isDevMode,
         )
 

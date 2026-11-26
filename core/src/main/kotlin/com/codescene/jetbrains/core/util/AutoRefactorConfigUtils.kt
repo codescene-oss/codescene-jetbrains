@@ -34,12 +34,8 @@ private const val DOCS_GENERAL_CODE_HEALTH = "docs_general_code_health"
 
 private const val DOCS_ISSUES_PREFIX = "docs_issues_"
 
-fun resolveFeatureFlags(aceTokenConfigured: Boolean): List<String> =
-    if (aceTokenConfigured) {
-        listOf("ace-status-indicator")
-    } else {
-        emptyList()
-    }
+// The webview declares no flag this plugin enables (cs-webview 2.5.25 removed ace-status-indicator).
+fun resolveFeatureFlags(): List<String> = emptyList()
 
 fun autoRefactorConfigForDocsView(
     settings: CodeSceneGlobalSettings,
