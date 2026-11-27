@@ -3,6 +3,7 @@ package com.codescene.jetbrains.platform.telemetry
 import com.codescene.jetbrains.core.contracts.ITelemetryService
 import com.codescene.jetbrains.core.flag.RuntimeFlags
 import com.codescene.jetbrains.core.review.BaseService
+import com.codescene.jetbrains.core.telemetry.TELEMETRY_EDITOR_TYPE
 import com.codescene.jetbrains.core.telemetry.TelemetryRequest
 import com.codescene.jetbrains.core.telemetry.TelemetryRuntimeInfo
 import com.codescene.jetbrains.core.telemetry.UnhandledErrorTelemetry
@@ -15,7 +16,6 @@ import com.codescene.jetbrains.platform.cli.CsIdeServerService
 import com.codescene.jetbrains.platform.di.CodeSceneApplicationServiceProvider
 import com.codescene.jetbrains.platform.settings.CodeSceneGlobalSettingsStore
 import com.codescene.jetbrains.platform.util.Log
-import com.codescene.jetbrains.platform.util.PlatformConstants.TELEMETRY_EDITOR_TYPE
 import com.intellij.ide.plugins.cl.PluginAwareClassLoader
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo

@@ -1,8 +1,11 @@
 package com.codescene.jetbrains.core.telemetry
 
+const val TELEMETRY_EDITOR_TYPE = "jetbrains"
+
 data class TelemetryEventData(
     val eventName: String,
     val userId: String,
+    val editorType: String,
     val ideInfo: String,
     val editorVersion: String,
     val pluginVersion: String,
@@ -25,6 +28,7 @@ fun buildTelemetryEventData(
     return TelemetryEventData(
         eventName = extendedName,
         userId = "",
+        editorType = editorType,
         ideInfo = ideInfo,
         editorVersion = editorVersion,
         pluginVersion = pluginVersion,

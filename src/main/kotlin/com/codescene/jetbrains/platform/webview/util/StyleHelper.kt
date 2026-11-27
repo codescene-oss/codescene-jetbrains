@@ -3,15 +3,16 @@ package com.codescene.jetbrains.platform.webview.util
 import com.codescene.jetbrains.core.util.CwfThemeSourceInputs
 import com.codescene.jetbrains.core.util.RgbColor
 import com.codescene.jetbrains.core.util.buildCwfThemeCssVariables
+import com.codescene.jetbrains.core.util.contrastRatio
 import com.codescene.jetbrains.core.util.parseScrollbarHex
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.editor.colors.ColorKey
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.ui.JBColor
 import com.intellij.ui.jcef.JBCefScrollbarsHelper
 import java.awt.Color
 import javax.swing.UIManager
-import kotlin.math.pow
 
 @Service(Service.Level.APP)
 class StyleHelper {
@@ -61,7 +62,11 @@ class StyleHelper {
             val textFg = UIManager.getColor("Label.foreground")
             val editorBackground =
                 textFg?.let { fg ->
-                    if (contrastRatio(rawEditorBackground, fg) < MIN_LABEL_ON_BACKGROUND_CONTRAST) {
+                    if (contrastRatio(
+                            rawEditorBackground.toRgbColor(),
+                            fg.toRgbColor(),
+                        ) < MIN_LABEL_ON_BACKGROUND_CONTRAST
+                    ) {
                         UIManager.getColor("Panel.background") ?: rawEditorBackground
                     } else {
                         rawEditorBackground
@@ -71,6 +76,10 @@ class StyleHelper {
             val buttonBg = UIManager.getColor("Button.default.startBackground")
             val buttonFg = JBColor.namedColor("Button.default.foreground")
             val buttonSecondaryBg = UIManager.getColor("Button.default.endBackground")
+
+            val successFg = scheme.getColor(ColorKey.find("FILESTATUS_ADDED"))
+            val warningFg = UIManager.getColor("Component.warningFocusColor")
+            val isBright = JBColor.isBright()
 
             buildCwfThemeCssVariables(
                 CwfThemeSourceInputs(
@@ -84,6 +93,9 @@ class StyleHelper {
                     fontSizePx = fontSize,
                     editorFontFamily = editorFontFamily,
                     editorFontSizePx = editorFontSize,
+                    successForeground = successFg?.toRgbColor(),
+                    warningForeground = warningFg?.toRgbColor(),
+                    isBright = isBright,
                 ),
             )
         } catch (e: Exception) {
@@ -95,22 +107,3 @@ class StyleHelper {
 }
 
 private fun Color.toRgbColor(): RgbColor = RgbColor(red = red, green = green, blue = blue)
-
-private fun contrastRatio(
-    background: Color,
-    foreground: Color,
-): Double {
-    val l1 = relativeLuminance(background)
-    val l2 = relativeLuminance(foreground)
-    val lighter = maxOf(l1, l2)
-    val darker = minOf(l1, l2)
-    return (lighter + 0.05) / (darker + 0.05)
-}
-
-private fun relativeLuminance(color: Color): Double {
-    fun channel(c: Int): Double {
-        val v = c / 255.0
-        return if (v <= 0.03928) v / 12.92 else ((v + 0.055) / 1.055).pow(2.4)
-    }
-    return 0.2126 * channel(color.red) + 0.7152 * channel(color.green) + 0.0722 * channel(color.blue)
-}

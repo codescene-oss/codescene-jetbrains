@@ -11,6 +11,10 @@ class CwfThemeCssUtilsTest {
 
     @Test
     fun `buildCwfThemeCssVariables accepts source inputs`() {
+        val successCandidate = RgbColor(0, 128, 0)
+        val warningCandidate = RgbColor(191, 136, 3)
+        val editorBg = RgbColor(85, 85, 85)
+
         val css =
             buildCwfThemeCssVariables(
                 CwfThemeSourceInputs(
@@ -18,16 +22,27 @@ class CwfThemeCssUtilsTest {
                     linkForeground = RgbColor(34, 34, 34),
                     buttonForeground = RgbColor(51, 51, 51),
                     buttonBackground = RgbColor(68, 68, 68),
-                    editorBackground = RgbColor(85, 85, 85),
+                    editorBackground = editorBg,
                     scrollbarThumbHex = "66666666",
                     buttonSecondaryBackground = RgbColor(119, 119, 119),
                     fontSizePx = 12,
                     editorFontFamily = "JetBrains Mono",
                     editorFontSizePx = 13,
+                    successForeground = successCandidate,
+                    warningForeground = warningCandidate,
+                    isBright = false,
                 ),
             )
 
-        assertEquals(
+        val resolvedColors =
+            resolveCwfStatusColors(
+                successCandidate = successCandidate,
+                warningCandidate = warningCandidate,
+                editorBackground = editorBg,
+                isBright = false,
+            )
+
+        val cssFromInputs =
             buildCwfThemeCssVariables(
                 CwfThemeCssInputs(
                     textForegroundHex = "111111",
@@ -40,10 +55,13 @@ class CwfThemeCssUtilsTest {
                     fontSizePx = 12,
                     editorFontFamily = "JetBrains Mono",
                     editorFontSizePx = 13,
+                    successHex = toHex(resolvedColors.success),
+                    warningHex = toHex(resolvedColors.warning),
+                    issueHex = toHex(resolvedColors.issue),
                 ),
-            ),
-            css,
-        )
+            )
+
+        assertEquals(cssFromInputs, css)
     }
 
     @Test
@@ -88,6 +106,9 @@ class CwfThemeCssUtilsTest {
                     fontSizePx = 12,
                     editorFontFamily = "Evil'; color: red; /*",
                     editorFontSizePx = 13,
+                    successHex = "89D185",
+                    warningHex = "CCA700",
+                    issueHex = "EE9D28",
                 ),
             )
 
@@ -111,6 +132,9 @@ class CwfThemeCssUtilsTest {
                 fontSizePx = 12,
                 editorFontFamily = "JetBrains Mono",
                 editorFontSizePx = 13,
+                successHex = "89D185",
+                warningHex = "CCA700",
+                issueHex = "EE9D28",
             )
 
         val css = buildCwfThemeCssVariables(inputs)
@@ -131,6 +155,9 @@ class CwfThemeCssUtilsTest {
               --cs-theme-button-background: #444444;
               --cs-theme-button-secondaryForeground: #333333;
               --cs-theme-button-secondaryBackground: #777777;
+              --cs-theme-success: #89D185;
+              --cs-theme-warning: #CCA700;
+              --cs-theme-issue: #EE9D28;
               --cs-theme-button-foreground-1: #11111103;
               --cs-theme-button-background-1: #44444403;
               --cs-theme-foreground-1: #11111103;

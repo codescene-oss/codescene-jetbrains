@@ -7,7 +7,6 @@ import java.awt.Color
 
 object PlatformConstants {
     const val CODESCENE_PLUGIN_ID = "com.codescene.vanilla"
-    const val TELEMETRY_EDITOR_TYPE = "jetbrains"
 
     const val INFO_NOTIFICATION_GROUP = "CodeScene Information"
     const val ERROR_NOTIFICATION_GROUP = "CodeScene Error"

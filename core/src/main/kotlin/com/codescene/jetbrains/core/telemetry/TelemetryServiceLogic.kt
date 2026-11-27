@@ -73,11 +73,14 @@ fun buildTelemetryEvent(
         TelemetryEvent(
             eventData.eventName,
             eventData.userId,
-            eventData.ideInfo,
+            eventData.editorType,
             eventData.pluginVersion,
             eventData.isDevMode || runtime.internal,
+            null,
+            null,
         )
 
+    telemetryEvent.setAdditionalProperty("ide-product", eventData.ideInfo)
     telemetryEvent.setAdditionalProperty("device-id", eventData.deviceId)
     telemetryEvent.setAdditionalProperty("event-time", runtime.eventTime)
     telemetryEvent.setAdditionalProperty("process-platform", runtime.processPlatform)
