@@ -27,34 +27,39 @@ private fun relativeLuminance(color: RgbColor): Double {
     return 0.2126 * channel(color.red) + 0.7152 * channel(color.green) + 0.0722 * channel(color.blue)
 }
 
+private const val MIN_STATUS_CONTRAST = 3.0
+
+private val SUCCESS_FALLBACK_LIGHT = RgbColor(0x38, 0x8A, 0x34)
+private val SUCCESS_FALLBACK_DARK = RgbColor(0x89, 0xD1, 0x85)
+private val WARNING_FALLBACK_LIGHT = RgbColor(0xBF, 0x88, 0x03)
+private val WARNING_FALLBACK_DARK = RgbColor(0xCC, 0xA7, 0x00)
+private val ISSUE_LIGHT = RgbColor(0xA1, 0x5C, 0x00)
+private val ISSUE_DARK = RgbColor(0xEE, 0x9D, 0x28)
+
+private fun readableOrFallback(
+    candidate: RgbColor?,
+    editorBackground: RgbColor,
+    fallback: RgbColor,
+): RgbColor = candidate?.takeIf { contrastRatio(it, editorBackground) >= MIN_STATUS_CONTRAST } ?: fallback
+
 fun resolveCwfStatusColors(
     successCandidate: RgbColor?,
     warningCandidate: RgbColor?,
     editorBackground: RgbColor,
     isBright: Boolean,
-): CwfStatusColors {
-    val successFallbackLight = RgbColor(0x38, 0x8A, 0x34)
-    val successFallbackDark = RgbColor(0x89, 0xD1, 0x85)
-    val warningFallbackLight = RgbColor(0xBF, 0x88, 0x03)
-    val warningFallbackDark = RgbColor(0xCC, 0xA7, 0x00)
-    val issueLight = RgbColor(0xA1, 0x5C, 0x00)
-    val issueDark = RgbColor(0xEE, 0x9D, 0x28)
-
-    val success =
-        if (successCandidate != null && contrastRatio(successCandidate, editorBackground) >= 3.0) {
-            successCandidate
-        } else {
-            if (isBright) successFallbackLight else successFallbackDark
-        }
-
-    val warning =
-        if (warningCandidate != null && contrastRatio(warningCandidate, editorBackground) >= 3.0) {
-            warningCandidate
-        } else {
-            if (isBright) warningFallbackLight else warningFallbackDark
-        }
-
-    val issue = if (isBright) issueLight else issueDark
-
-    return CwfStatusColors(success, warning, issue)
-}
+): CwfStatusColors =
+    CwfStatusColors(
+        success =
+            readableOrFallback(
+                successCandidate,
+                editorBackground,
+                if (isBright) SUCCESS_FALLBACK_LIGHT else SUCCESS_FALLBACK_DARK,
+            ),
+        warning =
+            readableOrFallback(
+                warningCandidate,
+                editorBackground,
+                if (isBright) WARNING_FALLBACK_LIGHT else WARNING_FALLBACK_DARK,
+            ),
+        issue = if (isBright) ISSUE_LIGHT else ISSUE_DARK,
+    )
