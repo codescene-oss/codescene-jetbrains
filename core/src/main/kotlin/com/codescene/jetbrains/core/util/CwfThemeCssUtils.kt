@@ -35,6 +35,9 @@ data class CwfThemeSourceInputs(
     val fontSizePx: Int,
     val editorFontFamily: String,
     val editorFontSizePx: Int,
+    val successForeground: RgbColor?,
+    val warningForeground: RgbColor?,
+    val isBright: Boolean,
 )
 
 data class CwfThemeCssInputs(
@@ -48,6 +51,9 @@ data class CwfThemeCssInputs(
     val fontSizePx: Int,
     val editorFontFamily: String,
     val editorFontSizePx: Int,
+    val successHex: String,
+    val warningHex: String,
+    val issueHex: String,
 )
 
 fun toHex(color: RgbColor): String = "%02X%02X%02X".format(color.red, color.green, color.blue)
@@ -81,8 +87,15 @@ fun escapeCssSingleQuotedString(value: String): String {
     return "'$body'"
 }
 
-fun buildCwfThemeCssVariables(inputs: CwfThemeSourceInputs): String =
-    buildCwfThemeCssVariables(
+fun buildCwfThemeCssVariables(inputs: CwfThemeSourceInputs): String {
+    val statusColors =
+        resolveCwfStatusColors(
+            successCandidate = inputs.successForeground,
+            warningCandidate = inputs.warningForeground,
+            editorBackground = inputs.editorBackground,
+            isBright = inputs.isBright,
+        )
+    return buildCwfThemeCssVariables(
         CwfThemeCssInputs(
             textForegroundHex = toHex(inputs.textForeground),
             linkForegroundHex = toHex(inputs.linkForeground),
@@ -94,8 +107,12 @@ fun buildCwfThemeCssVariables(inputs: CwfThemeSourceInputs): String =
             fontSizePx = inputs.fontSizePx,
             editorFontFamily = inputs.editorFontFamily,
             editorFontSizePx = inputs.editorFontSizePx,
+            successHex = toHex(statusColors.success),
+            warningHex = toHex(statusColors.warning),
+            issueHex = toHex(statusColors.issue),
         ),
     )
+}
 
 fun buildCwfThemeCssVariables(inputs: CwfThemeCssInputs): String {
     val textFg = inputs.textForegroundHex
@@ -124,6 +141,9 @@ fun buildCwfThemeCssVariables(inputs: CwfThemeCssInputs): String {
     sb.appendLine("  --cs-theme-button-background: #$buttonBg;")
     sb.appendLine("  --cs-theme-button-secondaryForeground: #$buttonFg;")
     sb.appendLine("  --cs-theme-button-secondaryBackground: #$buttonSecondaryBg;")
+    sb.appendLine("  --cs-theme-success: #${inputs.successHex};")
+    sb.appendLine("  --cs-theme-warning: #${inputs.warningHex};")
+    sb.appendLine("  --cs-theme-issue: #${inputs.issueHex};")
 
     cwfThemeOpacitySuffixes.forEach { (key, value) ->
         sb.appendLine("  --cs-theme-button-foreground-$key: #$textFg$value;")

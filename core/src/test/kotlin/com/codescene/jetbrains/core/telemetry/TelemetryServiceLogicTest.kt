@@ -71,6 +71,7 @@ class TelemetryServiceLogicTest {
             )
 
         assertEquals("JetBrains/open", result?.eventName)
+        assertEquals("JetBrains", result?.editorType)
         assertEquals("idea", result?.ideInfo)
         assertEquals("2023.3.8", result?.editorVersion)
         assertEquals("1.0.0", result?.pluginVersion)

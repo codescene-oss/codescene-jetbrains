@@ -1,6 +1,7 @@
 package com.codescene.jetbrains.core.contract
 
 import com.codescene.data.telemetry.TelemetryEvent
+import com.codescene.jetbrains.core.telemetry.TELEMETRY_EDITOR_TYPE
 import com.codescene.jetbrains.core.telemetry.TelemetryRequest
 import com.codescene.jetbrains.core.telemetry.TelemetryRuntimeInfo
 import com.codescene.jetbrains.core.telemetry.buildOpenLinkTelemetryData
@@ -12,6 +13,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -25,7 +27,7 @@ class ContractOutboundTest {
 
     private fun request(data: Map<String, Any>) =
         TelemetryRequest(
-            editorType = "JetBrains",
+            editorType = TELEMETRY_EDITOR_TYPE,
             eventName = "open-settings",
             data = data,
             ideInfo = "intellij_idea",
@@ -71,8 +73,9 @@ class ContractOutboundTest {
         val wire = serialized(telemetryEvent(data, internal = true))
 
         assertContract(wire)
-        assertEquals("JetBrains/open-settings", wire.get("event-name").asText())
-        assertEquals("intellij_idea", wire.get("editor-type").asText())
+        assertEquals("jetbrains/open-settings", wire.get("event-name").asText())
+        assertEquals("jetbrains", wire.get("editor-type").asText())
+        assertEquals("intellij_idea", wire.get("ide-product").asText())
         assertEquals("1.2.3", wire.get("extension-version").asText())
         assertTrue(wire.get("internal").isBoolean && wire.get("internal").asBoolean())
         assertEquals("device-1", wire.get("device-id").asText())
@@ -116,5 +119,15 @@ class ContractOutboundTest {
         val violations = bundle.validate("telemetry-event.json", "TelemetryEvent", wire)
 
         assertEquals(listOf("$.editor-type"), violations.map { it.path })
+    }
+
+    @Test
+    fun `telemetry event omits session-id and repository-paths`() {
+        listOf(true, false).forEach { internal ->
+            val wire = serialized(telemetryEvent(emptyMap(), internal))
+
+            assertNull("session-id should be absent", wire.get("session-id"))
+            assertNull("repository-paths should be absent", wire.get("repository-paths"))
+        }
     }
 }
