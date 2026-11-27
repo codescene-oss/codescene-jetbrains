@@ -58,7 +58,10 @@ class CwfMessageRouterTest {
         assertEquals(true, routeCwfMessage(CwfMessage(PanelMessages.COPY_CODE.value), handler, json))
         assertEquals(true, routeCwfMessage(CwfMessage(PanelMessages.APPLY.value), handler, json))
         assertEquals(true, routeCwfMessage(CwfMessage(PanelMessages.REJECT.value), handler, json))
-        assertEquals(true, routeCwfMessage(CwfMessage(PanelMessages.ACKNOWLEDGED.value), handler, json))
+        assertEquals(
+            true,
+            routeCwfMessage(CwfMessage(PanelMessages.ACKNOWLEDGED.value), handler, json, aceEnabled = true),
+        )
 
         verify(exactly = 1) { handler.handleClose() }
         verify(exactly = 1) { handler.handleCancel() }
@@ -83,7 +86,10 @@ class CwfMessageRouterTest {
                 """.trimIndent(),
             )
         val slot = slot<AceAcknowledgedPayload>()
-        assertEquals(true, routeCwfMessage(CwfMessage(PanelMessages.ACKNOWLEDGED.value, payload), handler, json))
+        assertEquals(
+            true,
+            routeCwfMessage(CwfMessage(PanelMessages.ACKNOWLEDGED.value, payload), handler, json, aceEnabled = true),
+        )
         verify(exactly = 1) { handler.handleAcknowledged(capture(slot)) }
         assertEquals("docs", slot.captured.source)
         assertEquals("/tmp/Foo.cs", slot.captured.filePath)
@@ -97,9 +103,39 @@ class CwfMessageRouterTest {
                 CwfMessage(PanelMessages.ACKNOWLEDGED.value, JsonPrimitive("not-an-object")),
                 handler,
                 json,
+                aceEnabled = true,
             )
         assertEquals(false, ok)
         verify(exactly = 0) { handler.handleAcknowledged(any()) }
+    }
+
+    @Test
+    fun `acknowledged is treated as unsupported when ACE is unavailable`() {
+        val payload =
+            json.parseToJsonElement(
+                """
+                {
+                  "source":"docs",
+                  "filePath":"/tmp/Foo.cs",
+                  "fn":{"name":"Bar","range":{"startLine":12,"startColumn":9,"endLine":43,"endColumn":10}},
+                  "range":{"startLine":12,"startColumn":9,"endLine":43,"endColumn":10}
+                }
+                """.trimIndent(),
+            )
+        val ok =
+            routeCwfMessage(CwfMessage(PanelMessages.ACKNOWLEDGED.value, payload), handler, json, aceEnabled = false)
+        assertEquals(true, ok)
+        verify(exactly = 1) { handler.handleUnsupportedMessage(PanelMessages.ACKNOWLEDGED.value) }
+        verify(exactly = 0) { handler.handleAcknowledged(any()) }
+
+        val malformedOk =
+            routeCwfMessage(
+                CwfMessage(PanelMessages.ACKNOWLEDGED.value, JsonPrimitive("bad")),
+                handler,
+                json,
+                aceEnabled = false,
+            )
+        assertEquals(true, malformedOk)
     }
 
     @Test
@@ -135,11 +171,21 @@ class CwfMessageRouterTest {
 
         assertEquals(
             true,
-            routeCwfMessage(CwfMessage(PanelMessages.OPEN_DOCS_FOR_FUNCTION.value, docsPayload), handler, json),
+            routeCwfMessage(
+                CwfMessage(PanelMessages.OPEN_DOCS_FOR_FUNCTION.value, docsPayload),
+                handler,
+                json,
+                aceEnabled = true,
+            ),
         )
         assertEquals(
             true,
-            routeCwfMessage(CwfMessage(PanelMessages.REQUEST_AND_PRESENT_REFACTORING.value, reqPayload), handler, json),
+            routeCwfMessage(
+                CwfMessage(PanelMessages.REQUEST_AND_PRESENT_REFACTORING.value, reqPayload),
+                handler,
+                json,
+                aceEnabled = true,
+            ),
         )
 
         verify(exactly = 1) { handler.handleOpenDocs(any()) }
@@ -149,6 +195,47 @@ class CwfMessageRouterTest {
         assertNotNull(requestSlot.captured.fnToRefactor)
         assertEquals("f", requestSlot.captured.fnToRefactor?.name)
         assertEquals(1, requestSlot.captured.fn.range?.startLine)
+    }
+
+    @Test
+    fun `request-and-present-refactoring is treated as unsupported when ACE is unavailable`() {
+        val reqPayload =
+            json.parseToJsonElement(
+                """
+                {
+                  "fileName":"a.kt",
+                  "filePath":"a.kt",
+                  "source":"docs",
+                  "fn":{"name":"f","range":{"endLine":1,"endColumn":1,"startLine":1,"startColumn":1}},
+                  "range":{"endLine":1,"endColumn":1,"startLine":1,"startColumn":1},
+                  "fnToRefactor":{
+                    "name":"f",
+                    "body":"fun f() = 1",
+                    "file-type":"kotlin",
+                    "nippy-b64":"abc"
+                  }
+                }
+                """.trimIndent(),
+            )
+        val ok =
+            routeCwfMessage(
+                CwfMessage(PanelMessages.REQUEST_AND_PRESENT_REFACTORING.value, reqPayload),
+                handler,
+                json,
+                aceEnabled = false,
+            )
+        assertEquals(true, ok)
+        verify(exactly = 1) { handler.handleUnsupportedMessage(PanelMessages.REQUEST_AND_PRESENT_REFACTORING.value) }
+        verify(exactly = 0) { handler.handleRequestAndPresentRefactoring(any()) }
+
+        val malformedOk =
+            routeCwfMessage(
+                CwfMessage(PanelMessages.REQUEST_AND_PRESENT_REFACTORING.value, JsonPrimitive("bad")),
+                handler,
+                json,
+                aceEnabled = false,
+            )
+        assertEquals(true, malformedOk)
     }
 
     @Test

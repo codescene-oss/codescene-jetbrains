@@ -48,12 +48,14 @@ class AutoRefactorConfigUtilsTest {
         val withToken =
             toAutoRefactorConfig(
                 CodeSceneGlobalSettings(aceAcknowledged = true, aceTokenConfigured = true),
+                aceEnabled = true,
             )
         assertTrue(withToken.activated)
 
         val withoutToken =
             toAutoRefactorConfig(
                 CodeSceneGlobalSettings(aceAcknowledged = true, aceTokenConfigured = false),
+                aceEnabled = true,
             )
         assertTrue(withoutToken.activated)
     }
@@ -63,6 +65,7 @@ class AutoRefactorConfigUtilsTest {
         val result =
             toAutoRefactorConfig(
                 CodeSceneGlobalSettings(aceAcknowledged = false, aceTokenConfigured = true),
+                aceEnabled = true,
             )
         assertFalse(result.activated)
     }
@@ -72,22 +75,23 @@ class AutoRefactorConfigUtilsTest {
         val result =
             toAutoRefactorConfig(
                 CodeSceneGlobalSettings(aceAcknowledged = false, aceTokenConfigured = false),
+                aceEnabled = true,
             )
         assertTrue(result.activated)
     }
 
     @Test
     fun `toAutoRefactorConfig visible follows aceTokenConfigured`() {
-        val enabled = toAutoRefactorConfig(CodeSceneGlobalSettings(aceTokenConfigured = true))
+        val enabled = toAutoRefactorConfig(CodeSceneGlobalSettings(aceTokenConfigured = true), aceEnabled = true)
         assertEquals(true, enabled.visible)
 
-        val disabled = toAutoRefactorConfig(CodeSceneGlobalSettings(aceTokenConfigured = false))
+        val disabled = toAutoRefactorConfig(CodeSceneGlobalSettings(aceTokenConfigured = false), aceEnabled = true)
         assertEquals(false, disabled.visible)
     }
 
     @Test
     fun `toAutoRefactorConfig disabled is true when token not configured`() {
-        val result = toAutoRefactorConfig(CodeSceneGlobalSettings(aceTokenConfigured = false))
+        val result = toAutoRefactorConfig(CodeSceneGlobalSettings(aceTokenConfigured = false), aceEnabled = true)
         assertEquals(true, result.disabled)
     }
 
@@ -121,6 +125,7 @@ class AutoRefactorConfigUtilsTest {
                     aceStatus = AceStatus.SIGNED_IN,
                     aceTokenConfigured = true,
                 ),
+                aceEnabled = true,
             )
         assertTrue(result.aceStatus.hasToken)
         assertEquals("enabled", result.aceStatus.status)
@@ -134,6 +139,7 @@ class AutoRefactorConfigUtilsTest {
                     aceStatus = AceStatus.SIGNED_OUT,
                     aceTokenConfigured = false,
                 ),
+                aceEnabled = true,
             )
         assertFalse(result.aceStatus.hasToken)
         assertEquals("enabled", result.aceStatus.status)
@@ -147,8 +153,45 @@ class AutoRefactorConfigUtilsTest {
                     aceStatus = AceStatus.DEACTIVATED,
                     aceTokenConfigured = true,
                 ),
+                aceEnabled = true,
             )
         assertEquals("disabled", result.aceStatus.status)
+    }
+
+    @Test
+    fun `toAutoRefactorConfig returns the default config when ACE is unavailable`() {
+        val result =
+            toAutoRefactorConfig(
+                CodeSceneGlobalSettings(
+                    aceStatus = AceStatus.SIGNED_IN,
+                    aceTokenConfigured = true,
+                    aceAcknowledged = true,
+                ),
+                aceEnabled = false,
+            )
+        val expected = com.codescene.jetbrains.core.models.shared.AutoRefactorConfig()
+        assertEquals(expected.activated, result.activated)
+        assertEquals(expected.visible, result.visible)
+        assertEquals(expected.disabled, result.disabled)
+        assertEquals(expected.aceStatus.status, result.aceStatus.status)
+        assertEquals(expected.aceStatus.hasToken, result.aceStatus.hasToken)
+    }
+
+    @Test
+    fun `autoRefactorConfigForDocsView returns the default config when ACE is unavailable`() {
+        val result =
+            autoRefactorConfigForDocsView(
+                CodeSceneGlobalSettings(aceTokenConfigured = true),
+                "docs_issues_complex_method",
+                refactorTargetPresent = true,
+                aceEnabled = false,
+            )
+        val expected = com.codescene.jetbrains.core.models.shared.AutoRefactorConfig()
+        assertEquals(expected.activated, result.activated)
+        assertEquals(expected.visible, result.visible)
+        assertEquals(expected.disabled, result.disabled)
+        assertEquals(expected.aceStatus.status, result.aceStatus.status)
+        assertEquals(expected.aceStatus.hasToken, result.aceStatus.hasToken)
     }
 
     @Test
@@ -160,6 +203,7 @@ class AutoRefactorConfigUtilsTest {
                 settings,
                 "docs_general_code_health",
                 refactorTargetPresent = false,
+                aceEnabled = true,
             )
         assertFalse(result.visible)
         assertTrue(result.disabled)
@@ -174,6 +218,7 @@ class AutoRefactorConfigUtilsTest {
                 settings,
                 "docs_code_health_monitor",
                 refactorTargetPresent = true,
+                aceEnabled = true,
             )
         assertFalse(result.visible)
         assertTrue(result.disabled)
@@ -188,6 +233,7 @@ class AutoRefactorConfigUtilsTest {
                 settings,
                 "docs_issues_complex_method",
                 refactorTargetPresent = false,
+                aceEnabled = true,
             )
         assertFalse(result.visible)
         assertTrue(result.disabled)
@@ -202,8 +248,9 @@ class AutoRefactorConfigUtilsTest {
                 settings,
                 "docs_issues_complex_method",
                 refactorTargetPresent = true,
+                aceEnabled = true,
             )
-        val base = toAutoRefactorConfig(settings)
+        val base = toAutoRefactorConfig(settings, aceEnabled = true)
         assertEquals(base.visible, result.visible)
         assertEquals(base.disabled, result.disabled)
         assertEquals(base.activated, result.activated)

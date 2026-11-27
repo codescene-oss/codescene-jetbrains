@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.core.util
 
+import com.codescene.jetbrains.core.flag.AceAvailability
 import com.codescene.jetbrains.core.models.settings.AceStatus
 import java.net.ConnectException
 import java.net.http.HttpTimeoutException
@@ -14,8 +15,15 @@ fun resolveAcePreflightDecision(
     tokenConfigured: Boolean,
     token: String,
     force: Boolean,
+    aceEnabled: Boolean = AceAvailability.ENABLED,
 ): AcePreflightDecision =
-    if (tokenConfigured) {
+    if (!aceEnabled) {
+        AcePreflightDecision(
+            shouldRun = false,
+            skippedStatus = null,
+            successStatus = null,
+        )
+    } else if (tokenConfigured) {
         AcePreflightDecision(
             shouldRun = true,
             successStatus = resolveActivatedAceStatus(token).takeIf { force },

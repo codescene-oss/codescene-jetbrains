@@ -1,6 +1,8 @@
 package com.codescene.jetbrains.core.telemetry
 
 import com.codescene.data.telemetry.TelemetryEvent
+import com.codescene.jetbrains.core.flag.AceAvailability
+import com.codescene.jetbrains.core.util.TelemetryEvents
 
 data class TelemetryRequest(
     val editorType: String,
@@ -12,12 +14,29 @@ data class TelemetryRequest(
     val deviceId: String,
 )
 
+private val aceEventNames =
+    setOf(
+        TelemetryEvents.ACE_INFO_PRESENTED,
+        TelemetryEvents.ACE_INFO_ACKNOWLEDGED,
+        TelemetryEvents.ACE_REFACTOR_REQUESTED,
+        TelemetryEvents.ACE_REFACTOR_PRESENTED,
+        TelemetryEvents.ACE_REFACTOR_APPLIED,
+        TelemetryEvents.ACE_REFACTOR_REJECTED,
+        TelemetryEvents.ACE_DIFF_SHOWN,
+        TelemetryEvents.ACE_COPY_CODE,
+    )
+
 fun resolveTelemetryEventData(
     consentGiven: Boolean,
     noticeDisplayed: Boolean,
     request: TelemetryRequest,
+    aceEnabled: Boolean = AceAvailability.ENABLED,
 ): TelemetryEventData? {
     if (!consentGiven || !noticeDisplayed) return null
+
+    if (!aceEnabled && request.eventName in aceEventNames) {
+        return null
+    }
 
     return buildTelemetryEventData(
         editorType = request.editorType,

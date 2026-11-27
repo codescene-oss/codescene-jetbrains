@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.core.util
 
+import com.codescene.jetbrains.core.flag.AceAvailability
 import com.codescene.jetbrains.core.models.settings.AceStatus
 import com.codescene.jetbrains.core.models.settings.CodeSceneGlobalSettings
 import com.codescene.jetbrains.core.models.shared.AceStatusType
@@ -15,7 +16,13 @@ fun mapAceStatusToCwfString(status: AceStatus): String =
         AceStatus.OFFLINE -> "offline"
     }
 
-fun toAutoRefactorConfig(settings: CodeSceneGlobalSettings): AutoRefactorConfig {
+fun toAutoRefactorConfig(
+    settings: CodeSceneGlobalSettings,
+    aceEnabled: Boolean = AceAvailability.ENABLED,
+): AutoRefactorConfig {
+    if (!aceEnabled) {
+        return AutoRefactorConfig()
+    }
     val hasToken = settings.aceTokenConfigured
     val isActivated = !(!settings.aceAcknowledged && hasToken)
     return AutoRefactorConfig(
@@ -41,8 +48,9 @@ fun autoRefactorConfigForDocsView(
     settings: CodeSceneGlobalSettings,
     docType: String,
     refactorTargetPresent: Boolean,
+    aceEnabled: Boolean = AceAvailability.ENABLED,
 ): AutoRefactorConfig {
-    val base = toAutoRefactorConfig(settings)
+    val base = toAutoRefactorConfig(settings, aceEnabled)
     if (docType == DOCS_GENERAL_CODE_HEALTH ||
         !docType.startsWith(DOCS_ISSUES_PREFIX) ||
         !refactorTargetPresent

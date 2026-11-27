@@ -3,6 +3,7 @@ package com.codescene.jetbrains.core.review
 import com.codescene.data.ace.PreflightResponse
 import com.codescene.jetbrains.core.contracts.ILogger
 import com.codescene.jetbrains.core.contracts.ISettingsProvider
+import com.codescene.jetbrains.core.flag.AceAvailability
 import com.codescene.jetbrains.core.models.settings.AceStatus
 import com.codescene.jetbrains.core.util.resolveAceFailureStatus
 import com.codescene.jetbrains.core.util.resolveAcePreflightDecision
@@ -13,14 +14,18 @@ class AcePreflightOrchestrator(
     private val serviceName: String,
     private val fetchPreflight: suspend (Boolean) -> TimedResult<PreflightResponse?>,
     private val onStatusChange: (AceStatus) -> Unit,
+    private val aceEnabled: Boolean = AceAvailability.ENABLED,
 ) {
     suspend fun runPreflight(force: Boolean = false): PreflightResponse? {
+        if (!aceEnabled) return null
+
         val settings = settingsProvider.currentState()
         val decision =
             resolveAcePreflightDecision(
                 tokenConfigured = settings.aceTokenConfigured,
                 token = settingsProvider.getAceAuthToken(),
                 force = force,
+                aceEnabled = aceEnabled,
             )
 
         decision.skippedStatus?.let(settingsProvider::updateAceStatus)

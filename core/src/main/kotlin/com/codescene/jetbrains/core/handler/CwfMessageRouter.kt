@@ -1,5 +1,6 @@
 package com.codescene.jetbrains.core.handler
 
+import com.codescene.jetbrains.core.flag.AceAvailability
 import com.codescene.jetbrains.core.models.CwfMessage
 import com.codescene.jetbrains.core.models.message.AceAcknowledgedPayload
 import com.codescene.jetbrains.core.models.message.CopyCodePayload
@@ -17,7 +18,23 @@ import kotlinx.serialization.json.jsonPrimitive
 
 private val unsupportedMessageTypes: Set<String> = UnsupportedMessages.entries.map { it.value }.toSet()
 
+private val aceOnlyMessageTypes: Set<String> =
+    setOf(PanelMessages.ACKNOWLEDGED.value, PanelMessages.REQUEST_AND_PRESENT_REFACTORING.value)
+
 fun routeCwfMessage(
+    message: CwfMessage,
+    handler: ICwfActionHandler,
+    json: Json,
+    aceEnabled: Boolean = AceAvailability.ENABLED,
+): Boolean {
+    if (!aceEnabled && message.messageType in aceOnlyMessageTypes) {
+        handler.handleUnsupportedMessage(message.messageType)
+        return true
+    }
+    return routeSupportedCwfMessage(message, handler, json)
+}
+
+private fun routeSupportedCwfMessage(
     message: CwfMessage,
     handler: ICwfActionHandler,
     json: Json,

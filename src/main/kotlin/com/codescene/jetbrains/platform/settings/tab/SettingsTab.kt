@@ -1,6 +1,5 @@
 package com.codescene.jetbrains.platform.settings.tab
 
-import com.codescene.jetbrains.core.flag.RuntimeFlags
 import com.codescene.jetbrains.core.util.Constants.TELEMETRY_EVENTS_URL
 import com.codescene.jetbrains.core.util.Constants.TELEMETRY_SAMPLES_URL
 import com.codescene.jetbrains.platform.UiLabelsBundle
@@ -37,16 +36,7 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                     .comment(UiLabelsBundle.message("enableCodeLensesComment"))
             }
 
-            groupRowsRange(UiLabelsBundle.message("ace")) {
-                row {
-                    checkBox("Ace acknowledged")
-                        .bindSelected(settings::aceAcknowledged)
-                        .comment(
-                            "For testing purposes. This should only be visible when FEATURE_CWF_DEVMODE is enabled.",
-                        )
-                        .visible(RuntimeFlags.isDevMode)
-                }
-
+            groupRowsRange(UiLabelsBundle.message("cloudConnection")) {
                 row(UiLabelsBundle.message("aceAuthToken")) {
                     passwordField()
                         .align(Align.FILL)
@@ -55,16 +45,14 @@ class SettingsTab : BoundConfigurable(UiLabelsBundle.message("settingsTitle")) {
                         .bindText(::aceAuthToken)
                         .also { aceAuthTokenField = it.component }
                 }
-            }
 
-            groupRowsRange(UiLabelsBundle.message("cloudConnection")) {
                 row(UiLabelsBundle.message("serverUrl")) {
                     textField()
                         .align(Align.FILL)
                         .resizableColumn()
                         .bindText(settings::serverUrl)
-                }
-            }.visible(false)
+                }.visible(false)
+            }
 
             groupRowsRange(UiLabelsBundle.message("statistics")) {
                 row {

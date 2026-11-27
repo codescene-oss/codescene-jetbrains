@@ -38,6 +38,7 @@ class AcePreflightOrchestratorTest {
             fetchBypassCache = bypassCache
             TimedResult(preflightResponse, 100)
         },
+        aceEnabled: Boolean = true,
     ) = AcePreflightOrchestrator(
         settingsProvider =
             InMemorySettingsProvider(settings, aceAuthToken = aceAuthToken).also { settingsProvider = it },
@@ -45,6 +46,7 @@ class AcePreflightOrchestratorTest {
         serviceName = "Test",
         fetchPreflight = fetchResult,
         onStatusChange = { statusChanges.add(it) },
+        aceEnabled = aceEnabled,
     )
 
     @Test
@@ -131,6 +133,31 @@ class AcePreflightOrchestratorTest {
             val result = orchestrator.runPreflight()
             assertNull(result)
             assertTrue(statusChanges.contains(AceStatus.OFFLINE))
+        }
+
+    @Test
+    fun `runPreflight is a no-op when ACE is unavailable`() =
+        runBlocking {
+            val initialAceStatus = AceStatus.SIGNED_IN
+            val settings = CodeSceneGlobalSettings(aceTokenConfigured = true).also { it.aceStatus = initialAceStatus }
+            var fetchInvoked = false
+            val orchestrator =
+                createOrchestrator(
+                    settings = settings,
+                    aceAuthToken = "token",
+                    fetchResult = {
+                        fetchInvoked = true
+                        TimedResult(preflightResponse, 100)
+                    },
+                    aceEnabled = false,
+                )
+
+            val result = orchestrator.runPreflight(force = true)
+
+            assertNull(result)
+            assertEquals(false, fetchInvoked)
+            assertEquals(0, statusChanges.size)
+            assertEquals(initialAceStatus, settingsProvider.currentState().aceStatus)
         }
 
     private fun assertTrue(condition: Boolean) = org.junit.Assert.assertTrue(condition)
