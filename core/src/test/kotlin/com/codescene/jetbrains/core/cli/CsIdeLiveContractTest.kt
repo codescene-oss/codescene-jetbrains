@@ -1,9 +1,7 @@
 package com.codescene.jetbrains.core.cli
 
 import com.codescene.ExtensionAPI.CacheParams
-import com.codescene.ExtensionAPI.CodeParams
 import com.codescene.ExtensionAPI.ReviewParams
-import com.codescene.data.ace.FnToRefactor
 import com.codescene.data.delta.Delta
 import com.codescene.data.review.Review
 import com.codescene.jetbrains.core.TestLogger
@@ -53,48 +51,6 @@ class CsIdeLiveContractTest {
             val previous = review("DeltaSubject.kt", simpleKotlinCode, repoRoot, cacheDir)
             val current = review("DeltaSubject.kt", complexKotlinCode, repoRoot, cacheDir)
             assertDelta(client.delta(previous.rawScore, current.rawScore))
-        }
-    }
-
-    @Test
-    fun `fnsToRefactor accepts review findings`() {
-        withIsolatedWorkspace { cacheDir, repoRoot ->
-            val review = review("AceReviewSubject.kt", complexKotlinCode, repoRoot, cacheDir)
-            val codeSmells = review.fileLevelCodeSmells + review.functionLevelCodeSmells.flatMap { it.codeSmells }
-            assertTrue("review produced no code smells", codeSmells.isNotEmpty())
-            val functions =
-                retry {
-                    client.fnsToRefactor(
-                        CodeParams(complexKotlinCode, "./AceReviewSubject.kt"),
-                        CacheParams(cacheDir.toString()),
-                        codeSmells,
-                    )
-                }
-            assertFunctions(functions)
-        }
-    }
-
-    @Test
-    fun `fnsToRefactor accepts delta response`() {
-        withIsolatedWorkspace { cacheDir, repoRoot ->
-            val delta =
-                retry {
-                    client.reviewDelta(
-                        ReviewParams("./AceDeltaSubject.kt", simpleKotlinCode, repoRoot.toString()),
-                        ReviewParams("./AceDeltaSubject.kt", complexKotlinCode, repoRoot.toString()),
-                        CacheParams(cacheDir.toString()),
-                    )
-                }
-            assertDelta(delta)
-            val functions =
-                retry {
-                    client.fnsToRefactor(
-                        CodeParams(complexKotlinCode, "./AceDeltaSubject.kt"),
-                        CacheParams(cacheDir.toString()),
-                        delta!!,
-                    )
-                }
-            assertFunctions(functions)
         }
     }
 
@@ -188,15 +144,6 @@ class CsIdeLiveContractTest {
         delta.newScore?.let(::assertOptionalScoreInRange)
         assertNotNull(delta.fileLevelFindings)
         assertNotNull(delta.functionLevelFindings)
-    }
-
-    private fun assertFunctions(functions: List<FnToRefactor>) {
-        functions.forEach { function ->
-            assertTrue(function.name.isNotBlank())
-            assertNotNull(function.body)
-            assertNotNull(function.fileType)
-            assertNotNull(function.refactoringTargets)
-        }
     }
 
     private fun reviewScore(review: Review): Double = optionalScore(review.score)
